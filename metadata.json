@@ -1,0 +1,7 @@
+{
+  "name": "CondoConnect",
+  "description": "Uma plataforma completa de gestão de comunidades e serviços para condomínios, conectando moradores, profissionais e administradores em um ecossistema digital elegante.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
