@@ -396,42 +396,50 @@ const App: React.FC = () => {
   const checkUserRole = async (userId: string) => {
     try {
       if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
-        throw new Error("Supabase is not configured. Falling back to mock data.");
+        setAppState('roleSelection');
+        return;
       }
+
+      console.log('🔵 [AUTH] Verificando perfil para:', userId);
+
+      // Usar maybeSingle() para não disparar erro caso não existam linhas
       const { data, error } = await supabase
         .from('profiles')
-        .select('role')
+        .select('*')
         .eq('id', userId)
-        .single();
+        .maybeSingle();
 
       if (data) {
+        console.log('✅ [AUTH] Perfil encontrado no banco:', data.role);
         setUserRole(data.role as UserRole);
         setCurrentUser({
           ...data,
-          avatar: data.avatar || `https://picsum.photos/seed/${data.name}/150`
+          avatar: data.avatar || `https://picsum.photos/seed/${data.name || 'user'}/150`
         });
         setAppState('main');
         if (data.role === UserRole.RESIDENT) setActiveTab('home');
         else setActiveTab('dashboard');
-      } else {
-        // PERFIL NÃO ENCONTRADO NO BANCO: Verificar se existe no metadata do Auth
-        // Às vezes o trigger demora ou falha
-        const { data: { user } } = await supabase.auth.getUser();
-        const metaRole = user?.user_metadata?.role;
+        return;
+      }
 
-        if (metaRole) {
-          console.log('🔵 [SYNC] Perfil faltando mas role encontrada no meta:', metaRole);
-          setUserRole(metaRole as UserRole);
-          // O perfil será criado na próxima vez que ele salvar algo ou via trigger
-          setAppState('main');
-          if (metaRole === UserRole.RESIDENT) setActiveTab('home');
-          else setActiveTab('dashboard');
-        } else {
-          setAppState('roleSelection');
-        }
+      // Se não achou no banco, verificar os metadados da sessão atual
+      console.log('⚠️ [AUTH] Perfil não encontrado no DB. Verificando metadados...');
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      const metaRole = user?.user_metadata?.role;
+
+      if (metaRole) {
+        console.log('🔵 [AUTH] Encontrado papel nos metadados:', metaRole);
+        setUserRole(metaRole as UserRole);
+        setAppState('main');
+        if (metaRole === UserRole.RESIDENT) setActiveTab('home');
+        else setActiveTab('dashboard');
+      } else {
+        console.log('❌ [AUTH] Papel não encontrado. Redirecionando para seleção de tipo de conta.');
+        setAppState('roleSelection');
       }
     } catch (err) {
-      console.error('Error checking role, falling back to mock:', err);
+      console.error('❌ [AUTH] Erro ao verificar papel do usuário:', err);
       setAppState('roleSelection');
     } finally {
       setLoading(false);
