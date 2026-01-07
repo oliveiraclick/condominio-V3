@@ -6,7 +6,8 @@ import {
   ResidentHome, Marketplace, AppNavigation, AcessoPage,
   FinanceiroPage, ChamadosPage, CondoAgendaPage, ServicosFullView,
   DesapegoFullView, ResidentProfile, ResidentBookings, CreateDesapegoPage,
-  AssembliesPage, ShopDetailPage, DesapegoDetailView
+  AssembliesPage, ShopDetailPage, DesapegoDetailView,
+  PersonalDataPage, PrivacyPage
 } from './pages/Resident';
 import {
   ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation,
@@ -103,6 +104,24 @@ const App: React.FC = () => {
     if (data) setProducts(data);
   };
 
+  const fetchDesapegos = async () => {
+    const { data } = await supabase.from('marketplace').select('*, profiles(name, unit, tower, phone)').order('created_at', { ascending: false });
+    if (data) {
+      // Map to frontend structure
+      setDesapegos(data.map((item: any) => ({
+        id: item.id,
+        name: item.title,
+        price: `R$ ${item.price.toFixed(2)}`,
+        img: item.image_url,
+        user: item.profiles?.name || 'Vizinho',
+        tower: item.profiles ? `${item.profiles.tower} - ${item.profiles.unit}` : 'Residencial',
+        phone: item.profiles?.phone, // Added phone
+        status: item.status.toUpperCase(),
+        desc: item.description
+      })));
+    }
+  };
+
   // 2. BUSCA DE PERFIL COM LÓGICA DE AUTO-REPARO
   const fetchUserProfile = async (userId: string) => {
     setLoading(true);
@@ -171,6 +190,7 @@ const App: React.FC = () => {
       fetchProfessionalServices();
       fetchAccessList();
       fetchProducts();
+      fetchDesapegos();
     }
   }, [appState, session]);
 
@@ -191,8 +211,14 @@ const App: React.FC = () => {
   };
 
   const fetchServiceRequests = async () => {
-    const { data } = await supabase.from('service_requests').select('*').order('created_at', { ascending: false });
-    if (data) setServiceRequests(data);
+    const { data } = await supabase.from('service_requests').select('*, profiles(name, phone)').order('created_at', { ascending: false });
+    if (data) {
+      setServiceRequests(data.map((item: any) => ({
+        ...item,
+        user: item.profiles?.name || 'Morador',
+        phone: item.profiles?.phone // Added phone
+      })));
+    }
   };
 
   const fetchAccessList = async () => {
@@ -226,9 +252,44 @@ const App: React.FC = () => {
 
     // NOVO: Handlers de Produtos (Mini-Ecommerce)
     // NOVO: Handlers de Produtos (Mini-Ecommerce)
+    // NOVO: Handlers de Produtos (Mini-Ecommerce)
     const handleAddProduct = async (product: any) => {
       if (!session?.user) return;
-      const { error } = await supabase.from('products').insert([{ ...product, vendor_id: session.user.id }]);
+
+      let finalImageUrl = product.image_url;
+
+      // Handle Image Upload if file exists
+      if (product.image_file) {
+        const file = product.image_file;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Math.random()}.${fileExt}`;
+        const filePath = `${session.user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('products')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          alert('Erro ao fazer upload da imagem: ' + uploadError.message);
+          return;
+        }
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('products')
+          .getPublicUrl(filePath);
+
+        finalImageUrl = publicUrl;
+      }
+
+      // Remove the file object before sending to DB
+      const { image_file, ...productData } = product;
+
+      const { error } = await supabase.from('products').insert([{
+        ...productData,
+        image_url: finalImageUrl,
+        vendor_id: session.user.id
+      }]);
+
       if (error) {
         alert('Erro ao criar produto: ' + error.message);
       } else {
@@ -246,21 +307,104 @@ const App: React.FC = () => {
       if (!error) fetchProducts();
     };
 
+    const handleAddDesapego = async (item: any) => {
+      if (!session?.user) return;
+      const { error } = await supabase.from('marketplace').insert([{
+        seller_id: session.user.id,
+        title: item.name,
+        price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
+        status: item.status,
+        description: item.desc,
+        image_url: item.img
+      }]);
+      if (error) {
+        alert('Erro ao criar desapego: ' + error.message);
+      } else {
+        fetchDesapegos();
+      }
+    };
+
+    const handleDeleteDesapego = async (id: string) => {
+      const { error } = await supabase.from('marketplace').delete().eq('id', id);
+      if (error) alert('Erro ao excluir anúncio: ' + error.message);
+      else {
+        alert('Anúncio removido!');
+        fetchDesapegos();
+        setActiveTab('home');
+      }
+    };
+
+    // --- CRITICAL LAUNCH HANDLERS ---
+    const handleAddReservation = async (reservation: any) => {
+      if (!session?.user) return;
+      const { error } = await supabase.from('reservations').insert([{
+        resident_id: session.user.id,
+        area_id: reservation.areaId,
+        area_name: reservation.area,
+        date: reservation.date,
+        unit: currentUser?.unit,
+        tower: currentUser?.tower
+      }]);
+      if (error) alert('Erro ao reservar: ' + error.message);
+      else {
+        alert('Reserva confirmada com sucesso!');
+        fetchReservations();
+      }
+    };
+
+    const handleAddAccess = async (access: any) => {
+      if (!session?.user) return;
+      const { error } = await supabase.from('access_control').insert([{
+        resident_id: session.user.id,
+        visitor_name: access.name,
+        type: access.type,
+        date: access.date,
+        unit: currentUser?.unit,
+        tower: currentUser?.tower,
+        avatar_url: currentUser?.avatar
+      }]);
+      if (error) alert('Erro ao autorizar acesso: ' + error.message);
+      else {
+        fetchAccessList();
+      }
+    };
+
+    const handleAddServiceRequest = async (req: any) => {
+      if (!session?.user) return;
+      const { error } = await supabase.from('service_requests').insert([{
+        resident_id: session.user.id,
+        title: req.title || req.name,
+        category: req.category || 'Solicitação',
+        description: req.description || req.name,
+        status: 'Aberto',
+        unit: currentUser?.unit,
+        location: `${currentUser?.tower} - ${currentUser?.unit}`,
+        professional_id: req.professional_id // Optional
+      }]);
+      if (error) alert('Erro ao abrir chamado: ' + error.message);
+      else {
+        alert(req.category === 'Solicitação' ? 'Solicitação enviada!' : 'Chamado aberto com sucesso!');
+        fetchServiceRequests();
+      }
+    };
+
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
         case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} />;
         case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
         case 'booking': return <ResidentBookings onBack={() => setActiveTab('home')} reservations={reservations} />;
-        case 'profile': return <ResidentProfile currentUser={currentUser} />;
-        case 'acesso': return <AcessoPage onBack={() => setActiveTab('home')} accessList={accessList} onAddAccess={async (a) => fetchAccessList()} currentUser={currentUser} />;
+        case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={setActiveTab} />;
+        case 'personal-data': return <PersonalDataPage onBack={() => setActiveTab('profile')} currentUser={currentUser} />;
+        case 'privacy': return <PrivacyPage onBack={() => setActiveTab('profile')} />;
+        case 'acesso': return <AcessoPage onBack={() => setActiveTab('home')} accessList={accessList} onAddAccess={handleAddAccess} currentUser={currentUser} />;
         case 'financeiro': return <FinanceiroPage onBack={() => setActiveTab('home')} invoices={invoices} />;
-        case 'chamado': return <ChamadosPage onBack={() => setActiveTab('home')} serviceRequests={serviceRequests} onAddRequest={async (r) => fetchServiceRequests()} currentUser={currentUser} />;
-        case 'condo-agenda': return <CondoAgendaPage onBack={() => setActiveTab('home')} reservations={reservations} onAddReservation={async (res) => fetchReservations()} commonAreas={commonAreas} />;
-        case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={() => { }} services={professionalServices} />;
-        case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} />;
-        case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} />;
+        case 'chamado': return <ChamadosPage onBack={() => setActiveTab('home')} serviceRequests={serviceRequests} onAddRequest={handleAddServiceRequest} currentUser={currentUser} />;
+        case 'condo-agenda': return <CondoAgendaPage onBack={() => setActiveTab('home')} reservations={reservations} onAddReservation={handleAddReservation} commonAreas={commonAreas} />;
+        case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
+        case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
+        case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
         case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} />;
-        case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={(item) => setDesapegos([item, ...desapegos])} currentUser={currentUser} />;
+        case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={handleAddDesapego} currentUser={currentUser} />;
         default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} />;
       }
     }

@@ -31,37 +31,67 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   </div>
 );
 
-const DesapegoCard: React.FC<{ item: any }> = ({ item }) => {
-  const [interestSent, setInterestSent] = useState(false);
+const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ item, currentUser, onDelete }) => {
+  const isOwner = currentUser?.name === item.user; // Idealmente usar ID, mas name serve por enquanto dado o backend atual
+
+  const handleInterest = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (item.phone) {
+      const cleanPhone = item.phone.replace(/\D/g, '');
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.name}* no app do condomínio e tenho interesse!`);
+      window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
+    } else {
+      alert('Telefone do vendedor não disponível.');
+    }
+  };
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onDelete && confirm('Tem certeza que deseja remover este anúncio?')) {
+      onDelete(item.id);
+    }
+  };
+
   return (
-    <Card className="p-0 overflow-hidden border-none shadow-2xl shadow-slate-200/60 rounded-[48px] bg-white group active:scale-[0.98] transition-all">
-      <div className="relative h-80 p-6">
-        <img src={item.img} className="w-full h-full object-cover rounded-[40px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
-        <div className="absolute top-12 left-12">
-          <span className="bg-emerald-500 text-white font-black px-5 py-2 text-[10px] uppercase rounded-xl shadow-xl tracking-widest">{item.status}</span>
+    <Card className="p-0 overflow-hidden border-none shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group active:scale-[0.98] transition-all">
+      <div className="relative h-72 p-5">
+        <img src={item.img} className="w-full h-full object-cover rounded-[32px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
+        <div className="absolute top-10 left-10">
+          <span className="bg-emerald-500 text-white font-black px-4 py-2 text-[10px] uppercase rounded-xl shadow-lg tracking-widest">{item.status}</span>
         </div>
-        <div className="absolute bottom-12 right-12 bg-white/90 backdrop-blur-md px-6 py-3 rounded-[24px] shadow-2xl border border-white/20">
-          <p className="text-xl font-black text-slate-950 tracking-tighter">{item.price}</p>
+        <div className="absolute bottom-10 right-10 bg-white/90 backdrop-blur-md px-5 py-3 rounded-[20px] shadow-xl border border-white/20">
+          <p className="text-lg font-black text-slate-950 tracking-tighter">{item.price}</p>
         </div>
       </div>
-      <div className="p-10 pt-4">
-        <div className="flex items-center gap-4 mb-6">
-          <div className="w-12 h-12 rounded-2xl overflow-hidden border-2 border-slate-50 shadow-md">
+      <div className="p-8 pt-2">
+        <h4 className="font-black text-xl text-slate-950 mb-2 tracking-tighter italic truncate">{item.name}</h4>
+        <div className="flex items-center gap-3 mb-6">
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-100 shadow-sm">
             <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt="User" />
           </div>
           <div>
-            <span className="text-[11px] font-black text-slate-400 uppercase tracking-widest">{item.user}</span>
-            <p className="text-[9px] font-black text-violet-500 uppercase mt-0.5 tracking-widest">{item.tower}</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-violet-500">({item.tower})</span></p>
+            <p className="text-[8px] font-bold text-slate-300 uppercase mt-0.5 tracking-widest leading-none">{item.tower.split(' - ')[0]}</p>
           </div>
         </div>
-        <h4 className="font-black text-2xl text-slate-950 mb-3 tracking-tighter italic">{item.name}</h4>
-        <p className="text-sm text-slate-500 font-medium leading-relaxed mb-8">{item.desc}</p>
-        <button
-          onClick={() => { setInterestSent(true); setTimeout(() => setInterestSent(false), 3000); }}
-          className={`w-full py-6 rounded-[32px] text-[11px] font-black uppercase tracking-[0.2em] shadow-2xl transition-all active:scale-95 ${interestSent ? 'bg-emerald-500 text-white' : 'bg-slate-950 text-white shadow-slate-950/20'}`}
-        >
-          {interestSent ? 'Interesse Enviado!' : 'Tenho Interesse'}
-        </button>
+
+        {isOwner ? (
+          <button
+            onClick={handleDelete}
+            className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] bg-rose-50 text-rose-500 flex items-center justify-center gap-2 hover:bg-rose-100 transition-colors"
+          >
+            <Trash2 size={16} />
+            Remover Anúncio
+          </button>
+        ) : (
+          <button
+            onClick={handleInterest}
+            className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
+          >
+            <MessageSquare size={16} />
+            Tenho Interesse
+          </button>
+        )}
       </div>
     </Card>
   );
@@ -218,7 +248,7 @@ export const ResidentHome: React.FC<{
           <div className="relative group">
             {desapegos.length > 0 && (
               <div className="transform transition-all duration-300" onClick={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])}>
-                <DesapegoCard item={desapegos[currentDesapegoIndex]} />
+                <DesapegoCard item={desapegos[currentDesapegoIndex]} currentUser={currentUser} variant="preview" />
               </div>
             )}
 
@@ -250,7 +280,7 @@ export const ResidentHome: React.FC<{
 };
 
 // --- PERFIL DO MORADOR ---
-export const ResidentProfile: React.FC<{ currentUser: any }> = ({ currentUser }) => {
+export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: string) => void }> = ({ currentUser, onNavigate }) => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     window.location.reload();
@@ -273,8 +303,8 @@ export const ResidentProfile: React.FC<{ currentUser: any }> = ({ currentUser })
 
       <div className="p-10 space-y-4">
         {[
-          { icon: <User size={20} />, label: 'Dados Pessoais', desc: 'Edite seu perfil e contatos' },
-          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade' },
+          { icon: <User size={20} />, label: 'Dados Pessoais', desc: 'Edite seu perfil e contatos', onClick: () => onNavigate('personal-data') },
+          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade', onClick: () => onNavigate('privacy') },
           { icon: <LogOut size={20} />, label: 'Encerrar Sessão', color: 'text-rose-500', bg: 'bg-rose-50', onClick: handleLogout },
         ].map((item, i) => (
           <button key={i} onClick={item.onClick} className="w-full p-6 bg-slate-50 rounded-[30px] flex items-center justify-between group transition-all hover:bg-violet-50">
@@ -313,9 +343,9 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
         </div>
       </header>
       <div className="p-6 space-y-10">
-        <div className="relative group">
+        <div className="relative group" onClick={() => onNavigate('shop-detail')}>
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-violet-500 transition-colors" size={20} />
-          <Input placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100" />
+          <Input readOnly placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100 cursor-pointer pointer-events-none" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -426,26 +456,30 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
   );
 };
 
-export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[] }> = ({ onBack, desapegos }) => (
+export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; currentUser?: any; onDelete?: (id: string) => void; onSelect?: (item: any) => void }> = ({ onBack, desapegos, currentUser, onDelete, onSelect }) => (
   <div className="min-h-screen bg-slate-50 pb-32">
     <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
       <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90"><ArrowLeft size={20} /></button>
       <h2 className="text-xl font-black italic uppercase">Desapego</h2>
     </header>
     <div className="p-6 space-y-10">
-      {desapegos.map(item => <DesapegoCard key={item.id} item={item} />)}
+      {desapegos.map(item => (
+        <div key={item.id} onClick={() => onSelect && onSelect(item)}>
+          <DesapegoCard item={item} currentUser={currentUser} onDelete={onDelete} variant="preview" />
+        </div>
+      ))}
     </div>
   </div>
 );
 
-export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any }> = ({ onBack, item }) => (
+export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ onBack, item, currentUser, onDelete }) => (
   <div className="min-h-screen bg-slate-50 pb-32">
     <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40">
       <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"><ArrowLeft size={20} /></button>
       <h2 className="text-xl font-black italic uppercase tracking-tight">Detalhes do Produto</h2>
     </header>
     <div className="p-6 animate-in slide-in-from-bottom-4">
-      {item ? <DesapegoCard item={item} /> : <p>Item não encontrado.</p>}
+      {item ? <DesapegoCard item={item} currentUser={currentUser} onDelete={onDelete} variant="detail" /> : <p>Item não encontrado.</p>}
       <div className="mt-8 space-y-4">
         <div className="bg-white p-6 rounded-[32px] shadow-sm">
           <h3 className="font-bold text-slate-900 mb-2">Descrição do Vendedor</h3>
@@ -1036,6 +1070,90 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[] }> 
             </div>
           )}
         </div>
+      </div>
+    </div>
+  );
+};
+
+
+export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }> = ({ onBack, currentUser }) => {
+  return (
+    <div className="min-h-screen bg-slate-50 pb-32">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase">Dados Pessoais</h2>
+      </header>
+      <div className="p-6 space-y-8">
+        <div className="flex flex-col items-center">
+          <div className="w-32 h-32 rounded-[40px] border-4 border-white shadow-xl overflow-hidden mb-4">
+            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" />
+          </div>
+          <button className="text-violet-600 font-bold text-xs uppercase bg-violet-50 px-4 py-2 rounded-lg">Alterar Foto</button>
+        </div>
+
+        <div className="space-y-6 bg-white p-8 rounded-[40px] shadow-sm">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome Completo</label>
+            <Input defaultValue={currentUser?.name} className="h-14 font-medium" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Unidade</label>
+              <Input defaultValue={currentUser?.unit} readOnly className="h-14 font-medium bg-slate-50 text-slate-500" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Torre/Bloco</label>
+              <Input defaultValue={currentUser?.tower || 'A'} readOnly className="h-14 font-medium bg-slate-50 text-slate-500" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
+            <Input defaultValue="morador@email.com" className="h-14 font-medium" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Telefone</label>
+            <Input defaultValue="(11) 99999-9999" className="h-14 font-medium" />
+          </div>
+        </div>
+
+        <Button fullWidth className="h-16 rounded-[24px] bg-slate-900 text-white font-black uppercase text-xs tracking-widest">Salvar Alterações</Button>
+      </div>
+    </div>
+  );
+};
+
+export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  return (
+    <div className="min-h-screen bg-slate-50 pb-32">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase">Privacidade</h2>
+      </header>
+      <div className="p-6 space-y-6">
+        <div className="bg-white p-8 rounded-[40px] shadow-sm space-y-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-slate-900">Perfil Público</h4>
+              <p className="text-xs text-slate-400 max-w-[200px] mt-1">Permitir que outros moradores vejam seu nome e unidade</p>
+            </div>
+            <div className="w-14 h-8 bg-emerald-500 rounded-full p-1 flex justify-end cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-slate-900">Notificações Push</h4>
+              <p className="text-xs text-slate-400 max-w-[200px] mt-1">Receber avisos de encomendas e visitantes</p>
+            </div>
+            <div className="w-14 h-8 bg-emerald-500 rounded-full p-1 flex justify-end cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-bold text-slate-900">Mostrar Telefone</h4>
+              <p className="text-xs text-slate-400 max-w-[200px] mt-1">Permitir que prestadores vejam seu contato</p>
+            </div>
+            <div className="w-14 h-8 bg-slate-200 rounded-full p-1 flex justify-start cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
+          </div>
+        </div>
+        <p className="text-center text-[10px] text-slate-400 uppercase font-bold tracking-widest px-10">Qualquer mudança pode levar alguns minutos para refletir no sistema.</p>
       </div>
     </div>
   );

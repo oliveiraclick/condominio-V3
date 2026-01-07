@@ -121,7 +121,15 @@ export const ProfessionalDashboard: React.FC<{
                           <p className="text-[9px] font-black text-slate-400 uppercase mt-1">{s.user} • {s.location}</p>
                         </div>
                       </div>
-                      <button className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center active:scale-90"><Phone size={18} /></button>
+                      <button
+                        onClick={() => {
+                          if (s.phone) window.open(`tel:${s.phone}`);
+                          else alert('Telefone do morador não disponível');
+                        }}
+                        className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center active:scale-90"
+                      >
+                        <Phone size={18} />
+                      </button>
                     </div>
                   ))}
                 </div>
@@ -161,7 +169,7 @@ export const ProfessionalDashboard: React.FC<{
             </div>
           </div>
         </div>
-      </div>
+      </div >
     );
   };
 
@@ -270,16 +278,38 @@ export const ProfessionalShop: React.FC<{
 }> = ({ products = [], onAddProduct, onDeleteProduct, onToggleStatus }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [form, setForm] = useState({ title: '', price: '', desc: '', category: 'Outros' });
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
 
-  const handleSave = () => {
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedImage(file);
+      setImagePreview(URL.createObjectURL(file));
+    }
+  };
+
+  const handleSave = async () => {
     if (!form.title || !form.price) return;
-    onAddProduct({
-      ...form,
-      price: parseFloat(form.price.replace(',', '.')),
-      image_url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80' // Placeholder for now
-    });
-    setIsAdding(false);
-    setForm({ title: '', price: '', desc: '', category: 'Outros' });
+    setLoading(true);
+    try {
+      await onAddProduct({
+        ...form,
+        price: parseFloat(form.price.replace(',', '.')),
+        image_file: selectedImage, // Pass the file to the parent handler
+        image_url: imagePreview || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80'
+      });
+      setIsAdding(false);
+      setForm({ title: '', price: '', desc: '', category: 'Outros' });
+      setSelectedImage(null);
+      setImagePreview(null);
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar produto');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -296,28 +326,60 @@ export const ProfessionalShop: React.FC<{
           <div className="bg-white p-6 rounded-[32px] shadow-xl border border-emerald-100 mb-8 animate-in fade-in slide-in-from-top-4 space-y-4">
             <h4 className="font-bold text-slate-900">Novo Produto</h4>
 
-            <div className="h-40 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200">
-              <Camera size={24} />
-              <span className="text-[10px] font-black uppercase mt-2">Adicionar Foto</span>
+            <div
+              className="h-40 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200 overflow-hidden relative cursor-pointer"
+              onClick={() => document.getElementById('prod-img-input')?.click()}
+            >
+              {imagePreview ? (
+                <img src={imagePreview} className="w-full h-full object-cover" alt="Preview" />
+              ) : (
+                <>
+                  <Camera size={24} />
+                  <span className="text-[10px] font-bold uppercase mt-2">Adicionar Foto</span>
+                </>
+              )}
+              <input
+                id="prod-img-input"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageChange}
+              />
             </div>
 
-            <input placeholder="Nome do Produto (Ex: Pão Caseiro)" className="w-full h-12 bg-slate-50 rounded-xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
-
-            <div className="flex gap-4">
-              <input placeholder="Preço (Ex: 15,00)" className="flex-1 h-12 bg-slate-50 rounded-xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
-              <select className="flex-1 h-12 bg-slate-50 rounded-xl px-4 text-sm font-medium outline-none" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
-                <option value="Outros">Outros</option>
-                <option value="Alimentação">Alimentação</option>
-                <option value="Artesanato">Artesanato</option>
-                <option value="Serviços">Serviços</option>
+            <Input
+              placeholder="Nome do Produto"
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+            />
+            <div className="grid grid-cols-2 gap-4">
+              <Input
+                placeholder="Preço (R$)"
+                value={form.price}
+                onChange={e => setForm({ ...form, price: e.target.value })}
+              />
+              <select
+                className="w-full h-14 bg-slate-50 rounded-xl px-4 text-sm font-bold text-slate-600 outline-none focus:ring-2 focus:ring-violet-500"
+                value={form.category}
+                onChange={e => setForm({ ...form, category: e.target.value })}
+              >
+                <option>Alimentação</option>
+                <option>Serviços</option>
+                <option>Artesanato</option>
+                <option>Outros</option>
               </select>
             </div>
-
-            <textarea placeholder="Descrição (Opcional)" className="w-full h-24 bg-slate-50 rounded-xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20" value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} />
-
-            <div className="flex gap-2 pt-2">
-              <button onClick={() => setIsAdding(false)} className="flex-1 h-12 rounded-xl text-slate-400 font-bold text-xs uppercase bg-slate-50">Cancelar</button>
-              <button onClick={handleSave} className="flex-1 h-12 rounded-xl text-white font-bold text-xs uppercase bg-emerald-600 shadow-lg shadow-emerald-600/20">Criar Produto</button>
+            <textarea
+              placeholder="Descrição curta..."
+              className="w-full h-24 bg-slate-50 rounded-xl p-4 text-sm font-medium text-slate-600 outline-none resize-none focus:ring-2 focus:ring-violet-500"
+              value={form.desc}
+              onChange={e => setForm({ ...form, desc: e.target.value })}
+            />
+            <div className="flex gap-3 pt-2">
+              <Button variant="secondary" onClick={() => setIsAdding(false)} className="flex-1 bg-slate-100 text-slate-500">Cancelar</Button>
+              <Button onClick={handleSave} className="flex-1 bg-violet-600 text-white" disabled={loading}>
+                {loading ? 'Salvando...' : 'Publicar'}
+              </Button>
             </div>
           </div>
         )}
