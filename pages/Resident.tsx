@@ -1399,19 +1399,20 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 // --- NAVEGAÇÃO ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-8 py-5 flex justify-between items-center z-40 max-w-md mx-auto">
+  <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-8 py-5 flex justify-between items-center z-50 max-w-md mx-auto rounded-t-[32px]">
     {[
-      { id: 'home', icon: <LayoutGrid size={26} /> },
-      { id: 'market', icon: <ShoppingBag size={26} /> },
-      { id: 'booking', icon: <CalendarDays size={26} /> },
-      { id: 'profile', icon: <User size={26} /> },
+      { id: 'home', icon: <LayoutGrid size={28} /> },
+      { id: 'market', icon: <ShoppingBag size={28} /> },
+      { id: 'booking', icon: <CalendarDays size={28} /> },
+      { id: 'profile', icon: <User size={28} /> },
     ].map((item) => (
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center transition-all ${activeTab === item.id ? 'text-violet-600 scale-110' : 'text-slate-300'}`}
+        className={`flex flex-col items-center transition-all duration-300 ${activeTab === item.id ? 'text-violet-600 scale-110 drop-shadow-lg' : 'text-violet-200 hover:text-violet-400'}`}
       >
         {item.icon}
+        {activeTab === item.id && <div className="w-1.5 h-1.5 bg-violet-600 rounded-full mt-1.5 animate-bounce" />}
       </button>
     ))}
   </div>
