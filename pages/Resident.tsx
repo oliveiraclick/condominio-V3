@@ -305,9 +305,12 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center justify-between bg-white border-b border-slate-100 sticky top-0 z-40">
-        <h2 className="text-2xl font-black italic tracking-tighter uppercase">Marketplace</h2>
-        <ShoppingBag className="text-violet-600" size={24} />
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100"><ArrowLeft size={20} className="text-slate-900" /></button>
+        <div className="flex-1 flex items-center justify-between">
+          <h2 className="text-2xl font-black italic tracking-tighter uppercase">e-Shop</h2>
+          <ShoppingBag className="text-violet-600" size={24} />
+        </div>
       </header>
       <div className="p-6 space-y-10">
         <div className="relative group">
@@ -326,17 +329,17 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 
         {products && products.length > 0 && (
           <div>
-            <SectionHeader title="Destaques da Vizinhança" />
+            <SectionHeader title="Destaques e-Shop" />
             <div className="space-y-4">
               {products.map((item, i) => (
                 <div key={i} className="bg-white p-4 rounded-[32px] flex items-center gap-4 shadow-sm border border-slate-50">
                   <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
-                    <img src={item.img} className="w-full h-full object-cover" />
+                    <img src={item.image_url || item.img} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-900 italic truncate">{item.name}</h4>
-                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{item.price}</p>
-                    <p className="text-[10px] text-slate-400 uppercase mt-1 truncate">Vendedor: {item.user}</p>
+                    <h4 className="font-bold text-slate-900 italic truncate">{item.title || item.name}</h4>
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{typeof item.price === 'number' ? `R$ ${item.price.toFixed(2)}` : item.price}</p>
+                    <p className="text-[10px] text-slate-400 uppercase mt-1 truncate">Vendedor: {item.profiles?.name || item.user || 'e-Shop'}</p>
                   </div>
                   <button className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white flex-shrink-0">
                     <ChevronRight size={18} />
@@ -351,11 +354,13 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
   );
 };
 
-export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void }> = ({ initialCategory, onBack, onServiceRequest }) => {
-  const pros = [
-    { id: 1, name: 'Marcos Silva', sector: 'Hidráulica', rating: 4.8, img: 'https://picsum.photos/seed/pro1/100', price: 'Sob Consulta' },
-    { id: 2, name: 'Juliana Mendes', sector: 'Limpeza Profissional', rating: 5.0, img: 'https://picsum.photos/seed/pro2/100', price: 'R$ 120/visita' }
-  ];
+export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[] }> = ({ initialCategory, onBack, onServiceRequest, services = [] }) => {
+  // Fallback mocks if no services passed (or filtered list)
+  const filteredPros = services.filter(s => s.category === initialCategory);
+  const displayPros = filteredPros.length > 0 ? filteredPros : [
+    { id: 1, providerName: 'Marcos Silva', category: 'Hidráulica', rating: 4.8, img: 'https://picsum.photos/seed/pro1/100', price: 'Sob Consulta', providerPhone: '5511999999999' },
+    { id: 2, providerName: 'Juliana Mendes', category: 'Limpeza Profissional', rating: 5.0, img: 'https://picsum.photos/seed/pro2/100', price: 'R$ 120/visita', providerPhone: '5511999999999' }
+  ].filter(s => s.category === initialCategory || initialCategory === 'Todos');
 
   const handleRequest = (proName: string) => {
     onServiceRequest({
@@ -369,6 +374,12 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
     alert(`Solicitação enviada para ${proName}! Ele entrará em contato em breve.`);
   };
 
+  const openWhatsApp = (phone: string) => {
+    const cleanPhone = phone?.replace(/\D/g, '');
+    if (cleanPhone) window.open(`https://wa.me/${cleanPhone}`, '_blank');
+    else alert('Telefone não disponível');
+  };
+
   return (
     <div className="min-h-screen bg-slate-50">
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
@@ -376,18 +387,20 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
         <h2 className="text-xl font-black italic uppercase tracking-tighter leading-none">{initialCategory}</h2>
       </header>
       <div className="p-6 space-y-6">
-        {pros.map(pro => (
+        {displayPros.length > 0 ? displayPros.map(pro => (
           <Card key={pro.id} className="p-8 border-none shadow-xl rounded-[44px] bg-white space-y-6">
             <div className="flex items-center gap-5">
-              <div className="w-18 h-18 rounded-[28px] overflow-hidden border-2 border-slate-50 shadow-sm"><img src={pro.img} className="w-full h-full object-cover" /></div>
+              <div className="w-18 h-18 rounded-[28px] overflow-hidden border-2 border-slate-50 shadow-sm">
+                <img src={pro.img || `https://picsum.photos/seed/${pro.id}/100`} className="w-full h-full object-cover" />
+              </div>
               <div className="flex-1">
-                <h4 className="font-black text-slate-900 italic text-xl leading-none">{pro.name}</h4>
+                <h4 className="font-black text-slate-900 italic text-xl leading-none">{pro.providerName || pro.title}</h4>
                 <div className="flex items-center gap-2 mt-2">
                   <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg border border-amber-100">
                     <Star size={10} fill="currentColor" />
-                    <span className="text-[10px] font-black">{pro.rating}</span>
+                    <span className="text-[10px] font-black">{pro.rating || 5.0}</span>
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{pro.sector}</span>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{pro.category || pro.sector}</span>
                 </div>
               </div>
             </div>
@@ -395,9 +408,19 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
               <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base de Preço</span>
               <span className="font-black text-slate-900 italic">{pro.price}</span>
             </div>
-            <Button fullWidth onClick={() => handleRequest(pro.name)} className="h-15 rounded-[22px] bg-violet-600 text-white text-[10px] font-black uppercase tracking-[0.2em]">Solicitar Agora</Button>
+            <div className="grid grid-cols-2 gap-3">
+              <Button onClick={() => openWhatsApp(pro.providerPhone)} className="h-14 rounded-[22px] bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 space-x-2">
+                <MessageSquare size={16} />
+                <span>WhatsApp</span>
+              </Button>
+              <Button onClick={() => handleRequest(pro.providerName)} className="h-14 rounded-[22px] bg-violet-600/10 text-violet-600 text-[10px] font-black uppercase tracking-widest hover:bg-violet-600 hover:text-white transition-all active:scale-95">
+                Solicitar
+              </Button>
+            </div>
           </Card>
-        ))}
+        )) : (
+          <div className="text-center py-10 text-slate-300 font-bold">Nenhum prestador encontrado nesta categoria.</div>
+        )}
       </div>
     </div>
   );
@@ -940,37 +963,83 @@ export const AssembliesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   </div>
 );
 
-export const ShopDetailPage: React.FC<{ onBack: () => void }> = ({ onBack }) => (
-  <div className="min-h-screen bg-white pb-32">
-    <div className="h-80 relative">
-      <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" />
-      <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90"><ArrowLeft /></button>
-    </div>
-    <div className="-mt-12 bg-white rounded-t-[48px] p-8 relative z-10 min-h-screen space-y-8">
-      <div className="flex justify-between items-start">
-        <h2 className="text-3xl font-black italic tracking-tighter w-2/3 leading-none">Padaria Splendido</h2>
-        <div className="px-4 py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest">Aberto</div>
+export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[] }> = ({ onBack, products = [] }) => {
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const filteredProducts = products.filter(p =>
+    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    p.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  return (
+    <div className="min-h-screen bg-white pb-32">
+      <div className="h-80 relative">
+        <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-black/20"></div>
+        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90"><ArrowLeft /></button>
+        <div className="absolute bottom-16 left-8 right-8 text-white">
+          <h2 className="text-4xl font-black italic tracking-tighter leading-none mb-2">e-Shop</h2>
+          <p className="font-medium opacity-90">Produtos e Serviços do Condomínio</p>
+        </div>
       </div>
-      <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-        {['Pães', 'Cafés', 'Doces', 'Salgados'].map(t => <span key={t} className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{t}</span>)}
+
+      <div className="-mt-10 px-6 relative z-20 mb-6">
+        <div className="bg-white p-4 rounded-3xl shadow-xl flex items-center gap-3">
+          <Search className="text-slate-400" size={20} />
+          <input
+            type="text"
+            placeholder="Buscar por produto ou prestador..."
+            className="flex-1 outline-none text-slate-700 font-bold placeholder:text-slate-300 placeholder:font-medium"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </div>
       </div>
-      <div className="space-y-4">
-        <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">Destaques de Hoje</h4>
-        {[1, 2, 3].map(i => (
-          <div key={i} className="flex gap-4 p-4 rounded-[24px] border border-slate-50 shadow-sm active:scale-[0.98]">
-            <div className="w-20 h-20 bg-slate-100 rounded-2xl"></div>
-            <div className="flex-1 py-1">
-              <h5 className="font-bold text-slate-900 italic">Combo Café da Manhã</h5>
-              <p className="text-xs text-slate-400 mt-1">Pão na chapa + Café com leite média.</p>
-              <p className="text-emerald-600 font-black mt-2">R$ 12,50</p>
+
+      <div className="bg-white rounded-t-[48px] relative z-10 min-h-screen px-6 space-y-8">
+        <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
+          {['Todos', 'Pães', 'Cafés', 'Doces', 'Salgados'].map(t => <span key={t} className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{t}</span>)}
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
+            {searchTerm ? `Resultados: ${filteredProducts.length}` : `Destaques (${filteredProducts.length})`}
+          </h4>
+
+          {filteredProducts.length > 0 ? filteredProducts.map(p => (
+            <div key={p.id} className="flex gap-4 p-4 rounded-[24px] border border-slate-50 shadow-sm active:scale-[0.98]">
+              <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden relative group">
+                {p.image_url ? (
+                  <img src={p.image_url} className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center text-slate-300"><ShoppingBag size={24} /></div>
+                )}
+              </div>
+              <div className="flex-1 py-1">
+                <div className="flex justify-between items-start">
+                  <h5 className="font-bold text-slate-900 italic line-clamp-1">{p.title}</h5>
+                  {p.profiles?.name && <span className="text-[9px] font-bold text-violet-600 bg-violet-50 px-2 py-1 rounded-full">{p.profiles.name}</span>}
+                </div>
+                <p className="text-xs text-slate-400 mt-1 line-clamp-2">{p.description || "Sem descrição."}</p>
+                <div className="flex justify-between items-center mt-2">
+                  <p className="text-emerald-600 font-black">R$ {p.price?.toFixed(2)}</p>
+                  <button className="w-8 h-8 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-violet-600/20 active:scale-90 transition-all"><Plus size={16} /></button>
+                </div>
+              </div>
             </div>
-            <button className="self-end w-8 h-8 bg-violet-600 text-white rounded-full flex items-center justify-center"><Plus size={16} /></button>
-          </div>
-        ))}
+          )) : (
+            <div className="text-center py-10 flex flex-col items-center">
+              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300"><Search size={24} /></div>
+              <p className="text-slate-400 font-bold text-sm">Nenhum produto encontrado.</p>
+              <p className="text-slate-300 text-xs mt-1">Tente buscar por outro termo.</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // --- NAVEGAÇÃO ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (

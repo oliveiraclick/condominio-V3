@@ -90,17 +90,20 @@ export interface Ad {
   created_at: string;
 }
 
-export interface ShopItem {
+export interface Product {
   id: string;
-  vendor_name: string;
+  vendor_id: string;
   title: string;
   description: string;
-  price: string;
+  price: number;
   image_url: string;
   category: string;
-  is_open: boolean;
-  delivery_time?: string;
+  available: boolean;
+  vendor_name?: string; // Joined from profile
+  created_at?: string;
 }
+
+export interface ShopItem extends Product { } // Backward compatibility if needed
 
 export interface FinancialTransaction {
   id: string;

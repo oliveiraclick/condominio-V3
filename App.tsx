@@ -10,7 +10,7 @@ import {
 } from './pages/Resident';
 import {
   ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation,
-  ProfessionalServices, ProfessionalEarnings, ProfessionalProfileView
+  ProfessionalServices, ProfessionalEarnings, ProfessionalProfileView, ProfessionalShop
 } from './pages/Professional';
 import {
   AdminDashboard, AdminResidents, AdminNotices, AdminAccess,
@@ -46,6 +46,7 @@ const App: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
   const [accessList, setAccessList] = useState<any[]>([]);
+  const [products, setProducts] = useState<any[]>([]);
 
   // 1. ÚNICO LISTENER DE AUTENTICAÇÃO
   useEffect(() => {
@@ -97,6 +98,11 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, []);
 
+  const fetchProducts = async () => {
+    const { data } = await supabase.from('products').select('*, profiles(name)').order('created_at', { ascending: false });
+    if (data) setProducts(data);
+  };
+
   // 2. BUSCA DE PERFIL COM LÓGICA DE AUTO-REPARO
   const fetchUserProfile = async (userId: string) => {
     setLoading(true);
@@ -143,12 +149,13 @@ const App: React.FC = () => {
         setAppState('main');
         setActiveTab(role === UserRole.RESIDENT ? 'home' : 'dashboard');
       } else {
+        // Profile not found -> New user, go to Role Selection
         setAppState('roleSelection');
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
-      // Fallback on error/timeout
-      setAppState('roleSelection');
+      // ERROR -> Safe fallback to LOGIN (not role selection)
+      setAppState('login');
     } finally {
       setLoading(false);
     }
@@ -160,8 +167,10 @@ const App: React.FC = () => {
       fetchCommonAreas();
       fetchReservations();
       fetchServiceRequests();
+      fetchServiceRequests();
       fetchProfessionalServices();
       fetchAccessList();
+      fetchProducts();
     }
   }, [appState, session]);
 
@@ -198,9 +207,8 @@ const App: React.FC = () => {
 
   // --- NAVEGAÇÃO ---
   const handleSplashFinish = () => {
-    if (!session) setAppState('login');
-    else if (userRole) setAppState('main');
-    else setAppState('roleSelection');
+    if (session && userRole) setAppState('main');
+    else setAppState('login');
   };
 
   const navigateToCategory = (category: string) => {
@@ -216,20 +224,42 @@ const App: React.FC = () => {
   const renderContent = () => {
     if (!userRole || !currentUser) return null;
 
+    // NOVO: Handlers de Produtos (Mini-Ecommerce)
+    // NOVO: Handlers de Produtos (Mini-Ecommerce)
+    const handleAddProduct = async (product: any) => {
+      if (!session?.user) return;
+      const { error } = await supabase.from('products').insert([{ ...product, vendor_id: session.user.id }]);
+      if (error) {
+        alert('Erro ao criar produto: ' + error.message);
+      } else {
+        fetchProducts();
+      }
+    };
+
+    const handleDeleteProduct = async (id: string) => {
+      const { error } = await supabase.from('products').delete().eq('id', id);
+      if (!error) fetchProducts();
+    };
+
+    const handleToggleProductStatus = async (product: any) => {
+      const { error } = await supabase.from('products').update({ available: !product.available }).eq('id', product.id);
+      if (!error) fetchProducts();
+    };
+
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
         case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} />;
-        case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices} products={desapegos} />;
+        case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
         case 'booking': return <ResidentBookings onBack={() => setActiveTab('home')} reservations={reservations} />;
         case 'profile': return <ResidentProfile currentUser={currentUser} />;
         case 'acesso': return <AcessoPage onBack={() => setActiveTab('home')} accessList={accessList} onAddAccess={async (a) => fetchAccessList()} currentUser={currentUser} />;
         case 'financeiro': return <FinanceiroPage onBack={() => setActiveTab('home')} invoices={invoices} />;
         case 'chamado': return <ChamadosPage onBack={() => setActiveTab('home')} serviceRequests={serviceRequests} onAddRequest={async (r) => fetchServiceRequests()} currentUser={currentUser} />;
         case 'condo-agenda': return <CondoAgendaPage onBack={() => setActiveTab('home')} reservations={reservations} onAddReservation={async (res) => fetchReservations()} commonAreas={commonAreas} />;
-        case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={() => { }} />;
+        case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={() => { }} services={professionalServices} />;
         case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} />;
         case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} />;
-        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} />;
+        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={(item) => setDesapegos([item, ...desapegos])} currentUser={currentUser} />;
         default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} />;
       }
@@ -239,7 +269,7 @@ const App: React.FC = () => {
       switch (activeTab) {
         case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={setActiveTab} />;
         case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} />;
-        case 'services': return <ProfessionalServices services={professionalServices.filter(s => s.provider_id === session?.user?.id)} onAddService={() => fetchProfessionalServices()} onDeleteService={() => fetchProfessionalServices()} />;
+        case 'shop': return <ProfessionalShop products={products.filter(p => p.vendor_id === session?.user?.id)} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} onToggleStatus={handleToggleProductStatus} />;
         case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
         default: return <ProfessionalDashboard serviceRequests={serviceRequests} activeServices={activeServices} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} />;
       }

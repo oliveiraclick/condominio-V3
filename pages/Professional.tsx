@@ -4,7 +4,7 @@ import {
   BarChart3, Calendar, MessageSquare, Bell,
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store
 } from 'lucide-react';
 
 export const ProfessionalDashboard: React.FC<{
@@ -241,16 +241,16 @@ export const ProfessionalNavigation: React.FC<{ activeTab: string; onChange: (ta
     {[
       { id: 'dashboard', icon: <Grid size={24} /> },
       { id: 'agenda', icon: <Calendar size={24} /> },
-      { id: 'services', icon: <Plus size={24} />, special: true },
+      { id: 'shop', icon: <Store size={24} /> },
       { id: 'earnings', icon: <TrendingUp size={24} /> },
       { id: 'profile', icon: <User size={24} /> },
     ].map((tab) => (
       <button
         key={tab.id}
         onClick={() => onChange(tab.id)}
-        className={`flex items-center justify-center transition-all ${tab.special
-            ? 'w-14 h-14 bg-slate-900 text-white rounded-full -mt-10 border-4 border-white shadow-xl'
-            : activeTab === tab.id ? 'text-violet-600 scale-110' : 'text-slate-300'
+        className={`flex items-center justify-center transition-all ${tab.id === 'shop'
+          ? 'w-14 h-14 bg-violet-600 text-white rounded-full -mt-10 border-4 border-white shadow-xl'
+          : activeTab === tab.id ? 'text-violet-600 scale-110' : 'text-slate-300'
           }`}
       >
         {tab.icon}
@@ -258,6 +258,102 @@ export const ProfessionalNavigation: React.FC<{ activeTab: string; onChange: (ta
     ))}
   </div>
 );
+
+// --------------------------------------------------------------------------------
+// NOVELTY: Component for Managing Shop Products (Mini-Ecommerce)
+// --------------------------------------------------------------------------------
+export const ProfessionalShop: React.FC<{
+  products: any[];
+  onAddProduct: (p: any) => void;
+  onDeleteProduct: (id: string) => void;
+  onToggleStatus: (product: any) => void;
+}> = ({ products = [], onAddProduct, onDeleteProduct, onToggleStatus }) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [form, setForm] = useState({ title: '', price: '', desc: '', category: 'Outros' });
+
+  const handleSave = () => {
+    if (!form.title || !form.price) return;
+    onAddProduct({
+      ...form,
+      price: parseFloat(form.price.replace(',', '.')),
+      image_url: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80' // Placeholder for now
+    });
+    setIsAdding(false);
+    setForm({ title: '', price: '', desc: '', category: 'Outros' });
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-32">
+      <div className="p-6 pt-12">
+        <header className="flex justify-between items-center mb-10">
+          <h2 className="text-2xl font-black italic tracking-tighter uppercase leading-none">Meus Produtos</h2>
+          <button onClick={() => setIsAdding(true)} className="w-12 h-12 bg-emerald-500 text-white rounded-2xl flex items-center justify-center shadow-lg active:scale-95 transition-all">
+            <Plus size={24} />
+          </button>
+        </header>
+
+        {isAdding && (
+          <div className="bg-white p-6 rounded-[32px] shadow-xl border border-emerald-100 mb-8 animate-in fade-in slide-in-from-top-4 space-y-4">
+            <h4 className="font-bold text-slate-900">Novo Produto</h4>
+
+            <div className="h-40 bg-slate-50 rounded-2xl flex flex-col items-center justify-center text-slate-400 border-2 border-dashed border-slate-200">
+              <Camera size={24} />
+              <span className="text-[10px] font-black uppercase mt-2">Adicionar Foto</span>
+            </div>
+
+            <input placeholder="Nome do Produto (Ex: Pão Caseiro)" className="w-full h-12 bg-slate-50 rounded-xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} />
+
+            <div className="flex gap-4">
+              <input placeholder="Preço (Ex: 15,00)" className="flex-1 h-12 bg-slate-50 rounded-xl px-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} />
+              <select className="flex-1 h-12 bg-slate-50 rounded-xl px-4 text-sm font-medium outline-none" value={form.category} onChange={e => setForm({ ...form, category: e.target.value })}>
+                <option value="Outros">Outros</option>
+                <option value="Alimentação">Alimentação</option>
+                <option value="Artesanato">Artesanato</option>
+                <option value="Serviços">Serviços</option>
+              </select>
+            </div>
+
+            <textarea placeholder="Descrição (Opcional)" className="w-full h-24 bg-slate-50 rounded-xl p-4 text-sm font-medium outline-none focus:ring-2 focus:ring-emerald-500/20" value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} />
+
+            <div className="flex gap-2 pt-2">
+              <button onClick={() => setIsAdding(false)} className="flex-1 h-12 rounded-xl text-slate-400 font-bold text-xs uppercase bg-slate-50">Cancelar</button>
+              <button onClick={handleSave} className="flex-1 h-12 rounded-xl text-white font-bold text-xs uppercase bg-emerald-600 shadow-lg shadow-emerald-600/20">Criar Produto</button>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {products.map(p => (
+            <div key={p.id} className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex gap-4 items-center group">
+              <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src={p.image_url} className="w-full h-full object-cover" />
+                {!p.available && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><span className="text-[8px] font-black text-white uppercase">Pausado</span></div>}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-bold text-slate-900 truncate">{p.title}</h4>
+                <p className="text-emerald-600 font-black text-sm">R$ {p.price?.toFixed(2)}</p>
+                <div className="flex items-center gap-2 mt-2">
+                  <button onClick={() => onToggleStatus(p)} className={`px-3 py-1 rounded-lg text-[9px] font-black uppercase ${p.available ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    {p.available ? 'Ativo' : 'Pausado'}
+                  </button>
+                  <button onClick={() => onDeleteProduct(p.id)} className="w-8 h-8 flex items-center justify-center text-rose-500 bg-rose-50 rounded-lg">
+                    <X size={14} />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+          {products.length === 0 && !isAdding && (
+            <div className="text-center py-20 text-slate-400 font-bold italic text-xs uppercase">
+              <Store className="mx-auto mb-4 text-slate-200" size={64} />
+              Sua loja está vazia.
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
 
 // --------------------------------------------------------------------------------
 // NOVELTY: Component for Managing Services
