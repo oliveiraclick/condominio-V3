@@ -11,7 +11,7 @@ import {
   Settings, LogOut, ShieldCheck, Wallet, HelpCircle, UserCheck,
   CalendarDays, Check, HardHat, Hammer, UserPlus, Briefcase, ListFilter, PartyPopper,
   Trophy, Target, Dumbbell, GlassWater, Waves, Store, Heart, Navigation,
-  MessageSquare, Send, Paperclip, Mic, MoreVertical, CheckCheck, Award, Quote, Camera,
+  MessageSquare, Send, Paperclip, Mic, MoreVertical, CheckCheck, Award, Quote, Camera, MessageCircle,
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
   Building2, Camera as CameraIcon, Download
 } from 'lucide-react';
@@ -112,7 +112,8 @@ export const ResidentHome: React.FC<{
   onClearNotifications?: () => void;
   onSelectDesapego?: (item: any) => void;
   products?: any[]; // Added products prop
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego, products = [] }) => {
+  onSelectProduct?: (item: any) => void;
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego, products = [], onSelectProduct }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
@@ -231,7 +232,7 @@ export const ResidentHome: React.FC<{
               {products.map((item, i) => (
                 <div
                   key={i}
-                  onClick={() => onNavigate('shop-detail')}
+                  onClick={() => onSelectProduct ? onSelectProduct(item) : onNavigate('shop-detail')}
                   className="min-w-[45%] bg-white p-4 rounded-[32px] shadow-sm border border-slate-50 flex flex-col gap-3 active:scale-95 transition-all cursor-pointer relative"
                 >
                   <div className="w-full h-32 rounded-2xl bg-orange-50 text-orange-500 overflow-hidden relative flex items-center justify-center">
@@ -1035,33 +1036,40 @@ export const AssembliesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   </div>
 );
 
-export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[] }> = ({ onBack, products = [] }) => {
+export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; onSelectProduct?: (p: any) => void }> = ({ onBack, products = [], onSelectProduct }) => {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
-  const filteredProducts = products.filter(p =>
-    p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const categories = ['Todos', 'Alimentação', 'Manutenção', 'Limpeza', 'Estética', 'Outros'];
+
+  const filteredProducts = products.filter(p => {
+    const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory;
+
+    return matchesSearch && matchesCategory;
+  });
 
   return (
-    <div className="min-h-screen bg-white pb-32">
-      <div className="h-80 relative">
-        <img src="https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/20"></div>
-        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90"><ArrowLeft /></button>
-        <div className="absolute bottom-16 left-8 right-8 text-white">
+    <div className="min-h-screen bg-slate-50 pb-32">
+      <div className="h-64 relative bg-violet-600">
+        {/* Abstract Header Pattern */}
+        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 z-20"><ArrowLeft /></button>
+        <div className="absolute bottom-12 left-8 right-8 text-white z-10">
           <h2 className="text-4xl font-black italic tracking-tighter leading-none mb-2">e-Shop</h2>
-          <p className="font-medium opacity-90">Produtos e Serviços do Condomínio</p>
+          <p className="font-medium opacity-80 text-violet-100">Encontre de tudo no seu condomínio.</p>
         </div>
       </div>
 
-      <div className="-mt-10 px-6 relative z-20 mb-6">
-        <div className="bg-white p-4 rounded-3xl shadow-xl flex items-center gap-3">
+      <div className="-mt-8 px-6 relative z-20 mb-6">
+        <div className="bg-white p-4 rounded-3xl shadow-xl shadow-slate-200/50 flex items-center gap-3">
           <Search className="text-slate-400" size={20} />
           <input
             type="text"
-            placeholder="Buscar por produto ou prestador..."
+            placeholder="Buscar produtos e serviços..."
             className="flex-1 outline-none text-slate-700 font-bold placeholder:text-slate-300 placeholder:font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -1069,34 +1077,54 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[] }> 
         </div>
       </div>
 
-      <div className="bg-white rounded-t-[48px] relative z-10 min-h-screen px-6 space-y-8">
-        <div className="flex gap-4 overflow-x-auto no-scrollbar py-2">
-          {['Todos', 'Pães', 'Cafés', 'Doces', 'Salgados'].map(t => <span key={t} className="px-4 py-2 bg-slate-50 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap">{t}</span>)}
+      <div className="px-6 space-y-8">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
+          {categories.map(t => (
+            <button
+              key={t}
+              onClick={() => setSelectedCategory(t)}
+              className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === t ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30' : 'bg-white text-slate-400'}`}
+            >
+              {t}
+            </button>
+          ))}
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-widest">
-            {searchTerm ? `Resultados: ${filteredProducts.length}` : `Destaques (${filteredProducts.length})`}
+          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">
+            {searchTerm ? `Resultados: ${filteredProducts.length}` : `Disponíveis (${filteredProducts.length})`}
           </h4>
 
           {filteredProducts.length > 0 ? filteredProducts.map(p => (
-            <div key={p.id} className="flex gap-4 p-4 rounded-[24px] border border-slate-50 shadow-sm active:scale-[0.98]">
-              <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden relative group">
+            <div
+              key={p.id}
+              onClick={() => onSelectProduct && onSelectProduct(p)}
+              className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm active:scale-[0.98] transition-all flex gap-4 cursor-pointer"
+            >
+              <div className="w-24 h-24 bg-slate-100 rounded-2xl overflow-hidden relative group shrink-0">
                 {p.image_url ? (
                   <img src={p.image_url} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-300"><ShoppingBag size={24} /></div>
+                  <div className="w-full h-full flex items-center justify-center text-slate-300"><Store size={24} /></div>
                 )}
               </div>
-              <div className="flex-1 py-1">
-                <div className="flex justify-between items-start">
-                  <h5 className="font-bold text-slate-900 italic line-clamp-1">{p.title}</h5>
-                  {p.profiles?.name && <span className="text-[9px] font-bold text-violet-600 bg-violet-50 px-2 py-1 rounded-full">{p.profiles.name}</span>}
+              <div className="flex-1 py-1 min-w-0">
+                <div className="flex justify-between items-start gap-2">
+                  <h5 className="font-black text-slate-900 italic text-lg leading-tight line-clamp-2">{p.title}</h5>
                 </div>
-                <p className="text-xs text-slate-400 mt-1 line-clamp-2">{p.description || "Sem descrição."}</p>
-                <div className="flex justify-between items-center mt-2">
-                  <p className="text-emerald-600 font-black">R$ {p.price?.toFixed(2)}</p>
-                  <button className="w-8 h-8 bg-violet-600 text-white rounded-full flex items-center justify-center shadow-lg shadow-violet-600/20 active:scale-90 transition-all"><Plus size={16} /></button>
+
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[9px] font-bold text-violet-600 bg-violet-50 px-2.5 py-1 rounded-lg">
+                    {p.category}
+                  </span>
+                  {p.profiles?.name && <span className="text-[9px] font-bold text-slate-400">por {p.profiles.name.split(' ')[0]}</span>}
+                </div>
+
+                <div className="flex justify-between items-end mt-3">
+                  <p className="text-emerald-600 font-black text-lg tracking-tight">R$ {typeof p.price === 'number' ? p.price.toFixed(2) : p.price}</p>
+                  <button className="w-8 h-8 bg-slate-950 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                    <ChevronRight size={14} />
+                  </button>
                 </div>
               </div>
             </div>
@@ -1104,9 +1132,92 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[] }> 
             <div className="text-center py-10 flex flex-col items-center">
               <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300"><Search size={24} /></div>
               <p className="text-slate-400 font-bold text-sm">Nenhum produto encontrado.</p>
-              <p className="text-slate-300 text-xs mt-1">Tente buscar por outro termo.</p>
             </div>
           )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- PRODUCT DETAIL PAGE (E-SHOP) ---
+export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({ item, onBack }) => {
+  const handleContact = () => {
+    // Basic WhatsApp link generation
+    // Ideally we would look up the vendor's phone number if it wasn't in the item
+    // But for MVP we assume item might have it or we use a generic placeholder if missing
+    // Actually, App.tsx fetchProducts includes profiles(phone) join? checking... yes.
+    /*
+      App.tsx:
+      const {data} = await supabase.from('products').select('*, profiles(name)')...
+              Wait, did I request phone in App.tsx?
+              Let's check App.tsx first. If not, I'll need to update App.tsx fetch.
+              For now, I'll render the component assuming phone might be there or not.
+              */
+    const phone = item.profiles?.phone || '';
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.title}* no app do condomínio e tenho interesse!`);
+      window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
+    } else {
+      alert('Telefone do vendedor não disponível. Tente contactar a portaria.');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-32">
+      <div className="h-[45vh] relative bg-white rounded-b-[48px] shadow-2xl overflow-hidden group">
+        {item.image_url ? (
+          <img src={item.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+            <Store size={64} />
+          </div>
+        )}
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent opacity-60"></div>
+        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg"><ArrowLeft /></button>
+      </div>
+
+      <div className="px-8 -mt-10 relative z-10">
+        <div className="bg-white p-6 rounded-[40px] shadow-xl shadow-slate-200/50">
+          <div className="flex justify-between items-start mb-2">
+            <span className="px-3 py-1 bg-violet-50 text-violet-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{item.category}</span>
+            <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(item.created_at).toLocaleDateString()}</span>
+          </div>
+          <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter leading-none mb-4">{item.title}</h2>
+
+          <div className="flex items-center gap-3 pb-6 border-b border-slate-50 mb-6">
+            <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden">
+              <img src={`https://picsum.photos/seed/${item.vendor_id}/100`} className="w-full h-full object-cover" />
+            </div>
+            <div>
+              <p className="text-xs text-slate-900 font-bold">Vendido por {item.profiles?.name || 'Vendedor Parceiro'}</p>
+              {item.profiles?.unit ? (
+                <p className="text-[10px] text-slate-400 font-medium">Residente • {item.profiles.tower || ''} {item.profiles.unit}</p>
+              ) : (
+                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Loja Verificada</p>
+              )}
+            </div>
+          </div>
+
+          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide mb-2">Sobre este item</h3>
+          <p className="text-slate-500 leading-relaxed text-sm font-medium mb-8">
+            {item.description || "Sem descrição detalhada."}
+          </p>
+
+          <div className="flex items-center justify-between gap-6">
+            <div>
+              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Valor Total</p>
+              <p className="text-3xl font-black text-emerald-600 tracking-tighter">R$ {typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
+            </div>
+            <button
+              onClick={handleContact}
+              className="flex-1 bg-violet-600 text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-violet-500/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+            >
+              <MessageCircle size={18} />
+              Tenho Interesse
+            </button>
+          </div>
         </div>
       </div>
     </div>

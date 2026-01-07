@@ -6,7 +6,7 @@ import {
   ResidentHome, Marketplace, AppNavigation, AcessoPage,
   FinanceiroPage, ChamadosPage, CondoAgendaPage, ServicosFullView,
   DesapegoFullView, ResidentProfile, ResidentBookings, CreateDesapegoPage,
-  AssembliesPage, ShopDetailPage, DesapegoDetailView,
+  AssembliesPage, ShopDetailPage, DesapegoDetailView, ProductDetailPage,
   PersonalDataPage, PrivacyPage
 } from './pages/Resident';
 import {
@@ -48,6 +48,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [accessList, setAccessList] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // 1. ÚNICO LISTENER DE AUTENTICAÇÃO
   useEffect(() => {
@@ -247,6 +248,11 @@ const App: React.FC = () => {
     setActiveTab('desapego-detail');
   };
 
+  const handleSelectProduct = (item: any) => {
+    setSelectedProduct(item);
+    setActiveTab('shop-product-detail');
+  };
+
   const renderContent = () => {
     if (!userRole || !currentUser) return null;
 
@@ -403,9 +409,10 @@ const App: React.FC = () => {
         case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
         case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
         case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
-        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} />;
+        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} onSelectProduct={handleSelectProduct} />;
+        case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={() => setActiveTab('shop-detail')} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={handleAddDesapego} currentUser={currentUser} />;
-        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} products={products} />;
+        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} />;
       }
     }
 
