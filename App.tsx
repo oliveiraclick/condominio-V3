@@ -54,23 +54,9 @@ const App: React.FC = () => {
   // 1. ÚNICO LISTENER DE AUTENTICAÇÃO
   useEffect(() => {
     const initializeAuth = async () => {
-      // Create a timeout promise
-      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
-
       try {
-        // Race between auth check and 5s timeout
-        const sessionResult: any = await Promise.race([
-          supabase.auth.getSession(),
-          timeoutPromise
-        ]);
-
-        if (!sessionResult || !sessionResult.data) {
-          console.warn("Auth check timed out or failed");
-          setLoading(false);
-          return;
-        }
-
-        const { data: { session: currentSession } } = sessionResult;
+        // Removed timeout race condition to fix mobile persistence issues
+        const { data: { session: currentSession } } = await supabase.auth.getSession();
         setSession(currentSession);
 
         if (currentSession) {

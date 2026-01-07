@@ -1399,21 +1399,35 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 // --- NAVEGAÇÃO ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-8 py-5 flex justify-between items-center z-50 max-w-md mx-auto rounded-t-[32px]">
+  <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
     {[
-      { id: 'home', icon: <LayoutGrid size={28} /> },
-      { id: 'market', icon: <ShoppingBag size={28} /> },
-      { id: 'booking', icon: <CalendarDays size={28} /> },
-      { id: 'profile', icon: <User size={28} /> },
-    ].map((item) => (
-      <button
-        key={item.id}
-        onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center transition-all duration-300 ${activeTab === item.id ? 'text-violet-600 scale-110 drop-shadow-lg' : 'text-violet-200 hover:text-violet-400'}`}
-      >
-        {item.icon}
-        {activeTab === item.id && <div className="w-1.5 h-1.5 bg-violet-600 rounded-full mt-1.5 animate-bounce" />}
-      </button>
-    ))}
+      { id: 'home', icon: <LayoutGrid size={24} />, label: 'Home' },
+      { id: 'market', icon: <ShoppingBag size={24} />, label: 'Shop' },
+      { id: 'create-desapego', icon: <Plus size={28} />, isAction: true },
+      { id: 'booking', icon: <CalendarDays size={24} />, label: 'Reservas' },
+      { id: 'profile', icon: <User size={24} />, label: 'Perfil' },
+    ].map((item) => {
+      if (item.isAction) {
+        return (
+          <button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className="mb-4 -mt-12 w-16 h-16 bg-violet-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-violet-500/40 border-[4px] border-[#fcfcfd] active:scale-95 transition-transform"
+          >
+            {item.icon}
+          </button>
+        );
+      }
+      return (
+        <button
+          key={item.id}
+          onClick={() => onChange(item.id)}
+          className={`flex flex-col items-center gap-1 transition-all duration-300 w-12 ${activeTab === item.id ? 'text-violet-600 -translate-y-1' : 'text-violet-200 hover:text-violet-400'}`}
+        >
+          {item.icon}
+          {activeTab === item.id && <div className="w-1.5 h-1.5 bg-violet-600 rounded-full animate-bounce" />}
+        </button>
+      );
+    })}
   </div>
 );
