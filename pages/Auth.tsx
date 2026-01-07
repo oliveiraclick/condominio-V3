@@ -60,7 +60,7 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
   );
 };
 
-export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void }> = ({ onLogin, onRegister }) => {
+export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegister: () => void }> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -79,9 +79,9 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
         onLogin();
         return;
       }
-      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
-      onLogin(); // App.tsx will handle the rest via onAuthStateChange
+      onLogin(data.session); // App.tsx will handle the rest via onAuthStateChange and direct session usage
     } catch (err: any) {
       setError(translateError(err));
     } finally {

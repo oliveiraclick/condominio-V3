@@ -213,8 +213,8 @@ const App: React.FC = () => {
     );
   }
 
-  if (appState === 'login') return <LoginScreen onLogin={async () => {
-    const { data: { session: currentSession } } = await supabase.auth.getSession();
+  if (appState === 'login') return <LoginScreen onLogin={async (session) => {
+    const currentSession = session || (await supabase.auth.getSession()).data.session;
     if (currentSession) {
       await fetchUserProfile(currentSession.user.id);
     }
