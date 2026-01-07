@@ -1,29 +1,19 @@
--- Create condominiums table
-create table condominiums (
-  id uuid default uuid_generate_v4() primary key,
-  name text not null,
+CREATE TABLE IF NOT EXISTS public.condominiums (
+  id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
+  name text NOT NULL,
   address text,
-  plan text default 'basic',
-  created_at timestamp with time zone default timezone('utc'::text, now()) not null
+  plan text DEFAULT 'basic',
+  created_at timestamp with time zone DEFAULT timezone('utc'::text, now()) NOT NULL
 );
 
--- Add condominium_id to profiles
-alter table profiles 
-add column condominium_id uuid references condominiums(id);
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS condominium_id uuid REFERENCES public.condominiums(id);
 
--- Enable RLS
-alter table condominiums enable row level security;
-create policy "Condominiums viewable by everyone" on condominiums for select using ( true );
+ALTER TABLE public.condominiums ENABLE ROW LEVEL SECURITY;
 
--- Seed default condominium
-insert into condominiums (name, address, plan)
-values ('Vila Verde Residence', 'Rua das Flores, 123', 'pro');
+INSERT INTO public.condominiums (name, address, plan)
+SELECT 'Vila Verde Residence', 'Rua das Flores, 123', 'pro'
+WHERE NOT EXISTS (SELECT 1 FROM public.condominiums);
 
--- Update existing profiles to belong to the new default condominium
-do $$
-declare
-  default_condo_id uuid;
-begin
-  select id into default_condo_id from condominiums limit 1;
-  update profiles set condominium_id = default_condo_id where condominium_id is null;
-end $$;
+UPDATE public.profiles 
+SET condominium_id = (SELECT id FROM public.condominiums LIMIT 1) 
+WHERE condominium_id IS NULL;

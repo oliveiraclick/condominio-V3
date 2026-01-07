@@ -827,72 +827,189 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
   );
 };
 
-export const ResidentProfile: React.FC = () => {
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        setProfile(data);
-      }
-      setLoading(false);
-    };
-    fetchProfile();
-  }, []);
+export const ResidentProfile: React.FC<{ currentUser: any }> = ({ currentUser: profile }) => {
+  const [view, setView] = useState<'main' | 'account' | 'family' | 'privacy'>('main');
 
   const handleLogout = async () => {
+    console.log('🔵 [AUTH] Saindo do sistema...');
     await supabase.auth.signOut();
+    window.location.reload();
   };
 
-  if (loading) return (
-    <div className="min-h-screen bg-white flex items-center justify-center">
-      <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-    </div>
+  const ProfileDetailHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
+    <header className="p-8 pt-16 flex items-center gap-6 bg-white sticky top-0 z-40">
+      <button onClick={onBack} className="w-14 h-14 bg-slate-50 rounded-[24px] flex items-center justify-center active:scale-95 transition-all text-slate-900 shadow-sm border border-slate-100">
+        <ArrowLeft size={24} />
+      </button>
+      <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-950">{title}</h2>
+    </header>
   );
+
+  if (view === 'account') {
+    return (
+      <div className="min-h-screen bg-white pb-32 animate-in slide-in-from-right duration-300">
+        <ProfileDetailHeader title="Minha Conta" onBack={() => setView('main')} />
+        <div className="p-8 space-y-8">
+          <div className="flex flex-col items-center gap-6 mb-10">
+            <div className="relative">
+              <div className="w-32 h-32 rounded-[44px] bg-slate-100 overflow-hidden border-4 border-slate-50 shadow-xl">
+                <img src={profile?.avatar || `https://picsum.photos/seed/${profile?.name}/200`} className="w-full h-full object-cover" alt="Avatar" />
+              </div>
+              <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
+                <Camera size={18} />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Nome Completo</label>
+              <Input value={profile?.name || ''} readOnly className="h-16 rounded-3xl bg-slate-50/50 border-slate-100" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">E-mail</label>
+              <Input value={profile?.email || ''} readOnly className="h-16 rounded-3xl bg-slate-50/50 border-slate-100" />
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Telefone (Fixo/Móvel)</label>
+              <Input value={profile?.phone || '(11) 99999-9999'} readOnly className="h-16 rounded-3xl bg-slate-50/50 border-slate-100" />
+            </div>
+            <div className="pt-6 border-t border-slate-50">
+              <Button fullWidth className="bg-slate-950 text-white h-16 rounded-[28px] text-[10px] font-black uppercase tracking-[0.2em]">Salvar Alterações</Button>
+              <p className="text-center text-[9px] text-slate-400 font-bold uppercase mt-6 tracking-widest px-8 leading-relaxed">Alguns dados só podem ser alterados via administração do condomínio.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'family') {
+    return (
+      <div className="min-h-screen bg-white pb-32 animate-in slide-in-from-right duration-300">
+        <ProfileDetailHeader title="Minha Família" onBack={() => setView('main')} />
+        <div className="p-8 space-y-10">
+          <div className="bg-violet-50 p-8 rounded-[40px] border border-violet-100/50">
+            <p className="text-[10px] text-violet-600 font-black uppercase tracking-widest mb-2 leading-none">Status da Unidade</p>
+            <h4 className="text-2xl font-black italic tracking-tighter text-slate-900">{profile?.unit || '---'}-{profile?.tower || '-'} • 3 Dependentes</h4>
+          </div>
+
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] px-2">Integrantes</h4>
+            {[
+              { name: profile?.name || 'Titular', role: 'Titular', avatar: profile?.avatar },
+              { name: 'Maria Oliveira', role: 'Cônjuge', avatar: 'https://picsum.photos/seed/maria/100' },
+              { name: 'Pedro Santos', role: 'Filho', avatar: 'https://picsum.photos/seed/pedro/100' },
+            ].map((member, i) => (
+              <div key={i} className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-100">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-2xl bg-white overflow-hidden border border-slate-100 shadow-sm">
+                    <img src={member.avatar || `https://picsum.photos/seed/${member.name}/100`} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h5 className="font-bold text-slate-900 leading-none">{member.name}</h5>
+                    <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest mt-1.5 block">{member.role}</span>
+                  </div>
+                </div>
+                {member.role !== 'Titular' && (
+                  <button className="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-colors">
+                    <X size={18} />
+                  </button>
+                )}
+              </div>
+            ))}
+            <button className="w-full p-6 border-2 border-dashed border-slate-100 rounded-[32px] flex items-center justify-center gap-3 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:border-violet-200 hover:text-violet-500 hover:bg-violet-50/50 transition-all">
+              <UserPlus size={20} /> Adicionar Dependente
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (view === 'privacy') {
+    return (
+      <div className="min-h-screen bg-white pb-32 animate-in slide-in-from-right duration-300">
+        <ProfileDetailHeader title="Privacidade" onBack={() => setView('main')} />
+        <div className="p-8 space-y-10">
+          <div className="space-y-6">
+            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] px-2">Configurações de Dados</h4>
+            {[
+              { title: 'Perfil Público', desc: 'Permitir que vizinhos vejam seu perfil no Mural.', checked: true },
+              { title: 'Notificações Push', desc: 'Alertas de avisos, encomendas e reservas.', checked: true },
+              { title: 'Compartilhar Telefone', desc: 'Mostrar número apenas para outros moradores.', checked: false },
+              { title: 'Biometria Facial', desc: 'Usar FaceID/Digital para acesso ao condomínio.', checked: true },
+            ].map((opt, i) => (
+              <div key={i} className="flex items-center justify-between p-7 bg-slate-50 rounded-[35px] border border-slate-50 transition-all">
+                <div className="flex-1 pr-6">
+                  <h5 className="font-bold text-slate-900 tracking-tight leading-none mb-2">{opt.title}</h5>
+                  <p className="text-[10px] text-slate-400 font-medium uppercase leading-tight tracking-wider">{opt.desc}</p>
+                </div>
+                <div className={`w-14 h-8 rounded-full flex items-center p-1 transition-colors ${opt.checked ? 'bg-emerald-500' : 'bg-slate-200'}`}>
+                  <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${opt.checked ? 'translate-x-6' : 'translate-x-0'}`}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="pt-6 border-t border-slate-50">
+            <Button fullWidth className="bg-rose-50 text-rose-500 h-16 rounded-[28px] text-[10px] font-black uppercase tracking-[0.2em] border-none">Excluir Minha Conta Permanentemente</Button>
+            <p className="text-center text-[9px] text-slate-400 font-bold uppercase mt-6 tracking-widest px-8 leading-relaxed">Esta ação é irreversível e removerá todos os seus dados do sistema.</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
-      <div className="h-56 bg-violet-600 relative overflow-hidden">
-        <div className="absolute inset-0 bg-slate-950/20"></div>
-        <div className="absolute -bottom-16 -left-16 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
-        <div className="absolute -bottom-12 left-10 w-28 h-28 rounded-[40px] border-4 border-white overflow-hidden shadow-2xl z-10">
-          <img src={profile?.avatar || "https://picsum.photos/seed/alex/200"} alt="Me" className="w-full h-full object-cover" />
+      {/* Header Profile Premium */}
+      <div className="h-64 bg-violet-600 relative overflow-visible shadow-2xl">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-violet-500 to-indigo-600"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/20 to-transparent"></div>
+
+        {/* Avatar Container: Overflow visible to avoid cutting */}
+        <div className="absolute -bottom-16 left-10 w-32 h-32 rounded-[44px] border-[6px] border-[#f8fafc] bg-white overflow-hidden shadow-2xl z-20 transition-transform hover:scale-105 duration-500">
+          <img src={profile?.avatar || `https://picsum.photos/seed/${profile?.name}/200`} alt="Me" className="w-full h-full object-cover" />
         </div>
       </div>
-      <div className="pt-16 px-10 space-y-10">
-        <div>
-          <h2 className="text-3xl font-black italic tracking-tighter">{profile?.name || 'Carregando...'}</h2>
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2 flex items-center gap-2">
-            <MapPin size={12} className="text-violet-500" /> Splendido • Unidade {profile?.unit || '---'}-{profile?.tower || '-'}
-          </p>
+
+      <div className="pt-20 px-10 space-y-10">
+        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 leading-none">{profile?.name || 'Seu Nome'}</h2>
+          <div className="flex items-center gap-3 mt-4">
+            <span className="bg-violet-100 text-violet-700 font-black text-[10px] px-3 py-1 rounded-lg uppercase tracking-widest">{profile?.role || 'Residente'}</span>
+            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+              <MapPin size={12} className="text-violet-500" /> {profile?.condo || 'Vila Verde'} • {profile?.unit || '---'} {profile?.tower || '-'}
+            </p>
+          </div>
         </div>
 
-        <div className="space-y-4">
-          <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.3em]">Menu de Configuração</h4>
-          <div className="space-y-2">
+        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
+          <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] px-2">Menu de Painel</h4>
+          <div className="grid gap-3">
             {[
-              { icon: <Settings size={20} />, label: 'Minha Conta' },
-              { icon: <Users size={20} />, label: 'Minha Família' },
-              { icon: <ShieldCheck size={20} />, label: 'Privacidade' },
-              { icon: <LogOut size={20} />, label: 'Sair do Sistema', color: 'text-rose-500', onClick: handleLogout }
+              { icon: <Settings size={22} />, label: 'Minha Conta', desc: 'Dados pessoais e segurança', onClick: () => setView('account') },
+              { icon: <Users size={22} />, label: 'Minha Família', desc: 'Gerenciar dependentes', onClick: () => setView('family') },
+              { icon: <ShieldCheck size={22} />, label: 'Privacidade', desc: 'Configurações de dados', onClick: () => setView('privacy') },
+              { icon: <LogOut size={22} />, label: 'Sair do Sistema', color: 'text-rose-500', bg: 'bg-rose-50', desc: 'Encerrar sessão atual', onClick: handleLogout }
             ].map((it, i) => (
               <button
                 key={i}
                 onClick={it.onClick}
-                className="w-full p-6 bg-white rounded-3xl flex items-center justify-between group"
+                className="w-full p-6 bg-white rounded-[32px] flex items-center justify-between group shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-slate-50 active:scale-[0.98]"
               >
-                <div className="flex items-center gap-4">
-                  <div className={`${it.color || 'text-slate-400'} group-hover:scale-110 transition-transform`}>{it.icon}</div>
-                  <span className={`text-sm font-bold italic ${it.color || 'text-slate-700'}`}>{it.label}</span>
+                <div className="flex items-center gap-5 text-left">
+                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:rotate-6 ${it.bg || 'bg-slate-50'} ${it.color || 'text-slate-400'}`}>
+                    {it.icon}
+                  </div>
+                  <div>
+                    <span className={`text-base font-black italic block ${it.color || 'text-slate-900'} leading-none mb-1`}>{it.label}</span>
+                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{it.desc}</span>
+                  </div>
                 </div>
-                <ChevronRight size={18} className="text-slate-200" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-200 group-hover:bg-violet-50 group-hover:text-violet-400 transition-colors">
+                  <ChevronRight size={20} />
+                </div>
               </button>
             ))}
           </div>

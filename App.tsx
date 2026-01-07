@@ -9,7 +9,10 @@ import {
   DesapegoFullView, ResidentProfile, ResidentBookings, CreateDesapegoPage,
   AssembliesPage, ShopDetailPage
 } from './pages/Resident';
-import { ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation } from './pages/Professional';
+import {
+  ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation,
+  ProfessionalServices, ProfessionalEarnings, ProfessionalProfileView
+} from './pages/Professional';
 import {
   AdminDashboard, AdminResidents, AdminNotices, AdminAccess,
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
@@ -319,13 +322,14 @@ const App: React.FC = () => {
   };
 
   const handleAddProfessionalService = async (service: any) => {
+    if (!session?.user?.id) return;
     // Persist to Supabase
     const { error } = await supabase.from('professional_services').insert({
-      provider_id: currentUser?.id,
+      provider_id: session.user.id,
       title: service.title,
       category: service.category,
-      description: service.desc,
-      price_range: service.price,
+      description: service.desc || '',
+      price_range: service.price_range || service.price,
       active: true
     });
 
@@ -339,7 +343,7 @@ const App: React.FC = () => {
   };
 
   const handleDeleteProfessionalService = async (id: string) => {
-    const { error } = await supabase.from('professional_services').delete().eq('id', id);
+    const { error } = await supabase.from('professional_services').update({ active: false }).eq('id', id);
     if (!error) {
       fetchProfessionalServices();
     } else {
@@ -501,6 +505,8 @@ const App: React.FC = () => {
     setUserRole(role);
     if (role === UserRole.RESIDENT) {
       setAppState('registerResident');
+    } else if (role === UserRole.PROFESSIONAL) {
+      setAppState('registerProfessional');
     } else {
       setAppState('main');
       setActiveTab('dashboard');
@@ -508,12 +514,7 @@ const App: React.FC = () => {
   };
 
   const handleFinishRegistration = (userData: any) => {
-    setCurrentUser({
-      ...userData,
-      avatar: `https://picsum.photos/seed/${userData.name}/150`
-    });
-    setActiveTab('home');
-    setAppState('main');
+    setAppState('login');
   };
 
   const navigateToCategory = (category: string) => {
@@ -545,7 +546,7 @@ const App: React.FC = () => {
         case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={handleClearNotifications} shopItems={proProducts} />;
         case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices.map(s => ({ ...s, rating: calculateRating(s.provider_id) }))} products={proProducts} />;
         case 'booking': return <ResidentBookings onBack={() => setActiveTab('home')} reservations={reservations} setReservations={setReservations} />;
-        case 'profile': return <ResidentProfile />;
+        case 'profile': return <ResidentProfile currentUser={currentUser} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={(item) => setDesapegos([item, ...desapegos])} currentUser={currentUser} />;
         case 'acesso': return <AcessoPage onBack={() => setActiveTab('home')} accessList={accessList} onAddAccess={handleAddAccess} currentUser={currentUser} />;
         case 'financeiro': return <FinanceiroPage onBack={() => setActiveTab('home')} invoices={invoices} />;
@@ -560,10 +561,11 @@ const App: React.FC = () => {
     }
     else if (userRole === UserRole.PROFESSIONAL) {
       switch (activeTab) {
-        case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} setActiveServices={() => { }} onUpdateRequest={handleUpdateServiceRequest} />;
+        case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} setActiveServices={() => { }} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={setActiveTab} />;
         case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} />;
-        case 'earnings': return <div className="p-10 text-center text-slate-400 font-black italic uppercase text-[10px] py-40">Relatórios Financeiros - Em Breve</div>;
-        case 'profile': return <div className="p-10 text-center text-slate-400 font-black italic uppercase text-[10px] py-40">Configurações de Perfil Profissional</div>;
+        case 'services': return <ProfessionalServices services={professionalServices.filter(s => s.provider_id === session?.user?.id)} onAddService={handleAddProfessionalService} onDeleteService={handleDeleteProfessionalService} />;
+        case 'earnings': return <ProfessionalEarnings />;
+        case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => { setUserRole(null); setSession(null); setAppState('login'); }} />;
         default: return <ProfessionalDashboard serviceRequests={serviceRequests} setServiceRequests={setServiceRequests} activeServices={activeServices} setActiveServices={setActiveServices} />;
       }
     } else if (userRole === UserRole.ADMIN) {

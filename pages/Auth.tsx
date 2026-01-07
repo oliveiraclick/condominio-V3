@@ -5,7 +5,7 @@ import {
   Mail, Lock, Chrome, Apple, ArrowLeft, Building2,
   UserCircle, ShieldCheck, User, IdCard, Phone as PhoneIcon,
   MapPin, Heart, Baby, Plus, Trash2, Camera, FileText, Check,
-  ChevronRight, Calendar, Zap
+  ChevronRight, Calendar, Zap, GraduationCap
 } from 'lucide-react';
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
@@ -170,6 +170,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
     }
     setLoading(true);
     setError(null);
+    console.log('🔵 [RES REG] Iniciando cadastro de morador...', { email: formData.email, name: formData.name });
     try {
       // 1. Criar usuário no Auth do Supabase
       const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -189,15 +190,22 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         }
       });
 
-      if (authError) throw authError;
+      console.log('🔵 [RES REG] Resposta signUp:', { authData, authError });
+
+      if (authError) {
+        console.error('❌ [RES REG] Erro no signUp:', authError);
+        throw authError;
+      }
 
       if (authData.user) {
-        // Check for session to ensure we can write to RLS-protected tables
+        console.log('✅ [RES REG] Usuário criado no Auth:', authData.user.id);
+
         if (authData.session) {
+          console.log('🔵 [RES REG] Sessão iniciada. Tentando upsert do perfil...');
           // 2. Salvar Perfil Detalhado
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
+            .upsert({
               id: authData.user.id,
               name: formData.name,
               email: formData.email,
@@ -211,10 +219,16 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
               is_free: true
             });
 
-          if (profileError) throw profileError;
+          if (profileError) {
+            console.error('❌ [RES REG] Erro no upsert do perfil:', profileError);
+            throw profileError;
+          }
+
+          console.log('✅ [RES REG] Perfil salvo com sucesso!');
 
           // 3. Salvar Dependentes
           if (formData.dependents.length > 0) {
+            console.log('🔵 [RES REG] Salvando dependentes...', formData.dependents.length);
             const depsToInsert = formData.dependents.map(d => ({
               profile_id: authData.user?.id,
               name: d.name,
@@ -226,22 +240,25 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
               .from('dependents')
               .insert(depsToInsert);
 
-            if (depsError) throw depsError;
+            if (depsError) {
+              console.error('❌ [RES REG] Erro ao salvar dependentes:', depsError);
+              throw depsError;
+            }
           }
 
           onFinish(formData);
         } else {
-          // No session - Email confirmation enabled
-          alert("Cadastro realizado! Verifique seu email para confirmar sua conta.");
-          // We can't insert profile here without session, so we rely on the DB trigger or user logging in later.
-          // Ideally, we redirect back to login.
-          window.location.reload();
+          console.log('⚠️ [RES REG] SEM SESSÃO (Email confirmation?)');
+          alert("✅ Cadastro realizado!\n\nVerifique seu email para confirmar sua conta.\n\nApós confirmar, faça login normalmente.");
+          onFinish(formData);
         }
       }
     } catch (err: any) {
+      console.error('❌ [RES REG] Erro capturado:', err);
       setError(err.message || 'Erro ao processar cadastro.');
     } finally {
       setLoading(false);
+      console.log('🔵 [RES REG] Processo finalizado.');
     }
   };
 
@@ -468,13 +485,19 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
 export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
     password: '',
     phone: '',
     cpf: '',
-    category: 'Manutenção'
+    category: 'Manutenção',
+    docs: {
+      rg: false,
+      cpf: false,
+      license: false
+    }
   });
 
   const handleFinish = async () => {
@@ -520,12 +543,13 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
           console.log('🔵 [PROF REG] Inserindo perfil na tabela profiles...');
           const { error: profileError } = await supabase
             .from('profiles')
-            .insert({
+            .upsert({
               id: authData.user.id,
               name: formData.name,
               email: formData.email,
               phone: formData.phone,
               cpf: formData.cpf,
+              category: formData.category,
               role: UserRole.PROFESSIONAL
             });
 
@@ -538,9 +562,8 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
           onFinish(formData);
         } else {
           console.log('⚠️ [PROF REG] SEM SESSION - Email confirmation habilitado');
-          console.log('🔵 [PROF REG] Trigger do banco deve criar o perfil automaticamente');
           alert("✅ Cadastro realizado!\n\nVerifique seu email para confirmar sua conta.\n\nApós confirmar, faça login normalmente.");
-          onBack();
+          onFinish(formData);
         }
       } else {
         console.error('❌ [PROF REG] authData.user é null/undefined');
@@ -557,69 +580,121 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
-      <header className="p-6 pt-12 flex items-center gap-4">
-        <button onClick={onBack} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 shadow-sm active:scale-90 transition-transform">
-          <ArrowLeft size={20} />
-        </button>
-        <div>
-          <h2 className="text-xl font-black text-slate-900 italic tracking-tighter leading-none">Cadastro Profissional</h2>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Junte-se à nossa rede</p>
+      <header className="p-6 pt-12 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 shadow-sm active:scale-90 transition-transform">
+            <ArrowLeft size={20} />
+          </button>
+          <div>
+            <h2 className="text-xl font-black text-slate-900 italic tracking-tighter leading-none">Cadastro Profissional</h2>
+            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Etapa {step} de 2</p>
+          </div>
+        </div>
+        <div className="flex gap-1">
+          {[1, 2].map(s => (
+            <div key={s} className={`h-1.5 w-6 rounded-full transition-all ${step >= s ? 'bg-slate-900' : 'bg-slate-100'}`} />
+          ))}
         </div>
       </header>
 
-      <div className="px-6 flex-1 overflow-y-auto no-scrollbar space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
-        {error && (
-          <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic">
-            {error}
+      <div className="px-6 flex-1 overflow-y-auto no-scrollbar py-6">
+        {step === 1 ? (
+          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Dados de Acesso</h3>
+              <p className="text-sm text-slate-500 font-medium italic">Preencha suas informações profissionais básicas.</p>
+            </div>
+
+            <div className="space-y-4">
+              <div className="relative">
+                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <Input placeholder="Nome Completo / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="pl-12 h-14" />
+              </div>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="pl-12 h-14" />
+              </div>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="pl-12 h-14" />
+              </div>
+              <div className="relative">
+                <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="pl-12 h-14" />
+              </div>
+              <div className="relative">
+                <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+                <Input placeholder="CPF / CNPJ" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="pl-12 h-14" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria Principal</label>
+                <select
+                  value={formData.category}
+                  onChange={e => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none border-none"
+                >
+                  <option value="Manutenção">Manutenção Geral</option>
+                  <option value="Limpeza">Limpeza / Diarista</option>
+                  <option value="Beleza">Beleza / Estética</option>
+                  <option value="Tecnologia">Tecnologia / TI</option>
+                  <option value="Eventos">Eventos / Buffet</option>
+                  <option value="Reformas">Reformas / Pintura</option>
+                </select>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
+            <div className="space-y-2">
+              <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Documentação</h3>
+              <p className="text-sm text-slate-500 font-medium italic">Para sua segurança e dos moradores, precisamos validar sua identidade e licenças.</p>
+            </div>
+
+            <div className="space-y-4">
+              {[
+                { key: 'rg', label: 'RG ou CNH (Frente e Verso)', icon: <IdCard size={24} /> },
+                { key: 'cpf', label: 'Cartão CNPJ (Se houver)', icon: <FileText size={24} /> },
+                { key: 'license', label: 'Certificados / Referências', icon: <GraduationCap size={24} /> }
+              ].map((doc) => (
+                <button
+                  key={doc.key}
+                  onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })}
+                  className={`w-full p-6 rounded-[32px] border-2 border-dashed flex items-center justify-between group transition-all ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100 hover:border-violet-200'}`}
+                >
+                  <div className="flex items-center gap-5">
+                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-violet-500 transition-colors'}`}>
+                      {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={28} /> : doc.icon}
+                    </div>
+                    <div className="text-left">
+                      <h4 className={`font-black tracking-tight italic ${formData.docs[doc.key as keyof typeof formData.docs] ? 'text-emerald-700' : 'text-slate-900'}`}>{doc.label}</h4>
+                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{formData.docs[doc.key as keyof typeof formData.docs] ? 'ARQUIVO CARREGADO' : 'CLIQUE PARA ANEXAR'}</p>
+                    </div>
+                  </div>
+                  {!formData.docs[doc.key as keyof typeof formData.docs] && <Camera className="text-slate-300" size={20} />}
+                </button>
+              ))}
+            </div>
+
+            <div className="p-6 bg-slate-50 rounded-[32px] flex items-start gap-4">
+              <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 shrink-0">
+                <ShieldCheck size={20} />
+              </div>
+              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
+                Seus dados estão protegidos por criptografia de ponta a ponta e serão usados apenas para a verificação do seu perfil pela administração.
+              </p>
+            </div>
           </div>
         )}
-        <div className="space-y-4">
-          <div className="relative">
-            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <Input placeholder="Nome Completo / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="pl-12 h-14" />
-          </div>
-          <div className="relative">
-            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="pl-12 h-14" />
-          </div>
-          <div className="relative">
-            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="pl-12 h-14" />
-          </div>
-          <div className="relative">
-            <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="pl-12 h-14" />
-          </div>
-          <div className="relative">
-            <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-            <Input placeholder="CPF / CNPJ" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="pl-12 h-14" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria Principal</label>
-            <select
-              value={formData.category}
-              onChange={e => setFormData({ ...formData, category: e.target.value })}
-              className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none border-none"
-            >
-              <option>Manutenção</option>
-              <option>Limpeza</option>
-              <option>Eletricista</option>
-              <option>Encanador</option>
-              <option>Beleza</option>
-              <option>Outros</option>
-            </select>
-          </div>
-        </div>
       </div>
 
       <footer className="p-6 bg-white border-t border-slate-50">
         <Button
           fullWidth
-          onClick={handleFinish}
+          onClick={step === 1 ? () => setStep(2) : handleFinish}
           disabled={loading}
           className="h-16 rounded-[24px] bg-slate-950 text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 italic"
         >
-          {loading ? 'Processando...' : 'Finalizar Cadastro'}
+          {loading ? 'Processando...' : (step === 1 ? 'Próximo: Documentos' : 'Finalizar Cadastro')}
         </Button>
       </footer>
     </div>
