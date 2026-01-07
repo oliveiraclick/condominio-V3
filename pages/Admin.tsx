@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '../components/UI';
 import {
@@ -17,7 +16,6 @@ import {
   Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell
 } from 'lucide-react';
 
-// --- NAVEGAÇÃO ADMIN ---
 export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
   <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
     {[
@@ -29,13 +27,27 @@ export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: stri
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id || (activeTab === 'admin-concierge-chat' && item.id === 'messages') ? 'text-violet-600 scale-110' : 'text-slate-300'}`}
+        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-violet-600 scale-110' : 'text-slate-300'}`}
       >
         {item.icon}
-        <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
+        <span className="text-[10px] font-bold uppercase">{item.label}</span>
       </button>
     ))}
   </div>
+);
+
+const AdminHeader: React.FC<{ title: string; onBack?: () => void; rightElement?: React.ReactNode }> = ({ title, onBack, rightElement }) => (
+  <header className="p-6 pt-12 bg-white border-b border-slate-50 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+    <div className="flex items-center gap-4">
+      {onBack && (
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-900">
+          <ArrowLeft size={20} />
+        </button>
+      )}
+      <h2 className="text-xl font-black text-slate-950 italic uppercase tracking-tighter">{title}</h2>
+    </div>
+    {rightElement}
+  </header>
 );
 
 const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () => void }> = ({ title, action, onAction }) => (
@@ -49,20 +61,36 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   </div>
 );
 
-// --- HEADER REUTILIZÁVEL ---
-const AdminHeader: React.FC<{ title: string; onBack?: () => void; rightElement?: React.ReactNode }> = ({ title, onBack, rightElement }) => (
-  <header className="p-6 pt-12 bg-white border-b border-slate-50 flex items-center justify-between sticky top-0 z-50 shadow-sm">
-    <div className="flex items-center gap-4">
-      {onBack && (
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-900 active:scale-90 transition-transform">
-          <ArrowLeft size={20} />
-        </button>
-      )}
-      <h2 className="text-xl font-black text-slate-950 italic tracking-tighter uppercase leading-none">{title}</h2>
+// --- DASHBOARD ADMIN ---
+export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ onNavigate }) => {
+  const operations = [
+    { id: 'packages', icon: <Package size={28} />, label: 'Encomendas', target: 'admin-packages' },
+    { id: 'residents', icon: <Users size={28} />, label: 'Moradores', target: 'admin-residents' },
+    { id: 'reserves', icon: <CalendarDays size={28} />, label: 'Reservas', target: 'admin-reservations' },
+    { id: 'access', icon: <Key size={28} />, label: 'Portaria Fast', target: 'admin-access' },
+    { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
+    { id: 'finance', icon: <Wallet size={28} />, label: 'Financeiro', target: 'admin-finance' },
+  ];
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] pb-32">
+      <div className="p-8 pt-16">
+        <h3 className="text-slate-400 font-bold text-sm uppercase tracking-[0.2em] mb-10">Painel de Operações</h3>
+        <div className="grid grid-cols-3 gap-x-4 gap-y-10">
+          {operations.map((op) => (
+            <button key={op.id} onClick={() => onNavigate(op.target)} className="flex flex-col items-center group">
+              <div className="w-[80px] h-[80px] bg-white rounded-[28px] shadow-lg flex items-center justify-center text-slate-800 border hover:bg-violet-600 hover:text-white transition-all">
+                {op.icon}
+              </div>
+              <span className="mt-4 text-[10px] font-black text-slate-700 text-center uppercase">{op.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
-    {rightElement}
-  </header>
-);
+  );
+};
+
 
 // --- COMPONENTE GESTÃO DE ESPAÇOS ---
 export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: any; onUpdateArea?: (a: any) => void }> = ({ commonAreas, setCommonAreas, onUpdateArea }) => {
@@ -255,205 +283,31 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
   );
 };
 
-// --- LISTA DE MORADORES ---
+// --- LISTA DE MORADORES (Atualizado com versão simplificada) ---
 export const AdminResidents: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedResident, setSelectedResident] = useState<any>(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editForm, setEditForm] = useState<any>(null);
+  const residents = [
+    { id: 1, name: 'Alex Ferreira', unit: '402-B', tower: 'A' },
+    { id: 2, name: 'Clara Mendes', unit: '105-B', tower: 'B' }
+  ];
 
-  const [residentList, setResidentList] = useState([
-    {
-      id: 1,
-      name: 'Alex Ferreira',
-      email: 'alex@example.com',
-      cpf: '123.456.789-00',
-      rg: '12.345.678-X',
-      phone: '(11) 98888-7777',
-      condo: 'Splendido Residencial',
-      tower: 'A',
-      unit: '402-B',
-      spouse: 'Mariana Ferreira',
-      dependents: [
-        { id: '1', name: 'Enzo Ferreira', kinship: 'Filho(a)', birthDate: '2015-05-20' },
-        { id: '2', name: 'Valentina Ferreira', kinship: 'Filho(a)', birthDate: '2018-08-12' }
-      ],
-      docs: { rg: true, cpf: true, residence: true }
-    },
-    {
-      id: 2,
-      name: 'Clara Mendes',
-      email: 'clara@example.com',
-      cpf: '987.654.321-11',
-      rg: '87.654.321-0',
-      phone: '(11) 97777-6666',
-      condo: 'Splendido Residencial',
-      tower: 'B',
-      unit: '105-B',
-      spouse: '',
-      dependents: [],
-      docs: { rg: true, cpf: true, residence: false }
-    },
-  ]);
-
-  const filtered = residentList.filter(r =>
-    r.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    r.unit.includes(searchTerm) ||
-    r.tower.includes(searchTerm)
-  );
-
-  const handleStartEdit = () => {
-    setEditForm({ ...selectedResident });
-    setIsEditing(true);
-  };
-
-  const handleCancelEdit = () => {
-    setIsEditing(false);
-    setEditForm(null);
-  };
-
-  const handleSaveEdit = () => {
-    const updatedList = residentList.map(r => r.id === editForm.id ? editForm : r);
-    setResidentList(updatedList);
-    setSelectedResident(editForm);
-    setIsEditing(false);
-    setEditForm(null);
-    alert('Cadastro atualizado com sucesso no sistema!');
-  };
-
-  if (selectedResident) {
-    const data = isEditing ? editForm : selectedResident;
-
-    return (
-      <div className="min-h-screen bg-[#f8fafc] pb-32 overflow-x-hidden">
-        <AdminHeader
-          title={isEditing ? "Editar Morador" : "Perfil Detalhado"}
-          onBack={() => isEditing ? handleCancelEdit() : setSelectedResident(null)}
-          rightElement={
-            !isEditing && (
-              <button onClick={handleStartEdit} className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-600/30 active:scale-90 transition-transform">
-                <Edit3 size={20} />
-              </button>
-            )
-          }
-        />
-
-        <div className="p-6 space-y-8 animate-in slide-in-from-right-4 duration-500">
-          <div className="relative">
-            <div className="absolute inset-0 bg-violet-600 rounded-[48px] -rotate-1 transform scale-105 opacity-5"></div>
-            <div className="bg-white p-8 rounded-[48px] shadow-2xl shadow-slate-200/50 border border-slate-50 flex items-center gap-6 relative z-10">
-              <div className="w-24 h-24 bg-violet-600 rounded-[35px] flex items-center justify-center text-white font-black text-4xl italic shadow-2xl shadow-violet-600/40 shrink-0">
-                {data.name.charAt(0)}
-              </div>
-              <div className="flex-1 overflow-hidden">
-                {isEditing ? (
-                  <div className="space-y-2">
-                    <label className="text-[9px] font-black text-slate-400 uppercase tracking-widest ml-1">Nome do Morador</label>
-                    <Input
-                      value={editForm.name}
-                      onChange={e => setEditForm({ ...editForm, name: e.target.value })}
-                      className="h-12 text-sm font-bold italic bg-slate-50 border-none shadow-inner"
-                    />
-                  </div>
-                ) : (
-                  <>
-                    <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter leading-tight truncate">{data.name}</h3>
-                    <div className="flex items-center gap-2 mt-2">
-                      <MapPin size={12} className="text-violet-500" />
-                      <p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Torre {data.tower} • {data.unit}</p>
-                    </div>
-                    <div className="flex gap-2 mt-4">
-                      <Badge color="bg-emerald-50 text-emerald-600">CADASTRO ATIVO</Badge>
-                    </div>
-                  </>
-                )}
-              </div>
-            </div>
-          </div>
-
-          <div className="space-y-4">
-            <div className="flex items-center justify-between px-4">
-              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Dados Pessoais</h4>
-              <User size={14} className="text-slate-300" />
-            </div>
-            <Card className="p-8 border-none shadow-xl rounded-[40px] space-y-6 bg-white">
-              <div className="grid grid-cols-2 gap-6">
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">CPF</p>
-                  {isEditing ? (
-                    <Input value={editForm.cpf} onChange={e => setEditForm({ ...editForm, cpf: e.target.value })} className="h-10 text-xs font-bold border-none bg-slate-50 shadow-inner" />
-                  ) : (
-                    <p className="font-bold text-slate-900">{data.cpf}</p>
-                  )}
-                </div>
-                <div className="space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">RG</p>
-                  {isEditing ? (
-                    <Input value={editForm.rg} onChange={e => setEditForm({ ...editForm, rg: e.target.value })} className="h-10 text-xs font-bold border-none bg-slate-50 shadow-inner" />
-                  ) : (
-                    <p className="font-bold text-slate-900">{data.rg}</p>
-                  )}
-                </div>
-                <div className="col-span-2 space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">E-mail de Contato</p>
-                  {isEditing ? (
-                    <Input value={editForm.email} onChange={e => setEditForm({ ...editForm, email: e.target.value })} className="h-10 text-xs font-bold border-none bg-slate-50 shadow-inner" />
-                  ) : (
-                    <p className="font-bold text-slate-900">{data.email}</p>
-                  )}
-                </div>
-                <div className="col-span-2 space-y-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Telefone / WhatsApp</p>
-                  {isEditing ? (
-                    <Input value={editForm.phone} onChange={e => setEditForm({ ...editForm, phone: e.target.value })} className="h-10 text-xs font-bold border-none bg-slate-50 shadow-inner" />
-                  ) : (
-                    <p className="font-bold text-slate-900">{data.phone}</p>
-                  )}
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4 pt-4 pb-12">
-            {isEditing ? (
-              <>
-                <Button fullWidth variant="secondary" onClick={handleCancelEdit} className="h-16 rounded-[28px] text-[10px] font-black uppercase tracking-[0.2em]">Descartar</Button>
-                <Button fullWidth onClick={handleSaveEdit} className="h-16 rounded-[28px] bg-emerald-600 text-white flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-emerald-600/20">
-                  <Save size={18} /> Salvar
-                </Button>
-              </>
-            ) : (
-              <>
-                <Button fullWidth variant="outline" className="h-16 rounded-[28px] border-slate-200 text-slate-400 text-[10px] font-black uppercase tracking-[0.2em]">Bloquear</Button>
-                <Button fullWidth onClick={handleStartEdit} className="h-16 rounded-[28px] bg-slate-950 text-white flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] shadow-2xl shadow-slate-900/10">
-                  <Edit3 size={18} /> Editar Agora
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const filtered = residents.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()));
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32 overflow-x-hidden">
-      <AdminHeader title="Gestão de Moradores" onBack={onBack} />
-      <div className="p-6 space-y-10">
-        <div className="relative group">
-          <Input
-            placeholder="Nome, Torre ou Unidade..."
-            className="pl-16 h-20 bg-white border-none rounded-[35px] shadow-2xl shadow-slate-200/40 text-lg font-bold italic"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <AdminHeader title="Moradores" onBack={onBack} />
+      <div className="p-6 space-y-6">
+        <div className="relative">
+          <Input placeholder="Buscar por nome ou unidade..." className="pl-12 h-14" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
         </div>
-        <div className="space-y-5">
+        <div className="space-y-4">
           {filtered.map(res => (
-            <div key={res.id} onClick={() => setSelectedResident(res)} className="bg-white p-6 rounded-[44px] flex items-center gap-5 border border-slate-50 shadow-sm hover:shadow-2xl transition-all cursor-pointer">
-              <div className="w-16 h-16 bg-slate-50 rounded-[28px] flex items-center justify-center text-slate-300 font-black text-xl italic">{res.name.charAt(0)}</div>
-              <div className="flex-1"><h4 className="font-black text-slate-900 italic text-lg leading-none">{res.name}</h4><p className="text-[10px] font-black text-violet-500 uppercase tracking-widest mt-1">Apto {res.unit}</p></div>
+            <div key={res.id} className="bg-white p-6 rounded-[32px] border flex items-center justify-between shadow-sm hover:border-violet-200 transition-colors cursor-pointer">
+              <div>
+                <h4 className="font-black text-slate-900 italic">{res.name}</h4>
+                <p className="text-[10px] font-bold text-violet-500 uppercase">Apto {res.unit} • Torre {res.tower}</p>
+              </div>
               <ChevronRight size={20} className="text-slate-200" />
             </div>
           ))}
@@ -589,41 +443,6 @@ export const AdminConciergeChat: React.FC<{ onBack: () => void }> = ({ onBack })
       <div className="p-6 bg-white border-t border-slate-50 flex items-center gap-3">
         <input placeholder="Resposta..." value={inputText} onChange={(e) => setInputText(e.target.value)} className="flex-1 h-14 bg-slate-50 rounded-2xl px-6 font-bold italic" />
         <button onClick={() => { if (inputText) { setMessages([...messages, { id: Date.now(), sender: 'admin', text: inputText, time: 'Agora' }]); setInputText(''); } }} className="w-14 h-14 bg-[#050b18] text-white rounded-full flex items-center justify-center"><Send /></button>
-      </div>
-    </div>
-  );
-};
-
-// --- DASHBOARD ADMIN ---
-export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ onNavigate }) => {
-  const operations = [
-    { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
-    { id: 'packages', icon: <Package size={28} />, label: 'Encomendas', target: 'admin-packages' },
-    { id: 'access', icon: <Key size={28} />, label: 'Portaria Fast', target: 'admin-access' },
-    { id: 'reserves', icon: <CalendarDays size={28} />, label: 'Reservas', target: 'admin-reservations' },
-    { id: 'finance', icon: <Wallet size={28} />, label: 'Financeiro', target: 'admin-finance' },
-    { id: 'residents', icon: <Users size={28} />, label: 'Moradores', target: 'admin-residents' },
-    { id: 'incidents', icon: <ShieldAlert size={28} />, label: 'Ocorrências', target: 'admin-incidents' },
-    { id: 'garage', icon: <Car size={28} />, label: 'Garagem', target: 'admin-garage' },
-    { id: 'maintenance', icon: <Wrench size={28} />, label: 'Manutenção', target: 'admin-maintenance' },
-  ];
-  return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32 overflow-x-hidden">
-      <div className="p-8 pt-16 mb-4">
-        <h3 className="text-slate-400 font-bold text-sm tracking-[0.2em] uppercase mb-10">Painel de Operações</h3>
-        <div className="grid grid-cols-3 gap-x-4 gap-y-10">
-          {operations.map((op) => (
-            <button key={op.id} onClick={() => onNavigate(op.target)} className="flex flex-col items-center group active:scale-95 transition-all">
-              <div className="w-[100px] h-[100px] bg-white rounded-[35px] shadow-2xl shadow-slate-200/50 flex items-center justify-center text-slate-800 border border-slate-50 group-hover:bg-violet-600 group-hover:text-white transition-all overflow-hidden relative">
-                <div className="absolute inset-0 bg-violet-600 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                <div className="relative z-10 transition-colors duration-300">{op.icon}</div>
-              </div>
-              <span className="mt-4 text-[10px] font-black text-slate-700 text-center leading-tight uppercase tracking-tighter">
-                {op.label.split(' ').map((word, i) => <React.Fragment key={i}>{word}<br /></React.Fragment>)}
-              </span>
-            </button>
-          ))}
-        </div>
       </div>
     </div>
   );
