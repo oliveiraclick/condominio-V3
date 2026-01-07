@@ -146,10 +146,28 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', cpf: '', rg: '', phone: '',
-    condo: 'Splendido Residencial', tower: '', unit: '', spouse: '',
+    condo: '', tower: '', unit: '', spouse: '',
     dependents: [] as Dependent[],
     docs: { rg: false, cpf: false, residence: false }
   });
+  const [condos, setCondos] = useState<any[]>([]);
+
+  useEffect(() => {
+    const fetchCondos = async () => {
+      const { data } = await supabase.from('condominiums').select('*').eq('status', 'active');
+      if (data && data.length > 0) {
+        setCondos(data);
+      } else {
+        // Fallback or Mock if DB empty
+        setCondos([
+          { id: '1', name: 'Vila Verde Residence' },
+          { id: '2', name: 'Splendido Residencial' },
+          { id: '3', name: 'Grand Park' }
+        ]);
+      }
+    };
+    fetchCondos();
+  }, []);
 
   const handleFinish = async () => {
     if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
@@ -210,6 +228,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             name: formData.name,
             email: formData.email,
             role: UserRole.RESIDENT,
+            condo_id: formData.condo,
             tower: formData.tower,
             unit: formData.unit,
             phone: formData.phone,
@@ -302,8 +321,21 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
 
         {step === 2 && (
           <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Localização</h3>
-            <Input placeholder="Condomínio" value={formData.condo} disabled className="bg-slate-100" />
+            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Onde você mora?</h3>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Selecione o Condomínio</label>
+              <select
+                value={formData.condo}
+                onChange={e => setFormData({ ...formData, condo: e.target.value })}
+                className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 border-r-[16px] border-transparent outline-none"
+              >
+                <option value="">Selecione...</option>
+                {condos.map(c => (
+                  <option key={c.id} value={c.id}>{c.name}</option>
+                ))}
+              </select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <Input placeholder="Torre / Bloco" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} />
               <Input placeholder="Unidade / Apto" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />

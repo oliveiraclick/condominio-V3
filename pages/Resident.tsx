@@ -130,15 +130,20 @@ export const ResidentHome: React.FC<{
         {/* ATALHOS RÁPIDOS */}
         <div>
           <SectionHeader title="Gestão Condomínio" />
-          <div className="grid grid-cols-3 gap-3">
+          <div className="grid grid-cols-4 gap-3">
             {[
-              { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro' },
-              { icon: <Key size={20} />, label: 'Acessos', target: 'acesso' },
-              { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda' },
+              { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
+              { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
+              { icon: <MessageSquare size={20} />, label: 'Chamado', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
+              { icon: <ShoppingBag size={20} />, label: 'Mercado', target: 'market', color: 'text-pink-600', bg: 'bg-pink-50' },
+              { icon: <Briefcase size={20} />, label: 'Serviços', target: 'servicos-full', color: 'text-cyan-600', bg: 'bg-cyan-50' },
+              { icon: <Megaphone size={20} />, label: 'Avisos', target: 'home', color: 'text-rose-600', bg: 'bg-rose-50' },
+              { icon: <Grid size={20} />, label: 'Mais', target: 'home', color: 'text-slate-600', bg: 'bg-slate-50' },
             ].map((act, i) => (
-              <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-5 rounded-[28px] flex flex-col items-center gap-3 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                <div className="text-violet-600 bg-violet-50 w-12 h-12 rounded-xl flex items-center justify-center">{act.icon}</div>
-                <span className="text-[10px] font-black text-slate-600 uppercase text-center">{act.label}</span>
+              <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
+                <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none">{act.label}</span>
               </button>
             ))}
           </div>
@@ -214,7 +219,7 @@ export const ResidentProfile: React.FC<{ currentUser: any }> = ({ currentUser })
   );
 };
 
-export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCategory: (cat: string) => void }> = ({ onNavigate, onSelectCategory }) => {
+export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCategory: (cat: string) => void; services?: any[]; products?: any[] }> = ({ onNavigate, onSelectCategory, products }) => {
   const categories = [
     { id: '1', name: 'Alimentação', icon: <Utensils size={28} />, bg: 'bg-orange-50', color: 'text-orange-600' },
     { id: '2', name: 'Manutenção', icon: <Wrench size={28} />, bg: 'bg-blue-50', color: 'text-blue-600' },
@@ -242,6 +247,29 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
             </button>
           ))}
         </div>
+
+        {products && products.length > 0 && (
+          <div>
+            <SectionHeader title="Destaques da Vizinhança" />
+            <div className="space-y-4">
+              {products.map((item, i) => (
+                <div key={i} className="bg-white p-4 rounded-[32px] flex items-center gap-4 shadow-sm border border-slate-50">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                    <img src={item.img} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-slate-900 italic truncate">{item.name}</h4>
+                    <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{item.price}</p>
+                    <p className="text-[10px] text-slate-400 uppercase mt-1 truncate">Vendedor: {item.user}</p>
+                  </div>
+                  <button className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                    <ChevronRight size={18} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
