@@ -140,15 +140,15 @@ const App: React.FC = () => {
 
       if (profile) {
         // 2. Try to fetch Condo Name separately
-        let condoName = 'Condomínio';
-        if (profile.condo_id) {
+        let condoName = 'Splendido Residencial';
+        if (profile.condominium_id) {
           try {
             // Short timeout for condo name
             const condoTimeout = new Promise((_, r) => setTimeout(() => r(new Error('Condo timeout')), 2000));
             const fetchCondoOp = supabase
               .from('condominiums')
               .select('name')
-              .eq('id', profile.condo_id)
+              .eq('id', profile.condominium_id)
               .maybeSingle();
 
             const { data: condo } = await Promise.race([fetchCondoOp, condoTimeout]) as any;
