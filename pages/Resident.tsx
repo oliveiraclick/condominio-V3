@@ -128,24 +128,41 @@ export const ResidentHome: React.FC<{
         )}
 
         {/* ATALHOS RÁPIDOS */}
-        <div>
-          <SectionHeader title="Gestão Condomínio" />
-          <div className="grid grid-cols-4 gap-3">
-            {[
-              { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-              { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
-              { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
-              { icon: <MessageSquare size={20} />, label: 'Chamado', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
-              { icon: <ShoppingBag size={20} />, label: 'Mercado', target: 'market', color: 'text-pink-600', bg: 'bg-pink-50' },
-              { icon: <Briefcase size={20} />, label: 'Serviços', target: 'servicos-full', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-              { icon: <Megaphone size={20} />, label: 'Avisos', target: 'home', color: 'text-rose-600', bg: 'bg-rose-50' },
-              { icon: <Grid size={20} />, label: 'Mais', target: 'home', color: 'text-slate-600', bg: 'bg-slate-50' },
-            ].map((act, i) => (
-              <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
-                <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none">{act.label}</span>
-              </button>
-            ))}
+        <div className="space-y-8">
+          {/* GESTÃO CONDOMÍNIO */}
+          <div>
+            <SectionHeader title="Gestão Condomínio" action="Ver Todos" onAction={() => onNavigate('home')} />
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
+                { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
+                { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
+              ].map((act, i) => (
+                <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                  <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
+                  <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* PRESTADORES */}
+          <div>
+            <SectionHeader title="Prestadores" action="Ver Todos" onAction={() => onSelectCategory('Todos')} />
+            <div className="grid grid-cols-4 gap-3">
+              {[
+                { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
+                { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
+                { icon: <Paintbrush size={20} />, label: 'Pintura', category: 'Pintor', color: 'text-pink-600', bg: 'bg-pink-50' },
+              ].map((act, i) => (
+                <button key={i} onClick={() => onSelectCategory(act.category)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                  <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
+                  <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none">{act.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
