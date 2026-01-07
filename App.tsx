@@ -17,7 +17,7 @@ import {
   AdminDashboard, AdminResidents, AdminNotices, AdminAccess,
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
   AdminNavigation, AdminIncidents, AdminGarage, AdminLostFound, AdminPolls, AdminMaintenance,
-  AdminSystemUsers
+  AdminSystemUsers, AdminCategories
 } from './pages/Admin';
 import { SuperAdmin } from './pages/SuperAdmin';
 
@@ -48,6 +48,7 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [accessList, setAccessList] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]); // Dynamic Categories
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
 
   // 1. ÚNICO LISTENER DE AUTENTICAÇÃO
@@ -74,6 +75,7 @@ const App: React.FC = () => {
 
         if (currentSession) {
           await fetchUserProfile(currentSession.user.id);
+          fetchCategories();
         } else {
           setLoading(false);
         }
@@ -89,6 +91,7 @@ const App: React.FC = () => {
       setSession(newSession);
       if (newSession) {
         await fetchUserProfile(newSession.user.id);
+        fetchCategories();
       } else {
         setUserRole(null);
         setCurrentUser(null);
@@ -121,6 +124,11 @@ const App: React.FC = () => {
         desc: item.description
       })));
     }
+  };
+
+  const fetchCategories = async () => {
+    const { data } = await supabase.from('categories').select('*').order('name');
+    if (data) setCategories(data);
   };
 
   // 2. BUSCA DE PERFIL COM LÓGICA DE AUTO-REPARO
@@ -240,7 +248,7 @@ const App: React.FC = () => {
 
   const navigateToCategory = (category: string) => {
     setSelectedCategory(category);
-    setActiveTab('servicos-full');
+    setActiveTab('shop-detail');
   };
 
   const handleSelectDesapego = (item: any) => {
@@ -315,13 +323,38 @@ const App: React.FC = () => {
 
     const handleAddDesapego = async (item: any) => {
       if (!session?.user) return;
+
+      let finalImageUrl = item.img;
+
+      if (item.image_file) {
+        const file = item.image_file;
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${session.user.id}/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('marketplace')
+          .upload(filePath, file);
+
+        if (uploadError) {
+          alert('Erro ao fazer upload da imagem: ' + uploadError.message);
+          return;
+        }
+
+        const { data } = supabase.storage
+          .from('marketplace')
+          .getPublicUrl(filePath);
+
+        finalImageUrl = data.publicUrl;
+      }
+
       const { error } = await supabase.from('marketplace').insert([{
         seller_id: session.user.id,
         title: item.name,
         price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
         status: item.status,
         description: item.desc,
-        image_url: item.img
+        image_url: finalImageUrl
       }]);
       if (error) {
         alert('Erro ao criar desapego: ' + error.message);
@@ -409,10 +442,11 @@ const App: React.FC = () => {
         case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
         case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
         case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
-        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} onSelectProduct={handleSelectProduct} />;
+        case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
+        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} onSelectProduct={handleSelectProduct} categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />;
         case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={() => setActiveTab('shop-detail')} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={handleAddDesapego} currentUser={currentUser} />;
-        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} />;
+        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} />;
       }
     }
 
@@ -433,6 +467,7 @@ const App: React.FC = () => {
         case 'admin-access': return <AdminAccess onBack={() => setActiveTab('dashboard')} accessList={accessList} onCheckIn={() => fetchAccessList()} />;
         case 'admin-reservations': return <AdminReservations onBack={() => setActiveTab('dashboard')} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={fetchCommonAreas} />;
         case 'admin-incidents': return <AdminIncidents onBack={() => setActiveTab('dashboard')} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
+        case 'admin-categories': return <AdminCategories onBack={() => setActiveTab('dashboard')} categories={categories} onRefresh={fetchCategories} />;
         default: return <AdminDashboard onNavigate={setActiveTab} />;
       }
     }

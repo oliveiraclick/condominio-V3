@@ -511,27 +511,89 @@ export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; 
   </div>
 );
 
-export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ onBack, item, currentUser, onDelete }) => (
-  <div className="min-h-screen bg-slate-50 pb-32">
-    <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40">
-      <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"><ArrowLeft size={20} /></button>
-      <h2 className="text-xl font-black italic uppercase tracking-tight">Detalhes do Produto</h2>
-    </header>
-    <div className="p-6 animate-in slide-in-from-bottom-4">
-      {item ? <DesapegoCard item={item} currentUser={currentUser} onDelete={onDelete} variant="detail" /> : <p>Item não encontrado.</p>}
-      <div className="mt-8 space-y-4">
-        <div className="bg-white p-6 rounded-[32px] shadow-sm">
-          <h3 className="font-bold text-slate-900 mb-2">Descrição do Vendedor</h3>
-          <p className="text-sm text-slate-500 leading-relaxed">{item?.desc || 'Sem descrição.'}</p>
+export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ onBack, item, currentUser, onDelete }) => {
+  if (!item) return <div className="p-10">Item não encontrado. <button onClick={onBack}>Voltar</button></div>;
+
+  const isOwner = currentUser?.name === item.user;
+
+  const handleInterest = () => {
+    if (item.phone) {
+      const cleanPhone = item.phone.replace(/\D/g, '');
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.name}* no app do condomínio e tenho interesse!`);
+      window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
+    } else {
+      alert('Telefone do vendedor não disponível.');
+    }
+  };
+
+  const handleDelete = () => {
+    if (onDelete && confirm('Tem certeza que deseja remover este anúncio?')) {
+      onDelete(item.id);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-50 pb-32 animate-in fade-in duration-300">
+      <div className="h-96 relative bg-slate-200">
+        <img src={item.img} className="w-full h-full object-cover" alt={item.name} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-slate-50/90"></div>
+        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/20"><ArrowLeft /></button>
+
+        <div className="absolute bottom-8 left-6 right-6">
+          <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg mb-3 inline-block">{item.status}</span>
         </div>
       </div>
+
+      <div className="px-6 -mt-6 relative z-10 w-full rounded-t-[40px] bg-slate-50">
+        <div className="flex justify-between items-start mb-4 pt-6">
+          <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter leading-none max-w-[70%]">{item.name}</h2>
+          <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
+            <p className="font-black text-slate-900 text-lg tracking-tight">{item.price}</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-4 py-6 border-y border-slate-200/50 mb-6">
+          <div className="w-12 h-12 rounded-full bg-indigo-100 overflow-hidden border-2 border-white shadow-sm">
+            <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt={item.user} />
+          </div>
+          <div>
+            <p className="text-xs text-slate-900 font-bold">Vendido por {item.user}</p>
+            <p className="text-[10px] text-slate-400 font-medium">{item.tower || 'Morador Verificado'}</p>
+          </div>
+          {!isOwner && (
+            <button onClick={handleInterest} className="ml-auto w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center active:scale-90 transition-all border border-emerald-100">
+              <MessageSquare size={18} />
+            </button>
+          )}
+        </div>
+
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-900">Sobre o produto</h3>
+          <p className="text-sm text-slate-500 leading-relaxed">{item.desc || 'Sem descrição detalhada.'}</p>
+        </div>
+      </div>
+
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-50">
+        {isOwner ? (
+          <Button fullWidth onClick={handleDelete} className="bg-rose-50 text-rose-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-rose-100">
+            <Trash2 size={18} className="mr-2" /> Remover Anúncio
+          </Button>
+        ) : (
+          <Button fullWidth onClick={handleInterest} className="bg-emerald-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs shadow-lg shadow-emerald-500/30">
+            <MessageSquare size={18} className="mr-2" /> Tenho Interesse
+          </Button>
+        )}
+      </div>
     </div>
-  </div>
-);
+  );
+};
 
 export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: any) => void; currentUser: any }> = ({ onBack, onAdd, currentUser }) => {
   const [form, setForm] = useState({ name: '', price: '', desc: '', status: 'USADO' });
+
   const [image, setImage] = useState<string | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handlePublish = () => {
     if (!form.name || !form.price) return;
@@ -543,6 +605,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
       user: currentUser?.name || 'Morador',
       tower: currentUser?.tower || '---',
       img: image || 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?auto=format&fit=crop&w=600&q=80',
+      image_file: imageFile,
       desc: form.desc
     };
     onAdd(newItem);
@@ -560,7 +623,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
       <div className="p-8 space-y-10 animate-in slide-in-from-bottom-8 duration-500">
         {/* Foto do Item */}
         <div
-          onClick={() => setImage('https://images.unsplash.com/photo-1583847268964-b28dc2f51ac9?auto=format&fit=crop&w=600&q=80')}
+          onClick={() => fileInputRef.current?.click()}
           className={`w-full h-80 rounded-[48px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 cursor-pointer overflow-hidden ${image ? 'border-violet-500 bg-slate-50' : 'border-slate-200 bg-slate-50/50 hover:border-violet-300'}`}
         >
           {image ? (
@@ -572,10 +635,22 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
               </div>
               <div className="text-center">
                 <p className="text-[11px] font-black uppercase tracking-widest text-slate-950">Adicionar Fotos</p>
-                <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Até 5 fotos do produto</p>
+                <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Clique para upload</p>
               </div>
             </>
           )}
+          <input
+            type="file"
+            ref={fileInputRef}
+            className="hidden"
+            accept="image/*"
+            onChange={e => {
+              if (e.target.files?.[0]) {
+                setImageFile(e.target.files[0]);
+                setImage(URL.createObjectURL(e.target.files[0]));
+              }
+            }}
+          />
         </div>
 
         <div className="space-y-6">
@@ -1036,11 +1111,11 @@ export const AssembliesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   </div>
 );
 
-export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; onSelectProduct?: (p: any) => void }> = ({ onBack, products = [], onSelectProduct }) => {
+export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; onSelectProduct?: (p: any) => void; categories?: any[]; selectedCategory?: string; onSelectCategory?: (c: string) => void }> = ({ onBack, products = [], onSelectProduct, categories = [], selectedCategory = 'Todos', onSelectCategory }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('Todos');
 
-  const categories = ['Todos', 'Alimentação', 'Manutenção', 'Limpeza', 'Estética', 'Outros'];
+  const displayCategories = ['Todos', ...categories.map(c => c.name)];
+  const activeCategoryData = categories.find(c => c.name === selectedCategory);
 
   const filteredProducts = products.filter(p => {
     const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -1054,12 +1129,18 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <div className="h-64 relative bg-violet-600">
-        {/* Abstract Header Pattern */}
-        <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+      <div className="h-64 relative bg-violet-600 overflow-hidden">
+        {activeCategoryData?.image_url ? (
+          <div className="absolute inset-0 bg-cover bg-center animate-in fade-in duration-700" style={{ backgroundImage: `url(${activeCategoryData.image_url})` }}>
+            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+          </div>
+        ) : (
+          <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
+        )}
+
         <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 z-20"><ArrowLeft /></button>
         <div className="absolute bottom-12 left-8 right-8 text-white z-10">
-          <h2 className="text-4xl font-black italic tracking-tighter leading-none mb-2">e-Shop</h2>
+          <h2 className="text-4xl font-black italic tracking-tighter leading-none mb-2">{selectedCategory === 'Todos' ? 'e-Shop' : selectedCategory}</h2>
           <p className="font-medium opacity-80 text-violet-100">Encontre de tudo no seu condomínio.</p>
         </div>
       </div>
@@ -1079,10 +1160,10 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 
       <div className="px-6 space-y-8">
         <div className="flex gap-2 overflow-x-auto no-scrollbar py-2">
-          {categories.map(t => (
+          {displayCategories.map(t => (
             <button
               key={t}
-              onClick={() => setSelectedCategory(t)}
+              onClick={() => onSelectCategory && onSelectCategory(t)}
               className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === t ? 'bg-violet-600 text-white shadow-lg shadow-violet-500/30' : 'bg-white text-slate-400'}`}
             >
               {t}

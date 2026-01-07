@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '../components/UI';
+import { supabase } from '../supabase';
 import {
   LayoutDashboard, Users, Megaphone, Key, CalendarDays,
   MessageSquare, Wallet, Package, ArrowLeft, Search,
@@ -69,7 +70,9 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ 
     { id: 'reserves', icon: <CalendarDays size={28} />, label: 'Reservas', target: 'admin-reservations' },
     { id: 'access', icon: <Key size={28} />, label: 'Portaria Fast', target: 'admin-access' },
     { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
+    { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
     { id: 'finance', icon: <Wallet size={28} />, label: 'Financeiro', target: 'admin-finance' },
+    { id: 'categories', icon: <Layers size={28} />, label: 'Categorias', target: 'admin-categories' },
   ];
 
   return (
@@ -606,3 +609,132 @@ export const AdminMaintenance: React.FC<{ onBack: () => void }> = ({ onBack }) =
 export const AdminSystemUsers: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="SISTEMA" onBack={onBack} /><div className="p-8 text-center text-slate-400 text-xs font-black uppercase tracking-widest py-32">Configurações de níveis de acesso.</div></div>;
 export const AdminLostFound: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="ACHADOS" onBack={onBack} /></div>;
 export const AdminPolls: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="VOTAÇÕES" onBack={onBack} /></div>;
+
+export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; onRefresh: () => void }> = ({ onBack, categories, onRefresh }) => {
+  const [isAdding, setIsAdding] = useState(false);
+  const [form, setForm] = useState({ name: '', image: '' });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSave = async () => {
+    if (!form.name) return;
+    setUploading(true);
+
+    try {
+      let publicUrl = form.image;
+
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('categories')
+          .upload(filePath, imageFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data } = supabase.storage
+          .from('categories')
+          .getPublicUrl(filePath);
+
+        publicUrl = data.publicUrl;
+      }
+
+      const { error } = await supabase.from('categories').insert([{
+        name: form.name,
+        image_url: publicUrl,
+        type: 'product'
+      }]);
+
+      if (error) throw error;
+
+      alert('Categoria criada com sucesso!');
+      setIsAdding(false);
+      setForm({ name: '', image: '' });
+      setImageFile(null);
+      onRefresh();
+
+    } catch (error: any) {
+      alert('Erro ao salvar categoria: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza? Isso pode afetar produtos desta categoria.')) return;
+    const { error } = await supabase.from('categories').delete().eq('id', id);
+    if (!error) onRefresh();
+    else alert('Erro ao excluir: ' + error.message);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <AdminHeader title="CATEGORIAS" onBack={onBack} />
+      <div className="p-6 space-y-6">
+        <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2"><Plus size={20} /> Nova Categoria</Button>
+
+        {isAdding && (
+          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
+            <h3 className="text-lg font-black italic text-slate-900">Nova Categoria</h3>
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-violet-400 transition-all overflow-hidden relative"
+            >
+              {imageFile ? (
+                <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
+              ) : form.image ? (
+                <img src={form.image} className="w-full h-full object-cover opacity-50" />
+              ) : (
+                <>
+                  <ImageIcon className="text-slate-300" size={32} />
+                  <span className="text-[10px] font-bold text-slate-400 uppercase">Toque para Upload</span>
+                </>
+              )}
+              <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="image/*"
+                onChange={e => {
+                  if (e.target.files?.[0]) {
+                    setImageFile(e.target.files[0]);
+                    setForm({ ...form, image: '' });
+                  }
+                }}
+              />
+            </div>
+
+            <Input placeholder="Nome da Categoria (Ex: Elétrica)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
+            <Input placeholder="OU Cole uma URL de Imagem..." value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} className="h-14" />
+
+            <div className="flex gap-3">
+              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
+              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-violet-600 font-black uppercase text-[10px]">
+                {uploading ? 'Salvando...' : 'Criar Categoria'}
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        <div className="grid grid-cols-2 gap-4">
+          {categories.map(cat => (
+            <div key={cat.id} className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex flex-col gap-3 group relative overflow-hidden">
+              <div className="h-32 bg-slate-100 rounded-2xl overflow-hidden relative">
+                <img src={cat.image_url || `https://ui-avatars.com/api/?name=${cat.name}&background=random`} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all" />
+              </div>
+              <div className="flex justify-between items-center px-1">
+                <span className="font-black text-slate-900 italic">{cat.name}</span>
+                <button onClick={() => handleDelete(cat.id)} className="w-8 h-8 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center active:scale-90"><Trash2 size={14} /></button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
