@@ -138,7 +138,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
           <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
         </div>
       </div>
-      <p className="text-[11px] font-black uppercase tracking-widest text-slate-800 mt-1 shadow-sm">v1.0.6</p>
+      <p className="text-[11px] font-black uppercase tracking-widest text-slate-800 mt-1 shadow-sm">v1.0.7</p>
     </div>
   );
 };
@@ -163,14 +163,21 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
       } else {
         // Fallback or Mock if DB empty
         setCondos([
-          { id: '1', name: 'Vila Verde Residence' },
-          { id: '2', name: 'Splendido Residencial' },
-          { id: '3', name: 'Grand Park' }
+          { id: '1', name: 'Vila Verde Residence', type: 'vertical' },
+          { id: '2', name: 'Splendido Residencial', type: 'vertical' },
+          { id: '3', name: 'Grand Park', type: 'horizontal' }
         ]);
       }
     };
     fetchCondos();
   }, []);
+
+  const selectedCondoData = condos.find(c => c.id === formData.condo);
+  const isHorizontal = selectedCondoData?.type === 'horizontal';
+  const labelTower = isHorizontal ? 'Número' : 'Torre / Bloco';
+  const placeholderTower = isHorizontal ? 'Ex: 1200' : 'Bloco A';
+  const labelUnit = isHorizontal ? 'Rua / Alameda' : 'Unidade';
+  const placeholderUnit = isHorizontal ? 'Ex: Rua das Flores' : 'Apto 101';
 
   const handleFinish = async () => {
     if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
@@ -340,8 +347,14 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <Input placeholder="Torre / Bloco" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} />
-              <Input placeholder="Unidade / Apto" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{labelUnit}</label>
+                <Input placeholder={placeholderUnit} value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{labelTower}</label>
+                <Input placeholder={placeholderTower} value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} />
+              </div>
             </div>
           </div>
         )}
