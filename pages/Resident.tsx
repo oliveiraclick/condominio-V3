@@ -90,28 +90,28 @@ export const ResidentHome: React.FC<{
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
       {/* HEADER DINÂMICO */}
-      <div className="bg-white p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-slate-100">
+      <div className="bg-violet-600 p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-violet-500">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-violet-100 shadow-xl">
+            <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-violet-400/30 shadow-xl bg-white/10 backdrop-blur-sm">
               <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h2 className="font-black text-slate-950 text-2xl tracking-tighter leading-none italic">Olá, {currentUser?.name?.split(' ')[0] || 'Morador'}!</h2>
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2 flex items-center gap-1">
-                <MapPin size={10} className="text-violet-500" /> {currentUser?.condo || 'Meu Condomínio'} • {currentUser?.unit || '---'}
+              <h2 className="font-black text-white text-2xl tracking-tighter leading-none italic">Olá, {currentUser?.name?.split(' ')[0] || 'Morador'}!</h2>
+              <p className="text-[10px] text-violet-200 font-black uppercase tracking-widest mt-2 flex items-center gap-1">
+                <MapPin size={10} className="text-violet-200" /> {currentUser?.condo || 'Meu Condomínio'} • {currentUser?.unit || '---'}
               </p>
             </div>
           </div>
-          <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-slate-50 border rounded-2xl flex items-center justify-center relative">
-            <Bell size={24} />
-            {notifications.length > 0 && <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full"></span>}
+          <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
+            <Bell size={24} className="text-white" />
+            {notifications.length > 0 && <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full"></span>}
           </button>
         </div>
 
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-          <Input placeholder="O que você precisa hoje?" className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-medium" />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-300" size={18} />
+          <Input placeholder="O que você precisa hoje?" className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder-violet-200/70 focus:bg-white/20 transition-all" />
         </div>
       </div>
 
@@ -190,7 +190,7 @@ export const ResidentHome: React.FC<{
 
         {/* E-SHOP (PADARIA) */}
         <div>
-          <SectionHeader title="Conveniência" action="Ver Todos" onAction={() => onNavigate('shop-detail')} />
+          <SectionHeader title="e-Shop" action="Ver Todos" onAction={() => onNavigate('shop-detail')} />
           <div
             onClick={() => onNavigate('shop-detail')}
             className="bg-white p-6 rounded-[36px] shadow-sm border border-slate-50 flex items-center gap-6 active:scale-95 transition-all"
