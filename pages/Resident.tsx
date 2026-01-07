@@ -31,11 +31,16 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   </div>
 );
 
-const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ item, currentUser, onDelete }) => {
-  const isOwner = currentUser?.name === item.user; // Idealmente usar ID, mas name serve por enquanto dado o backend atual
+const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: string) => void; variant?: 'preview' | 'detail'; onSelect?: () => void }> = ({ item, currentUser, onDelete, variant = 'preview', onSelect }) => {
+  const isOwner = currentUser?.name === item.user;
 
   const handleInterest = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (variant === 'preview' && onSelect) {
+      onSelect();
+      return;
+    }
+
     if (item.phone) {
       const cleanPhone = item.phone.replace(/\D/g, '');
       const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.name}* no app do condomínio e tenho interesse!`);
@@ -53,7 +58,10 @@ const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: str
   };
 
   return (
-    <Card className="p-0 overflow-hidden border-none shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group active:scale-[0.98] transition-all">
+    <Card
+      onClick={() => onSelect && onSelect()}
+      className={`p-0 overflow-hidden border-none shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group transition-all ${onSelect ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+    >
       <div className="relative h-72 p-5">
         <img src={item.img} className="w-full h-full object-cover rounded-[32px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
         <div className="absolute top-10 left-10">
@@ -89,7 +97,7 @@ const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: str
             className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
           >
             <MessageSquare size={16} />
-            Tenho Interesse
+            {variant === 'preview' ? 'Ver Detalhes' : 'Tenho Interesse'}
           </button>
         )}
       </div>
@@ -232,7 +240,7 @@ export const ResidentHome: React.FC<{
               {products.map((item, i) => (
                 <div
                   key={i}
-                  onClick={() => onSelectProduct ? onSelectProduct(item) : onNavigate('shop-detail')}
+                  onClick={() => onSelectProduct && onSelectProduct(item)}
                   className="min-w-[45%] bg-white p-4 rounded-[32px] shadow-sm border border-slate-50 flex flex-col gap-3 active:scale-95 transition-all cursor-pointer relative"
                 >
                   <div className="w-full h-32 rounded-2xl bg-orange-50 text-orange-500 overflow-hidden relative flex items-center justify-center">
@@ -504,7 +512,7 @@ export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; 
     <div className="p-6 space-y-10">
       {desapegos.map(item => (
         <div key={item.id} onClick={() => onSelect && onSelect(item)}>
-          <DesapegoCard item={item} currentUser={currentUser} onDelete={onDelete} variant="preview" />
+          <DesapegoCard item={item} currentUser={currentUser} onDelete={onDelete} variant="preview" onSelect={() => onSelect && onSelect(item)} />
         </div>
       ))}
     </div>
