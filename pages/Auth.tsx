@@ -193,11 +193,18 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
     setError(null);
     console.log('🔵 [RES REG] Iniciando cadastro de morador...', { email: formData.email, name: formData.name });
     try {
-      // 1. Criar usuário no Auth do Supabase
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
+      let userId = '';
+      let sessionExists = false;
+
+      // 0. Verificar se já existe usuário logado
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      if (currentUser) {
+        console.log('🔵 [RES REG] Usuário já autenticado, pulando signUp:', currentUser.id);
+        userId = currentUser.id;
+        sessionExists = true;
+
+        await supabase.auth.updateUser({
           data: {
             full_name: formData.name,
             role: UserRole.RESIDENT,
@@ -208,26 +215,39 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             unit: formData.unit,
             spouse_name: formData.spouse
           }
+        });
+      } else {
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.name,
+              role: UserRole.RESIDENT,
+              cpf: formData.cpf,
+              rg: formData.rg,
+              phone: formData.phone,
+              tower: formData.tower,
+              unit: formData.unit,
+              spouse_name: formData.spouse
+            }
+          }
+        });
+
+        if (authError) throw authError;
+        if (authData.user) {
+          userId = authData.user.id;
+          sessionExists = !!authData.session;
         }
-      });
-
-      console.log('🔵 [RES REG] Resposta signUp:', { authData, authError });
-
-      if (authError) {
-        console.error('❌ [RES REG] Erro no signUp:', authError);
-        throw authError;
       }
 
-      if (authData.user) {
-        console.log('✅ [RES REG] Usuário criado no Auth:', authData.user.id);
-
-        if (authData.session) {
+      if (userId) {
+        if (sessionExists) {
           console.log('🔵 [RES REG] Sessão iniciada. Tentando upsert do perfil...');
-          // 2. Salvar Perfil Detalhado
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
-              id: authData.user.id,
+              id: userId,
               name: formData.name,
               email: formData.email,
               cpf: formData.cpf,
@@ -240,18 +260,13 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
               is_free: true
             });
 
-          if (profileError) {
-            console.error('❌ [RES REG] Erro no upsert do perfil:', profileError);
-            throw profileError;
-          }
-
-          console.log('✅ [RES REG] Perfil salvo com sucesso!');
+          if (profileError) throw profileError;
 
           // 3. Salvar Dependentes
           if (formData.dependents.length > 0) {
             console.log('🔵 [RES REG] Salvando dependentes...', formData.dependents.length);
             const depsToInsert = formData.dependents.map(d => ({
-              profile_id: authData.user?.id,
+              profile_id: userId,
               name: d.name,
               kinship: d.kinship,
               birth_date: d.birthDate
@@ -261,10 +276,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
               .from('dependents')
               .insert(depsToInsert);
 
-            if (depsError) {
-              console.error('❌ [RES REG] Erro ao salvar dependentes:', depsError);
-              throw depsError;
-            }
+            if (depsError) throw depsError;
           }
 
           onFinish(formData);
@@ -534,11 +546,19 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
     setError(null);
 
     try {
-      console.log('🔵 [PROF REG] Chamando supabase.auth.signUp...');
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: formData.email,
-        password: formData.password,
-        options: {
+      let userId = '';
+      let sessionExists = false;
+
+      // 0. Verificar se já existe usuário logado
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+
+      if (currentUser) {
+        console.log('🔵 [PROF REG] Usuário já autenticado, pulando signUp:', currentUser.id);
+        userId = currentUser.id;
+        sessionExists = true;
+
+        // Atualizar metadados
+        await supabase.auth.updateUser({
           data: {
             full_name: formData.name,
             role: UserRole.PROFESSIONAL,
@@ -546,26 +566,48 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
             cpf: formData.cpf,
             category: formData.category
           }
+        });
+
+      } else {
+        console.log('🔵 [PROF REG] Chamando supabase.auth.signUp...');
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: formData.email,
+          password: formData.password,
+          options: {
+            data: {
+              full_name: formData.name,
+              role: UserRole.PROFESSIONAL,
+              phone: formData.phone,
+              cpf: formData.cpf,
+              category: formData.category
+            }
+          }
+        });
+
+        console.log('🔵 [PROF REG] Resposta do signUp:', { authData, authError });
+
+        if (authError) {
+          console.error('❌ [PROF REG] Erro no signUp:', authError);
+          throw authError;
         }
-      });
 
-      console.log('🔵 [PROF REG] Resposta do signUp:', { authData, authError });
-
-      if (authError) {
-        console.error('❌ [PROF REG] Erro no signUp:', authError);
-        throw authError;
+        if (authData.user) {
+          userId = authData.user.id;
+          sessionExists = !!authData.session;
+          console.log('✅ [PROF REG] Usuário criado:', userId);
+        }
       }
 
-      if (authData.user) {
-        console.log('✅ [PROF REG] Usuário criado:', authData.user.id);
-        console.log('🔵 [PROF REG] Session presente?', !!authData.session);
+      if (userId) {
+        console.log('✅ [PROF REG] Usuário ID:', userId);
+        console.log('🔵 [PROF REG] Session presente?', sessionExists);
 
-        if (authData.session) {
+        if (sessionExists) {
           console.log('🔵 [PROF REG] Inserindo perfil na tabela profiles...');
           const { error: profileError } = await supabase
             .from('profiles')
             .upsert({
-              id: authData.user.id,
+              id: userId,
               name: formData.name,
               email: formData.email,
               phone: formData.phone,
@@ -587,7 +629,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
           onFinish(formData);
         }
       } else {
-        console.error('❌ [PROF REG] authData.user é null/undefined');
+        console.error('❌ [PROF REG] Usuário não identificado');
         throw new Error('Falha ao criar usuário');
       }
     } catch (err: any) {
@@ -598,6 +640,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
       console.log('🔵 [PROF REG] Processo finalizado');
     }
   };
+
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
