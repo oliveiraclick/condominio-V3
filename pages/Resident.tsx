@@ -261,7 +261,7 @@ export const ResidentHome: React.FC<{
           <div className="relative group">
             {desapegos.length > 0 && (
               <div className="transform transition-all duration-300" onClick={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])}>
-                <DesapegoCard item={desapegos[currentDesapegoIndex]} currentUser={currentUser} variant="preview" />
+                <DesapegoCard item={desapegos[currentDesapegoIndex]} currentUser={currentUser} variant="preview" onSelect={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])} />
               </div>
             )}
 
