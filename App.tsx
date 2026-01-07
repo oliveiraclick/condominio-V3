@@ -34,7 +34,12 @@ const App: React.FC = () => {
   const [reservations, setReservations] = useState<any[]>([]);
   const [serviceRequests, setServiceRequests] = useState<any[]>([]);
   const [activeServices, setActiveServices] = useState<any[]>([]);
-  const [desapegos, setDesapegos] = useState<any[]>([]);
+  const [desapegos, setDesapegos] = useState<any[]>([
+    { id: '1', name: 'Bicicleta Caloi Aro 29', price: 'R$ 850', img: 'https://images.unsplash.com/photo-1532298229144-0ec0c57515c7?q=80&w=2070&auto=format&fit=crop', user: 'Marcos (Torre A - 302)', status: 'VENDENDO', tower: 'Torre A', desc: 'Bicicleta em ótimo estado, com câmbio Shimano.' },
+    { id: '2', name: 'Sofá Retrátil 3 Lugares', price: 'R$ 1.200', img: 'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?q=80&w=2070&auto=format&fit=crop', user: 'Ana (Torre B - 104)', status: 'VENDENDO', tower: 'Torre B', desc: 'Sofá muito confortável, cor cinza, sem manchas.' },
+    { id: '3', name: 'Violão Yamaha C40', price: 'R$ 400', img: 'https://images.unsplash.com/photo-1510915361894-db8b60106cb1?q=80&w=2070&auto=format&fit=crop', user: 'Pedro (Torre A - 505)', status: 'NEGOCIANDO', tower: 'Torre A', desc: 'Violão clássico, ideal para iniciantes.' },
+    { id: '4', name: 'Microondas Electrolux', price: 'R$ 350', img: 'https://plus.unsplash.com/premium_photo-1664372531393-27fe4842d0f0?q=80&w=2070&auto=format&fit=crop', user: 'Carla (Torre C - 201)', status: 'VENDENDO', tower: 'Torre C', desc: 'Microondas 127v, funcionando perfeitamente.' },
+  ]);
   const [commonAreas, setCommonAreas] = useState<any[]>([]);
   const [professionalServices, setProfessionalServices] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
