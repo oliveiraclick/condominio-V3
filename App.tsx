@@ -94,24 +94,33 @@ const App: React.FC = () => {
   // 2. BUSCA DE PERFIL COM LÓGICA DE AUTO-REPARO
   const fetchUserProfile = async (userId: string) => {
     setLoading(true);
+    // Timeout safeguard
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 6000));
+
     try {
       // 1. Fetch Profile ONLY (Safe - No Joins)
-      const { data: profile, error } = await supabase
+      const fetchProfileOp = supabase
         .from('profiles')
         .select('*')
         .eq('id', userId)
         .maybeSingle();
 
+      const { data: profile, error } = await Promise.race([fetchProfileOp, timeout]) as any;
+
       if (profile) {
-        // 2. Try to fetch Condo Name separately (if condo_id exists)
+        // 2. Try to fetch Condo Name separately
         let condoName = 'Condomínio';
         if (profile.condo_id) {
           try {
-            const { data: condo } = await supabase
+            // Short timeout for condo name
+            const condoTimeout = new Promise((_, r) => setTimeout(() => r(new Error('Condo timeout')), 2000));
+            const fetchCondoOp = supabase
               .from('condominiums')
               .select('name')
               .eq('id', profile.condo_id)
               .maybeSingle();
+
+            const { data: condo } = await Promise.race([fetchCondoOp, condoTimeout]) as any;
             if (condo) condoName = condo.name;
           } catch (e) {
             console.warn('Failed to load condo name', e);
@@ -128,12 +137,11 @@ const App: React.FC = () => {
         setAppState('main');
         setActiveTab(role === UserRole.RESIDENT ? 'home' : 'dashboard');
       } else {
-        // Se logou mas não tem perfil, envia para seleção de cargo
         setAppState('roleSelection');
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
-      // Even on error, ensure we don't get stuck loading
+      // Fallback on error/timeout
       setAppState('roleSelection');
     } finally {
       setLoading(false);
