@@ -429,7 +429,7 @@ const App: React.FC = () => {
 
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
-        case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} products={products} />;
+        case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} />;
         case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
         case 'booking': return <ResidentBookings onBack={() => setActiveTab('home')} reservations={reservations} />;
         case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={setActiveTab} />;
