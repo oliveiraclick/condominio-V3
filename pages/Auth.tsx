@@ -178,6 +178,13 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         options: {
           data: {
             full_name: formData.name,
+            role: UserRole.RESIDENT,
+            cpf: formData.cpf,
+            rg: formData.rg,
+            phone: formData.phone,
+            tower: formData.tower,
+            unit: formData.unit,
+            spouse_name: formData.spouse
           }
         }
       });
@@ -185,42 +192,51 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
       if (authError) throw authError;
 
       if (authData.user) {
-        // 2. Salvar Perfil Detalhado
-        const { error: profileError } = await supabase
-          .from('profiles')
-          .insert({
-            id: authData.user.id,
-            name: formData.name,
-            email: formData.email,
-            cpf: formData.cpf,
-            rg: formData.rg,
-            phone: formData.phone,
-            tower: formData.tower,
-            unit: formData.unit,
-            spouse_name: formData.spouse,
-            role: UserRole.RESIDENT,
-            is_free: true
-          });
+        // Check for session to ensure we can write to RLS-protected tables
+        if (authData.session) {
+          // 2. Salvar Perfil Detalhado
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              name: formData.name,
+              email: formData.email,
+              cpf: formData.cpf,
+              rg: formData.rg,
+              phone: formData.phone,
+              tower: formData.tower,
+              unit: formData.unit,
+              spouse_name: formData.spouse,
+              role: UserRole.RESIDENT,
+              is_free: true
+            });
 
-        if (profileError) throw profileError;
+          if (profileError) throw profileError;
 
-        // 3. Salvar Dependentes
-        if (formData.dependents.length > 0) {
-          const depsToInsert = formData.dependents.map(d => ({
-            profile_id: authData.user?.id,
-            name: d.name,
-            kinship: d.kinship,
-            birth_date: d.birthDate
-          }));
+          // 3. Salvar Dependentes
+          if (formData.dependents.length > 0) {
+            const depsToInsert = formData.dependents.map(d => ({
+              profile_id: authData.user?.id,
+              name: d.name,
+              kinship: d.kinship,
+              birth_date: d.birthDate
+            }));
 
-          const { error: depsError } = await supabase
-            .from('dependents')
-            .insert(depsToInsert);
+            const { error: depsError } = await supabase
+              .from('dependents')
+              .insert(depsToInsert);
 
-          if (depsError) throw depsError;
+            if (depsError) throw depsError;
+          }
+
+          onFinish(formData);
+        } else {
+          // No session - Email confirmation enabled
+          alert("Cadastro realizado! Verifique seu email para confirmar sua conta.");
+          // We can't insert profile here without session, so we rely on the DB trigger or user logging in later.
+          // Ideally, we redirect back to login.
+          window.location.reload();
         }
-
-        onFinish(formData);
       }
     } catch (err: any) {
       setError(err.message || 'Erro ao processar cadastro.');
@@ -274,14 +290,15 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
       <div className="px-6 flex-1 overflow-y-auto no-scrollbar">
         {renderStepIndicator()}
 
+        {error && (
+          <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic animate-in slide-in-from-top-2">
+            {error}
+          </div>
+        )}
+
         {step === 1 && (
           <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Dados de Acesso</h3>
-            {error && (
-              <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic">
-                {error}
-              </div>
-            )}
             <div className="space-y-4">
               <div className="relative">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
@@ -403,13 +420,13 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         {step === 4 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Documentação</h3>
-            <p className="text-sm text-slate-500 font-medium italic leading-relaxed">Para validação da sua conta, anexe fotos nítidas dos documentos originais.</p>
+            <p className="text-sm text-slate-500 font-medium italic leading-relaxed">Para validação da sua conta, anexe fotos nítidas dos documentos originais. (Opcional)</p>
 
             <div className="space-y-4">
               {[
-                { key: 'rg', label: 'RG ou CNH (Frente e Verso)', icon: <IdCard size={24} /> },
-                { key: 'cpf', label: 'CPF (Caso não tenha no RG)', icon: <FileText size={24} /> },
-                { key: 'residence', label: 'Comprovante de Residência', icon: <MapPin size={24} /> }
+                { key: 'rg', label: 'RG ou CNH (Frente e Verso) - Opcional', icon: <IdCard size={24} /> },
+                { key: 'cpf', label: 'CPF (Caso não tenha no RG) - Opcional', icon: <FileText size={24} /> },
+                { key: 'residence', label: 'Comprovante de Residência - Opcional', icon: <MapPin size={24} /> }
               ].map((doc) => (
                 <button
                   key={doc.key}
@@ -448,11 +465,173 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
   );
 };
 
-export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void }> = ({ onSelect }) => {
+export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phone: '',
+    cpf: '',
+    category: 'Manutenção'
+  });
+
+  const handleFinish = async () => {
+    console.log('🔵 [PROF REG] Iniciando cadastro...', formData);
+
+    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
+      console.log('⚠️ [PROF REG] Modo MOCK - Supabase não configurado');
+      onFinish(formData);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      console.log('🔵 [PROF REG] Chamando supabase.auth.signUp...');
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            full_name: formData.name,
+            role: UserRole.PROFESSIONAL,
+            phone: formData.phone,
+            cpf: formData.cpf,
+            category: formData.category
+          }
+        }
+      });
+
+      console.log('🔵 [PROF REG] Resposta do signUp:', { authData, authError });
+
+      if (authError) {
+        console.error('❌ [PROF REG] Erro no signUp:', authError);
+        throw authError;
+      }
+
+      if (authData.user) {
+        console.log('✅ [PROF REG] Usuário criado:', authData.user.id);
+        console.log('🔵 [PROF REG] Session presente?', !!authData.session);
+
+        if (authData.session) {
+          console.log('🔵 [PROF REG] Inserindo perfil na tabela profiles...');
+          const { error: profileError } = await supabase
+            .from('profiles')
+            .insert({
+              id: authData.user.id,
+              name: formData.name,
+              email: formData.email,
+              phone: formData.phone,
+              cpf: formData.cpf,
+              role: UserRole.PROFESSIONAL
+            });
+
+          if (profileError) {
+            console.error('❌ [PROF REG] Erro ao inserir perfil:', profileError);
+            throw profileError;
+          }
+
+          console.log('✅ [PROF REG] Perfil inserido com sucesso!');
+          onFinish(formData);
+        } else {
+          console.log('⚠️ [PROF REG] SEM SESSION - Email confirmation habilitado');
+          console.log('🔵 [PROF REG] Trigger do banco deve criar o perfil automaticamente');
+          alert("✅ Cadastro realizado!\n\nVerifique seu email para confirmar sua conta.\n\nApós confirmar, faça login normalmente.");
+          onBack();
+        }
+      } else {
+        console.error('❌ [PROF REG] authData.user é null/undefined');
+        throw new Error('Falha ao criar usuário');
+      }
+    } catch (err: any) {
+      console.error('❌ [PROF REG] Erro geral:', err);
+      setError(err.message || 'Erro ao cadastrar.');
+    } finally {
+      setLoading(false);
+      console.log('🔵 [PROF REG] Processo finalizado');
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
+      <header className="p-6 pt-12 flex items-center gap-4">
+        <button onClick={onBack} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 shadow-sm active:scale-90 transition-transform">
+          <ArrowLeft size={20} />
+        </button>
+        <div>
+          <h2 className="text-xl font-black text-slate-900 italic tracking-tighter leading-none">Cadastro Profissional</h2>
+          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Junte-se à nossa rede</p>
+        </div>
+      </header>
+
+      <div className="px-6 flex-1 overflow-y-auto no-scrollbar space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        {error && (
+          <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic">
+            {error}
+          </div>
+        )}
+        <div className="space-y-4">
+          <div className="relative">
+            <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+            <Input placeholder="Nome Completo / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="pl-12 h-14" />
+          </div>
+          <div className="relative">
+            <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+            <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="pl-12 h-14" />
+          </div>
+          <div className="relative">
+            <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+            <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="pl-12 h-14" />
+          </div>
+          <div className="relative">
+            <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+            <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="pl-12 h-14" />
+          </div>
+          <div className="relative">
+            <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+            <Input placeholder="CPF / CNPJ" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="pl-12 h-14" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria Principal</label>
+            <select
+              value={formData.category}
+              onChange={e => setFormData({ ...formData, category: e.target.value })}
+              className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none border-none"
+            >
+              <option>Manutenção</option>
+              <option>Limpeza</option>
+              <option>Eletricista</option>
+              <option>Encanador</option>
+              <option>Beleza</option>
+              <option>Outros</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <footer className="p-6 bg-white border-t border-slate-50">
+        <Button
+          fullWidth
+          onClick={handleFinish}
+          disabled={loading}
+          className="h-16 rounded-[24px] bg-slate-950 text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 italic"
+        >
+          {loading ? 'Processando...' : 'Finalizar Cadastro'}
+        </Button>
+      </footer>
+    </div>
+  );
+};
+
+export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBack: () => void }> = ({ onSelect, onBack }) => {
+
   return (
     <div className="min-h-screen bg-slate-50 p-8 flex flex-col overflow-y-auto no-scrollbar pb-16">
       <div className="mb-12 shrink-0">
-        <button className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-full flex items-center justify-center mb-12">
+        <button onClick={onBack} className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-full flex items-center justify-center mb-12">
           <ArrowLeft size={20} className="text-slate-600" />
         </button>
         <h2 className="text-2xl font-bold text-center mb-2 text-slate-900 italic tracking-tighter">Como você quer entrar?</h2>

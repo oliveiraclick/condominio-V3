@@ -1,6 +1,18 @@
 import React, { useState } from 'react';
 import { Users, Building, DollarSign, Activity, Search, ShieldCheck } from 'lucide-react';
-import { SectionHeader, Card, Button, Input } from '../pages/Resident'; // Reusing components
+import { Card, Button, Input } from '../components/UI';
+import { supabase } from '../supabase';
+
+const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () => void }> = ({ title, action, onAction }) => (
+  <div className="flex justify-between items-end mb-6 px-1">
+    <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">{title}</h3>
+    {action && (
+      <button onClick={onAction} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all">
+        {action}
+      </button>
+    )}
+  </div>
+);
 
 export const SuperAdmin: React.FC<{ onLogout: () => void; currentUser: any }> = ({ onLogout, currentUser }) => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -33,7 +45,7 @@ export const SuperAdmin: React.FC<{ onLogout: () => void; currentUser: any }> = 
         {activeTab === 'dashboard' && <DashboardView />}
         {activeTab === 'condos' && <CondosView />}
         {activeTab === 'finance' && <SubscriptionsView />}
-        {activeTab === 'finance' && <SubscriptionsView />}
+
       </div>
     </div>
   );
@@ -239,55 +251,5 @@ const SubscriptionsView = () => {
   )
 }
 
-const SubscriptionsView = () => {
-  const [pros, setPros] = React.useState<any[]>([]);
 
-  React.useEffect(() => {
-    // Mock data or fetch from Supabase
-    // supabase.from('profiles').select('*').eq('role', 'professional').then(({ data }) => setPros(data));
-    setPros([
-      { id: 1, name: 'Marco Tech', trial_ends_at: new Date(Date.now() + 15 * 86400000).toISOString(), subscription_status: 'trial' },
-      { id: 2, name: 'Jose Encanador', trial_ends_at: new Date(Date.now() - 2 * 86400000).toISOString(), subscription_status: 'expired' }
-    ]);
-  }, []);
-
-  const extendTrial = (id: number, days: number) => {
-    alert(`Simulando extensão de ${days} dias para ID: ${id}. (Conecte ao Supabase para funcionar real)`);
-  };
-
-  return (
-    <div className="p-10 space-y-8 animate-in slide-in-from-right-8 duration-500">
-      <h1 className="text-3xl font-black italic tracking-tighter text-white">Assinaturas & Trials</h1>
-
-      <div className="bg-slate-800 rounded-[32px] overflow-hidden">
-        <table className="w-full text-left">
-          <thead className="bg-slate-950 text-slate-400 uppercase text-[10px] font-bold tracking-widest">
-            <tr>
-              <th className="p-6">Profissional</th>
-              <th className="p-6">Status</th>
-              <th className="p-6">Fim do Trial</th>
-              <th className="p-6">Ações</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-700">
-            {pros.map(p => {
-              const daysLeft = Math.ceil((new Date(p.trial_ends_at).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-              return (
-                <tr key={p.id} className="hover:bg-slate-700/50 transition-colors">
-                  <td className="p-6 font-bold text-white">{p.name}</td>
-                  <td className="p-6"><span className="bg-emerald-500/20 text-emerald-400 px-2 py-1 rounded-lg text-[10px] uppercase font-black">{p.subscription_status}</span></td>
-                  <td className="p-6 text-slate-400 text-sm">{new Date(p.trial_ends_at).toLocaleDateString()} <span className={daysLeft < 5 ? 'text-rose-500 font-bold' : 'text-slate-500'}>({daysLeft} dias)</span></td>
-                  <td className="p-6 flex gap-2">
-                    <button onClick={() => extendTrial(p.id, 15)} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-[10px] font-bold uppercase hover:bg-indigo-500">+15 Dias</button>
-                    <button onClick={() => extendTrial(p.id, 30)} className="px-3 py-1.5 bg-indigo-600 rounded-lg text-[10px] font-bold uppercase hover:bg-indigo-500">+30 Dias</button>
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
 
