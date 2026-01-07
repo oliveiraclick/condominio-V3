@@ -1,4 +1,3 @@
-
 import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '../components/UI';
 import {
@@ -18,7 +17,6 @@ import {
 } from 'lucide-react';
 import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
-
 
 // --- COMPONENTES DE APOIO ---
 
@@ -69,217 +67,149 @@ const DesapegoCard: React.FC<{ item: any }> = ({ item }) => {
   );
 };
 
-// --- HOME PRINCIPAL ---
+// --- HOME DO MORADOR ---
 export const ResidentHome: React.FC<{
   onNavigate: (target: string) => void;
   onSelectCategory: (cat: string) => void;
   packages: any[];
   setPackages: (pkgs: any[]) => void;
   desapegos: any[];
-  serviceRequests: any[];
-  activeServices: any[];
   currentUser: any;
   notifications?: any[];
+  // Legacy props kept for compatibility if passed, though optionally used
+  serviceRequests?: any[];
+  activeServices?: any[];
   onClearNotifications?: () => void;
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], serviceRequests = [], activeServices = [], currentUser, notifications = [], onClearNotifications }) => {
-  const myPackages = packages.filter(p => p.unit === (currentUser?.unit || '402-B'));
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [] }) => {
   const [showNotifications, setShowNotifications] = useState(false);
-
-  const managementActions = [
-    { icon: <History size={24} />, label: 'Minhas Atividades', target: 'booking' },
-    { icon: <Wallet size={24} />, label: 'Financeiro', target: 'financeiro' },
-    { icon: <Key size={24} />, label: 'Controle de Acesso', target: 'acesso' },
-    { icon: <CalendarDays size={24} />, label: 'Reservas', target: 'condo-agenda' },
-    { icon: <AlertCircle size={24} />, label: 'Ocorrências', target: 'chamado' },
-    { icon: <Users size={24} />, label: 'Assembleias', target: 'assemblies' },
-  ];
-
-  const serviceCategories = [
-    { icon: <Paintbrush size={24} />, label: 'Pintura', cat: 'Limpeza' },
-    { icon: <Zap size={24} />, label: 'Elétrica', cat: 'Reparos' },
-    { icon: <Droplets size={24} />, label: 'Hydráulica', cat: 'Reparos' },
-    { icon: <Wrench size={24} />, label: 'Manutenção', cat: 'Reparos' },
-    { icon: <Scissors size={24} />, label: 'Beleza', cat: 'Beleza' },
-    { icon: <Utensils size={24} />, label: 'Cozinha', cat: 'Gastronomia' },
-  ];
-
-  const shopItems = [
-    { id: 's1', name: 'Padaria Splendido', img: 'https://images.unsplash.com/photo-1509440159596-0249088772ff?auto=format&fit=crop&w=600&q=80', tag: 'Aberto', desc: 'Pães artesanais e café fresco' },
-    { id: 's2', name: 'Mercadinho 24h', img: 'https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=600&q=80', tag: 'Self-service', desc: 'Conveniência total no seu prédio' },
-    { id: 's3', name: 'Lavanderia Express', img: 'https://images.unsplash.com/photo-1545173168-9f1947eebb7f?auto=format&fit=crop&w=600&q=80', tag: 'Aberto', desc: 'Lavagem e secagem profissional' },
-  ];
-
-  const messages = [
-    { title: 'Manutenção Preventiva', text: 'Amanhã teremos manutenção nos elevadores da Torre A.', time: '10 min atrás', type: 'AVISO' },
-    { title: 'Nova Assembleia', text: 'Convocação para reunião extraordinária no dia 15/01.', time: '2h atrás', type: 'EVENTO' },
-  ];
+  const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
-      {/* 1. CABEÇALHO PREMIUM */}
-      <div className="bg-white p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-slate-100 relative z-50">
+      {/* HEADER DINÂMICO */}
+      <div className="bg-white p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-slate-100">
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-violet-100 shadow-xl">
-              <img src={currentUser?.avatar || "https://picsum.photos/seed/alex/150"} alt="Avatar" className="w-full h-full object-cover" />
+              <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
-            <div className="flex flex-col">
+            <div>
               <h2 className="font-black text-slate-950 text-2xl tracking-tighter leading-none italic">Olá, {currentUser?.name?.split(' ')[0] || 'Morador'}!</h2>
               <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mt-2 flex items-center gap-1">
-                <MapPin size={10} className="text-violet-500" /> {currentUser?.condo || 'Condomínio'} • {currentUser?.unit || '---'}-{currentUser?.tower || '-'}
+                <MapPin size={10} className="text-violet-500" /> {currentUser?.condo || 'Meu Condomínio'} • {currentUser?.unit || '---'}
               </p>
             </div>
           </div>
-          <div className="relative">
-            <button
-              onClick={() => setShowNotifications(!showNotifications)}
-              className="w-12 h-12 bg-slate-50 border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-all relative"
-            >
-              <Bell size={24} />
-              {notifications.length > 0 && (
-                <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full border border-white"></span>
-              )}
-            </button>
-
-            {showNotifications && (
-              <div className="absolute right-0 top-14 w-80 bg-white rounded-[32px] shadow-2xl border border-slate-100 p-4 animate-in slide-in-from-top-4 fade-in duration-200 z-[100]">
-                <div className="flex justify-between items-center mb-4 px-2">
-                  <h4 className="font-black text-slate-900 italic text-sm">Notificações</h4>
-                  <button onClick={onClearNotifications} className="text-[10px] text-violet-600 font-bold uppercase hover:bg-violet-50 px-2 py-1 rounded-lg transition-colors">Limpar</button>
-                </div>
-                <div className="space-y-2 max-h-60 overflow-y-auto w-full pr-1">
-                  {notifications.length > 0 ? notifications.map((n: any) => (
-                    <div key={n.id} className={`p-3 rounded-2xl flex gap-3 ${n.read ? 'bg-transparent' : 'bg-violet-50'}`}>
-                      <div className={`w-2 h-2 rounded-full mt-2 shrink-0 ${n.read ? 'bg-slate-200' : 'bg-violet-500'}`}></div>
-                      <div className="flex-1">
-                        <h5 className={`text-xs font-bold leading-tight ${n.read ? 'text-slate-500' : 'text-slate-900'}`}>{n.title}</h5>
-                        <p className="text-[10px] text-slate-400 leading-snug mt-1">{n.desc}</p>
-                        <span className="text-[9px] text-slate-300 font-bold mt-1 block">{n.time}</span>
-                      </div>
-                    </div>
-                  )) : (
-                    <div className="text-center py-6">
-                      <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Tudo limpo por aqui</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
+          <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-slate-50 border rounded-2xl flex items-center justify-center relative">
+            <Bell size={24} />
+            {notifications.length > 0 && <span className="absolute top-3 right-3 w-2 h-2 bg-rose-500 rounded-full"></span>}
+          </button>
         </div>
 
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-violet-500 transition-colors" size={18} />
-          <Input
-            placeholder="O que você precisa hoje?"
-            className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-medium focus:ring-2 focus:ring-violet-100 transition-all"
-            onKeyDown={(e) => e.key === 'Enter' && alert('Busca iniciada: ' + e.currentTarget.value + '. Feature em desenvolvimento.')}
-          />
+        <div className="relative">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
+          <Input placeholder="O que você precisa hoje?" className="pl-12 h-14 bg-slate-50 border-none rounded-2xl font-medium" />
         </div>
       </div>
 
       <div className="p-6 space-y-12">
-        {/* 2. GESTÃO CONDÔMINO */}
-        <div>
-          <SectionHeader title="Gestão Condômino" />
-          <div className="grid grid-cols-3 gap-3">
-            {managementActions.map((act, i) => (
-              <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-5 rounded-[32px] flex flex-col items-center gap-3 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                <div className="text-violet-600 bg-violet-50 w-12 h-12 rounded-2xl flex items-center justify-center">{act.icon}</div>
-                <span className="text-[10px] font-black text-slate-600 text-center uppercase tracking-tighter leading-tight whitespace-pre-wrap">{act.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 3. PRESTADORES POR CATEGORIA */}
-        <div>
-          <SectionHeader title="Prestadores de Serviços" action="Ver Todos" onAction={() => onNavigate('market')} />
-          <div className="grid grid-cols-3 gap-3">
-            {serviceCategories.map((cat, i) => (
-              <button key={i} onClick={() => onSelectCategory(cat.cat)} className="bg-white p-5 rounded-[32px] flex flex-col items-center gap-3 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                <div className="text-emerald-600 bg-emerald-50 w-12 h-12 rounded-2xl flex items-center justify-center">{cat.icon}</div>
-                <span className="text-[10px] font-black text-slate-600 text-center uppercase tracking-tighter leading-tight">{cat.label}</span>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* 4. E-SHOP (B2C Ecosystem) */}
-        <div>
-          <SectionHeader title="E-Shop: Parceiros" action="Oportunidades" onAction={() => onNavigate('market')} />
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-4 px-1">Compre direto de empresas parceiras</p>
-          <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar -mx-6 px-6">
-            {shopItems.map((shop, i) => (
-              <div key={i} onClick={() => onNavigate('shop-detail')} className="min-w-[240px] h-56 rounded-[40px] overflow-hidden relative group active:scale-95 transition-all shadow-xl cursor-pointer">
-                <img src={shop.img} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={shop.name} />
-                <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/20 to-transparent"></div>
-                <div className="absolute top-6 right-6 bg-violet-600 text-white px-4 py-1.5 rounded-full shadow-lg">
-                  <span className="text-[9px] font-black uppercase tracking-widest">{shop.tag}</span>
-                </div>
-                <div className="absolute bottom-8 left-8 right-8">
-                  <h4 className="font-black text-white text-xl tracking-tighter italic leading-none">{shop.name}</h4>
-                  <p className="text-[10px] text-white/70 font-medium mt-2 line-clamp-1">{shop.desc}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* 5. MURAL DO DESAPEGO (C2C Resident to Resident) */}
-        <div>
-          <SectionHeader title="Mural do Desapego" action="Anunciar" onAction={() => onNavigate('create-desapego')} />
-          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-6 px-1">Negocie direto com seus vizinhos</p>
-          <div className="space-y-6">
-            {desapegos.slice(0, 2).map((item) => (
-              <DesapegoCard key={item.id} item={item} />
-            ))}
-          </div>
-        </div>
-
-        {/* 6. MENSAGENS DO CONDOMÍNIO */}
-        <div>
-          <SectionHeader title="Comunicados Oficiais" />
-          <div className="space-y-4">
-            {messages.map((msg, i) => (
-              <div key={i} onClick={() => alert('Abrindo: ' + msg.title)} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-start gap-4 active:scale-98 transition-all cursor-pointer">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 ${msg.type === 'AVISO' ? 'bg-amber-50 text-amber-500' : 'bg-blue-50 text-blue-500'}`}>
-                  <Megaphone size={28} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex justify-between items-start mb-2">
-                    <h4 className="font-bold text-slate-900 text-base tracking-tight">{msg.title}</h4>
-                    <span className="text-[9px] font-black text-slate-300 uppercase">{msg.time}</span>
-                  </div>
-                  <p className="text-sm text-slate-500 line-clamp-2 leading-relaxed">{msg.text}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* ENCOMENDAS */}
+        {/* ENCOMENDAS ATIVAS */}
         {myPackages.length > 0 && (
-          <div className="bg-slate-950 rounded-[48px] p-8 text-white shadow-2xl shadow-slate-950/20 relative overflow-hidden group animate-in zoom-in duration-500">
-            <div className="absolute top-0 right-0 w-48 h-48 bg-violet-600/10 rounded-full blur-[60px] -mr-16 -mt-16"></div>
-            <div className="flex items-center gap-5 mb-8">
-              <div className="w-16 h-16 bg-white/5 backdrop-blur-md rounded-[24px] flex items-center justify-center border border-white/10"><Package size={28} className="text-violet-400" /></div>
+          <div className="bg-slate-950 rounded-[44px] p-8 text-white shadow-2xl animate-in zoom-in duration-500">
+            <div className="flex items-center gap-5 mb-6">
+              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Package size={24} className="text-violet-400" /></div>
               <div>
-                <h3 className="font-black text-xl tracking-tight leading-none">Encomenda Chegou!</h3>
-                <p className="text-[10px] text-slate-500 uppercase font-black tracking-[0.2em] mt-2">
-                  {myPackages.length === 1 ? `Locker ${myPackages[0].locker} • Torre A` : `${myPackages.length} Encomendas aguardando`}
-                </p>
+                <h3 className="font-black text-lg tracking-tight">Sua encomenda chegou!</h3>
+                <p className="text-[9px] text-slate-500 uppercase font-black mt-1">Retirada no Locker: {myPackages[0].locker}</p>
               </div>
             </div>
-            <button onClick={() => setPackages && setPackages(packages.filter(p => p.unit !== '402-B'))} className="w-full py-5 bg-violet-600 text-white rounded-[24px] text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-violet-600/30 active:scale-[0.98] transition-all">Liberar Retirada</button>
+            <Button fullWidth className="bg-violet-600 h-14 rounded-2xl font-black uppercase text-[10px]" onClick={() => setPackages(packages.filter(p => p.unit !== currentUser?.unit))}>Confirmar Retirada</Button>
           </div>
         )}
 
+        {/* ATALHOS RÁPIDOS */}
+        <div>
+          <SectionHeader title="Gestão Condomínio" />
+          <div className="grid grid-cols-3 gap-3">
+            {[
+              { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro' },
+              { icon: <Key size={20} />, label: 'Acessos', target: 'acesso' },
+              { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda' },
+            ].map((act, i) => (
+              <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-5 rounded-[28px] flex flex-col items-center gap-3 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                <div className="text-violet-600 bg-violet-50 w-12 h-12 rounded-xl flex items-center justify-center">{act.icon}</div>
+                <span className="text-[10px] font-black text-slate-600 uppercase text-center">{act.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* MURAL DO DESAPEGO */}
+        <div>
+          <SectionHeader title="Mural do Desapego" action="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
+          <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
+            {desapegos.map((item, i) => (
+              <Card key={i} className="min-w-[280px] p-0 overflow-hidden rounded-[35px] border-none shadow-xl">
+                <div className="h-48 relative">
+                  <img src={item.img} className="w-full h-full object-cover" />
+                  <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-[10px] font-black">{item.price}</div>
+                </div>
+                <div className="p-6">
+                  <h4 className="font-black italic text-slate-900">{item.name}</h4>
+                  <p className="text-[9px] text-slate-400 uppercase mt-1">Vendedor: {item.user}</p>
+                  <Button fullWidth className="mt-4 h-10 bg-slate-950 text-[9px] rounded-xl font-black uppercase">Tenho Interesse</Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- PERFIL DO MORADOR ---
+export const ResidentProfile: React.FC<{ currentUser: any }> = ({ currentUser }) => {
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    window.location.reload();
+  };
+
+  return (
+    <div className="min-h-screen bg-white pb-32">
+      <div className="h-64 bg-violet-600 relative flex items-end px-10 pb-10">
+        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-700"></div>
+        <div className="relative z-10 flex items-center gap-6">
+          <div className="w-24 h-24 rounded-[30px] border-4 border-white bg-white overflow-hidden shadow-2xl">
+            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" />
+          </div>
+          <div className="text-white">
+            <h2 className="text-3xl font-black italic tracking-tighter leading-none">{currentUser?.name || 'Morador'}</h2>
+            <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mt-2">Unidade {currentUser?.unit || '---'}</p>
+          </div>
+        </div>
       </div>
 
-      <button onClick={() => onNavigate('create-desapego')} className="fixed bottom-28 right-8 w-18 h-18 bg-violet-600 rounded-full flex items-center justify-center shadow-2xl shadow-violet-600/40 text-white border-4 border-white active:scale-90 transition-transform z-50">
-        <Plus size={36} strokeWidth={3} />
-      </button>
+      <div className="p-10 space-y-4">
+        {[
+          { icon: <User size={20} />, label: 'Dados Pessoais', desc: 'Edite seu perfil e contatos' },
+          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade' },
+          { icon: <LogOut size={20} />, label: 'Encerrar Sessão', color: 'text-rose-500', bg: 'bg-rose-50', onClick: handleLogout },
+        ].map((item, i) => (
+          <button key={i} onClick={item.onClick} className="w-full p-6 bg-slate-50 rounded-[30px] flex items-center justify-between group transition-all hover:bg-violet-50">
+            <div className="flex items-center gap-5">
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg || 'bg-white shadow-sm'} ${item.color || 'text-slate-400'}`}>
+                {item.icon}
+              </div>
+              <div className="text-left">
+                <h4 className={`font-bold ${item.color || 'text-slate-900'}`}>{item.label}</h4>
+                <p className="text-[10px] text-slate-400 uppercase font-medium">{item.desc}</p>
+              </div>
+            </div>
+            <ChevronRight size={18} className="text-slate-200" />
+          </button>
+        ))}
+      </div>
     </div>
   );
 };
@@ -827,199 +757,6 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
   );
 };
 
-export const ResidentProfile: React.FC<{ currentUser: any }> = ({ currentUser: profile }) => {
-  const [view, setView] = useState<'main' | 'account' | 'family' | 'privacy'>('main');
-
-  const handleLogout = async () => {
-    console.log('🔵 [AUTH] Saindo do sistema...');
-    await supabase.auth.signOut();
-    window.location.reload();
-  };
-
-  const ProfileDetailHeader: React.FC<{ title: string; onBack: () => void }> = ({ title, onBack }) => (
-    <header className="p-8 pt-16 flex items-center gap-6 bg-white sticky top-0 z-40">
-      <button onClick={onBack} className="w-14 h-14 bg-slate-50 rounded-[24px] flex items-center justify-center active:scale-95 transition-all text-slate-900 shadow-sm border border-slate-100">
-        <ArrowLeft size={24} />
-      </button>
-      <h2 className="text-2xl font-black italic uppercase tracking-tighter text-slate-950">{title}</h2>
-    </header>
-  );
-
-  if (view === 'account') {
-    return (
-      <div className="min-h-screen bg-white pb-32 animate-in slide-in-from-right duration-300">
-        <ProfileDetailHeader title="Minha Conta" onBack={() => setView('main')} />
-        <div className="p-8 space-y-8">
-          <div className="flex flex-col items-center gap-6 mb-10">
-            <div className="relative">
-              <div className="w-32 h-32 rounded-[44px] bg-slate-100 overflow-hidden border-4 border-slate-50 shadow-xl">
-                <img src={profile?.avatar || `https://picsum.photos/seed/${profile?.name}/200`} className="w-full h-full object-cover" alt="Avatar" />
-              </div>
-              <button className="absolute -bottom-2 -right-2 w-10 h-10 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg border-4 border-white">
-                <Camera size={18} />
-              </button>
-            </div>
-          </div>
-          <div className="space-y-6">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Nome Completo</label>
-              <Input value={profile?.name || ''} readOnly className="h-16 rounded-3xl bg-slate-50/50 border-slate-100" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">E-mail</label>
-              <Input value={profile?.email || ''} readOnly className="h-16 rounded-3xl bg-slate-50/50 border-slate-100" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Telefone (Fixo/Móvel)</label>
-              <Input value={profile?.phone || '(11) 99999-9999'} readOnly className="h-16 rounded-3xl bg-slate-50/50 border-slate-100" />
-            </div>
-            <div className="pt-6 border-t border-slate-50">
-              <Button fullWidth className="bg-slate-950 text-white h-16 rounded-[28px] text-[10px] font-black uppercase tracking-[0.2em]">Salvar Alterações</Button>
-              <p className="text-center text-[9px] text-slate-400 font-bold uppercase mt-6 tracking-widest px-8 leading-relaxed">Alguns dados só podem ser alterados via administração do condomínio.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === 'family') {
-    return (
-      <div className="min-h-screen bg-white pb-32 animate-in slide-in-from-right duration-300">
-        <ProfileDetailHeader title="Minha Família" onBack={() => setView('main')} />
-        <div className="p-8 space-y-10">
-          <div className="bg-violet-50 p-8 rounded-[40px] border border-violet-100/50">
-            <p className="text-[10px] text-violet-600 font-black uppercase tracking-widest mb-2 leading-none">Status da Unidade</p>
-            <h4 className="text-2xl font-black italic tracking-tighter text-slate-900">{profile?.unit || '---'}-{profile?.tower || '-'} • 3 Dependentes</h4>
-          </div>
-
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] px-2">Integrantes</h4>
-            {[
-              { name: profile?.name || 'Titular', role: 'Titular', avatar: profile?.avatar },
-              { name: 'Maria Oliveira', role: 'Cônjuge', avatar: 'https://picsum.photos/seed/maria/100' },
-              { name: 'Pedro Santos', role: 'Filho', avatar: 'https://picsum.photos/seed/pedro/100' },
-            ].map((member, i) => (
-              <div key={i} className="flex items-center justify-between p-6 bg-slate-50 rounded-[32px] group hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-transparent hover:border-slate-100">
-                <div className="flex items-center gap-4">
-                  <div className="w-14 h-14 rounded-2xl bg-white overflow-hidden border border-slate-100 shadow-sm">
-                    <img src={member.avatar || `https://picsum.photos/seed/${member.name}/100`} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h5 className="font-bold text-slate-900 leading-none">{member.name}</h5>
-                    <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest mt-1.5 block">{member.role}</span>
-                  </div>
-                </div>
-                {member.role !== 'Titular' && (
-                  <button className="w-10 h-10 rounded-xl bg-slate-100 text-slate-400 flex items-center justify-center hover:bg-rose-50 hover:text-rose-500 transition-colors">
-                    <X size={18} />
-                  </button>
-                )}
-              </div>
-            ))}
-            <button className="w-full p-6 border-2 border-dashed border-slate-100 rounded-[32px] flex items-center justify-center gap-3 text-slate-400 font-black uppercase text-[10px] tracking-widest hover:border-violet-200 hover:text-violet-500 hover:bg-violet-50/50 transition-all">
-              <UserPlus size={20} /> Adicionar Dependente
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (view === 'privacy') {
-    return (
-      <div className="min-h-screen bg-white pb-32 animate-in slide-in-from-right duration-300">
-        <ProfileDetailHeader title="Privacidade" onBack={() => setView('main')} />
-        <div className="p-8 space-y-10">
-          <div className="space-y-6">
-            <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] px-2">Configurações de Dados</h4>
-            {[
-              { title: 'Perfil Público', desc: 'Permitir que vizinhos vejam seu perfil no Mural.', checked: true },
-              { title: 'Notificações Push', desc: 'Alertas de avisos, encomendas e reservas.', checked: true },
-              { title: 'Compartilhar Telefone', desc: 'Mostrar número apenas para outros moradores.', checked: false },
-              { title: 'Biometria Facial', desc: 'Usar FaceID/Digital para acesso ao condomínio.', checked: true },
-            ].map((opt, i) => (
-              <div key={i} className="flex items-center justify-between p-7 bg-slate-50 rounded-[35px] border border-slate-50 transition-all">
-                <div className="flex-1 pr-6">
-                  <h5 className="font-bold text-slate-900 tracking-tight leading-none mb-2">{opt.title}</h5>
-                  <p className="text-[10px] text-slate-400 font-medium uppercase leading-tight tracking-wider">{opt.desc}</p>
-                </div>
-                <div className={`w-14 h-8 rounded-full flex items-center p-1 transition-colors ${opt.checked ? 'bg-emerald-500' : 'bg-slate-200'}`}>
-                  <div className={`w-6 h-6 bg-white rounded-full shadow-md transform transition-transform ${opt.checked ? 'translate-x-6' : 'translate-x-0'}`}></div>
-                </div>
-              </div>
-            ))}
-          </div>
-          <div className="pt-6 border-t border-slate-50">
-            <Button fullWidth className="bg-rose-50 text-rose-500 h-16 rounded-[28px] text-[10px] font-black uppercase tracking-[0.2em] border-none">Excluir Minha Conta Permanentemente</Button>
-            <p className="text-center text-[9px] text-slate-400 font-bold uppercase mt-6 tracking-widest px-8 leading-relaxed">Esta ação é irreversível e removerá todos os seus dados do sistema.</p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32">
-      {/* Header Profile Premium */}
-      <div className="h-64 bg-violet-600 relative overflow-visible shadow-2xl">
-        <div className="absolute inset-0 bg-gradient-to-br from-violet-600 via-violet-500 to-indigo-600"></div>
-        <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-        <div className="absolute bottom-0 left-0 w-full h-24 bg-gradient-to-t from-black/20 to-transparent"></div>
-
-        {/* Avatar Container: Overflow visible to avoid cutting */}
-        <div className="absolute -bottom-16 left-10 w-32 h-32 rounded-[44px] border-[6px] border-[#f8fafc] bg-white overflow-hidden shadow-2xl z-20 transition-transform hover:scale-105 duration-500">
-          <img src={profile?.avatar || `https://picsum.photos/seed/${profile?.name}/200`} alt="Me" className="w-full h-full object-cover" />
-        </div>
-      </div>
-
-      <div className="pt-20 px-10 space-y-10">
-        <div className="animate-in fade-in slide-in-from-bottom-4 duration-700">
-          <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 leading-none">{profile?.name || 'Seu Nome'}</h2>
-          <div className="flex items-center gap-3 mt-4">
-            <span className="bg-violet-100 text-violet-700 font-black text-[10px] px-3 py-1 rounded-lg uppercase tracking-widest">{profile?.role || 'Residente'}</span>
-            <p className="text-[11px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
-              <MapPin size={12} className="text-violet-500" /> {profile?.condo || 'Vila Verde'} • {profile?.unit || '---'} {profile?.tower || '-'}
-            </p>
-          </div>
-        </div>
-
-        <div className="space-y-6 animate-in fade-in slide-in-from-bottom-8 duration-700 delay-150">
-          <h4 className="text-[10px] font-black text-slate-300 uppercase tracking-[0.4em] px-2">Menu de Painel</h4>
-          <div className="grid gap-3">
-            {[
-              { icon: <Settings size={22} />, label: 'Minha Conta', desc: 'Dados pessoais e segurança', onClick: () => setView('account') },
-              { icon: <Users size={22} />, label: 'Minha Família', desc: 'Gerenciar dependentes', onClick: () => setView('family') },
-              { icon: <ShieldCheck size={22} />, label: 'Privacidade', desc: 'Configurações de dados', onClick: () => setView('privacy') },
-              { icon: <LogOut size={22} />, label: 'Sair do Sistema', color: 'text-rose-500', bg: 'bg-rose-50', desc: 'Encerrar sessão atual', onClick: handleLogout }
-            ].map((it, i) => (
-              <button
-                key={i}
-                onClick={it.onClick}
-                className="w-full p-6 bg-white rounded-[32px] flex items-center justify-between group shadow-sm hover:shadow-xl hover:shadow-slate-200/50 transition-all border border-slate-50 active:scale-[0.98]"
-              >
-                <div className="flex items-center gap-5 text-left">
-                  <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all group-hover:rotate-6 ${it.bg || 'bg-slate-50'} ${it.color || 'text-slate-400'}`}>
-                    {it.icon}
-                  </div>
-                  <div>
-                    <span className={`text-base font-black italic block ${it.color || 'text-slate-900'} leading-none mb-1`}>{it.label}</span>
-                    <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">{it.desc}</span>
-                  </div>
-                </div>
-                <div className="w-10 h-10 rounded-full flex items-center justify-center bg-slate-50 text-slate-200 group-hover:bg-violet-50 group-hover:text-violet-400 transition-colors">
-                  <ChevronRight size={20} />
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-
 export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[] }> = ({ onBack, reservations }) => {
   const myReservations = reservations.filter(r => r.unit === '402-B');
   return (
@@ -1113,22 +850,21 @@ export const ShopDetailPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
   </div>
 );
 
-// --- NAVEGAÇÃO RESIDENTE ---
+// --- NAVEGAÇÃO ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-10 py-5 flex justify-between items-center z-40 max-w-md mx-auto">
+  <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-8 py-5 flex justify-between items-center z-40 max-w-md mx-auto">
     {[
-      { id: 'home', icon: <LayoutGrid size={26} />, label: 'Início' },
-      { id: 'market', icon: <ShoppingBag size={26} />, label: 'Market' },
-      { id: 'booking', icon: <CalendarDays size={26} />, label: 'Reservas' },
-      { id: 'profile', icon: <User size={26} />, label: 'Perfil' },
+      { id: 'home', icon: <LayoutGrid size={26} /> },
+      { id: 'market', icon: <ShoppingBag size={26} /> },
+      { id: 'booking', icon: <CalendarDays size={26} /> },
+      { id: 'profile', icon: <User size={26} /> },
     ].map((item) => (
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-violet-600 scale-110' : 'text-slate-300'}`}
+        className={`flex flex-col items-center transition-all ${activeTab === item.id ? 'text-violet-600 scale-110' : 'text-slate-300'}`}
       >
         {item.icon}
-        <span className="text-[10px] font-bold uppercase tracking-tighter">{item.label}</span>
       </button>
     ))}
   </div>
