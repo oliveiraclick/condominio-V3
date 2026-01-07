@@ -5,10 +5,27 @@ import {
   Mail, Lock, Chrome, Apple, ArrowLeft, Building2,
   UserCircle, ShieldCheck, User, IdCard, Phone as PhoneIcon,
   MapPin, Heart, Baby, Plus, Trash2, Camera, FileText, Check,
-  ChevronRight, Calendar, Zap, GraduationCap
+  ChevronRight, Calendar, Zap, GraduationCap, Briefcase
 } from 'lucide-react';
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
+
+const translateError = (error: any): string => {
+  const message = error?.message || '';
+  if (message.includes('User already registered') || message.includes('already exists')) {
+    return 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
+  }
+  if (message.includes('Invalid login credentials')) {
+    return 'E-mail ou senha incorretos.';
+  }
+  if (message.includes('Email not confirmed')) {
+    return 'Por favor, confirme seu e-mail antes de entrar.';
+  }
+  if (message.includes('Password should be at least 6 characters')) {
+    return 'A senha deve ter pelo menos 6 caracteres.';
+  }
+  return 'Ocorreu um erro inesperado. Tente novamente.';
+};
 
 
 export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
@@ -30,11 +47,11 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-8 z-50">
-      <div className="w-32 h-32 bg-violet-600/10 rounded-3xl flex items-center justify-center mb-8 animate-bounce">
-        <Building2 size={64} className="text-violet-600" />
+      <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center mb-8 animate-pulse overflow-hidden">
+        <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-4" />
       </div>
-      <h1 className="text-4xl font-bold text-slate-900 mb-2 tracking-tight">CondoConnect</h1>
-      <p className="text-slate-500 text-center mb-12">Smart Living for Your Community</p>
+      <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">Morador</h1>
+      <p className="text-violet-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Clicou, Achou</p>
 
       <div className="w-full max-w-xs bg-slate-100 h-1 rounded-full overflow-hidden">
         <div
@@ -69,7 +86,7 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
       if (error) throw error;
       onLogin();
     } catch (err: any) {
-      setError(err.message || 'Erro ao entrar. Verifique suas credenciais.');
+      setError(translateError(err));
     } finally {
       setLoading(false);
     }
@@ -78,11 +95,11 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
   return (
     <div className="min-h-screen bg-slate-50 p-8 flex flex-col">
       <div className="mt-16 mb-12">
-        <div className="w-16 h-16 bg-violet-600 rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-violet-600/30">
-          <Building2 size={32} className="text-white" />
+        <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-slate-100 p-3">
+          <img src="/logo.png" alt="Morador" className="w-full h-full object-contain" />
         </div>
-        <h2 className="text-3xl font-bold text-slate-900 mb-2">Seja bem-vindo</h2>
-        <p className="text-slate-500">Conecte-se com sua comunidade e gerencie sua vida em condomínio.</p>
+        <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">Seja bem-vindo</h2>
+        <p className="text-slate-500 font-medium">Conecte-se com sua comunidade. Clicou, Achou.</p>
       </div>
 
       <div className="space-y-4 mb-8">
@@ -135,9 +152,13 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
         Novo Cadastro
       </Button>
 
-      <p className="text-center text-slate-400 mt-auto text-[10px] font-black uppercase tracking-widest">
-        CondoConnect • Smart Living Core v3.1
-      </p>
+      <div className="flex items-center justify-center gap-2 text-slate-300 mt-auto">
+        <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
+        <p className="text-[10px] font-black uppercase tracking-widest px-2">
+          Morador • Clicou, Achou v3.1
+        </p>
+        <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
+      </div>
     </div>
   );
 };
@@ -255,7 +276,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
       }
     } catch (err: any) {
       console.error('❌ [RES REG] Erro capturado:', err);
-      setError(err.message || 'Erro ao processar cadastro.');
+      setError(translateError(err));
     } finally {
       setLoading(false);
       console.log('🔵 [RES REG] Processo finalizado.');
@@ -571,7 +592,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
       }
     } catch (err: any) {
       console.error('❌ [PROF REG] Erro geral:', err);
-      setError(err.message || 'Erro ao cadastrar.');
+      setError(translateError(err));
     } finally {
       setLoading(false);
       console.log('🔵 [PROF REG] Processo finalizado');
@@ -732,7 +753,7 @@ export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBac
           className="w-full p-6 bg-white border border-slate-100 shadow-sm rounded-3xl flex items-center gap-4 text-left hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group"
         >
           <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
-            <Building2 size={32} className="text-emerald-600 group-hover:text-white" />
+            <Briefcase size={32} className="text-emerald-600 group-hover:text-white" />
           </div>
           <div>
             <h3 className="font-bold text-lg text-slate-900 tracking-tight leading-none mb-1">Sou Profissional</h3>

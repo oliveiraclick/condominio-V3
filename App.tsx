@@ -414,11 +414,24 @@ const App: React.FC = () => {
         if (data.role === UserRole.RESIDENT) setActiveTab('home');
         else setActiveTab('dashboard');
       } else {
-        setAppState('roleSelection');
+        // PERFIL NÃO ENCONTRADO NO BANCO: Verificar se existe no metadata do Auth
+        // Às vezes o trigger demora ou falha
+        const { data: { user } } = await supabase.auth.getUser();
+        const metaRole = user?.user_metadata?.role;
+
+        if (metaRole) {
+          console.log('🔵 [SYNC] Perfil faltando mas role encontrada no meta:', metaRole);
+          setUserRole(metaRole as UserRole);
+          // O perfil será criado na próxima vez que ele salvar algo ou via trigger
+          setAppState('main');
+          if (metaRole === UserRole.RESIDENT) setActiveTab('home');
+          else setActiveTab('dashboard');
+        } else {
+          setAppState('roleSelection');
+        }
       }
     } catch (err) {
       console.error('Error checking role, falling back to mock:', err);
-      // Fallback para mock se o Supabase falhar ou não estiver configurado
       setAppState('roleSelection');
     } finally {
       setLoading(false);

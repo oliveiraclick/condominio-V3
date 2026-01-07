@@ -1031,8 +1031,8 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
       <div className="p-6 space-y-6 animate-in slide-in-from-right-4">
         {myReservations.length > 0 ? myReservations.map((r) => (
           <Card key={r.id} className="p-8 border-none shadow-xl rounded-[44px] bg-white relative overflow-hidden group">
-            <div className="absolute top-0 right-0 p-8 opacity-5 text-violet-600">
-              <Building2 size={80} />
+            <div className="absolute top-4 right-4 w-24 h-24 opacity-10">
+              <img src="/logo.png" className="w-full h-full object-contain" />
             </div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Local da Reserva</p>
             <h4 className="text-2xl font-black italic tracking-tight">{r.area}</h4>
