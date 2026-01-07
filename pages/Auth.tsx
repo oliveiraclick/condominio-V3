@@ -129,12 +129,15 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         Novo Cadastro
       </Button>
 
-      <div className="flex items-center justify-center gap-2 text-slate-300 mt-auto">
-        <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
-        <p className="text-[10px] font-black uppercase tracking-widest px-2">
-          APP MORADOR • Conecte-se. Clicou, Achou.
-        </p>
-        <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
+      <div className="flex items-center justify-center gap-2 text-slate-300 mt-auto flex-col text-center">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
+          <p className="text-[10px] font-black uppercase tracking-widest px-2">
+            APP MORADOR • Conecte-se. Clicou, Achou.
+          </p>
+          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
+        </div>
+        <p className="text-[9px] font-black uppercase tracking-widest text-slate-200 mt-1">v1.0.2</p>
       </div>
     </div>
   );
