@@ -44,12 +44,32 @@ const App: React.FC = () => {
   // 1. ÚNICO LISTENER DE AUTENTICAÇÃO
   useEffect(() => {
     const initializeAuth = async () => {
-      const { data: { session: currentSession } } = await supabase.auth.getSession();
-      setSession(currentSession);
+      // Create a timeout promise
+      const timeoutPromise = new Promise(resolve => setTimeout(resolve, 5000));
 
-      if (currentSession) {
-        await fetchUserProfile(currentSession.user.id);
-      } else {
+      try {
+        // Race between auth check and 5s timeout
+        const sessionResult: any = await Promise.race([
+          supabase.auth.getSession(),
+          timeoutPromise
+        ]);
+
+        if (!sessionResult || !sessionResult.data) {
+          console.warn("Auth check timed out or failed");
+          setLoading(false);
+          return;
+        }
+
+        const { data: { session: currentSession } } = sessionResult;
+        setSession(currentSession);
+
+        if (currentSession) {
+          await fetchUserProfile(currentSession.user.id);
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        console.error("Auth initialization error:", error);
         setLoading(false);
       }
     };
@@ -75,19 +95,35 @@ const App: React.FC = () => {
   const fetchUserProfile = async (userId: string) => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
+      // 1. Fetch Profile ONLY (Safe - No Joins)
+      const { data: profile, error } = await supabase
         .from('profiles')
-        .select('*, condominiums(name)')
+        .select('*')
         .eq('id', userId)
         .maybeSingle();
 
-      if (data) {
-        const role = data.role as UserRole;
+      if (profile) {
+        // 2. Try to fetch Condo Name separately (if condo_id exists)
+        let condoName = 'Condomínio';
+        if (profile.condo_id) {
+          try {
+            const { data: condo } = await supabase
+              .from('condominiums')
+              .select('name')
+              .eq('id', profile.condo_id)
+              .maybeSingle();
+            if (condo) condoName = condo.name;
+          } catch (e) {
+            console.warn('Failed to load condo name', e);
+          }
+        }
+
+        const role = profile.role as UserRole;
         setUserRole(role);
         setCurrentUser({
-          ...data,
-          avatar: data.avatar || `https://picsum.photos/seed/${data.name}/150`,
-          condo: data.condominiums?.name || 'Condomínio'
+          ...profile,
+          avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
+          condo: condoName
         });
         setAppState('main');
         setActiveTab(role === UserRole.RESIDENT ? 'home' : 'dashboard');
@@ -97,6 +133,7 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
+      // Even on error, ensure we don't get stuck loading
       setAppState('roleSelection');
     } finally {
       setLoading(false);
