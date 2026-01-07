@@ -402,7 +402,7 @@ const App: React.FC = () => {
 
       console.log('🔵 [AUTH] Verificando perfil para:', userId);
 
-      // Usar maybeSingle() para não disparar erro caso não existam linhas
+      // 1. Tentar pegar perfil do banco
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -422,24 +422,44 @@ const App: React.FC = () => {
         return;
       }
 
-      // Se não achou no banco, verificar os metadados da sessão atual
-      console.log('⚠️ [AUTH] Perfil não encontrado no DB. Verificando metadados...');
-      const { data: { session } } = await supabase.auth.getSession();
-      const user = session?.user;
-      const metaRole = user?.user_metadata?.role;
+      // 2. Se falhar, pegar DADOS FRESCOS do Auth (não confiar na sessão em cache)
+      console.log('⚠️ [AUTH] Perfil não encontrado no DB. Verificando Auth fresco...');
+      const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+      if (userError || !user) {
+        console.error('❌ [AUTH] Falha ao recuperar usuário fresco:', userError);
+        setAppState('login');
+        return;
+      }
+
+      const metaRole = user.user_metadata?.role;
 
       if (metaRole) {
-        console.log('🔵 [AUTH] Encontrado papel nos metadados:', metaRole);
+        console.log('🔵 [AUTH] Encontrado papel nos metadados (fresh):', metaRole);
+
+        // Tentar recuperar inserindo o perfil se ele não existe (Auto-Repair)
+        const { error: insertError } = await supabase.from('profiles').insert({
+          id: user.id,
+          email: user.email,
+          name: user.user_metadata.full_name || 'Novo Usuário',
+          role: metaRole,
+          // Adicionar campos opcionais para evitar erros de not-null se houver
+        });
+
+        if (!insertError) {
+          console.log('✅ [AUTH] Perfil restaurado automaticamente via metadados.');
+        }
+
         setUserRole(metaRole as UserRole);
         setAppState('main');
         if (metaRole === UserRole.RESIDENT) setActiveTab('home');
         else setActiveTab('dashboard');
       } else {
-        console.log('❌ [AUTH] Papel não encontrado. Redirecionando para seleção de tipo de conta.');
+        console.log('❌ [AUTH] Papel não encontrado mesmo no Auth fresco.');
         setAppState('roleSelection');
       }
     } catch (err) {
-      console.error('❌ [AUTH] Erro ao verificar papel do usuário:', err);
+      console.error('❌ [AUTH] Erro crítico ao verificar papel:', err);
       setAppState('roleSelection');
     } finally {
       setLoading(false);
