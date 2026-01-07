@@ -229,6 +229,7 @@ const App: React.FC = () => {
         case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={() => { }} />;
         case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} />;
         case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} />;
+        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={(item) => setDesapegos([item, ...desapegos])} currentUser={currentUser} />;
         default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} />;
       }

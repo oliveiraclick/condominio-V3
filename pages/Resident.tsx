@@ -188,6 +188,29 @@ export const ResidentHome: React.FC<{
           </div>
         </div>
 
+        {/* E-SHOP (PADARIA) */}
+        <div>
+          <SectionHeader title="Conveniência" action="Ver Todos" onAction={() => onNavigate('shop-detail')} />
+          <div
+            onClick={() => onNavigate('shop-detail')}
+            className="bg-white p-6 rounded-[36px] shadow-sm border border-slate-50 flex items-center gap-6 active:scale-95 transition-all"
+          >
+            <div className="w-20 h-20 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center">
+              <Store size={32} />
+            </div>
+            <div className="flex-1">
+              <div className="flex justify-between items-start">
+                <h4 className="font-black text-slate-950 text-xl italic tracking-tight">Padaria Splendido</h4>
+                <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase">Aberto</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1 font-medium">Pães quentinhos, doces e café da manhã.</p>
+            </div>
+            <div className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white">
+              <ChevronRight size={18} />
+            </div>
+          </div>
+        </div>
+
         {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
         <div>
           <SectionHeader title="Mural do Desapego" action="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
