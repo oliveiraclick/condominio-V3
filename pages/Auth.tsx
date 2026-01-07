@@ -1,11 +1,10 @@
-
-import React, { useState, useEffect, useRef } from 'react';
-import { Button, Input, Badge } from '../components/UI';
+import React, { useState, useEffect } from 'react';
+import { Button, Input } from '../components/UI';
 import {
-  Mail, Lock, Chrome, Apple, ArrowLeft, Building2,
+  Mail, Lock, ArrowLeft, Building2,
   UserCircle, ShieldCheck, User, IdCard, Phone as PhoneIcon,
   MapPin, Heart, Baby, Plus, Trash2, Camera, FileText, Check,
-  ChevronRight, Calendar, Zap, GraduationCap, Briefcase
+  Zap, GraduationCap, Briefcase
 } from 'lucide-react';
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
@@ -19,14 +18,16 @@ const translateError = (error: any): string => {
     return 'E-mail ou senha incorretos.';
   }
   if (message.includes('Email not confirmed')) {
-    return 'Por favor, confirme seu e-mail antes de entrar.';
+    return 'Por favor, confirme seu e-mail na sua caixa de entrada antes de entrar.';
   }
   if (message.includes('Password should be at least 6 characters')) {
     return 'A senha deve ter pelo menos 6 caracteres.';
   }
-  return 'Ocorreu um erro inesperado. Tente novamente.';
+  if (message.includes('should be a valid email')) {
+    return 'Digite um e-mail válido.';
+  }
+  return 'Erro ao conectar. Tente novamente.';
 };
-
 
 export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
@@ -39,7 +40,7 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
           setTimeout(onFinish, 500);
           return 100;
         }
-        return prev + 2;
+        return prev + 5;
       });
     }, 30);
     return () => clearInterval(timer);
@@ -52,17 +53,12 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
       </div>
       <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">APP MORADOR</h1>
       <p className="text-violet-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Conecte-se. Clicou, Achou.</p>
-
       <div className="w-full max-w-xs bg-slate-100 h-1 rounded-full overflow-hidden">
-        <div
-          className="bg-violet-600 h-full transition-all duration-300"
-          style={{ width: `${progress}%` }}
-        />
+        <div className="bg-violet-600 h-full transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
 };
-
 
 export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void }> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
@@ -71,20 +67,21 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
   const [error, setError] = useState<string | null>(null);
 
   const handleSignIn = async () => {
-    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
-      console.warn("Supabase not configured, using mock login.");
-      onLogin();
+    if (!email || !password) {
+      setError('Preencha e-mail e senha.');
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      if (error) throw error;
-      onLogin();
+      if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
+        console.warn("Supabase not configured, using mock login.");
+        onLogin();
+        return;
+      }
+      const { error: authError } = await supabase.auth.signInWithPassword({ email, password });
+      if (authError) throw authError;
+      onLogin(); // App.tsx will handle the rest via onAuthStateChange
     } catch (err: any) {
       setError(translateError(err));
     } finally {
@@ -99,33 +96,18 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
           <img src="/logo.png" alt="Morador" className="w-full h-full object-contain" />
         </div>
         <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">APP MORADOR</h2>
-        <p className="text-slate-500 font-medium italic">Conecte-se. Clicou, Achou.</p>
+        <p className="text-slate-500 font-medium italic">Faça login para continuar.</p>
       </div>
 
       <div className="space-y-4 mb-8">
-        {error && (
-          <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic">
-            {error}
-          </div>
-        )}
+        {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
         <div className="relative">
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <Input
-            placeholder="Seu email"
-            className="pl-12"
-            value={email}
-            onChange={e => setEmail(e.target.value)}
-          />
+          <Input placeholder="Seu email" className="pl-12" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
         <div className="relative">
           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <Input
-            type="password"
-            placeholder="Sua senha"
-            className="pl-12"
-            value={password}
-            onChange={e => setPassword(e.target.value)}
-          />
+          <Input type="password" placeholder="Sua senha" className="pl-12" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
         <div className="text-right">
           <button className="text-violet-600 text-sm font-medium">Esqueceu a senha?</button>
@@ -143,12 +125,7 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
         <span className="relative px-2 bg-slate-50 text-xs text-slate-400 uppercase tracking-widest font-black italic">Ou</span>
       </div>
 
-      <Button
-        fullWidth
-        variant="secondary"
-        onClick={onRegister}
-        className="bg-white border-2 border-slate-100 text-slate-900 font-black uppercase tracking-widest italic"
-      >
+      <Button fullWidth variant="secondary" onClick={onRegister} className="bg-white border-2 border-slate-100 text-slate-900 font-black uppercase tracking-widest italic">
         Novo Cadastro
       </Button>
 
@@ -163,22 +140,13 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
   );
 };
 
-
 export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    cpf: '',
-    rg: '',
-    phone: '',
-    condo: 'Splendido Residencial',
-    tower: '',
-    unit: '',
-    spouse: '',
+    name: '', email: '', password: '', cpf: '', rg: '', phone: '',
+    condo: 'Splendido Residencial', tower: '', unit: '', spouse: '',
     dependents: [] as Dependent[],
     docs: { rg: false, cpf: false, residence: false }
   });
@@ -191,32 +159,28 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
     }
     setLoading(true);
     setError(null);
-    console.log('🔵 [RES REG] Iniciando cadastro de morador...', { email: formData.email, name: formData.name });
     try {
       let userId = '';
       let sessionExists = false;
 
-      // 0. Verificar se já existe usuário logado
+      // 0. CHECK FOR EXISTING SESSION (Robust Logic)
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       if (currentUser) {
         console.log('🔵 [RES REG] Usuário já autenticado, pulando signUp:', currentUser.id);
         userId = currentUser.id;
         sessionExists = true;
-
+        // Update metadata just in case
         await supabase.auth.updateUser({
           data: {
             full_name: formData.name,
             role: UserRole.RESIDENT,
-            cpf: formData.cpf,
-            rg: formData.rg,
-            phone: formData.phone,
             tower: formData.tower,
-            unit: formData.unit,
-            spouse_name: formData.spouse
+            unit: formData.unit
           }
         });
       } else {
+        // 1. Normal SignUp
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -224,17 +188,14 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             data: {
               full_name: formData.name,
               role: UserRole.RESIDENT,
-              cpf: formData.cpf,
-              rg: formData.rg,
-              phone: formData.phone,
               tower: formData.tower,
-              unit: formData.unit,
-              spouse_name: formData.spouse
+              unit: formData.unit
             }
           }
         });
 
         if (authError) throw authError;
+
         if (authData.user) {
           userId = authData.user.id;
           sessionExists = !!authData.session;
@@ -243,58 +204,45 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
 
       if (userId) {
         if (sessionExists) {
-          console.log('🔵 [RES REG] Sessão iniciada. Tentando upsert do perfil...');
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: userId,
-              name: formData.name,
-              email: formData.email,
-              cpf: formData.cpf,
-              rg: formData.rg,
-              phone: formData.phone,
-              tower: formData.tower,
-              unit: formData.unit,
-              spouse_name: formData.spouse,
-              role: UserRole.RESIDENT,
-              is_free: true
-            });
+          // 2. Upsert Profile
+          const { error: profileError } = await supabase.from('profiles').upsert({
+            id: userId,
+            name: formData.name,
+            email: formData.email,
+            role: UserRole.RESIDENT,
+            tower: formData.tower,
+            unit: formData.unit,
+            phone: formData.phone,
+            cpf: formData.cpf,
+            is_free: true
+          });
 
           if (profileError) throw profileError;
 
-          // 3. Salvar Dependentes
+          // 3. Save Dependents (if any)
           if (formData.dependents.length > 0) {
-            console.log('🔵 [RES REG] Salvando dependentes...', formData.dependents.length);
             const depsToInsert = formData.dependents.map(d => ({
               profile_id: userId,
               name: d.name,
               kinship: d.kinship,
               birth_date: d.birthDate
             }));
-
-            const { error: depsError } = await supabase
-              .from('dependents')
-              .insert(depsToInsert);
-
-            if (depsError) throw depsError;
+            const { error: depsError } = await supabase.from('dependents').insert(depsToInsert);
+            if (depsError) throw depsError; // Non-fatal but could log
           }
 
           onFinish(formData);
         } else {
-          console.log('⚠️ [RES REG] SEM SESSÃO (Email confirmation?)');
-          alert("✅ Cadastro realizado!\n\nVerifique seu email para confirmar sua conta.\n\nApós confirmar, faça login normalmente.");
-          onFinish(formData);
+          alert("✅ Cadastro realizado! Verifique seu e-mail para confirmar a conta antes de entrar.");
+          onBack();
         }
       }
     } catch (err: any) {
-      console.error('❌ [RES REG] Erro capturado:', err);
       setError(translateError(err));
     } finally {
       setLoading(false);
-      console.log('🔵 [RES REG] Processo finalizado.');
     }
   };
-
 
   const addDependent = () => {
     const newDep: Dependent = { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' };
@@ -328,74 +276,37 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
       <header className="p-6 pt-12 flex items-center gap-4">
-        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 shadow-sm active:scale-90 transition-transform">
+        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-sm">
           <ArrowLeft size={20} />
         </button>
         <div>
-          <h2 className="text-xl font-black text-slate-900 italic tracking-tighter leading-none">Cadastro Morador</h2>
+          <h2 className="text-xl font-black text-slate-900 italic uppercase">Cadastro Morador</h2>
           <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Etapa {step} de 4</p>
         </div>
       </header>
 
       <div className="px-6 flex-1 overflow-y-auto no-scrollbar">
-        {renderStepIndicator()}
-
-        {error && (
-          <div className="mb-6 p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic animate-in slide-in-from-top-2">
-            {error}
-          </div>
-        )}
+        {step < 5 && renderStepIndicator()}
+        {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
 
         {step === 1 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Dados de Acesso</h3>
-            <div className="space-y-4">
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="pl-12 h-14" />
-              </div>
-            </div>
+            <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+            <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+            <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+            <Input placeholder="Telefone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+            <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} />
           </div>
         )}
 
-
         {step === 2 && (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
             <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Localização</h3>
-            <div className="space-y-4">
-              <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center gap-4">
-                <Building2 className="text-violet-600" size={24} />
-                <div className="flex-1">
-                  <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Condomínio</p>
-                  <p className="font-bold text-slate-900">{formData.condo}</p>
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Torre / Bloco</label>
-                  <Input placeholder="Ex: B" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14" />
-                </div>
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Unidade / Apto</label>
-                  <Input placeholder="Ex: 402" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14" />
-                </div>
-              </div>
+            <Input placeholder="Condomínio" value={formData.condo} disabled className="bg-slate-100" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="Torre / Bloco" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} />
+              <Input placeholder="Unidade / Apto" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />
             </div>
           </div>
         )}
@@ -403,96 +314,46 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         {step === 3 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pb-10">
             <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Núcleo Familiar</h3>
-
-            <div className="space-y-4">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Cônjuge / Parceiro(a)</p>
-              <div className="relative">
-                <Heart className="absolute left-4 top-1/2 -translate-y-1/2 text-rose-300" size={18} />
-                <Input placeholder="Nome do Cônjuge (opcional)" value={formData.spouse} onChange={e => setFormData({ ...formData, spouse: e.target.value })} className="pl-12 h-14" />
-              </div>
-            </div>
+            <Input placeholder="Nome do Cônjuge (opcional)" value={formData.spouse} onChange={e => setFormData({ ...formData, spouse: e.target.value })} />
 
             <div className="space-y-4">
               <div className="flex justify-between items-center px-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Filhos e Outros Dependentes</p>
+                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dependentes</p>
                 <button onClick={addDependent} className="text-violet-600 text-[10px] font-black uppercase flex items-center gap-1 bg-violet-50 px-3 py-1.5 rounded-lg"><Plus size={12} /> Adicionar</button>
               </div>
-
-              {formData.dependents.length === 0 && (
-                <div className="p-8 border-2 border-dashed border-slate-100 rounded-3xl text-center">
-                  <p className="text-xs text-slate-400 italic">Nenhum dependente adicionado.</p>
-                </div>
-              )}
-
-              <div className="space-y-4">
-                {formData.dependents.map((dep) => (
-                  <div key={dep.id} className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm space-y-4">
-                    <div className="flex gap-4">
-                      <div className="relative flex-1">
-                        <Baby className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-300" size={18} />
-                        <Input
-                          placeholder="Nome do Filho(a)"
-                          value={dep.name}
-                          onChange={e => updateDependent(dep.id, 'name', e.target.value)}
-                          className="pl-12 h-12 text-sm border-none bg-slate-50"
-                        />
-                      </div>
-                      <button onClick={() => removeDependent(dep.id)} className="w-12 h-12 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><Trash2 size={18} /></button>
-                    </div>
-                    <div className="flex gap-4">
-                      <div className="relative flex-1">
-                        <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={16} />
-                        <Input
-                          type="date"
-                          placeholder="Nascimento"
-                          value={dep.birthDate}
-                          onChange={e => updateDependent(dep.id, 'birthDate', e.target.value)}
-                          className="pl-12 h-12 text-xs border-none bg-slate-50"
-                        />
-                      </div>
-                      <select
-                        value={dep.kinship}
-                        onChange={e => updateDependent(dep.id, 'kinship', e.target.value as any)}
-                        className="bg-slate-50 rounded-xl px-4 text-[10px] font-black uppercase text-slate-500 outline-none border-none h-12"
-                      >
-                        <option>Filho(a)</option>
-                        <option>Parente</option>
-                        <option>Outro</option>
-                      </select>
-                    </div>
+              {formData.dependents.map((dep) => (
+                <div key={dep.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-2">
+                  <Input placeholder="Nome" value={dep.name} onChange={e => updateDependent(dep.id, 'name', e.target.value)} />
+                  <div className="flex gap-2">
+                    <Input type="date" value={dep.birthDate} onChange={e => updateDependent(dep.id, 'birthDate', e.target.value)} />
+                    <select value={dep.kinship} onChange={e => updateDependent(dep.id, 'kinship', e.target.value as any)} className="bg-slate-50 rounded-xl px-2 text-xs font-bold">
+                      <option>Filho(a)</option>
+                      <option>Parente</option>
+                      <option>Outro</option>
+                    </select>
+                    <button onClick={() => removeDependent(dep.id)} className="text-rose-500 p-2"><Trash2 size={16} /></button>
                   </div>
-                ))}
-              </div>
+                </div>
+              ))}
             </div>
           </div>
         )}
 
         {step === 4 && (
           <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Documentação</h3>
-            <p className="text-sm text-slate-500 font-medium italic leading-relaxed">Para validação da sua conta, anexe fotos nítidas dos documentos originais. (Opcional)</p>
-
+            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Documentação (Opcional)</h3>
             <div className="space-y-4">
               {[
-                { key: 'rg', label: 'RG ou CNH (Frente e Verso) - Opcional', icon: <IdCard size={24} /> },
-                { key: 'cpf', label: 'CPF (Caso não tenha no RG) - Opcional', icon: <FileText size={24} /> },
-                { key: 'residence', label: 'Comprovante de Residência - Opcional', icon: <MapPin size={24} /> }
+                { key: 'rg', label: 'RG ou CNH', icon: <IdCard size={24} /> },
+                { key: 'residence', label: 'Comp. Residência', icon: <MapPin size={24} /> }
               ].map((doc) => (
                 <button
                   key={doc.key}
                   onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })}
-                  className={`w-full p-6 rounded-[32px] border-2 border-dashed flex items-center justify-between group transition-all ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100 hover:border-violet-200'}`}
+                  className={`w-full p-4 rounded-2xl border-2 border-dashed flex items-center gap-4 ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200'}`}
                 >
-                  <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-violet-500 transition-colors'}`}>
-                      {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={28} /> : doc.icon}
-                    </div>
-                    <div className="text-left">
-                      <h4 className={`font-black tracking-tight italic ${formData.docs[doc.key as keyof typeof formData.docs] ? 'text-emerald-700' : 'text-slate-900'}`}>{doc.label}</h4>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{formData.docs[doc.key as keyof typeof formData.docs] ? 'ARQUIVO CARREGADO' : 'CLIQUE PARA ANEXAR'}</p>
-                    </div>
-                  </div>
-                  {!formData.docs[doc.key as keyof typeof formData.docs] && <Camera className="text-slate-300" size={20} />}
+                  {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={24} /> : doc.icon}
+                  <span className="font-bold text-sm">{doc.label}</span>
                 </button>
               ))}
             </div>
@@ -500,76 +361,50 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         )}
       </div>
 
-      <footer className="p-6 bg-white border-t border-slate-50">
-        <Button
-          fullWidth
-          onClick={step === 4 ? handleFinish : () => setStep(step + 1)}
-          disabled={loading}
-          className="h-16 rounded-[24px] bg-slate-950 text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 italic"
-        >
-          {loading ? 'Processando...' : (step === 4 ? 'Finalizar Cadastro' : 'Próxima Etapa')}
+      <footer className="p-6">
+        <Button fullWidth onClick={step === 4 ? handleFinish : () => setStep(step + 1)} disabled={loading} className="h-14 rounded-2xl font-black uppercase tracking-widest">
+          {loading ? 'Salvando...' : step === 4 ? 'Finalizar Cadastro' : 'Próxima Etapa'}
         </Button>
-
       </footer>
     </div>
   );
 };
 
 export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
+  // Professional Registration reusing similar logic
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
-    name: '',
-    email: '',
-    password: '',
-    phone: '',
-    cpf: '',
-    category: 'Manutenção',
-    docs: {
-      rg: false,
-      cpf: false,
-      license: false
-    }
+    name: '', email: '', password: '', phone: '', cpf: '', category: 'Manutenção',
+    docs: { rg: false, cpf: false, license: false }
   });
 
   const handleFinish = async () => {
-    console.log('🔵 [PROF REG] Iniciando cadastro...', formData);
-
     if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
-      console.log('⚠️ [PROF REG] Modo MOCK - Supabase não configurado');
       onFinish(formData);
       return;
     }
-
     setLoading(true);
     setError(null);
-
     try {
       let userId = '';
       let sessionExists = false;
 
-      // 0. Verificar se já existe usuário logado
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       if (currentUser) {
-        console.log('🔵 [PROF REG] Usuário já autenticado, pulando signUp:', currentUser.id);
         userId = currentUser.id;
         sessionExists = true;
-
-        // Atualizar metadados
         await supabase.auth.updateUser({
           data: {
             full_name: formData.name,
             role: UserRole.PROFESSIONAL,
             phone: formData.phone,
-            cpf: formData.cpf,
             category: formData.category
           }
         });
-
       } else {
-        console.log('🔵 [PROF REG] Chamando supabase.auth.signUp...');
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
@@ -578,257 +413,137 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
               full_name: formData.name,
               role: UserRole.PROFESSIONAL,
               phone: formData.phone,
-              cpf: formData.cpf,
               category: formData.category
             }
           }
         });
-
-        console.log('🔵 [PROF REG] Resposta do signUp:', { authData, authError });
-
-        if (authError) {
-          console.error('❌ [PROF REG] Erro no signUp:', authError);
-          throw authError;
-        }
-
+        if (authError) throw authError;
         if (authData.user) {
           userId = authData.user.id;
           sessionExists = !!authData.session;
-          console.log('✅ [PROF REG] Usuário criado:', userId);
         }
       }
 
-      if (userId) {
-        console.log('✅ [PROF REG] Usuário ID:', userId);
-        console.log('🔵 [PROF REG] Session presente?', sessionExists);
-
-        if (sessionExists) {
-          console.log('🔵 [PROF REG] Inserindo perfil na tabela profiles...');
-          const { error: profileError } = await supabase
-            .from('profiles')
-            .upsert({
-              id: userId,
-              name: formData.name,
-              email: formData.email,
-              phone: formData.phone,
-              cpf: formData.cpf,
-              category: formData.category,
-              role: UserRole.PROFESSIONAL
-            });
-
-          if (profileError) {
-            console.error('❌ [PROF REG] Erro ao inserir perfil:', profileError);
-            throw profileError;
-          }
-
-          console.log('✅ [PROF REG] Perfil inserido com sucesso!');
-          onFinish(formData);
-        } else {
-          console.log('⚠️ [PROF REG] SEM SESSION - Email confirmation habilitado');
-          alert("✅ Cadastro realizado!\n\nVerifique seu email para confirmar sua conta.\n\nApós confirmar, faça login normalmente.");
-          onFinish(formData);
-        }
-      } else {
-        console.error('❌ [PROF REG] Usuário não identificado');
-        throw new Error('Falha ao criar usuário');
+      if (userId && sessionExists) {
+        const { error: profileError } = await supabase.from('profiles').upsert({
+          id: userId,
+          name: formData.name,
+          email: formData.email,
+          phone: formData.phone,
+          cpf: formData.cpf,
+          category: formData.category,
+          role: UserRole.PROFESSIONAL
+        });
+        if (profileError) throw profileError;
+        onFinish(formData);
+      } else if (userId && !sessionExists) {
+        alert("✅ Cadastro realizado! Verifique seu e-mail.");
+        onBack();
       }
     } catch (err: any) {
-      console.error('❌ [PROF REG] Erro geral:', err);
       setError(translateError(err));
     } finally {
       setLoading(false);
-      console.log('🔵 [PROF REG] Processo finalizado');
     }
   };
 
-
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
-      <header className="p-6 pt-12 flex items-center justify-between">
-        <div className="flex items-center gap-4">
-          <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-900 shadow-sm active:scale-90 transition-transform">
-            <ArrowLeft size={20} />
-          </button>
-          <div>
-            <h2 className="text-xl font-black text-slate-900 italic tracking-tighter leading-none">Cadastro Profissional</h2>
-            <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Etapa {step} de 2</p>
-          </div>
-        </div>
-        <div className="flex gap-1">
-          {[1, 2].map(s => (
-            <div key={s} className={`h-1.5 w-6 rounded-full transition-all ${step >= s ? 'bg-slate-900' : 'bg-slate-100'}`} />
-          ))}
-        </div>
+      <header className="p-6 pt-12 flex items-center gap-4">
+        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-sm">
+          <ArrowLeft size={20} />
+        </button>
+        <h2 className="text-xl font-black text-slate-900 italic uppercase">Cadastro Profissional</h2>
       </header>
+      <div className="px-6 flex-1 overflow-y-auto">
+        {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
 
-      <div className="px-6 flex-1 overflow-y-auto no-scrollbar py-6">
-        {step === 1 ? (
-          <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-300">
+        {step === 1 && (
+          <div className="space-y-4">
+            <Input placeholder="Nome / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+            <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+            <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
+            <Input placeholder="Telefone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
             <div className="space-y-2">
-              <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Dados de Acesso</h3>
-              <p className="text-sm text-slate-500 font-medium italic">Preencha suas informações profissionais básicas.</p>
-            </div>
-
-            <div className="space-y-4">
-              <div className="relative">
-                <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="Nome Completo / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <PhoneIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="relative">
-                <IdCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={18} />
-                <Input placeholder="CPF / CNPJ" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="pl-12 h-14" />
-              </div>
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria Principal</label>
-                <select
-                  value={formData.category}
-                  onChange={e => setFormData({ ...formData, category: e.target.value })}
-                  className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none border-none"
-                >
-                  <option value="Manutenção">Manutenção Geral</option>
-                  <option value="Limpeza">Limpeza / Diarista</option>
-                  <option value="Beleza">Beleza / Estética</option>
-                  <option value="Tecnologia">Tecnologia / TI</option>
-                  <option value="Eventos">Eventos / Buffet</option>
-                  <option value="Reformas">Reformas / Pintura</option>
-                </select>
-              </div>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <div className="space-y-2">
-              <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Documentação</h3>
-              <p className="text-sm text-slate-500 font-medium italic">Para sua segurança e dos moradores, precisamos validar sua identidade e licenças.</p>
-            </div>
-
-            <div className="space-y-4">
-              {[
-                { key: 'rg', label: 'RG ou CNH (Frente e Verso)', icon: <IdCard size={24} /> },
-                { key: 'cpf', label: 'Cartão CNPJ (Se houver)', icon: <FileText size={24} /> },
-                { key: 'license', label: 'Certificados / Referências', icon: <GraduationCap size={24} /> }
-              ].map((doc) => (
-                <button
-                  key={doc.key}
-                  onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })}
-                  className={`w-full p-6 rounded-[32px] border-2 border-dashed flex items-center justify-between group transition-all ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100 hover:border-violet-200'}`}
-                >
-                  <div className="flex items-center gap-5">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-500 text-white' : 'bg-slate-50 text-slate-300 group-hover:text-violet-500 transition-colors'}`}>
-                      {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={28} /> : doc.icon}
-                    </div>
-                    <div className="text-left">
-                      <h4 className={`font-black tracking-tight italic ${formData.docs[doc.key as keyof typeof formData.docs] ? 'text-emerald-700' : 'text-slate-900'}`}>{doc.label}</h4>
-                      <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{formData.docs[doc.key as keyof typeof formData.docs] ? 'ARQUIVO CARREGADO' : 'CLIQUE PARA ANEXAR'}</p>
-                    </div>
-                  </div>
-                  {!formData.docs[doc.key as keyof typeof formData.docs] && <Camera className="text-slate-300" size={20} />}
-                </button>
-              ))}
-            </div>
-
-            <div className="p-6 bg-slate-50 rounded-[32px] flex items-start gap-4">
-              <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center text-slate-500 shrink-0">
-                <ShieldCheck size={20} />
-              </div>
-              <p className="text-[10px] text-slate-500 font-medium leading-relaxed">
-                Seus dados estão protegidos por criptografia de ponta a ponta e serão usados apenas para a verificação do seu perfil pela administração.
-              </p>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria</label>
+              <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600">
+                <option value="Manutenção">Manutenção</option>
+                <option value="Limpeza">Limpeza</option>
+                <option value="Beleza">Beleza</option>
+                <option value="Tecnologia">Tecnologia</option>
+              </select>
             </div>
           </div>
         )}
+        {step === 2 && (
+          <div className="space-y-4">
+            <h3 className="text-xl font-black">Documentos</h3>
+            <p className="text-sm text-slate-500">Opcional para validação.</p>
+            {[
+              { key: 'rg', label: 'RG / CNH' },
+              { key: 'license', label: 'Certificados' }
+            ].map((doc) => (
+              <button key={doc.key} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })}
+                className={`w-full p-4 rounded-2xl border-2 border-dashed flex items-center gap-4 ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200'}`}>
+                {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={24} /> : <FileText size={24} />}
+                <span className="font-bold text-sm">{doc.label}</span>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
-
-      <footer className="p-6 bg-white border-t border-slate-50">
-        <Button
-          fullWidth
-          onClick={step === 1 ? () => setStep(2) : handleFinish}
-          disabled={loading}
-          className="h-16 rounded-[24px] bg-slate-950 text-[11px] font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/10 italic"
-        >
-          {loading ? 'Processando...' : (step === 1 ? 'Próximo: Documentos' : 'Finalizar Cadastro')}
+      <footer className="p-6">
+        <Button fullWidth onClick={step === 2 ? handleFinish : () => setStep(2)} disabled={loading}>
+          {loading ? 'Salvando...' : step === 2 ? 'Finalizar' : 'Próxima'}
         </Button>
       </footer>
     </div>
   );
-};
+}
 
 export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBack: () => void }> = ({ onSelect, onBack }) => {
-
   return (
-    <div className="min-h-screen bg-slate-50 p-8 flex flex-col overflow-y-auto no-scrollbar pb-16">
-      <div className="mb-12 shrink-0">
-        <button onClick={onBack} className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-full flex items-center justify-center mb-12">
-          <ArrowLeft size={20} className="text-slate-600" />
-        </button>
-        <h2 className="text-2xl font-bold text-center mb-2 text-slate-900 italic tracking-tighter">Como você quer entrar?</h2>
-        <p className="text-slate-500 text-center text-sm">Escolha o perfil que deseja acessar agora.</p>
-      </div>
-
+    <div className="min-h-screen bg-slate-50 p-8 flex flex-col">
+      <button onClick={onBack} className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-full flex items-center justify-center mb-12">
+        <ArrowLeft size={20} className="text-slate-600" />
+      </button>
+      <h2 className="text-2xl font-bold text-center mb-8 italic text-slate-900 tracking-tighter">Como você quer entrar?</h2>
       <div className="space-y-4">
-        <button
-          onClick={() => onSelect(UserRole.RESIDENT)}
-          className="w-full p-6 bg-white border border-slate-100 shadow-sm rounded-3xl flex items-center gap-4 text-left hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group"
-        >
+        <button onClick={() => onSelect(UserRole.RESIDENT)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group">
           <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 transition-colors">
             <UserCircle size={32} className="text-violet-600 group-hover:text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-slate-900 tracking-tight leading-none mb-1">Sou Morador</h3>
-            <p className="text-slate-500 text-xs leading-relaxed">Acesse avisos, serviços e o marketplace do prédio.</p>
+            <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Sou Morador</h3>
+            <p className="text-slate-500 text-xs">Acesse avisos, serviços e o marketplace.</p>
           </div>
         </button>
-
-        <button
-          onClick={() => onSelect(UserRole.PROFESSIONAL)}
-          className="w-full p-6 bg-white border border-slate-100 shadow-sm rounded-3xl flex items-center gap-4 text-left hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group"
-        >
+        <button onClick={() => onSelect(UserRole.PROFESSIONAL)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-emerald-600 hover:ring-2 hover:ring-emerald-100 transition-all group">
           <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
             <Briefcase size={32} className="text-emerald-600 group-hover:text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-slate-900 tracking-tight leading-none mb-1">Sou Profissional</h3>
-            <p className="text-slate-500 text-xs leading-relaxed">Gerencie agendamentos e ofereça seus serviços.</p>
+            <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Sou Profissional</h3>
+            <p className="text-slate-500 text-xs">Gerencie seus serviços e clientes.</p>
           </div>
         </button>
-
-        <button
-          onClick={() => onSelect(UserRole.ADMIN)}
-          className="w-full p-6 bg-white border border-slate-100 shadow-sm rounded-3xl flex items-center gap-4 text-left hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group"
-        >
+        <button onClick={() => onSelect(UserRole.ADMIN)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group">
           <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 transition-colors">
             <ShieldCheck size={32} className="text-violet-600 group-hover:text-white" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-slate-900 tracking-tight leading-none mb-1 italic">Administrador</h3>
-            <p className="text-slate-500 text-xs leading-relaxed">Gestão de moradores, avisos e financeiro.</p>
+            <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Administrador</h3>
+            <p className="text-slate-500 text-xs">Gestão do condomínio e moradores.</p>
           </div>
         </button>
-
-        <div className="h-px bg-slate-100 my-4 mx-4"></div>
-
-        <button
-          onClick={() => onSelect(UserRole.SUPER_ADMIN)}
-          className="w-full p-6 bg-slate-900 border border-slate-800 shadow-xl rounded-3xl flex items-center gap-4 text-left hover:ring-2 hover:ring-cyan-400 transition-all group"
-        >
+        <div className="w-full h-px bg-slate-200 my-4"></div>
+        <button onClick={() => onSelect(UserRole.SUPER_ADMIN)} className="w-full p-6 bg-slate-900 rounded-3xl flex items-center gap-4 text-left shadow-lg hover:ring-2 hover:ring-cyan-400 transition-all group">
           <div className="w-14 h-14 bg-slate-800 rounded-2xl flex items-center justify-center">
             <Zap size={32} className="text-cyan-400" />
           </div>
           <div>
-            <h3 className="font-bold text-lg text-white tracking-tight leading-none mb-1 italic">SUPER ADM</h3>
-            <p className="text-slate-400 text-xs leading-relaxed">Plataforma, SaaS e Marketplace Global.</p>
+            <h3 className="font-bold text-lg text-white tracking-tight mb-1">SUPER ADM</h3>
+            <p className="text-slate-400 text-xs">Painel geral do sistema.</p>
           </div>
         </button>
       </div>
