@@ -111,11 +111,15 @@ export const ResidentHome: React.FC<{
   activeServices?: any[];
   onClearNotifications?: () => void;
   onSelectDesapego?: (item: any) => void;
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego }) => {
+  products?: any[]; // Added products prop
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego, products = [] }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
   const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
+
+  // Get a featured product (e.g., the last one added, or random)
+  const featuredProduct = products.length > 0 ? products[products.length - 1] : null;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
@@ -214,28 +218,37 @@ export const ResidentHome: React.FC<{
                   ))}
                 </div>
               </div>
-            )}
+            )
+            }
           </div>
         </div>
 
-        {/* E-SHOP (PADARIA) */}
+        {/* E-SHOP (Dinâmico) */}
         <div>
           <SectionHeader title="e-Shop" action="Ver Todos" onAction={() => onNavigate('shop-detail')} />
           <div
             onClick={() => onNavigate('shop-detail')}
-            className="bg-white p-6 rounded-[36px] shadow-sm border border-slate-50 flex items-center gap-6 active:scale-95 transition-all"
+            className="bg-white p-6 rounded-[36px] shadow-sm border border-slate-50 flex items-center gap-6 active:scale-95 transition-all cursor-pointer"
           >
-            <div className="w-20 h-20 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center">
-              <Store size={32} />
+            <div className="w-20 h-20 rounded-2xl bg-orange-50 text-orange-500 overflow-hidden relative flex items-center justify-center">
+              {featuredProduct?.image_url ? (
+                <img src={featuredProduct.image_url} className="w-full h-full object-cover" />
+              ) : (
+                <Store size={32} />
+              )}
             </div>
             <div className="flex-1">
               <div className="flex justify-between items-start">
-                <h4 className="font-black text-slate-950 text-xl italic tracking-tight">Padaria Splendido</h4>
-                <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase">Aberto</span>
+                <h4 className="font-black text-slate-950 text-xl italic tracking-tight line-clamp-1">
+                  {featuredProduct ? featuredProduct.title : "Marketplace"}
+                </h4>
+                {featuredProduct && <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-lg text-[9px] font-black uppercase">Novo</span>}
               </div>
-              <p className="text-xs text-slate-400 mt-1 font-medium">Pães quentinhos, doces e café da manhã.</p>
+              <p className="text-xs text-slate-400 mt-1 font-medium line-clamp-2">
+                {featuredProduct ? featuredProduct.description : "Encontre produtos e serviços dos seus vizinhos e comércio local."}
+              </p>
             </div>
-            <div className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white">
+            <div className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white shrink-0">
               <ChevronRight size={18} />
             </div>
           </div>

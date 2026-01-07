@@ -390,7 +390,7 @@ const App: React.FC = () => {
 
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
-        case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} />;
+        case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} products={products} />;
         case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
         case 'booking': return <ResidentBookings onBack={() => setActiveTab('home')} reservations={reservations} />;
         case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={setActiveTab} />;
@@ -405,7 +405,7 @@ const App: React.FC = () => {
         case 'desapego-detail': return <DesapegoDetailView onBack={() => setActiveTab('home')} item={selectedDesapego} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
         case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={handleAddDesapego} currentUser={currentUser} />;
-        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} />;
+        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => { }} onSelectDesapego={handleSelectDesapego} products={products} />;
       }
     }
 
