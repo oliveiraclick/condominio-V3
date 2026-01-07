@@ -50,8 +50,8 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
       <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center mb-8 animate-pulse overflow-hidden">
         <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-4" />
       </div>
-      <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">Morador</h1>
-      <p className="text-violet-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Clicou, Achou</p>
+      <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">APP MORADOR</h1>
+      <p className="text-violet-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Conecte-se. Clicou, Achou.</p>
 
       <div className="w-full max-w-xs bg-slate-100 h-1 rounded-full overflow-hidden">
         <div
@@ -98,8 +98,8 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
         <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-slate-100 p-3">
           <img src="/logo.png" alt="Morador" className="w-full h-full object-contain" />
         </div>
-        <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">Seja bem-vindo</h2>
-        <p className="text-slate-500 font-medium">Conecte-se com sua comunidade. Clicou, Achou.</p>
+        <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">APP MORADOR</h2>
+        <p className="text-slate-500 font-medium italic">Conecte-se. Clicou, Achou.</p>
       </div>
 
       <div className="space-y-4 mb-8">
@@ -155,7 +155,7 @@ export const LoginScreen: React.FC<{ onLogin: () => void; onRegister: () => void
       <div className="flex items-center justify-center gap-2 text-slate-300 mt-auto">
         <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
         <p className="text-[10px] font-black uppercase tracking-widest px-2">
-          Morador • Clicou, Achou v3.1
+          APP MORADOR • Conecte-se. Clicou, Achou.
         </p>
         <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
       </div>
