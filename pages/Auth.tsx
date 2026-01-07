@@ -140,7 +140,6 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
       </div>
       <p className="text-[11px] font-black uppercase tracking-widest text-slate-800 mt-1 shadow-sm">v1.0.2</p>
     </div>
-    </div >
   );
 };
 
