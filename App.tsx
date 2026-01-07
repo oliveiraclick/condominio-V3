@@ -213,7 +213,12 @@ const App: React.FC = () => {
     );
   }
 
-  if (appState === 'login') return <LoginScreen onLogin={() => { }} onRegister={() => setAppState('roleSelection')} />;
+  if (appState === 'login') return <LoginScreen onLogin={async () => {
+    const { data: { session: currentSession } } = await supabase.auth.getSession();
+    if (currentSession) {
+      await fetchUserProfile(currentSession.user.id);
+    }
+  }} onRegister={() => setAppState('roleSelection')} />;
   if (appState === 'roleSelection') return <RoleSelection onSelect={(role) => { setUserRole(role); setAppState(role === UserRole.RESIDENT ? 'registerResident' : 'registerProfessional'); }} onBack={() => setAppState('login')} />;
   if (appState === 'registerResident') return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
   if (appState === 'registerProfessional') return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
