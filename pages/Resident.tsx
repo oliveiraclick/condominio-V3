@@ -80,8 +80,11 @@ export const ResidentHome: React.FC<{
   serviceRequests?: any[];
   activeServices?: any[];
   onClearNotifications?: () => void;
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [] }) => {
+  onSelectDesapego?: (item: any) => void;
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego }) => {
   const [showNotifications, setShowNotifications] = useState(false);
+  const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
+  const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
   const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
 
   return (
@@ -127,62 +130,95 @@ export const ResidentHome: React.FC<{
           </div>
         )}
 
-        {/* ATALHOS RÁPIDOS */}
-        <div className="space-y-8">
-          {/* GESTÃO CONDOMÍNIO */}
-          <div>
-            <SectionHeader title="Gestão Condomínio" action="Ver Todos" onAction={() => onNavigate('home')} />
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
-                { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
-                { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
-              ].map((act, i) => (
-                <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                  <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
-                  <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
-                </button>
-              ))}
-            </div>
+        {/* ATALHOS RÁPIDOS (COM ABAS) */}
+        <div className="space-y-6">
+          {/* Tabs */}
+          <div className="flex p-1 bg-slate-100/80 rounded-2xl">
+            <button
+              onClick={() => setActiveSection('prestadores')}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeSection === 'prestadores' ? 'bg-white text-violet-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Prestadores
+            </button>
+            <button
+              onClick={() => setActiveSection('gestao')}
+              className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeSection === 'gestao' ? 'bg-white text-violet-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+            >
+              Gestão Condomínio
+            </button>
           </div>
 
-          {/* PRESTADORES */}
-          <div>
-            <SectionHeader title="Prestadores" action="Ver Todos" onAction={() => onSelectCategory('Todos')} />
-            <div className="grid grid-cols-4 gap-3">
-              {[
-                { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
-                { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
-                { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                { icon: <Paintbrush size={20} />, label: 'Pintura', category: 'Pintor', color: 'text-pink-600', bg: 'bg-pink-50' },
-              ].map((act, i) => (
-                <button key={i} onClick={() => onSelectCategory(act.category)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                  <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
-                  <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none">{act.label}</span>
-                </button>
-              ))}
-            </div>
+          {/* Conteúdo Dinâmico */}
+          <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
+            {activeSection === 'gestao' ? (
+              <div>
+                <SectionHeader title="Gestão Condomínio" action="Ver Todos" onAction={() => onNavigate('home')} />
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
+                    { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
+                    { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
+                  ].map((act, i) => (
+                    <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                      <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
+                      <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ) : (
+              <div>
+                <SectionHeader title="Prestadores" action="Ver Todos" onAction={() => onSelectCategory('Todos')} />
+                <div className="grid grid-cols-4 gap-3">
+                  {[
+                    { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
+                    { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
+                    { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
+                    { icon: <Paintbrush size={20} />, label: 'Pintura', category: 'Pintor', color: 'text-pink-600', bg: 'bg-pink-50' },
+                  ].map((act, i) => (
+                    <button key={i} onClick={() => onSelectCategory(act.category)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                      <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
+                      <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none">{act.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
-        {/* MURAL DO DESAPEGO */}
+        {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
         <div>
           <SectionHeader title="Mural do Desapego" action="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
-          <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar">
-            {desapegos.map((item, i) => (
-              <Card key={i} className="min-w-[280px] p-0 overflow-hidden rounded-[35px] border-none shadow-xl">
-                <div className="h-48 relative">
-                  <img src={item.img} className="w-full h-full object-cover" />
-                  <div className="absolute top-4 right-4 bg-white/90 px-3 py-1 rounded-full text-[10px] font-black">{item.price}</div>
-                </div>
-                <div className="p-6">
-                  <h4 className="font-black italic text-slate-900">{item.name}</h4>
-                  <p className="text-[9px] text-slate-400 uppercase mt-1">Vendedor: {item.user}</p>
-                  <Button fullWidth className="mt-4 h-10 bg-slate-950 text-[9px] rounded-xl font-black uppercase">Tenho Interesse</Button>
-                </div>
-              </Card>
-            ))}
+
+          <div className="relative group">
+            {desapegos.length > 0 && (
+              <div className="transform transition-all duration-300" onClick={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])}>
+                <DesapegoCard item={desapegos[currentDesapegoIndex]} />
+              </div>
+            )}
+
+            {/* Navigation Arrows */}
+            <button
+              onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === 0 ? desapegos.length - 1 : prev - 1); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
+            >
+              <ChevronLeft size={24} />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === desapegos.length - 1 ? 0 : prev + 1); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
+            >
+              <ChevronRight size={24} />
+            </button>
+
+            {/* Dots Indicator */}
+            <div className="flex justify-center gap-2 mt-6">
+              {desapegos.map((_, idx) => (
+                <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-violet-600' : 'w-2 bg-slate-200'}`} />
+              ))}
+            </div>
           </div>
         </div>
       </div>
@@ -352,6 +388,24 @@ export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[] }
     </header>
     <div className="p-6 space-y-10">
       {desapegos.map(item => <DesapegoCard key={item.id} item={item} />)}
+    </div>
+  </div>
+);
+
+export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any }> = ({ onBack, item }) => (
+  <div className="min-h-screen bg-slate-50 pb-32">
+    <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-40">
+      <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all shadow-sm"><ArrowLeft size={20} /></button>
+      <h2 className="text-xl font-black italic uppercase tracking-tight">Detalhes do Produto</h2>
+    </header>
+    <div className="p-6 animate-in slide-in-from-bottom-4">
+      {item ? <DesapegoCard item={item} /> : <p>Item não encontrado.</p>}
+      <div className="mt-8 space-y-4">
+        <div className="bg-white p-6 rounded-[32px] shadow-sm">
+          <h3 className="font-bold text-slate-900 mb-2">Descrição do Vendedor</h3>
+          <p className="text-sm text-slate-500 leading-relaxed">{item?.desc || 'Sem descrição.'}</p>
+        </div>
+      </div>
     </div>
   </div>
 );
