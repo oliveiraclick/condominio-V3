@@ -788,6 +788,8 @@ export const ProfessionalShop = ({ currentUser }: any) => {
     category: 'Outros',
     image_url: ''
   });
+  const [uploading, setUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
   useEffect(() => {
     loadProducts();
@@ -805,6 +807,32 @@ export const ProfessionalShop = ({ currentUser }: any) => {
       setProducts(data);
     }
     setLoading(false);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser?.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      setImageFile(file);
+    } catch (error: any) {
+      alert('Erro ao fazer upload: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   const handleSubmit = async () => {
@@ -884,6 +912,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
     setFormData({ title: '', description: '', price: '', category: 'Outros', image_url: '' });
     setEditingProduct(null);
     setShowForm(false);
+    setImageFile(null);
   };
 
   const categories = ['Alimentos', 'Artesanato', 'Serviços', 'Outros'];
@@ -950,12 +979,44 @@ export const ProfessionalShop = ({ currentUser }: any) => {
               </select>
             </div>
 
-            <Input
-              placeholder="URL da imagem (opcional)"
-              value={formData.image_url}
-              onChange={(e) => setFormData({ ...formData, image_url: e.target.value })}
-              className="h-14 rounded-2xl"
-            />
+            {/* Upload de Imagem */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Produto</label>
+              <div className="relative">
+                {formData.image_url ? (
+                  <div className="relative">
+                    <img src={formData.image_url} alt="Preview" className="w-full h-48 object-cover rounded-2xl" />
+                    <button
+                      onClick={() => setFormData({ ...formData, image_url: '' })}
+                      className="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 active:scale-95 transition-all"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-violet-400 transition-all bg-slate-50">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                    {uploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-xs font-bold text-slate-400">Enviando...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Camera size={32} className="text-slate-300" />
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Clique para adicionar foto</span>
+                      </div>
+                    )}
+                  </label>
+                )}
+              </div>
+            </div>
 
             <Button
               fullWidth
