@@ -31,6 +31,116 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   </div>
 );
 
+// --- NOTIFICATIONS MODAL ---
+const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userRole: string }> = ({ isOpen, onClose, userRole }) => {
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadNotifications();
+    }
+  }, [isOpen]);
+
+  const loadNotifications = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('sent_notifications')
+      .select('*')
+      .or(`target_role.eq.all,target_role.eq.${userRole}`)
+      .order('created_at', { ascending: false })
+      .limit(50);
+
+    if (data && !error) {
+      setNotifications(data);
+    }
+    setLoading(false);
+  };
+
+  const markAsRead = (id: string) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-40 flex items-end justify-center animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-md bg-white rounded-t-[40px] shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-24" style={{ maxHeight: 'calc(100vh - 120px)' }}>
+        {/* Header */}
+        <div className="p-6 pb-4 border-b border-slate-100 sticky top-0 bg-white rounded-t-[40px] z-10">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Notificações</h2>
+            <button onClick={onClose} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+              <X size={20} className="text-slate-600" />
+            </button>
+          </div>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
+            {notifications.length} mensagens
+          </p>
+        </div>
+
+        {/* Content with smooth scroll */}
+        <div
+          className="overflow-y-auto p-6 space-y-4"
+          style={{
+            maxHeight: 'calc(100vh - 280px)',
+            scrollbarWidth: 'none',
+            msOverflowStyle: 'none',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
+          <style>{`
+            .overflow-y-auto::-webkit-scrollbar {
+              display: none;
+            }
+          `}</style>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Bell size={24} className="text-slate-300" />
+              </div>
+              <p className="text-slate-400 font-bold text-sm">Nenhuma notificação</p>
+              <p className="text-slate-300 text-xs mt-1">Você está em dia!</p>
+            </div>
+          ) : (
+            notifications.map((notif) => (
+              <div key={notif.id} className="bg-slate-50 p-5 rounded-[28px] border border-slate-100 space-y-3 animate-in slide-in-from-bottom-2 relative group">
+                <div className="flex justify-between items-start gap-3">
+                  <h4 className="font-black text-slate-900 text-base italic tracking-tight flex-1">{notif.title}</h4>
+                  <Badge className={`text-[8px] uppercase px-2 py-1 ${notif.target_role === 'all' ? 'bg-violet-100 text-violet-600' :
+                    notif.target_role === 'resident' ? 'bg-blue-100 text-blue-600' :
+                      'bg-emerald-100 text-emerald-600'
+                    }`}>
+                    {notif.target_role === 'all' ? 'Geral' : notif.target_role === 'resident' ? 'Moradores' : 'Profissionais'}
+                  </Badge>
+                </div>
+                <p className="text-sm text-slate-600 leading-relaxed">{notif.body}</p>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+                    <Clock size={12} />
+                    {new Date(notif.created_at).toLocaleDateString('pt-BR')} às {new Date(notif.created_at).toLocaleTimeString('pt-BR').slice(0, 5)}
+                  </div>
+                  <button
+                    onClick={() => markAsRead(notif.id)}
+                    className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 active:scale-95 transition-all opacity-0 group-hover:opacity-100"
+                  >
+                    Marcar Lido
+                  </button>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: string) => void; variant?: 'preview' | 'detail'; onSelect?: () => void }> = ({ item, currentUser, onDelete, variant = 'preview', onSelect }) => {
   const isOwner = currentUser?.name === item.user;
 
@@ -132,6 +242,9 @@ export const ResidentHome: React.FC<{
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
+      {/* NOTIFICATIONS MODAL */}
+      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} userRole="resident" />
+
       {/* HEADER DINÂMICO */}
       <div className="bg-violet-600 p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-violet-500">
         <div className="flex items-center justify-between mb-8">
@@ -148,7 +261,7 @@ export const ResidentHome: React.FC<{
           </div>
           <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
             <Bell size={24} className="text-white" />
-            {notifications.length > 0 && <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full"></span>}
+            <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
           </button>
         </div>
 
@@ -906,51 +1019,118 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
   );
 };
 
-export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]; setReservations: any; commonAreas: any[] }> = ({ onBack, reservations, setReservations, commonAreas }) => {
+export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]; onAddReservation: (res: any) => void; commonAreas: any[] }> = ({ onBack, reservations, onAddReservation, commonAreas }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedArea, setSelectedArea] = useState<any>(null);
   const [date, setDate] = useState('');
+  const [selectedHour, setSelectedHour] = useState<string | null>(null);
   const [dateFiltered, setDateFiltered] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   // Group by category
   const categories = Array.from(new Set(commonAreas.map(a => a.category || 'Outros')));
 
-  const handleReserve = () => {
+  // Generate hourly slots (6am to 10pm)
+  const generateHourlySlots = () => {
+    const slots = [];
+    for (let hour = 6; hour <= 22; hour++) {
+      slots.push({
+        start: `${hour.toString().padStart(2, '0')}:00`,
+        end: `${(hour + 1).toString().padStart(2, '0')}:00`,
+        label: `${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`
+      });
+    }
+    return slots;
+  };
+
+  const hourlySlots = generateHourlySlots();
+
+  const handleReserve = async () => {
     if (!selectedArea || !date) return;
 
-    // Check if already reserved
-    const isTaken = reservations.some(r => r.areaId === selectedArea.id && r.date === date);
-    if (isTaken) {
-      alert('Este espaço já está reservado nesta data. Por favor escolha outra data.');
+    const isSportsArea = selectedArea.category === 'Esportes';
+
+    if (isSportsArea && !selectedHour) {
+      alert('Por favor, selecione um horário.');
       return;
     }
 
-    setReservations([...reservations, {
-      id: Date.now(),
-      area: selectedArea.name,
-      areaId: selectedArea.id,
-      date: date,
-      resident: 'Alex Ferreira', // Mock
-      unit: '402-B'
-    }]);
-    alert('Reserva solicitada com sucesso!');
-    setSelectedArea(null);
-    setDate('');
-    setDateFiltered(false);
+    setLoading(true);
+    try {
+      const reservationData: any = {
+        areaId: selectedArea.id,
+        area: selectedArea.name,
+        date: date
+      };
+
+      if (isSportsArea && selectedHour) {
+        const slot = hourlySlots.find(s => s.start === selectedHour);
+        reservationData.startTime = slot?.start;
+        reservationData.endTime = slot?.end;
+      } else {
+        reservationData.timeSlot = 'all_day';
+      }
+
+      await onAddReservation(reservationData);
+      alert('Reserva confirmada com sucesso!');
+      setSelectedArea(null);
+      setDate('');
+      setSelectedHour(null);
+      setDateFiltered(false);
+    } catch (error: any) {
+      alert(error.message || 'Erro ao criar reserva. Tente novamente.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleDateFilter = (d: string) => {
     setDate(d);
     setDateFiltered(true);
+    setSelectedHour(null);
   };
 
   const filteredAreas = selectedCategory
     ? commonAreas.filter(a => (a.category || 'Outros') === selectedCategory)
     : [];
 
+  // Check if hour is available
+  const isHourAvailable = (hour: string) => {
+    if (!selectedArea || !date) return true;
+
+    return !reservations.some(r =>
+      r.area_id === selectedArea.id &&
+      r.date === date &&
+      r.start_time === hour &&
+      r.status !== 'cancelled'
+    );
+  };
+
   // Filter available areas if date is selected
   const availableAreas = dateFiltered && date
-    ? filteredAreas.filter(area => !reservations.some(r => r.areaId === area.id && r.date === date))
+    ? filteredAreas.filter(area => {
+      const isSportsArea = area.category === 'Esportes';
+
+      if (isSportsArea) {
+        // For sports, check if at least one hour is available
+        return hourlySlots.some(slot => {
+          return !reservations.some(r =>
+            r.area_id === area.id &&
+            r.date === date &&
+            r.start_time === slot.start &&
+            r.status !== 'cancelled'
+          );
+        });
+      } else {
+        // For full-day areas, check if day is available
+        return !reservations.some(r =>
+          r.area_id === area.id &&
+          r.date === date &&
+          r.time_slot === 'all_day' &&
+          r.status !== 'cancelled'
+        );
+      }
+    })
     : filteredAreas;
 
   return (
@@ -1049,7 +1229,41 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                 </div>
               </div>
 
-              <Button fullWidth onClick={handleReserve} className="bg-violet-600 h-16 rounded-[28px] uppercase tracking-[0.2em] font-black text-xs shadow-xl shadow-violet-600/30">Confirmar Reserva</Button>
+              {/* Hourly Selection for Sports Areas */}
+              {selectedArea.category === 'Esportes' && (
+                <div className="space-y-3">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escolha o Horário</label>
+                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+                    {hourlySlots.map(slot => {
+                      const available = isHourAvailable(slot.start);
+                      return (
+                        <button
+                          key={slot.start}
+                          onClick={() => available && setSelectedHour(slot.start)}
+                          disabled={!available}
+                          className={`p-3 rounded-xl border-2 transition-all text-center ${selectedHour === slot.start
+                              ? 'border-violet-600 bg-violet-50'
+                              : available
+                                ? 'border-slate-200 bg-white hover:border-violet-200 active:scale-95'
+                                : 'border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed'
+                            }`}
+                        >
+                          <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-violet-600' : available ? 'text-slate-900' : 'text-slate-400'}`}>
+                            {slot.start}
+                          </div>
+                          <div className="text-[8px] text-slate-400 font-bold mt-0.5">
+                            {available ? '✓ Livre' : '✗ Ocupado'}
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              <Button fullWidth onClick={handleReserve} disabled={loading} className="bg-violet-600 h-16 rounded-[28px] uppercase tracking-[0.2em] font-black text-xs shadow-xl shadow-violet-600/30">
+                {loading ? 'Confirmando...' : 'Confirmar Reserva'}
+              </Button>
             </div>
           </div>
         )}

@@ -367,8 +367,26 @@ const App: React.FC = () => {
         case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
         case 'chamado': return <ChamadosPage onBack={goBack} serviceRequests={serviceRequests} onAddRequest={handleAddServiceRequest} currentUser={currentUser} />;
         case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} onAddReservation={async (res) => {
-          const { error } = await supabase.from('reservations').insert([{ resident_id: session.user.id, area_id: res.areaId, area_name: res.area, date: res.date, unit: currentUser?.unit, tower: currentUser?.tower }]);
-          if (!error) { alert('Reserva confirmada!'); refreshAppData(); } else alert(error.message);
+          const insertData: any = {
+            resident_id: session.user.id,
+            area_id: res.areaId,
+            area_name: res.area,
+            date: res.date,
+            status: 'confirmed',
+            unit: currentUser?.unit,
+            tower: currentUser?.tower
+          };
+
+          // Add time fields based on reservation type
+          if (res.startTime && res.endTime) {
+            insertData.start_time = res.startTime;
+            insertData.end_time = res.endTime;
+          } else if (res.timeSlot) {
+            insertData.time_slot = res.timeSlot;
+          }
+
+          const { error } = await supabase.from('reservations').insert([insertData]);
+          if (!error) { refreshAppData(); } else { throw new Error(error.message); }
         }} commonAreas={commonAreas} />;
         case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
         case 'shop-detail': return <ShopDetailPage onBack={goBack} products={products} onSelectProduct={handleSelectProduct} categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />;
