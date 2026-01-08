@@ -389,6 +389,8 @@ const App: React.FC = () => {
           if (!error) { refreshAppData(); } else { throw new Error(error.message); }
         }} commonAreas={commonAreas} />;
         case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
+        case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
+        case 'privacy': return <PrivacyPage onBack={goBack} />;
         case 'shop-detail': return <ShopDetailPage onBack={goBack} products={products} onSelectProduct={handleSelectProduct} categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />;
         case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={goBack} />;
         case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
