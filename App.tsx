@@ -430,6 +430,7 @@ const App: React.FC = () => {
         case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
         case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
         case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={refreshAppData} />;
+        case 'profile': return <AdminProfile currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
         default: return <AdminDashboard onNavigate={pushScreen} />;
       }
     }

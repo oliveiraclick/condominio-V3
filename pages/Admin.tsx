@@ -73,6 +73,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ 
     { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
     { id: 'finance', icon: <Wallet size={28} />, label: 'Financeiro', target: 'admin-finance' },
     { id: 'categories', icon: <Layers size={28} />, label: 'Categorias', target: 'admin-categories' },
+    { id: 'profile', icon: <UserCircle2 size={28} />, label: 'Meu Perfil', target: 'profile' },
   ];
 
   return (
@@ -733,6 +734,105 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
               </div>
             </div>
           ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- PERFIL DO ADMIN ---
+export const AdminProfile: React.FC<{ currentUser: any; onLogout: () => void }> = ({ currentUser, onLogout }) => {
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({
+    name: currentUser?.name || '',
+    phone: currentUser?.phone || '',
+  });
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) return;
+      setUploading(true);
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase.from('profiles').update({ avatar: data.publicUrl }).eq('id', currentUser.id);
+      if (updateError) throw updateError;
+
+      alert('Foto atualizada!');
+      window.location.reload();
+    } catch (error: any) {
+      alert('Erro ao atualizar foto: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('profiles').update({
+        name: formData.name,
+        phone: formData.phone,
+      }).eq('id', currentUser.id);
+
+      if (error) throw error;
+      alert('Perfil atualizado com sucesso!');
+      window.location.reload();
+    } catch (err: any) {
+      alert('Erro ao salvar: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] pb-32">
+      <AdminHeader title="Meu Perfil" />
+
+      <div className="p-8">
+        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 mb-6 flex flex-col items-center">
+          <div
+            className="w-32 h-32 rounded-[40px] border-4 border-slate-50 shadow-xl overflow-hidden mb-4 relative group cursor-pointer"
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
+            {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
+          </div>
+          <button onClick={() => fileInputRef.current?.click()} className="text-violet-600 font-bold text-xs uppercase bg-violet-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
+            {uploading ? 'Enviando...' : 'Alterar Foto'}
+          </button>
+          <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
+        </div>
+
+        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-4 mb-8">
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome</label>
+            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Telefone</label>
+            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
+          </div>
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
+            <Input value={currentUser?.email} readOnly className="h-14 font-medium bg-slate-50 text-slate-400" />
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase text-xs tracking-widest rounded-[24px]">
+            {loading ? 'Salvando...' : 'Salvar Alterações'}
+          </Button>
+          <Button variant="secondary" onClick={onLogout} className="w-full border-rose-100 text-rose-500 h-16 bg-white rounded-[24px]">Sair da Conta</Button>
         </div>
       </div>
     </div>

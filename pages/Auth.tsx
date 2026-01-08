@@ -62,12 +62,72 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
   );
 };
 
+// --- COMPONENTE: ESQUECI A SENHA ---
+const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [email, setEmail] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
+
+  const handleReset = async () => {
+    if (!email) return alert('Digite seu e-mail.');
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/update-password',
+      });
+      if (error) throw error;
+      setSent(true);
+    } catch (err: any) {
+      alert('Erro: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (sent) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
+        <div className="bg-white p-8 rounded-[40px] shadow-xl text-center">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+            <Check size={32} />
+          </div>
+          <h2 className="text-xl font-black text-slate-900 mb-2">E-mail Enviado!</h2>
+          <p className="text-slate-500 text-sm mb-6">Verifique sua caixa de entrada (e spam) para redefinir sua senha.</p>
+          <Button fullWidth onClick={onBack} className="h-14 bg-slate-900 text-white font-bold uppercase rounded-xl">Voltar ao Login</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
+      <header className="mb-8">
+        <button onClick={onBack} className="w-10 h-10 bg-white rounded-xl shadow-sm text-slate-400 flex items-center justify-center mb-6 active:scale-95 transition-transform"><ArrowLeft size={20} /></button>
+        <h2 className="text-3xl font-black italic text-slate-900 uppercase">Recuperar Senha</h2>
+        <p className="text-slate-500 font-medium">Digite seu e-mail para receber as instruções.</p>
+      </header>
+
+      <div className="bg-white p-6 rounded-[32px] shadow-sm space-y-4 mb-6">
+        <div className="relative group">
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
+          <Input placeholder="Seu e-mail cadastrado" className="pl-12 h-14 bg-slate-50 border-none" value={email} onChange={e => setEmail(e.target.value)} />
+        </div>
+      </div>
+
+      <Button fullWidth onClick={handleReset} disabled={loading} className="h-16 bg-violet-600 text-white font-black uppercase tracking-widest shadow-xl shadow-violet-200">
+        {loading ? 'Enviando...' : 'Enviar Link'}
+      </Button>
+    </div>
+  );
+};
+
 // --- COMPONENTE: LOGIN ---
 export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegister: () => void }> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [view, setView] = useState<'login' | 'forgot'>('login');
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -86,6 +146,10 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
       setLoading(false);
     }
   };
+
+  if (view === 'forgot') {
+    return <ForgotPassword onBack={() => setView('login')} />;
+  }
 
   return (
     <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
@@ -107,7 +171,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
           <Input type="password" placeholder="Sua senha" className="pl-12 h-14 bg-white border-none shadow-sm" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
-        <button className="w-full text-right text-violet-600 text-xs font-black uppercase tracking-widest mt-2">Esqueceu a senha?</button>
+        <button onClick={() => setView('forgot')} className="w-full text-right text-violet-600 text-xs font-black uppercase tracking-widest mt-2 hover:underline">Esqueceu a senha?</button>
       </div>
 
       <Button fullWidth onClick={handleSignIn} disabled={loading} className="h-16 bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 mb-6">
