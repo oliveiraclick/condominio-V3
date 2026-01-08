@@ -93,6 +93,7 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
           </div>
           <h2 className="text-xl font-black text-slate-900 mb-2">E-mail Enviado!</h2>
           <p className="text-slate-500 text-sm mb-6">Verifique sua caixa de entrada (e spam) para redefinir sua senha.</p>
+          <p className="text-center text-slate-500 text-xs mt-8">Versão 1.5.3 Beta</p>
           <Button fullWidth onClick={onBack} className="h-14 bg-slate-900 text-white font-bold uppercase rounded-xl">Voltar ao Login</Button>
         </div>
       </div>
