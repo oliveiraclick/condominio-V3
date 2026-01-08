@@ -20,7 +20,7 @@ import {
   AdminDashboard, AdminResidents, AdminNotices, AdminAccess,
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
   AdminNavigation, AdminIncidents, AdminGarage, AdminLostFound, AdminPolls, AdminMaintenance,
-  AdminSystemUsers, AdminCategories
+  AdminSystemUsers, AdminCategories, AdminProfile
 } from './pages/Admin';
 import { SuperAdmin } from './pages/SuperAdmin';
 
