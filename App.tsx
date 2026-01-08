@@ -452,6 +452,31 @@ const App: React.FC = () => {
       }
     };
 
+    const handleAddProfessionalService = async (service: any) => {
+      if (!session?.user) return;
+      const { error } = await supabase.from('professional_services').insert([{
+        provider_id: session.user.id,
+        title: service.title,
+        category: service.category,
+        description: service.desc,
+        price_range: service.price_range,
+        active: true
+      }]);
+      if (error) alert('Erro ao adicionar serviço: ' + error.message);
+      else {
+        alert('Serviço adicionado com sucesso!');
+        fetchProfessionalServices();
+      }
+    };
+
+    const handleDeleteProfessionalService = async (id: string) => {
+      const { error } = await supabase.from('professional_services').delete().eq('id', id);
+      if (error) alert('Erro ao remover serviço: ' + error.message);
+      else {
+        fetchProfessionalServices();
+      }
+    };
+
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
         case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} />;
@@ -476,9 +501,12 @@ const App: React.FC = () => {
     }
 
     if (userRole === UserRole.PROFESSIONAL) {
+      const completedServices = serviceRequests.filter(r => r.status === 'completed');
       switch (activeTab) {
-        case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={setActiveTab} />;
-        case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} />;
+        case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} completedServices={completedServices} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={setActiveTab} />;
+        case 'services': return <ProfessionalServices services={professionalServices.filter(s => s.provider_id === session?.user?.id)} onAddService={handleAddProfessionalService} onDeleteService={handleDeleteProfessionalService} />;
+        case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} onUpdateRequest={handleUpdateServiceRequest} />;
+        case 'earnings': return <ProfessionalEarnings services={completedServices} />;
         case 'shop': return <ProfessionalShop products={products.filter(p => p.vendor_id === session?.user?.id)} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} onToggleStatus={handleToggleProductStatus} />;
         case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
         default: return <ProfessionalDashboard serviceRequests={serviceRequests} activeServices={activeServices} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} />;

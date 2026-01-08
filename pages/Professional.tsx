@@ -4,7 +4,7 @@ import {
   BarChart3, Calendar, MessageSquare, Bell,
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase
 } from 'lucide-react';
 
 export const ProfessionalDashboard: React.FC<{
@@ -17,15 +17,17 @@ export const ProfessionalDashboard: React.FC<{
   setActiveServices?: any;
   setServiceRequests?: any;
   rating?: string;
+  completedServices?: any[];
 }> = ({
   serviceRequests = [],
   activeServices = [],
   onUpdateRequest,
   subscription,
   currentUser,
-  onNavigate
+  onNavigate,
+  completedServices = []
 }) => {
-
+    const totalEarnings = completedServices.reduce((acc, curr) => acc + (curr.price || 0), 0);
     const daysRemaining = subscription?.trialEndsAt
       ? Math.ceil((new Date(subscription.trialEndsAt).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))
       : 0;
@@ -66,7 +68,8 @@ export const ProfessionalDashboard: React.FC<{
     return (
       <div className="min-h-screen bg-slate-50 pb-32">
         <div className="p-6">
-          <div className="flex justify-between items-center mb-10 pt-8">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-8 pt-4">
             <div className="flex items-center gap-4">
               <div className="w-14 h-14 rounded-2xl bg-violet-600 border-4 border-white shadow-xl overflow-hidden">
                 <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" alt="Pro" />
@@ -76,104 +79,121 @@ export const ProfessionalDashboard: React.FC<{
                 <h2 className="font-black text-slate-950 italic tracking-tighter text-xl leading-none">{currentUser?.name || "Prestador"}</h2>
               </div>
             </div>
-            <button className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform">
+            <button className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform relative">
               <Bell size={22} />
+              {serviceRequests.length > 0 && <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white"></span>}
             </button>
           </div>
 
-          <div className="bg-slate-950 rounded-[48px] mb-12 p-10 text-white shadow-2xl shadow-slate-950/20 relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-8 opacity-5">
-              <BarChart3 size={200} />
+          {/* Trial Banner */}
+          {subscription?.status === 'trial' && daysRemaining > 0 && (
+            <div className="mb-8 bg-amber-50 border border-amber-100 p-4 rounded-[32px] flex items-center justify-between shadow-sm relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-1 h-full bg-amber-400"></div>
+              <div className="pl-4">
+                <p className="text-[9px] font-black text-amber-500 uppercase tracking-widest mb-1">Período de Teste</p>
+                <h4 className="font-bold text-slate-900 text-sm italic">Restam {daysRemaining} dias grátis</h4>
+              </div>
+              <Button onClick={() => window.open(kiwifyLink, '_blank')} className="h-10 bg-amber-400 text-amber-950 font-black uppercase text-[10px] rounded-xl px-4 shadow-lg shadow-amber-400/20">
+                Assinar Agora
+              </Button>
             </div>
-            <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Ganhos Disponíveis</p>
-            <h3 className="text-4xl font-black italic tracking-tighter">R$ 2.450,00</h3>
+          )}
 
-            <div className="grid grid-cols-3 gap-3 mt-10">
-              {[
-                { icon: <BarChart3 size={20} />, label: 'Ganhos', tab: 'earnings' },
-                { icon: <Calendar size={20} />, label: 'Agenda', tab: 'agenda' },
-                { icon: <UserCircle2 size={20} />, label: 'Perfil', tab: 'profile' },
-              ].map((btn, i) => (
-                <button
-                  key={i}
-                  onClick={() => onNavigate?.(btn.tab)}
-                  className="flex flex-col items-center gap-2 py-5 bg-white/5 hover:bg-white/10 rounded-[24px] transition-all active:scale-95 border border-white/5"
-                >
-                  {btn.icon}
-                  <span className="text-[9px] font-black uppercase tracking-widest opacity-60">{btn.label}</span>
-                </button>
-              ))}
+          {/* Main Stats Grid */}
+          <div className="grid grid-cols-2 gap-4 mb-8">
+            <div className="col-span-2 bg-slate-950 rounded-[40px] p-8 text-white shadow-2xl shadow-slate-950/20 relative overflow-hidden">
+              <div className="absolute top-0 right-0 p-8 opacity-10">
+                <BarChart3 size={150} />
+              </div>
+              <p className="text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Ganhos Disponíveis</p>
+              <h3 className="text-4xl font-black italic tracking-tighter">R$ {totalEarnings.toFixed(2)}</h3>
+              <div className="mt-6 flex gap-4">
+                <button onClick={() => onNavigate?.('earnings')} className="bg-white/10 px-4 py-2 rounded-xl text-[10px] font-bold uppercase hover:bg-white/20 transition-colors">Ver Extrato</button>
+              </div>
+            </div>
+            <div onClick={() => onNavigate?.('dashboard')} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl flex flex-col justify-between h-32 relative overflow-hidden group active:scale-95 transition-all">
+              <div className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center mb-2"><Bell size={20} /></div>
+              <div>
+                <span className="text-3xl font-black text-slate-900 leading-none">{serviceRequests.length}</span>
+                <p className="text-[9px] font-bold text-slate-400 uppercase leading-tight mt-1">Chamados Pendentes</p>
+              </div>
+            </div>
+            <div onClick={() => onNavigate?.('agenda')} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl flex flex-col justify-between h-32 relative overflow-hidden group active:scale-95 transition-all">
+              <div className="w-10 h-10 bg-emerald-50 text-emerald-500 rounded-xl flex items-center justify-center mb-2"><Calendar size={20} /></div>
+              <div>
+                <span className="text-3xl font-black text-slate-900 leading-none">{activeServices.length}</span>
+                <p className="text-[9px] font-bold text-slate-400 uppercase leading-tight mt-1">Serviços Agendados</p>
+              </div>
             </div>
           </div>
 
-          <div className="space-y-12 animate-in slide-in-from-bottom-4 duration-500">
-            {/* SERVIÇOS ATIVOS */}
-            {activeServices.length > 0 && (
-              <div className="space-y-6">
-                <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Execução ({activeServices.length})</h3>
-                <div className="space-y-4">
-                  {activeServices.map(s => (
-                    <div key={s.id} className="bg-white p-6 rounded-[35px] border border-emerald-100 flex items-center justify-between shadow-sm">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center"><CheckCircle2 size={24} /></div>
-                        <div>
-                          <h5 className="font-bold text-slate-900 leading-none">{s.name}</h5>
-                          <p className="text-[9px] font-black text-slate-400 uppercase mt-1">{s.user} • {s.location}</p>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => {
-                          if (s.phone) window.open(`tel:${s.phone}`);
-                          else alert('Telefone do morador não disponível');
-                        }}
-                        className="w-10 h-10 bg-slate-900 text-white rounded-xl flex items-center justify-center active:scale-90"
-                      >
-                        <Phone size={18} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+          {/* Central de Comando */}
+          <div className="mb-10">
+            <div className="flex justify-between items-end mb-6 px-2">
+              <h3 className="text-xl font-black italic text-slate-900 tracking-tighter">Acesso Rápido</h3>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+              <button onClick={() => onNavigate?.('services')} className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-slate-200 shadow-sm active:scale-95 transition-all">
+                <div className="w-12 h-12 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center"><Briefcase size={22} /></div>
+                <span className="text-[10px] font-bold text-slate-600 uppercase">Serviços</span>
+              </button>
+              <button onClick={() => onNavigate?.('shop')} className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-slate-200 shadow-sm active:scale-95 transition-all">
+                <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center"><Store size={22} /></div>
+                <span className="text-[10px] font-bold text-slate-600 uppercase">Loja</span>
+              </button>
+              <button onClick={() => onNavigate?.('agenda')} className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-slate-200 shadow-sm active:scale-95 transition-all">
+                <div className="w-12 h-12 bg-pink-50 text-pink-500 rounded-2xl flex items-center justify-center"><Calendar size={22} /></div>
+                <span className="text-[10px] font-bold text-slate-600 uppercase">Agenda</span>
+              </button>
+              <button onClick={() => onNavigate?.('profile')} className="flex flex-col items-center gap-2 p-4 bg-white rounded-3xl border border-slate-200 shadow-sm active:scale-95 transition-all">
+                <div className="w-12 h-12 bg-slate-50 text-slate-500 rounded-2xl flex items-center justify-center"><UserCircle2 size={22} /></div>
+                <span className="text-[10px] font-bold text-slate-600 uppercase">Perfil</span>
+              </button>
+            </div>
+          </div>
 
-            {/* NOVAS SOLICITAÇÕES */}
-            <div className="space-y-6">
-              <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2">Chamados em Aberto</h3>
-              <div className="space-y-6">
-                {serviceRequests.length > 0 ? serviceRequests.map((req) => (
-                  <Card key={req.id} className="p-8 border-none shadow-2xl shadow-slate-200/40 rounded-[44px] bg-white space-y-8">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center gap-4">
-                        <div className="w-16 h-16 bg-slate-50 rounded-[24px] flex items-center justify-center text-violet-500">
-                          <UserCircle2 size={32} />
-                        </div>
-                        <div>
-                          <h4 className="font-black text-slate-950 italic text-xl leading-none">{req.name}</h4>
-                          <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-2">{req.user} • {req.location}</p>
-                        </div>
+          {/* Chamados Pendentes */}
+          <div className="mb-24">
+            <div className="flex justify-between items-end mb-6 px-2">
+              <h3 className="text-xl font-black italic text-slate-900 tracking-tighter">Novos Chamados</h3>
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{serviceRequests.length} pendentes</span>
+            </div>
+            <div className="space-y-4">
+              {serviceRequests.length > 0 ? serviceRequests.map(req => (
+                <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 font-bold">{req.user?.charAt(0)}</div>
+                      <div>
+                        <h4 className="font-bold text-slate-900 leading-none">{req.user}</h4>
+                        <p className="text-xs text-slate-400 mt-1">{req.condo || "Condomínio"} • {req.location}</p>
                       </div>
-                      <Badge color="bg-violet-50 text-violet-600">NOVO</Badge>
                     </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <button onClick={() => handleAction(req.id, 'reject')} className="h-16 rounded-[24px] bg-rose-50 text-rose-500 text-[10px] font-black uppercase tracking-widest">Recusar</button>
-                      <button onClick={() => handleAction(req.id, 'accept')} className="h-16 rounded-[24px] bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20">Aceitar</button>
-                    </div>
-                  </Card>
-                )) : (
-                  <div className="py-20 text-center bg-white rounded-[40px] border border-dashed border-slate-200">
-                    <Clock className="mx-auto text-slate-100 mb-4" size={60} />
-                    <p className="text-slate-300 font-black italic uppercase tracking-widest text-[10px]">Aguardando novos chamados...</p>
+                    <Badge color="bg-rose-50 text-rose-500 text-[9px]">Urgente</Badge>
                   </div>
-                )}
-              </div>
+                  <h3 className="text-lg font-black italic text-slate-800 mb-2">{req.category}</h3>
+                  <p className="text-sm text-slate-500 mb-6 leading-relaxed">{req.description}</p>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <Button onClick={() => handleAction(req.id, 'reject')} className="h-12 bg-slate-100 text-slate-500 font-black uppercase text-[10px] rounded-xl hover:bg-rose-50 hover:text-rose-500 transition-colors">Recusar</Button>
+                    <Button onClick={() => handleAction(req.id, 'accept')} className="h-12 bg-emerald-500 text-white font-black uppercase text-[10px] rounded-xl shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">Aceitar</Button>
+                  </div>
+                </div>
+              )) : (
+                <div className="text-center py-10 opacity-50">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><Bell size={32} /></div>
+                  <p className="text-slate-400 font-bold uppercase text-xs">Tudo tranquilo por aqui.</p>
+                </div>
+              )}
             </div>
           </div>
+
         </div>
       </div >
     );
   };
 
-export const ProfessionalAgenda: React.FC<{ activeServices?: any[] }> = ({ activeServices = [] }) => {
+export const ProfessionalAgenda: React.FC<{ activeServices?: any[]; onUpdateRequest?: (id: string, status: string) => void }> = ({ activeServices = [], onUpdateRequest }) => {
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <div className="p-6">
@@ -195,11 +215,22 @@ export const ProfessionalAgenda: React.FC<{ activeServices?: any[] }> = ({ activ
 
         <div className="space-y-6">
           {activeServices.length > 0 ? activeServices.map((s, i) => (
-            <div key={i} className="bg-violet-600 rounded-[44px] p-8 text-white shadow-xl">
-              <Badge color="bg-white/20 text-white text-[9px]">Confirmado</Badge>
-              <h4 className="font-black text-2xl italic mt-4">{s.name}</h4>
-              <p className="text-sm opacity-80 mt-1">{s.user} • {s.location}</p>
-              <Button className="mt-6 bg-white text-violet-600 w-full h-14 rounded-2xl font-black uppercase text-[10px]">Iniciar Agora</Button>
+            <div key={i} className="bg-violet-600 rounded-[44px] p-8 text-white shadow-xl relative overflow-hidden">
+              <div className="relative z-10">
+                <Badge color="bg-white/20 text-white text-[9px]">Confirmado</Badge>
+                <h4 className="font-black text-2xl italic mt-4">{s.title || s.name}</h4>
+                <p className="text-sm opacity-80 mt-1">{s.user} • {s.location}</p>
+                <p className="text-xs font-bold mt-4 opacity-60 uppercase tracking-widest">Valor Combinado: R$ {(s.price || 0).toFixed(2)}</p>
+
+                <div className="grid grid-cols-2 gap-3 mt-6">
+                  <Button onClick={() => window.open(`tel:${s.phone}`)} className="bg-white/10 text-white h-12 rounded-xl font-black uppercase text-[10px] border border-white/20">Contato</Button>
+                  <Button onClick={() => {
+                    if (confirm('Marcar serviço como concluído? O valor será adicionado aos seus ganhos.')) {
+                      onUpdateRequest?.(s.id, 'completed');
+                    }
+                  }} className="bg-emerald-400 text-emerald-950 h-12 rounded-xl font-black uppercase text-[10px] shadow-lg shadow-emerald-500/20">Concluir</Button>
+                </div>
+              </div>
             </div>
           )) : (
             <p className="text-center text-slate-300 font-bold uppercase text-[10px] py-10 italic">Nenhum compromisso hoje.</p>
@@ -491,19 +522,15 @@ export const ProfessionalServices: React.FC<{
 // --------------------------------------------------------------------------------
 // NOVELTY: Component for Professional Earnings
 // --------------------------------------------------------------------------------
-export const ProfessionalEarnings: React.FC = () => {
-  const transactions = [
-    { id: 1, service: 'Instalação Elétrica', user: 'Alex F.', amount: 250, date: '05 Jan', status: 'completed' },
-    { id: 2, service: 'Reparo Hidráulico', user: 'Clara M.', amount: 180, date: '04 Jan', status: 'completed' },
-    { id: 3, service: 'Pintura de Parede', user: 'Roberto S.', amount: 450, date: '02 Jan', status: 'pending' },
-  ];
+export const ProfessionalEarnings: React.FC<{ services: any[] }> = ({ services = [] }) => {
+  const totalEarnings = services.reduce((acc, curr) => acc + (curr.price || 0), 0);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <div className="p-6 pt-12">
         <header className="mb-10 text-center">
           <p className="text-[10px] text-slate-400 font-black uppercase tracking-[0.3em] mb-2">Total Acumulado</p>
-          <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 leading-none">R$ 2.450,00</h2>
+          <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 leading-none">R$ {totalEarnings.toFixed(2)}</h2>
           <div className="flex justify-center gap-4 mt-8">
             <div className="bg-emerald-50 px-4 py-2 rounded-xl"><p className="text-[10px] font-bold text-emerald-600 uppercase tracking-widest leading-none">+ R$ 880,00 este mês</p></div>
           </div>
@@ -512,23 +539,25 @@ export const ProfessionalEarnings: React.FC = () => {
         <div className="bg-white rounded-[44px] p-8 border border-slate-100 shadow-xl space-y-8">
           <h3 className="font-black text-slate-900 italic text-sm tracking-tight">Últimas Transações</h3>
           <div className="space-y-6">
-            {transactions.map(t => (
-              <div key={t.id} className="flex items-center justify-between group">
-                <div className="flex items-center gap-4">
-                  <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${t.status === 'completed' ? 'bg-emerald-50 text-emerald-500' : 'bg-amber-50 text-amber-500'}`}>
-                    <TrendingUp size={20} />
+            <div className="space-y-6">
+              {services.length > 0 ? services.map(t => (
+                <div key={t.id} className="flex items-center justify-between group">
+                  <div className="flex items-center gap-4">
+                    <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-emerald-50 text-emerald-500`}>
+                      <TrendingUp size={20} />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-slate-900 text-sm leading-none">{t.title}</h5>
+                      <p className="text-[10px] font-black text-slate-400 uppercase mt-1.5">{t.user} • {new Date(t.created_at).toLocaleDateString()}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h5 className="font-bold text-slate-900 text-sm leading-none">{t.service}</h5>
-                    <p className="text-[10px] font-black text-slate-400 uppercase mt-1.5">{t.user} • {t.date}</p>
+                  <div className="text-right">
+                    <span className="text-sm font-black text-slate-900 italic tracking-tighter">R$ {(t.price || 0).toFixed(2)}</span>
+                    <p className="text-[8px] font-black uppercase tracking-widest mt-1 text-emerald-500">Recebido</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-sm font-black text-slate-900 italic tracking-tighter">R$ {t.amount.toFixed(2)}</span>
-                  <p className={`text-[8px] font-black uppercase tracking-widest mt-1 ${t.status === 'completed' ? 'text-emerald-500' : 'text-amber-500'}`}>{t.status === 'completed' ? 'Recebido' : 'Pendente'}</p>
-                </div>
-              </div>
-            ))}
+              )) : <p className="text-center text-slate-400 font-bold text-xs uppercase py-10">Nenhuma transação.</p>}
+            </div>
           </div>
           <Button fullWidth className="bg-slate-900 text-white h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest italic">Ver Extrato Completo</Button>
         </div>

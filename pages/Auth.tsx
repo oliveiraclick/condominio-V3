@@ -138,7 +138,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
           <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
         </div>
       </div>
-      <p className="text-[11px] font-black uppercase tracking-widest text-slate-800 mt-1 shadow-sm text-center w-full">v1.1.0</p>
+      <p className="text-[11px] font-black uppercase tracking-widest text-slate-800 mt-1 shadow-sm text-center w-full">v1.1.2</p>
     </div>
   );
 };
@@ -505,6 +505,17 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
       </header>
       <div className="px-6 flex-1 overflow-y-auto">
         {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
+
+        {/* Trial Info Banner */}
+        <div className="mb-6 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
+          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
+            <Briefcase size={20} />
+          </div>
+          <div>
+            <h4 className="font-black text-emerald-900 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4>
+            <p className="text-emerald-700 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p>
+          </div>
+        </div>
 
         {step === 1 && (
           <div className="space-y-4">
