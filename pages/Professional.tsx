@@ -141,6 +141,9 @@ export const ProfessionalDashboard: React.FC<{
   rating?: string;
   completedServices?: any[];
 }> = ({ serviceRequests = [], activeServices = [], onUpdateRequest, subscription, currentUser, onNavigate, setActiveServices, setServiceRequests, rating, completedServices = [] }) => {
+  // --- STATE ---
+  const [activeTab, setActiveTab] = useState('requests');
+  const [showNotifications, setShowNotifications] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [avgRating, setAvgRating] = useState(rating || '5.0');
 
