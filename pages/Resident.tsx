@@ -580,12 +580,6 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Extract unique categories from services or use defaults
-  const availableCategories = useMemo(() => {
-    const cats = new Set(services.map(s => s.category || 'Outros'));
-    return Array.from(cats);
-  }, [services]);
-
   // CATEGORY DEFINITIONS (Icons & Colors)
   const categoryConfig: any = {
     'Jardinagem': { icon: <Leaf size={24} />, color: 'text-green-600', bg: 'bg-green-50' },
@@ -599,6 +593,14 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
   };
 
   const getCatConfig = (cat: string) => categoryConfig[cat] || categoryConfig['Outros'];
+
+  // Extract unique categories from services or use defaults
+  const availableCategories = useMemo(() => {
+    // Merge config keys with any extra categories found in services
+    const serviceCats = new Set(services.map(s => s.category));
+    const configCats = Object.keys(categoryConfig);
+    return Array.from(new Set([...configCats, ...serviceCats])).filter(c => c !== 'Outros').concat('Outros'); // Ensure Outros is last
+  }, [services]);
 
   // FILTERED LIST
   const filteredPros = useMemo(() => {
