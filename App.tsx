@@ -356,8 +356,8 @@ const App: React.FC = () => {
     if (!session?.user) return;
     const { error } = await supabase.from('service_requests').insert([{
       resident_id: session.user.id, title: req.title || req.name, category: req.category || 'Solicitação',
-      description: req.description || req.name, status: 'Aberto', unit: currentUser?.unit, location: `${currentUser?.tower} - ${currentUser?.unit}`,
-      professional_id: req.professional_id
+      description: req.description || req.name, status: 'pending', unit: currentUser?.unit, location: `${currentUser?.tower} - ${currentUser?.unit}`,
+      provider_id: req.professional_id
     }]);
     if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(error.message);
   };
