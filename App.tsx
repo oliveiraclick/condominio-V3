@@ -408,7 +408,7 @@ const App: React.FC = () => {
         case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
         case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
         case 'desapego-full': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
-        default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={[]} onClearNotifications={() => { }} onSelectDesapego={() => { }} products={products} onSelectProduct={() => { }} categories={categories} />;
+        default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={[]} onClearNotifications={() => { }} onSelectDesapego={() => { }} products={products} onSelectProduct={() => { }} categories={categories} onSitePros={onSitePros} />;
       }
     }
 
