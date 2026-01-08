@@ -131,10 +131,10 @@ const App: React.FC = () => {
   };
 
   // 2. BUSCA DE PERFIL COM LÓGICA DE AUTO-REPARO
-  const fetchUserProfile = async (userId: string) => {
-    setLoading(true);
+  const fetchUserProfile = async (userId: string, isSilent = false) => {
+    if (!isSilent) setLoading(true);
     // Timeout safeguard
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 15000));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 3000));
 
     try {
       // 1. Fetch Profile ONLY (Safe - No Joins)
@@ -185,8 +185,8 @@ const App: React.FC = () => {
       setUserRole(UserRole.RESIDENT);
       setCurrentUser({
         id: userId,
-        name: 'Reconectando...',
-        condo: '...',
+        name: 'Bem-vindo!',
+        condo: 'Carregando...',
         unit: '...',
         tower: '...',
         email: '',
@@ -197,11 +197,22 @@ const App: React.FC = () => {
       } as any);
       setAppState('main');
       setActiveTab('home');
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     } finally {
-      setLoading(false);
+      if (!isSilent) setLoading(false);
     }
   };
+
+  // 4. SILENT RETRY LOGIC (Auto-Repair)
+  useEffect(() => {
+    if (currentUser?.name === 'Bem-vindo!' && session?.user?.id) {
+      console.log('Triggering silent profile refresh...');
+      const timer = setTimeout(() => {
+        fetchUserProfile(session.user.id, true);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [currentUser]);
 
   // 3. CARREGAMENTO DE DADOS (Apenas quando estiver no App)
   useEffect(() => {
