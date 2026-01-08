@@ -281,6 +281,44 @@ const App: React.FC = () => {
 
   useEffect(() => { refreshAppData(); }, [refreshAppData]);
 
+  // --- 6. REALTIME NOTIFICATIONS & PUSH ---
+  useEffect(() => {
+    if (!session?.user || userRole !== UserRole.PROFESSIONAL) return;
+
+    // Request Notification Permission
+    if (Notification.permission === 'default') {
+      Notification.requestPermission();
+    }
+
+    const channel = supabase
+      .channel('service_requests_changes')
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'service_requests' },
+        (payload) => {
+          const newRequest = payload.new as any;
+          if (newRequest.provider_id === session.user.id) {
+            // Trigger Visual Notification
+            const audio = new Audio('/notification.mp3'); // Optional: Add sound if available
+            audio.play().catch(() => { }); // catch if file not found
+
+            if (Notification.permission === 'granted') {
+              new Notification('Novo Chamado!', {
+                body: `Você recebeu uma nova solicitação: ${newRequest.title || 'Serviço'}`,
+                icon: '/icon.png'
+              });
+            } else {
+              alert(`🔔 Novo Chamado: ${newRequest.title || 'Serviço'}`);
+            }
+            refreshAppData(); // Auto-refresh data
+          }
+        }
+      )
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, [session, userRole, refreshAppData]);
+
   // --- 5. PAGINAÇÃO E HANDLERS ---
   const navigateToCategory = (category: string) => {
     setSelectedCategory(category);
