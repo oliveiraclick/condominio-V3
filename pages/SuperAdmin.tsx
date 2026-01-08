@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, User, ShieldCheck, Plus, Search, ArrowLeft } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, User, ShieldCheck, Plus, Search, ArrowLeft, Trash2 } from 'lucide-react';
 import { Card, Button, Input } from '../components/UI';
 import { supabase } from '../supabase';
 
@@ -124,7 +124,7 @@ const DashboardView = ({ onNavigate, currentUser, onLogout }: any) => {
 const CondosView = ({ onNavigate }: any) => {
   const [condos, setCondos] = useState<any[]>([]);
   const [showNew, setShowNew] = useState(false);
-  const [newCondo, setNewCondo] = useState({ name: '', address: '', plan: 'basic', type: 'vertical' });
+  const [newCondo, setNewCondo] = useState({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active' });
 
   useEffect(() => {
     loadCondos();
@@ -142,9 +142,30 @@ const CondosView = ({ onNavigate }: any) => {
       setShowNew(false);
       alert('Condomínio criado!');
       loadCondos(); // Refresh list
-      setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical' });
+      setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active' });
     } else {
       alert(error.message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Tem certeza que deseja excluir EXTERMINAR este condomínio? Todos os dados serão perdidos.')) return;
+    const { error } = await supabase.from('condominiums').delete().eq('id', id);
+    if (!error) {
+      alert('Condomínio excluído.');
+      loadCondos();
+    } else {
+      alert('Erro: ' + error.message);
+    }
+  };
+
+  const handleToggleStatus = async (id: string, currentStatus: string) => {
+    const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
+    const { error } = await supabase.from('condominiums').update({ status: newStatus }).eq('id', id);
+    if (!error) {
+      loadCondos();
+    } else {
+      alert('Erro: ' + error.message);
     }
   };
 
@@ -181,22 +202,36 @@ const CondosView = ({ onNavigate }: any) => {
             </div>
           </div>
 
-          <Button fullWidth onClick={handleCreate} className="bg-slate-900 text-white h-12 uppercase font-black text-xs">Salvar</Button>
+          <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleCreate(); }} className="bg-slate-900 text-white h-12 uppercase font-black text-xs">Salvar</Button>
           <button onClick={() => setShowNew(false)} className="w-full text-center text-xs text-slate-400 font-bold uppercase mt-2">Cancelar</button>
         </div>
       )}
 
       <div className="space-y-3 pb-20">
         {condos.map(c => (
-          <div key={c.id} className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between">
+          <div key={c.id} className={`p-4 rounded-3xl border shadow-sm flex items-center justify-between transition-all ${c.status === 'blocked' ? 'bg-slate-100 border-slate-200 opacity-75' : 'bg-white border-slate-50'}`}>
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400">{c.name?.[0]}</div>
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-black ${c.status === 'blocked' ? 'bg-slate-200 text-slate-400' : 'bg-slate-100 text-slate-400'}`}>{c.name?.[0]}</div>
               <div>
-                <h4 className="font-bold text-slate-900 text-sm">{c.name}</h4>
+                <h4 className={`font-bold text-sm ${c.status === 'blocked' ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{c.name}</h4>
                 <p className="text-[10px] text-slate-400 font-bold uppercase">{c.plan} • {c.type === 'horizontal' ? 'Horizontal' : 'Vertical'}</p>
               </div>
             </div>
-            <span className="w-2 h-2 rounded-full bg-emerald-500"></span>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => handleToggleStatus(c.id, c.status || 'active')}
+                className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase transition-colors ${c.status === 'blocked' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-50 text-amber-600'}`}
+              >
+                {c.status === 'blocked' ? 'Ativar' : 'Bloquear'}
+              </button>
+              <button
+                onClick={() => handleDelete(c.id)}
+                className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100"
+              >
+                <Trash2 size={14} />
+              </button>
+            </div>
           </div>
         ))}
       </div>
