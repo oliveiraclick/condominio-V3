@@ -938,7 +938,19 @@ export const ProfessionalProfileView = ({ currentUser, onLogout }: any) => {
         <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase text-xs tracking-widest rounded-[24px]">
           {loading ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
-        <Button variant="secondary" onClick={onLogout} className="w-full border-rose-100 text-rose-500 h-16 bg-white rounded-[24px]">Sair da Conta</Button>
+        <Button
+          variant="secondary"
+          onClick={async () => {
+            if (window.confirm('Sair do App?')) {
+              await supabase.auth.signOut();
+              localStorage.removeItem('userRole_cache');
+              window.location.href = '/';
+            }
+          }}
+          className="w-full border-rose-100 text-rose-500 h-16 bg-white rounded-[24px]"
+        >
+          Sair da Conta
+        </Button>
       </div>
     </div>
   );
