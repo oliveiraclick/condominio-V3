@@ -547,7 +547,7 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 
 export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[] }> = ({ initialCategory, onBack, onServiceRequest, services = [] }) => {
   // Fallback mocks if no services passed (or filtered list)
-  const filteredPros = services.filter(s => s.category === initialCategory);
+  const filteredPros = initialCategory === 'Todos' ? services : services.filter(s => s.category === initialCategory);
   const displayPros = filteredPros.length > 0 ? filteredPros : [
     { id: 1, providerName: 'Marcos Silva', category: 'Hidráulica', rating: 4.8, img: 'https://picsum.photos/seed/pro1/100', price: 'Sob Consulta', providerPhone: '5511999999999' },
     { id: 2, providerName: 'Juliana Mendes', category: 'Limpeza Profissional', rating: 5.0, img: 'https://picsum.photos/seed/pro2/100', price: 'R$ 120/visita', providerPhone: '5511999999999' }
