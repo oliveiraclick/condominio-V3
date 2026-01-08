@@ -139,6 +139,17 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
+
+      // TRACK LOGIN
+      const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.session.user.id).single();
+      if (profile) {
+        await supabase.from('login_history').insert([{
+          user_id: data.session.user.id,
+          role: profile.role,
+          condo_id: profile.condominium_id
+        }]);
+      }
+
       onLogin(data.session);
     } catch (err: any) {
       setError(translateError(err));

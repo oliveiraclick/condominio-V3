@@ -383,30 +383,124 @@ const NotificationsView = () => {
   );
 };
 
-// --- USERS VIEW ---
+// --- USERS VIEW (STATS) ---
 const UsersView = () => {
+  const [activeTab, setActiveTab] = useState<'users' | 'stats'>('stats');
   const [users, setUsers] = useState<any[]>([]);
-  useEffect(() => { loadUsers(); }, []);
+  const [topUsers, setTopUsers] = useState<any[]>([]);
+  const [limit, setLimit] = useState(10);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'users') loadUsers();
+    if (activeTab === 'stats') loadStats();
+  }, [activeTab, limit]);
+
   const loadUsers = async () => {
+    setLoading(true);
     const { data } = await supabase.from('profiles').select('*').limit(50).order('created_at', { ascending: false });
     if (data) setUsers(data);
+    setLoading(false);
   }
+
+  const loadStats = async () => {
+    setLoading(true);
+    // Fetch all login history to aggregate locally (Supabase free tier limitation on complex aggregation queries)
+    // For V1 this is acceptable. For V2 we should use a Postgres Function or View.
+    const { data } = await supabase.from('login_history').select('user_id, role, condo_id');
+
+    if (data) {
+      const counts: Record<string, number> = {};
+      data.forEach((r: any) => {
+        counts[r.user_id] = (counts[r.user_id] || 0) + 1;
+      });
+
+      // Get User Info
+      const userIds = Object.keys(counts);
+      const { data: profiles } = await supabase.from('profiles').select('id, name, avatar, role, condominium_id').in('id', userIds);
+
+      const { data: condos } = await supabase.from('condominiums').select('id, name');
+
+      const condoMap = condos?.reduce((acc: any, c: any) => ({ ...acc, [c.id]: c.name }), {}) || {};
+
+      const ranked = profiles?.map((p: any) => ({
+        ...p,
+        count: counts[p.id],
+        condo_name: condoMap[p.condominium_id] || 'N/A'
+      })).sort((a: any, b: any) => b.count - a.count).slice(0, limit);
+
+      setTopUsers(ranked || []);
+    }
+    setLoading(false);
+  }
+
   return (
     <div className="p-6 space-y-6 pt-12 animate-in slide-in-from-right-8">
-      <h1 className="text-2xl font-black italic text-slate-900 uppercase">Usuários</h1>
-      <div className="space-y-3 pb-20">
-        {users.map(u => (
-          <div key={u.id} className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400"><User size={20} /></div>
-              <div>
-                <h4 className="font-bold text-slate-900 text-sm">{u.name || 'Sem Nome'}</h4>
-                <p className="text-[10px] text-slate-400 font-bold uppercase">{u.role} • {u.email}</p>
-              </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-2xl font-black italic text-slate-900 uppercase">Usuários</h1>
+        <div className="flex bg-slate-100 p-1 rounded-xl">
+          <button onClick={() => setActiveTab('stats')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${activeTab === 'stats' ? 'bg-white text-violet-600 shadow-sm' : 'text-slate-400'}`}>Top Acessos</button>
+          <button onClick={() => setActiveTab('users')} className={`px-4 py-2 rounded-lg text-[10px] font-black uppercase transition-all ${activeTab === 'users' ? 'bg-white text-violet-600 shadow-sm' : 'text-slate-400'}`}>Recentes</button>
+        </div>
+      </div>
+
+      {activeTab === 'stats' && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <p className="text-[10px] font-bold text-slate-400 uppercase">Filtrar Top:</p>
+            <div className="flex gap-2">
+              {[10, 20, 50, 100].map(v => (
+                <button key={v} onClick={() => setLimit(v)} className={`w-8 h-8 rounded-lg text-[10px] font-black transition-all ${limit === v ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400 hover:bg-slate-200'}`}>{v}</button>
+              ))}
             </div>
           </div>
-        ))}
-      </div>
+
+          <div className="space-y-3 pb-20">
+            {loading && <div className="text-center py-10 text-xs font-bold text-slate-400 uppercase animate-pulse">Carregando dados...</div>}
+
+            {!loading && topUsers.map((u, i) => (
+              <div key={u.id} className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between relative overflow-hidden group">
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-violet-500 to-fuchsia-500 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <div className="w-12 h-12 rounded-2xl bg-slate-100 overflow-hidden border-2 border-slate-50">
+                      <img src={u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="absolute -bottom-2 -right-2 bg-slate-900 text-white w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black border-2 border-white shadow-sm">#{i + 1}</div>
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-slate-900 text-sm leading-tight text-left">{u.name}</h4>
+                    <p className="text-[9px] text-slate-400 font-bold uppercase mt-1 flex items-center gap-1">
+                      <span className={`px-1.5 py-0.5 rounded ${u.role === 'resident' ? 'bg-blue-50 text-blue-500' : 'bg-amber-50 text-amber-500'}`}>{u.role === 'resident' ? 'Morador' : 'Pro'}</span>
+                      • {u.condo_name}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <span className="block text-2xl font-black text-slate-900 tracking-tighter italic">{u.count}</span>
+                  <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest">Acessos</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {activeTab === 'users' && (
+        <div className="space-y-3 pb-20">
+          {users.map(u => (
+            <div key={u.id} className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-black text-slate-400"><User size={20} /></div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{u.name || 'Sem Nome'}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase">{u.role} • {u.email}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
