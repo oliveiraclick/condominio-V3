@@ -456,6 +456,7 @@ const App: React.FC = () => {
 
       // --- PROFISSIONAL ---
       if (userRole === UserRole.PROFESSIONAL) {
+        console.log('[App] Rendering Professional, activeTab:', activeTab);
         const completedServices = serviceRequests.filter(r => r.status === 'completed');
         switch (activeTab) {
           case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} completedServices={completedServices} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
