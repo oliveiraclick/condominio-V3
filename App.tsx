@@ -156,37 +156,33 @@ const App: React.FC = () => {
       const { data: profile, error } = await Promise.race([fetchProfileOp, timeout]) as any;
 
       if (profile) {
-        // 2. Try to fetch Condo Name separately
-        let condoName = 'Splendido Residencial';
-        if (profile.condominium_id) {
-          try {
-            // Short timeout for condo name
-            const condoTimeout = new Promise((_, r) => setTimeout(() => r(new Error('Condo timeout')), 2000));
-            const fetchCondoOp = supabase
-              .from('condominiums')
-              .select('name')
-              .eq('id', profile.condominium_id)
-              .maybeSingle();
-
-            const { data: condo } = await Promise.race([fetchCondoOp, condoTimeout]) as any;
-            if (condo) condoName = condo.name;
-          } catch (e) {
-            console.warn('Failed to load condo name', e);
-          }
-        }
-
         const role = profile.role as UserRole;
         setUserRole(role);
         // CACHE: Save role to prevent flicker on next load
         localStorage.setItem('userRole_cache', role);
 
+        // 3. Set User State IMMEDIATELY (Don't wait for Condo Name)
         setCurrentUser({
           ...profile,
           avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
-          condo: condoName
+          condo: 'Carregando...'
         });
         setAppState('main');
         setActiveTab(role === UserRole.RESIDENT ? 'home' : 'dashboard');
+
+        // 4. Fetch Condo Name in Background (Non-blocking)
+        if (profile.condominium_id) {
+          supabase
+            .from('condominiums')
+            .select('name')
+            .eq('id', profile.condominium_id)
+            .maybeSingle()
+            .then(({ data: condo }) => {
+              if (condo) {
+                setCurrentUser((prev: any) => ({ ...prev, condo: condo.name }));
+              }
+            });
+        }
       } else {
         // Profile not found -> New user, go to Role Selection
         setAppState('roleSelection');
@@ -234,7 +230,6 @@ const App: React.FC = () => {
     if (appState === 'main' && session) {
       fetchCommonAreas();
       fetchReservations();
-      fetchServiceRequests();
       fetchServiceRequests();
       fetchProfessionalServices();
       fetchAccessList();
