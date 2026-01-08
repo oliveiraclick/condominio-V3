@@ -181,8 +181,22 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
-      // ERROR -> Safe fallback to LOGIN (not role selection)
-      // setAppState('login');
+      // Fallback for timeout/offline to prevent login loop
+      setUserRole(UserRole.RESIDENT);
+      setCurrentUser({
+        id: userId,
+        name: 'Reconectando...',
+        condo: '...',
+        unit: '...',
+        tower: '...',
+        email: '',
+        phone: '',
+        photo: '',
+        role: 'resident',
+        created_at: ''
+      } as any);
+      setAppState('main');
+      setActiveTab('home');
       setLoading(false);
     } finally {
       setLoading(false);
