@@ -577,7 +577,7 @@ return (
     </div>
   </div>
 );
-};
+
 
 export const ProfessionalServices = ({ currentUser }: any) => {
   const [services, setServices] = useState<any[]>([]);
