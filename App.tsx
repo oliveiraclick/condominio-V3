@@ -69,6 +69,7 @@ const App: React.FC = () => {
   const [serviceRequests, setServiceRequests] = useState<any[]>([]);
   const [activeServices, setActiveServices] = useState<any[]>([]);
   const [desapegos, setDesapegos] = useState<any[]>([]);
+  const [onSitePros, setOnSitePros] = useState<any[]>([]);
   const [commonAreas, setCommonAreas] = useState<any[]>([]);
   const [professionalServices, setProfessionalServices] = useState<any[]>([]);
   const [accessList, setAccessList] = useState<any[]>([]);
@@ -228,15 +229,16 @@ const App: React.FC = () => {
     if (appState !== 'main' || !session) return;
 
     // Parallel Fetching for Maximum Speed
-    const [areas, resvs, requests, pros, access, prods, mkt, cats] = await Promise.all([
+    const [areas, resvs, requests, pros, access, prods, mkt, cats, onSite] = await Promise.all([
       supabase.from('common_areas').select('*').order('name'),
       supabase.from('reservations').select('*').order('date'),
       supabase.from('service_requests').select('*, profiles(name, phone)').order('created_at', { ascending: false }),
-      supabase.from('professional_services').select('*, profiles(name, phone)').eq('active', true),
+      supabase.from('professional_services').select('*, profiles(name, phone, is_on_site)').eq('active', true),
       supabase.from('access_control').select('*, profiles(name, unit, tower)').order('date'),
       supabase.from('products').select('*, profiles(name)').order('created_at', { ascending: false }),
       supabase.from('marketplace').select('*, profiles(name, unit, tower, phone)').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name')
+      supabase.from('categories').select('*').order('name'),
+      supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)
     ]);
 
     if (areas.data) setCommonAreas(areas.data);
@@ -248,8 +250,15 @@ const App: React.FC = () => {
       setActiveServices(mappedRequests.filter((r: any) => r.status === 'accepted'));
     }
 
-    if (pros.data) setProfessionalServices(pros.data.map(p => ({ ...p, providerName: p.profiles?.name, providerPhone: p.profiles?.phone })));
-    if (access.data) setAccessList(access.data.map(a => ({ ...a, name: a.visitor_name, residentName: a.profiles?.name, unit: a.profiles?.unit })));
+    if (pros.data) setProfessionalServices(pros.data.map(p => ({
+      ...p,
+      providerName: p.profiles?.name,
+      providerPhone: p.profiles?.phone,
+      is_on_site: p.profiles?.is_on_site
+    })));
+
+    // Let's correct the destructuring in the ReplacementContent to be explicit.
+
     if (prods.data) setProducts(prods.data);
     if (cats.data) setCategories(cats.data);
 
@@ -358,7 +367,7 @@ const App: React.FC = () => {
     // --- RESIDENTE ---
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
-        case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} />;
+        case 'resident': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} categories={categories} />;
         case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
         case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
         case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => {

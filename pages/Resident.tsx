@@ -232,7 +232,8 @@ export const ResidentHome: React.FC<{
   onSelectDesapego?: (item: any) => void;
   products?: any[]; // Added products prop
   onSelectProduct?: (item: any) => void;
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego, products = [], onSelectProduct }) => {
+  onSitePros?: any[];
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [] }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
@@ -273,6 +274,36 @@ export const ResidentHome: React.FC<{
       </div>
 
       <div className="p-6 space-y-12">
+        {/* PRESTADORES NO LOCAL (NEW) */}
+        {onSitePros.length > 0 && (
+          <div className="animate-in slide-in-from-left-4 duration-500">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Prestadores no Condomínio</h3>
+            </div>
+            <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
+              {onSitePros.map((pro, i) => (
+                <div key={i} className="min-w-[140px] bg-white p-4 rounded-[24px] border border-emerald-100 shadow-lg shadow-emerald-500/10 flex flex-col items-center gap-2 relative">
+                  <div className="absolute top-2 right-2 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100">
+                    <img src={pro.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="text-center">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{pro.category || 'Prestador'}</p>
+                    <h4 className="font-bold text-slate-900 text-xs leading-tight line-clamp-1">{pro.name}</h4>
+                  </div>
+                  <button onClick={() => {
+                    const cleanPhone = pro.phone?.replace(/\D/g, '');
+                    if (cleanPhone) window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+                  }} className="mt-1 w-full py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-colors">
+                    Chamar
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* ENCOMENDAS ATIVAS */}
         {myPackages.length > 0 && (
           <div className="bg-slate-950 rounded-[44px] p-8 text-white shadow-2xl animate-in zoom-in duration-500">
@@ -676,7 +707,14 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
                   <div className="flex-1 min-w-0 pt-2">
                     <div className="flex justify-between items-start">
                       <div>
-                        <Badge variant="secondary" className="mb-2 bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest px-2 py-1">{pro.category || 'Geral'}</Badge>
+                        <div className="flex gap-2 mb-2">
+                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest px-2 py-1">{pro.category || 'Geral'}</Badge>
+                          {pro.is_on_site && (
+                            <Badge className="bg-emerald-500 text-white text-[10px] uppercase tracking-widest px-2 py-1 animate-pulse flex items-center gap-1">
+                              <div className="w-1.5 h-1.5 bg-white rounded-full"></div> No Local
+                            </Badge>
+                          )}
+                        </div>
                         <h4 className="font-black text-slate-900 italic text-xl leading-none truncate">{pro.providerName || pro.title}</h4>
                       </div>
                       {pro.rating && (

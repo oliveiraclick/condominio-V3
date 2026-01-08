@@ -212,10 +212,35 @@ export const ProfessionalDashboard: React.FC<{
               <h2 className="font-black text-slate-950 italic tracking-tighter text-xl leading-none">{currentUser?.name || "Prestador"}</h2>
             </div>
           </div>
-          <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform relative">
-            <Bell size={22} />
-            <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
-          </button>
+
+          <div className="flex items-center gap-3">
+            {/* STATUS TOGGLE */}
+            <div className="flex flex-col items-end mr-2">
+              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status Local</span>
+              <button
+                onClick={async () => {
+                  const newState = !currentUser?.is_on_site;
+                  // Optimistic update (would need actual state update from parent or re-fetch)
+                  // For now assuming parent 'onUpdateRequest' might not cover profile, so we call supabase directly here or pass a callback
+                  try {
+                    const { error } = await supabase.from('profiles').update({ is_on_site: newState }).eq('id', currentUser.id);
+                    if (!error) {
+                      alert(newState ? "Você está visível como 'No Condomínio'!" : "Status alterado para 'Fora do Condomínio'.");
+                      window.location.reload(); // Simple reload to refresh context for now
+                    }
+                  } catch (e) { console.error(e); }
+                }}
+                className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${currentUser?.is_on_site ? 'bg-emerald-500' : 'bg-slate-200'}`}
+              >
+                <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${currentUser?.is_on_site ? 'translate-x-6' : 'translate-x-0'}`}></div>
+              </button>
+            </div>
+
+            <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform relative">
+              <Bell size={22} />
+              <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+            </button>
+          </div>
         </div>
 
         {/* Trial Banner */}
