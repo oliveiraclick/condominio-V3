@@ -406,16 +406,10 @@ const App: React.FC = () => {
       const completedServices = serviceRequests.filter(r => r.status === 'completed');
       switch (activeTab) {
         case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} completedServices={completedServices} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
-        case 'services': return <ProfessionalServices services={professionalServices.filter(s => s.provider_id === session?.user?.id)} onAddService={async (srv) => {
-          const { error } = await supabase.from('professional_services').insert([{ provider_id: session.user.id, title: srv.title, category: srv.category, description: srv.desc, price_range: srv.price_range, active: true }]);
-          if (!error) { alert('Serviço criado!'); refreshAppData(); } else alert(error.message);
-        }} onDeleteService={async (id) => {
-          const { error } = await supabase.from('professional_services').delete().eq('id', id);
-          if (!error) refreshAppData();
-        }} />;
-        case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} onUpdateRequest={handleUpdateServiceRequest} />;
+        case 'services': return <ProfessionalServices currentUser={currentUser} />;
+        case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} serviceRequests={serviceRequests} />;
         case 'earnings': return <ProfessionalEarnings services={completedServices} />;
-        case 'shop': return <ProfessionalShop products={products.filter(p => p.vendor_id === session?.user?.id)} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} onToggleStatus={handleToggleProductStatus} />;
+        case 'shop': return <ProfessionalShop currentUser={currentUser} />;
         case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
         default: return <ProfessionalDashboard serviceRequests={serviceRequests} activeServices={activeServices} onUpdateRequest={() => { }} currentUser={currentUser} onNavigate={pushScreen} />;
       }
