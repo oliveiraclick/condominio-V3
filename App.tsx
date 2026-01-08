@@ -134,7 +134,7 @@ const App: React.FC = () => {
   const fetchUserProfile = async (userId: string, isSilent = false) => {
     if (!isSilent) setLoading(true);
     // Timeout safeguard
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 3000));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 1000));
 
     try {
       // 1. Fetch Profile ONLY (Safe - No Joins)
