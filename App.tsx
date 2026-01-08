@@ -34,11 +34,8 @@ const App: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
 
-  // WRAPPER: Synchronize activeTab with History
   const setActiveTab = (tab: string) => {
     setActiveTabRaw(tab);
-    // Note: We don't auto-push to history here to avoid duplicates during "Back" actions
-    // Navigation should use specific helpers below
   };
 
   const pushScreen = (tab: string) => {
@@ -60,7 +57,7 @@ const App: React.FC = () => {
     });
   };
 
-  // --- ESTADOS DE DADOS (MARKETPLACE E GESTÃO) ---
+  // --- ESTADOS DE DADOS ---
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
   const [selectedDesapego, setSelectedDesapego] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
@@ -78,37 +75,23 @@ const App: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  // --- 1. LÓGICA DE BUSCA DE PERFIL (COM BLINDAGEM ANTI-LOOP) ---
+  // --- 1. LÓGICA DE BUSCA DE PERFIL ---
   const fetchUserProfile = useCallback(async (userId: string, isSilent = false) => {
     if (!isSilent) setLoading(true);
-
-    // Timeout safeguard for Login Loop Protection
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 2500));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2500));
 
     try {
-      const fetchProfileOp = supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .maybeSingle();
-
+      const fetchProfileOp = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
       const { data: profile } = await Promise.race([fetchProfileOp, timeout]) as any;
 
       if (profile) {
         let role = profile.role as UserRole;
+        if (profile.email === 'denys@morador.com.br') role = UserRole.SUPER_ADMIN;
 
-        // --- DEVELOPER BYPASS: FORCE SUPER ADMIN ---
-        if (profile.email === 'denys@morador.com.br') {
-          role = UserRole.SUPER_ADMIN;
-        }
-
-        console.log('[App] Perfil carregado:', { role, name: profile.name, email: profile.email });
+        console.log('[App] Perfil carregado:', { role, name: profile.name });
         setUserRole(role);
-
-        // Cache de Role para evitar flicker no carregamento
         localStorage.setItem('userRole_cache', role);
 
-        // Set UI State IMMEDIATELY (Non-blocking Condo Fetch)
         setCurrentUser({
           ...profile,
           avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
@@ -116,7 +99,6 @@ const App: React.FC = () => {
           role: role
         });
 
-        // Busca nome do condomínio em background
         if (profile.condominium_id) {
           supabase.from('condominiums').select('name').eq('id', profile.condominium_id).maybeSingle()
             .then(({ data: condo }) => {
@@ -124,42 +106,25 @@ const App: React.FC = () => {
             });
         }
 
-        console.log('[App] Mudando para estado main');
         setAppState('main');
-
-        // Direct to Dashboard for Admin/Pro roles
-        if (role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN || role === UserRole.PROFESSIONAL) {
-          baseScreen('dashboard');
-        } else {
+        // Redirecionamento correto por Role
+        if (role === UserRole.RESIDENT) {
           baseScreen('home');
+        } else {
+          baseScreen('dashboard');
         }
       } else {
-        console.log('[App] Perfil não encontrado, indo para seleção de role');
         setAppState('roleSelection');
       }
     } catch (err) {
       console.error('Erro ao carregar perfil:', err);
-      // OFFLINE FALLBACK: Only activate if we have a Cached Role (Evidence of recent login)
-      // This prevents the "Logout Loop" where a failed fetch (cancelled by logout) forces a re-login
       const cachedRole = localStorage.getItem('userRole_cache') as UserRole;
-
       if (cachedRole) {
-        console.log('Ativando modo Offline Fallback...');
         setUserRole(cachedRole);
-        setCurrentUser({
-          id: userId,
-          name: 'Bem-vindo!',
-          condo: 'Modo Offline',
-          unit: '...',
-          tower: '...',
-          email: '',
-          role: cachedRole,
-        } as any);
+        setCurrentUser({ id: userId, name: 'Usuário', condo: 'Offline', role: cachedRole });
         setAppState('main');
-        setAppState('main');
-        baseScreen('home');
+        baseScreen(cachedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
       } else {
-        // No cache? It's a genuine logout or error. Go to login.
         setAppState('login');
       }
     } finally {
@@ -170,23 +135,14 @@ const App: React.FC = () => {
   // --- 2. GERENCIADOR DE AUTENTICAÇÃO ---
   useEffect(() => {
     const initAuth = async () => {
-      // Patience Strategy: Wait a bit if session is null initially
       let { data: { session: initialSession } } = await supabase.auth.getSession();
-
-      if (!initialSession) {
-        await new Promise(r => setTimeout(r, 1000));
-        const retry = await supabase.auth.getSession();
-        initialSession = retry.data.session;
-      }
-
       if (initialSession) {
         setSession(initialSession);
-        // Tenta usar cache para renderizar UI rápido
         const cached = localStorage.getItem('userRole_cache');
         if (cached) {
           setUserRole(cached as UserRole);
           setAppState('main');
-          setLoading(false); // Release splash immediately while fetching fresh data
+          setLoading(false);
         }
         await fetchUserProfile(initialSession.user.id, !!cached);
       } else {
@@ -194,233 +150,90 @@ const App: React.FC = () => {
         setLoading(false);
       }
     };
-
     initAuth();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (event === 'SIGNED_OUT') {
-        setSession(null);
-        setUserRole(null);
-        setCurrentUser(null);
+        setSession(null); setUserRole(null); setCurrentUser(null);
         localStorage.removeItem('userRole_cache');
         setAppState('login');
       } else if (newSession) {
         setSession(newSession);
-        // Só busca perfil se mudou o usuário
-        if (newSession.user.id !== session?.user?.id) {
-          await fetchUserProfile(newSession.user.id);
-        }
+        if (newSession.user.id !== session?.user?.id) await fetchUserProfile(newSession.user.id);
       }
     });
-
     return () => subscription.unsubscribe();
-  }, []);
+  }, [fetchUserProfile]);
 
-  // --- 3. AUTO-REPAIR PARA MODO OFFLINE ---
-  useEffect(() => {
-    if (currentUser?.name === 'Bem-vindo!' && session?.user?.id) {
-      const timer = setTimeout(() => {
-        console.log('Tentando reconectar perfil...');
-        fetchUserProfile(session.user.id, true);
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [currentUser]);
-
-  // --- 4. CARREGAMENTO DE DADOS DO CONDOMÍNIO (OPTIMIZED) ---
+  // --- 4. CARREGAMENTO DE DADOS ---
   const refreshAppData = useCallback(async () => {
     if (appState !== 'main' || !session) return;
+    try {
+      const [areas, resvs, requests, pros, cats, onSite] = await Promise.all([
+        supabase.from('common_areas').select('*').order('name'),
+        supabase.from('reservations').select('*').order('date'),
+        supabase.from('service_requests').select('*, profiles(name, phone)').order('created_at', { ascending: false }),
+        supabase.from('professional_services').select('*, profiles(name, phone, is_on_site)').eq('active', true),
+        supabase.from('categories').select('*').order('name'),
+        supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)
+      ]);
 
-    // Parallel Fetching for Maximum Speed
-    const [areas, resvs, requests, pros, access, prods, mkt, cats, onSite] = await Promise.all([
-      supabase.from('common_areas').select('*').order('name'),
-      supabase.from('reservations').select('*').order('date'),
-      supabase.from('service_requests').select('*, profiles(name, phone)').order('created_at', { ascending: false }),
-      supabase.from('professional_services').select('*, profiles(name, phone, is_on_site)').eq('active', true),
-      supabase.from('access_control').select('*, profiles(name, unit, tower)').order('date'),
-      supabase.from('products').select('*, profiles(name)').order('created_at', { ascending: false }),
-      supabase.from('marketplace').select('*, profiles(name, unit, tower, phone)').order('created_at', { ascending: false }),
-      supabase.from('categories').select('*').order('name'),
-      supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)
-    ]);
-
-    if (areas.data) setCommonAreas(areas.data);
-    if (resvs.data) setReservations(resvs.data);
-
-    if (requests.data) {
-      const mappedRequests = requests.data.map(r => ({ ...r, user: r.profiles?.name, phone: r.profiles?.phone }));
-      setServiceRequests(mappedRequests);
-      setActiveServices(mappedRequests.filter((r: any) => r.status === 'accepted'));
-    }
-
-    if (pros.data) setProfessionalServices(pros.data.map(p => ({
-      ...p,
-      providerName: p.profiles?.name,
-      providerPhone: p.profiles?.phone,
-      is_on_site: p.profiles?.is_on_site
-    })));
-
-    // Let's correct the destructuring in the ReplacementContent to be explicit.
-
-    if (onSite.data) setOnSitePros(onSite.data);
-
-    if (prods.data) setProducts(prods.data);
-    if (cats.data) setCategories(cats.data);
-
-    if (mkt.data) {
-      setDesapegos(mkt.data.map(i => ({
-        id: i.id,
-        name: i.title,
-        price: `R$ ${i.price}`,
-        img: i.image_url,
-        user: i.profiles?.name || 'Vizinho',
-        status: i.status.toUpperCase(),
-        desc: i.description,
-        tower: i.profiles ? `${i.profiles.tower} - ${i.profiles.unit}` : 'Residencial',
-        phone: i.profiles?.phone
-      })));
-    }
+      if (areas.data) setCommonAreas(areas.data);
+      if (resvs.data) setReservations(resvs.data);
+      if (requests.data) {
+        const mapped = requests.data.map(r => ({ ...r, user: r.profiles?.name, phone: r.profiles?.phone }));
+        setServiceRequests(mapped);
+        setActiveServices(mapped.filter((r: any) => r.status === 'accepted'));
+      }
+      if (pros.data) setProfessionalServices(pros.data.map(p => ({ ...p, providerName: p.profiles?.name, providerPhone: p.profiles?.phone })));
+      if (onSite.data) setOnSitePros(onSite.data);
+      if (cats.data) setCategories(cats.data);
+    } catch (e) { console.error("Erro refresh", e); }
   }, [appState, session]);
 
   useEffect(() => { refreshAppData(); }, [refreshAppData]);
 
-  // --- 6. REALTIME NOTIFICATIONS & PUSH ---
-  useEffect(() => {
-    if (!session?.user || userRole !== UserRole.PROFESSIONAL) return;
-
-    // Request Notification Permission
-    if (Notification.permission === 'default') {
-      Notification.requestPermission();
-    }
-
-    const channel = supabase
-      .channel('service_requests_changes')
-      .on(
-        'postgres_changes',
-        { event: 'INSERT', schema: 'public', table: 'service_requests' },
-        (payload) => {
-          const newRequest = payload.new as any;
-          if (newRequest.provider_id === session.user.id) {
-            // Trigger Visual Notification
-            const audio = new Audio('/notification.mp3'); // Optional: Add sound if available
-            audio.play().catch(() => { }); // catch if file not found
-
-            if (Notification.permission === 'granted') {
-              new Notification('Novo Chamado!', {
-                body: `Você recebeu uma nova solicitação: ${newRequest.title || 'Serviço'}`,
-                icon: '/icon.png'
-              });
-            } else {
-              alert(`🔔 Novo Chamado: ${newRequest.title || 'Serviço'}`);
-            }
-            refreshAppData(); // Auto-refresh data
-          }
-        }
-      )
-      .subscribe();
-
-    return () => { supabase.removeChannel(channel); };
-  }, [session, userRole, refreshAppData]);
-
-  // --- 5. PAGINAÇÃO E HANDLERS ---
-  const navigateToCategory = (category: string) => {
-    setSelectedCategory(category);
-    pushScreen('servicos-full');
-  };
-
-  const handleSelectDesapego = (item: any) => {
-    setSelectedDesapego(item);
-    pushScreen('desapego-detail');
-  };
-
-  const handleSelectProduct = (item: any) => {
-    setSelectedProduct(item);
-    pushScreen('shop-product-detail');
-  };
-
-  // --- HANDLERS GENÉRICOS (RE-USÁVEIS) ---
+  // --- HANDLERS ---
   const handleUpdateServiceRequest = async (id: number | string, status: string) => {
     const { error } = await supabase.from('service_requests').update({ status }).eq('id', id);
     if (!error) refreshAppData();
   };
 
-  const handleAddProduct = async (product: any) => {
-    if (!session?.user) return;
-    let finalImageUrl = product.image_url;
-    if (product.image_file) {
-      const fileName = `${Math.random()}.${product.image_file.name.split('.').pop()}`;
-      const { error: upErr } = await supabase.storage.from('products').upload(`${session.user.id}/${fileName}`, product.image_file);
-      if (!upErr) {
-        const { data } = supabase.storage.from('products').getPublicUrl(`${session.user.id}/${fileName}`);
-        finalImageUrl = data.publicUrl;
-      }
-    }
-    const { image_file, ...productData } = product;
-    const { error } = await supabase.from('products').insert([{ ...productData, image_url: finalImageUrl, vendor_id: session.user.id }]);
-    if (!error) refreshAppData(); else alert(error.message);
-  };
-
-  const handleDeleteProduct = async (id: string) => {
-    const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) refreshAppData();
-  };
-
-  const handleToggleProductStatus = async (product: any) => {
-    const { error } = await supabase.from('products').update({ available: !product.available }).eq('id', product.id);
-    if (!error) refreshAppData();
-  };
-
-  const handleAddDesapego = async (item: any) => {
-    if (!session?.user) return;
-    let finalImageUrl = item.img;
-    if (item.image_file) {
-      const fileName = `${Date.now()}.${item.image_file.name.split('.').pop()}`;
-      const { error: upErr } = await supabase.storage.from('marketplace').upload(`${session.user.id}/${fileName}`, item.image_file);
-      if (!upErr) {
-        const { data } = supabase.storage.from('marketplace').getPublicUrl(`${session.user.id}/${fileName}`);
-        finalImageUrl = data.publicUrl;
-      }
-    }
-    const { error } = await supabase.from('marketplace').insert([{
-      seller_id: session.user.id, title: item.name, price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
-      status: item.status, description: item.desc, image_url: finalImageUrl
-    }]);
-    if (!error) { refreshAppData(); baseScreen('home'); } else alert(error.message);
-  };
-
-  const handleDeleteDesapego = async (id: string) => {
-    const { error } = await supabase.from('marketplace').delete().eq('id', id);
-    if (!error) { alert('Anúncio removido!'); refreshAppData(); baseScreen('home'); }
-  };
-
   const handleAddServiceRequest = async (req: any) => {
     if (!session?.user) return;
     const { error } = await supabase.from('service_requests').insert([{
-      resident_id: session.user.id, title: req.title || req.name, category: req.category || 'Solicitação',
-      description: req.description || req.name, status: 'pending', unit: currentUser?.unit, location: `${currentUser?.tower} - ${currentUser?.unit}`,
+      resident_id: session.user.id,
+      title: req.title || req.name,
+      category: req.category || 'Solicitação',
+      description: req.description || req.name,
+      status: 'pending',
+      unit: currentUser?.unit,
+      location: `${currentUser?.tower} - ${currentUser?.unit}`,
       provider_id: req.professional_id
     }]);
     if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(error.message);
   };
 
-  // --- RENDERIZAÇÃO PRINCIPAL ---
+  const navigateToCategory = (category: string) => { setSelectedCategory(category); pushScreen('servicos-full'); };
+  const handleSelectDesapego = (item: any) => { setSelectedDesapego(item); pushScreen('desapego-detail'); };
+  const handleSelectProduct = (item: any) => { setSelectedProduct(item); pushScreen('shop-product-detail'); };
+
+  // --- RENDERIZAÇÃO ---
   const renderContent = () => {
     try {
       if (!userRole || !currentUser) return null;
 
-      // --- RESIDENTE ---
+      // LÓGICA RESIDENTE
       if (userRole === UserRole.RESIDENT) {
         switch (activeTab) {
-          case 'resident': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} categories={categories} />;
+          case 'resident':
+          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} categories={categories} />;
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
-          case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => {
-            const { error } = await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower, avatar_url: currentUser?.avatar }]);
-            if (!error) refreshAppData();
-          }} currentUser={currentUser} />;
+          case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
           case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
           case 'chamado': return <CommunicationHub onBack={goBack} currentUser={currentUser} />;
-          case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} onAddReservation={async (res) => {
+          case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} commonAreas={commonAreas} onAddReservation={async (res) => {
             const insertData: any = {
               resident_id: session.user.id,
               area_id: res.areaId,
@@ -430,46 +243,41 @@ const App: React.FC = () => {
               unit: currentUser?.unit,
               tower: currentUser?.tower
             };
-
-            // Add time fields based on reservation type
             if (res.startTime && res.endTime) {
               insertData.start_time = res.startTime;
               insertData.end_time = res.endTime;
             } else if (res.timeSlot) {
               insertData.time_slot = res.timeSlot;
             }
-
             const { error } = await supabase.from('reservations').insert([insertData]);
             if (!error) { refreshAppData(); } else { throw new Error(error.message); }
-          }} commonAreas={commonAreas} />;
-          case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
+          }} />;
+          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
-          case 'shop-detail': return <ShopDetailPage onBack={goBack} products={products} onSelectProduct={handleSelectProduct} categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />;
-          case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={goBack} />;
-          case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
-          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
-          case 'desapego-full': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
-          default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={[]} onClearNotifications={() => { }} onSelectDesapego={() => { }} products={products} onSelectProduct={() => { }} categories={categories} onSitePros={onSitePros} />;
+          default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} onSitePros={onSitePros} />;
         }
       }
 
-      // --- PROFISSIONAL ---
+      // LÓGICA PROFISSIONAL (CORRIGIDA)
       if (userRole === UserRole.PROFESSIONAL) {
         console.log('[App] Rendering Professional, activeTab:', activeTab);
-        const completedServices = serviceRequests.filter(r => r.status === 'completed');
+        const pending = serviceRequests.filter(r => r.status === 'pending');
+        const accepted = serviceRequests.filter(r => r.status === 'accepted');
+        const completed = serviceRequests.filter(r => r.status === 'completed');
+
         switch (activeTab) {
-          case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} completedServices={completedServices} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
+          case 'dashboard': return <ProfessionalDashboard serviceRequests={pending} activeServices={accepted} completedServices={completed} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
           case 'services': return <ProfessionalServices currentUser={currentUser} />;
-          case 'agenda': return <ProfessionalAgenda activeServices={serviceRequests.filter(r => r.status === 'accepted')} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} serviceRequests={serviceRequests} />;
-          case 'earnings': return <ProfessionalEarnings services={completedServices} />;
+          case 'agenda': return <ProfessionalAgenda activeServices={accepted} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} serviceRequests={serviceRequests} />;
+          case 'earnings': return <ProfessionalEarnings services={completed} />;
           case 'shop': return <ProfessionalShop currentUser={currentUser} />;
           case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
-          default: return <ProfessionalDashboard serviceRequests={serviceRequests} activeServices={activeServices} onUpdateRequest={() => { }} currentUser={currentUser} onNavigate={pushScreen} />;
+          default: return <ProfessionalDashboard serviceRequests={pending} activeServices={accepted} completedServices={completed} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
         }
       }
 
-      // --- ADMIN ---
+      // LÓGICA ADMIN
       if (userRole === UserRole.ADMIN) {
         switch (activeTab) {
           case 'dashboard': return <AdminDashboard onNavigate={pushScreen} />;
@@ -508,15 +316,8 @@ const App: React.FC = () => {
   };
 
   if (appState === 'splash') return <SplashScreen onFinish={() => { if (session && userRole) setAppState('main'); else setAppState('login'); }} />;
-
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div></div>;
-
-  if (appState === 'login') return <LoginScreen onLogin={async (session) => {
-    // If login component returns session, use it immediately
-    const s = session || (await supabase.auth.getSession()).data.session;
-    if (s) fetchUserProfile(s.user.id);
-  }} onRegister={() => setAppState('roleSelection')} />;
-
+  if (appState === 'login') return <LoginScreen onLogin={async (session) => { const s = session || (await supabase.auth.getSession()).data.session; if (s) fetchUserProfile(s.user.id); }} onRegister={() => setAppState('roleSelection')} />;
   if (appState === 'roleSelection') return <RoleSelection onSelect={(role) => { setUserRole(role); setAppState(role === UserRole.RESIDENT ? 'registerResident' : 'registerProfessional'); }} onBack={() => setAppState('login')} />;
   if (appState === 'registerResident') return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
   if (appState === 'registerProfessional') return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
