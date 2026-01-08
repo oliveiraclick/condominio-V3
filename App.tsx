@@ -134,7 +134,7 @@ const App: React.FC = () => {
   const fetchUserProfile = async (userId: string) => {
     setLoading(true);
     // Timeout safeguard
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 6000));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 15000));
 
     try {
       // 1. Fetch Profile ONLY (Safe - No Joins)
@@ -182,7 +182,8 @@ const App: React.FC = () => {
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
       // ERROR -> Safe fallback to LOGIN (not role selection)
-      setAppState('login');
+      // setAppState('login');
+      setLoading(false);
     } finally {
       setLoading(false);
     }
