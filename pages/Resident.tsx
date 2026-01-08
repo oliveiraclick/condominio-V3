@@ -1979,35 +1979,30 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 // --- NAVEGAÇÃO ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
-    {[
-      { id: 'home', icon: <LayoutGrid size={24} />, label: 'Home' },
-      { id: 'market', icon: <ShoppingBag size={24} />, label: 'Shop' },
-      { id: 'create-desapego', icon: <Plus size={28} />, isAction: true },
-      { id: 'booking', icon: <CalendarDays size={24} />, label: 'Reservas' },
-      { id: 'profile', icon: <User size={24} />, label: 'Perfil' },
-    ].map((item) => {
-      if (item.isAction) {
-        return (
-          <button
-            key={item.id}
-            onClick={() => onChange(item.id)}
-            className="mb-4 -mt-12 w-16 h-16 bg-violet-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-violet-500/40 border-[4px] border-[#fcfcfd] active:scale-95 transition-transform"
-          >
-            {item.icon}
-          </button>
-        );
-      }
-      return (
+  <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 shadow-2xl z-50 max-w-md mx-auto">
+    <div className="flex justify-around items-center px-4 py-3">
+      {[
+        { id: 'home', icon: <LayoutGrid size={22} />, label: 'Início' },
+        { id: 'market', icon: <ShoppingBag size={22} />, label: 'Shop' },
+        { id: 'create-desapego', icon: <Plus size={28} />, label: 'Anunciar', special: true },
+        { id: 'desapego-full', icon: <Grid size={22} />, label: 'Desapego' },
+        { id: 'profile', icon: <User size={22} />, label: 'Perfil' },
+      ].map((item) => (
         <button
           key={item.id}
           onClick={() => onChange(item.id)}
-          className={`flex flex-col items-center gap-1 transition-all duration-300 w-12 ${activeTab === item.id ? 'text-violet-600 -translate-y-1' : 'text-violet-200 hover:text-violet-400'}`}
+          className={`flex flex-col items-center gap-1 transition-all ${item.special
+            ? 'w-16 h-16 -mt-8 bg-violet-600 text-white rounded-[24px] shadow-2xl shadow-violet-600/30 active:scale-90'
+            : `flex-1 ${activeTab === item.id ? 'text-violet-600' : 'text-slate-400'}`
+            }`}
         >
           {item.icon}
-          {activeTab === item.id && <div className="w-1.5 h-1.5 bg-violet-600 rounded-full animate-bounce" />}
+          {!item.special && <span className="text-[9px] font-black uppercase tracking-wider">{item.label}</span>}
         </button>
-      );
-    })}
-  </div>
+      ))}
+    </div>
+    <div className="text-center pb-1">
+      <span className="text-[8px] text-slate-300 font-bold">v1.6.0</span>
+    </div>
+  </nav>
 );
