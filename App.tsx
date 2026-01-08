@@ -522,7 +522,7 @@ const App: React.FC = () => {
   if (appState === 'registerResident') return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
   if (appState === 'registerProfessional') return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
 
-  const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents'].includes(activeTab);
+  const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents'].includes(activeTab);
 
   return (
     <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
