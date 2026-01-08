@@ -312,7 +312,20 @@ export const ResidentHome: React.FC<{
   const featuredProduct = products.length > 0 ? products[products.length - 1] : null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32">
+    <div className="min-h-screen bg-[#f8fafc] pb-32 relative">
+      {/* HEADER: ON-SITE BANNER */}
+      {onSitePros.length > 0 && (
+        <div onClick={() => onSelectCategory('Todos')} className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 animate-gradient-x text-white py-3 px-6 shadow-lg cursor-pointer sticky top-0 z-50 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
+            <span className="text-xs font-black uppercase tracking-widest">{onSitePros.length} Prestador{onSitePros.length > 1 ? 'es' : ''} no condomínio agora!</span>
+          </div>
+          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest opacity-90">
+            Ver todos <ChevronRight size={12} />
+          </div>
+        </div>
+      )}
+
       {/* REVIEWS MODAL */}
       <ReviewModal
         isOpen={reviewModalOpen}
