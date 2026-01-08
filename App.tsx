@@ -57,17 +57,28 @@ const App: React.FC = () => {
       try {
         // Removed timeout race condition to fix mobile persistence issues
         const { data: { session: currentSession } } = await supabase.auth.getSession();
-        setSession(currentSession);
 
         if (currentSession) {
+          setSession(currentSession);
           await fetchUserProfile(currentSession.user.id);
           fetchCategories();
         } else {
-          setAppState('login');
-          setLoading(false);
+          // Retry: Give auto-refresh a chance to work (1.5s grace period)
+          await new Promise(r => setTimeout(r, 1500));
+          const { data: { session: retrySession } } = await supabase.auth.getSession();
+
+          if (retrySession) {
+            setSession(retrySession);
+            await fetchUserProfile(retrySession.user.id);
+            fetchCategories();
+          } else {
+            setAppState('login');
+            setLoading(false);
+          }
         }
       } catch (error) {
         console.error("Auth initialization error:", error);
+        setAppState('login');
         setLoading(false);
       }
     };
