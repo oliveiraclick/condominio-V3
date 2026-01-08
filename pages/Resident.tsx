@@ -589,7 +589,7 @@ export const ResidentHome: React.FC<{
 export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: string) => void }> = ({ currentUser, onNavigate }) => {
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    window.location.reload();
+    // No reload needed, onAuthStateChange in App.tsx handles the state switch
   };
 
   return (
