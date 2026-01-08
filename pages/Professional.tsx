@@ -232,6 +232,38 @@ export const ProfessionalDashboard: React.FC<{
           </div>
         )}
 
+        {/* QUICK ACCESS (NEW) */}
+        <div className="mb-6">
+          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest mb-4 ml-1">Acesso Rápido</h3>
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => onNavigate?.('services')}
+              className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-violet-200 group"
+            >
+              <div className="w-12 h-12 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                <Briefcase size={22} />
+              </div>
+              <div className="text-center">
+                <span className="block font-black text-slate-900 text-xs uppercase mb-0.5">Meus Serviços</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Gerenciar</span>
+              </div>
+            </button>
+
+            <button
+              onClick={() => onNavigate?.('shop')}
+              className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-violet-200 group"
+            >
+              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <Store size={22} />
+              </div>
+              <div className="text-center">
+                <span className="block font-black text-slate-900 text-xs uppercase mb-0.5">Minha Loja</span>
+                <span className="text-[9px] font-bold text-slate-400 uppercase">Gerenciar</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
         {/* DASHBOARD TABS */}
         <div className="flex p-1 bg-white rounded-2xl mb-6 shadow-sm border border-slate-100">
           <button onClick={() => setActiveTab('requests')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'requests' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}>Novos ({serviceRequests.length})</button>
