@@ -254,7 +254,7 @@ export const ResidentHome: React.FC<{
               <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h2 className="font-black text-white text-2xl tracking-tighter leading-none italic">Olá, {currentUser?.name?.split(' ')[0] || 'Morador'}!</h2>
+              <h2 className="font-black text-white text-2xl tracking-tighter leading-none italic">Olá, {currentUser?.name || 'Morador'}!</h2>
               <p className="text-[10px] text-violet-200 font-black uppercase tracking-widest mt-2 flex items-center gap-1">
                 <MapPin size={10} className="text-violet-200" /> {currentUser?.condo || 'Meu Condomínio'} • {currentUser?.unit || '---'}
               </p>
