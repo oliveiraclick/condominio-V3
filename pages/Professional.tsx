@@ -581,711 +581,712 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
       </div>
     </div>
   );
+};
 
 
-  export const ProfessionalServices = ({ currentUser }: any) => {
-    const [services, setServices] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [editingService, setEditingService] = useState<any>(null);
-    const [formData, setFormData] = useState({
-      title: '',
-      category: '',
-      description: '',
-      price_range: ''
+export const ProfessionalServices = ({ currentUser }: any) => {
+  const [services, setServices] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingService, setEditingService] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    category: '',
+    description: '',
+    price_range: ''
+  });
+
+  useEffect(() => {
+    loadServices();
+  }, []);
+
+  const loadServices = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('professional_services')
+      .select('*')
+      .eq('provider_id', currentUser?.id)
+      .order('created_at', { ascending: false });
+
+    if (data && !error) {
+      setServices(data);
+    }
+    setLoading(false);
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.category) {
+      alert('Preencha título e categoria');
+      return;
+    }
+
+    const serviceData = {
+      ...formData,
+      provider_id: currentUser?.id
+    };
+
+    if (editingService) {
+      const { error } = await supabase
+        .from('professional_services')
+        .update(serviceData)
+        .eq('id', editingService.id);
+
+      if (!error) {
+        alert('Serviço atualizado!');
+        loadServices();
+        resetForm();
+      }
+    } else {
+      const { error } = await supabase
+        .from('professional_services')
+        .insert([serviceData]);
+
+      if (!error) {
+        alert('Serviço cadastrado!');
+        loadServices();
+        resetForm();
+      }
+    }
+  };
+
+  const handleEdit = (service: any) => {
+    setEditingService(service);
+    setFormData({
+      title: service.title,
+      category: service.category,
+      description: service.description || '',
+      price_range: service.price_range || ''
     });
+    setShowForm(true);
+  };
 
-    useEffect(() => {
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este serviço?')) return;
+
+    const { error } = await supabase
+      .from('professional_services')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      alert('Serviço excluído!');
       loadServices();
-    }, []);
+    }
+  };
 
-    const loadServices = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('professional_services')
-        .select('*')
-        .eq('provider_id', currentUser?.id)
-        .order('created_at', { ascending: false });
+  const toggleActive = async (service: any) => {
+    const { error } = await supabase
+      .from('professional_services')
+      .update({ active: !service.active })
+      .eq('id', service.id);
 
-      if (data && !error) {
-        setServices(data);
-      }
-      setLoading(false);
-    };
+    if (!error) {
+      loadServices();
+    }
+  };
 
-    const handleSubmit = async () => {
-      if (!formData.title || !formData.category) {
-        alert('Preencha título e categoria');
-        return;
-      }
+  const resetForm = () => {
+    setFormData({ title: '', category: '', description: '', price_range: '' });
+    setEditingService(null);
+    setShowForm(false);
+  };
 
-      const serviceData = {
-        ...formData,
-        provider_id: currentUser?.id
-      };
+  const categories = ['Eletricista', 'Encanador', 'Limpeza', 'Jardinagem', 'Pintura', 'Manutenção', 'Beleza', 'Tecnologia', 'Outros'];
 
-      if (editingService) {
-        const { error } = await supabase
-          .from('professional_services')
-          .update(serviceData)
-          .eq('id', editingService.id);
-
-        if (!error) {
-          alert('Serviço atualizado!');
-          loadServices();
-          resetForm();
-        }
-      } else {
-        const { error } = await supabase
-          .from('professional_services')
-          .insert([serviceData]);
-
-        if (!error) {
-          alert('Serviço cadastrado!');
-          loadServices();
-          resetForm();
-        }
-      }
-    };
-
-    const handleEdit = (service: any) => {
-      setEditingService(service);
-      setFormData({
-        title: service.title,
-        category: service.category,
-        description: service.description || '',
-        price_range: service.price_range || ''
-      });
-      setShowForm(true);
-    };
-
-    const handleDelete = async (id: string) => {
-      if (!confirm('Deseja realmente excluir este serviço?')) return;
-
-      const { error } = await supabase
-        .from('professional_services')
-        .delete()
-        .eq('id', id);
-
-      if (!error) {
-        alert('Serviço excluído!');
-        loadServices();
-      }
-    };
-
-    const toggleActive = async (service: any) => {
-      const { error } = await supabase
-        .from('professional_services')
-        .update({ active: !service.active })
-        .eq('id', service.id);
-
-      if (!error) {
-        loadServices();
-      }
-    };
-
-    const resetForm = () => {
-      setFormData({ title: '', category: '', description: '', price_range: '' });
-      setEditingService(null);
-      setShowForm(false);
-    };
-
-    const categories = ['Eletricista', 'Encanador', 'Limpeza', 'Jardinagem', 'Pintura', 'Manutenção', 'Beleza', 'Tecnologia', 'Outros'];
-
-    return (
-      <div className="min-h-screen bg-[#fcfcfd] pb-32">
-        <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Meus Serviços</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{services.length} serviços</p>
-            </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
-            >
-              <Plus size={24} />
-            </button>
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Meus Serviços</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{services.length} serviços</p>
           </div>
-        </header>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
+      </header>
 
-        <div className="p-6 space-y-4">
-          {/* Formulário */}
-          {showForm && (
-            <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-black italic text-slate-900 uppercase">{editingService ? 'Editar' : 'Novo'} Serviço</h3>
-                <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
-                  <X size={20} />
-                </button>
+      <div className="p-6 space-y-4">
+        {/* Formulário */}
+        {showForm && (
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black italic text-slate-900 uppercase">{editingService ? 'Editar' : 'Novo'} Serviço</h3>
+              <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <Input
+              placeholder="Nome do serviço"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="h-14 rounded-2xl"
+            />
+
+            <select
+              value={formData.category}
+              onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+              className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-emerald-500"
+            >
+              <option value="">Selecione a categoria</option>
+              {categories.map(cat => (
+                <option key={cat} value={cat}>{cat}</option>
+              ))}
+            </select>
+
+            <textarea
+              placeholder="Descrição detalhada do serviço"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-emerald-500 resize-none"
+            />
+
+            <Input
+              placeholder="Faixa de preço (ex: R$ 50 - R$ 150)"
+              value={formData.price_range}
+              onChange={(e) => setFormData({ ...formData, price_range: e.target.value })}
+              className="h-14 rounded-2xl"
+            />
+
+            <Button
+              fullWidth
+              onClick={handleSubmit}
+              className="h-14 bg-emerald-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-emerald-600/30"
+            >
+              {editingService ? 'Atualizar' : 'Cadastrar'} Serviço
+            </Button>
+          </div>
+        )}
+
+        {/* Lista de Serviços */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : services.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Briefcase size={24} className="text-slate-300" />
+            </div>
+            <p className="text-slate-400 font-bold text-sm">Nenhum serviço cadastrado</p>
+            <p className="text-slate-300 text-xs mt-1">Clique no + para adicionar</p>
+          </div>
+        ) : (
+          services.map((service) => (
+            <div key={service.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-3">
+              <div className="flex items-start justify-between gap-2">
+                <div className="flex-1">
+                  <h4 className="font-black text-slate-900 text-base italic tracking-tight">{service.title}</h4>
+                  <p className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-1 rounded-full inline-block mt-1">{service.category}</p>
+                </div>
+                <Badge className={`text-[8px] uppercase px-2 py-1 ${service.active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                  {service.active ? 'Ativo' : 'Inativo'}
+                </Badge>
               </div>
 
+              {service.description && (
+                <p className="text-xs text-slate-500 line-clamp-2">{service.description}</p>
+              )}
+
+              {service.price_range && (
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-black text-slate-700">{service.price_range}</span>
+                </div>
+              )}
+
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => toggleActive(service)}
+                  className="flex-1 h-10 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-100 active:scale-95 transition-all"
+                >
+                  {service.active ? 'Desativar' : 'Ativar'}
+                </button>
+                <button
+                  onClick={() => handleEdit(service)}
+                  className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDelete(service.id)}
+                  className="h-10 px-4 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all"
+                >
+                  Excluir
+                </button>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const ProfessionalEarnings = () => (
+  <div className="p-6">
+    <h2 className="text-xl font-black text-slate-900 mb-4">Extrato Financeiro</h2>
+    <p className="text-gray-500">Detalhamento de ganhos.</p>
+  </div>
+);
+
+export const ProfessionalProfileView = ({ currentUser, onLogout }: any) => {
+  const [loading, setLoading] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const [formData, setFormData] = useState({
+    name: currentUser?.name || '',
+    phone: currentUser?.phone || '',
+    category: currentUser?.category || '',
+    description: currentUser?.description || ''
+  });
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    try {
+      if (!event.target.files || event.target.files.length === 0) return;
+      setUploading(true);
+      const file = event.target.files[0];
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase.from('profiles').update({ avatar: data.publicUrl }).eq('id', currentUser.id);
+      if (updateError) throw updateError;
+
+      alert('Foto atualizada!');
+      window.location.reload();
+    } catch (error: any) {
+      alert('Erro ao atualizar foto: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSave = async () => {
+    setLoading(true);
+    try {
+      const { error } = await supabase.from('profiles').update({
+        name: formData.name,
+        phone: formData.phone,
+        category: formData.category,
+        description: formData.description
+      }).eq('id', currentUser.id);
+
+      if (error) throw error;
+      alert('Perfil atualizado com sucesso!');
+      window.location.reload();
+    } catch (err: any) {
+      alert('Erro ao salvar: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div className="p-6 pb-32">
+      <h2 className="text-xl font-black text-slate-900 mb-6">Meu Perfil</h2>
+
+      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 mb-6 flex flex-col items-center">
+        <div
+          className="w-32 h-32 rounded-[40px] border-4 border-slate-50 shadow-xl overflow-hidden mb-4 relative group cursor-pointer"
+          onClick={() => fileInputRef.current?.click()}
+        >
+          <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
+          {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
+        </div>
+        <button onClick={() => fileInputRef.current?.click()} className="text-violet-600 font-bold text-xs uppercase bg-violet-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
+          {uploading ? 'Enviando...' : 'Alterar Foto'}
+        </button>
+        <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
+      </div>
+
+      <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-4 mb-8">
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome / Empresa</label>
+          <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria</label>
+          <select
+            value={formData.category}
+            onChange={e => setFormData({ ...formData, category: e.target.value })}
+            className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 border-none outline-none focus:ring-2 focus:ring-emerald-100"
+          >
+            {['Manutenção', 'Limpeza', 'Beleza', 'Tecnologia', 'Reformas', 'Outros'].map(c => <option key={c} value={c}>{c}</option>)}
+          </select>
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Telefone</label>
+          <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
+        </div>
+        <div className="space-y-2">
+          <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
+          <Input value={currentUser?.email} readOnly className="h-14 font-medium bg-slate-50 text-slate-400" />
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase text-xs tracking-widest rounded-[24px]">
+          {loading ? 'Salvando...' : 'Salvar Alterações'}
+        </Button>
+        <Button variant="secondary" onClick={onLogout} className="w-full border-rose-100 text-rose-500 h-16 bg-white rounded-[24px]">Sair da Conta</Button>
+      </div>
+    </div>
+  );
+};
+
+export const ProfessionalShop = ({ currentUser }: any) => {
+  const [products, setProducts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showForm, setShowForm] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<any>(null);
+  const [formData, setFormData] = useState({
+    title: '',
+    description: '',
+    price: '',
+    category: 'Outros',
+    image_url: ''
+  });
+  const [uploading, setUploading] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+
+  useEffect(() => {
+    loadProducts();
+  }, []);
+
+  const loadProducts = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('products')
+      .select('*')
+      .eq('vendor_id', currentUser?.id)
+      .order('created_at', { ascending: false });
+
+    if (data && !error) {
+      setProducts(data);
+    }
+    setLoading(false);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${currentUser?.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('products')
+        .upload(filePath, file);
+
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('products')
+        .getPublicUrl(filePath);
+
+      setFormData({ ...formData, image_url: publicUrl });
+      setImageFile(file);
+    } catch (error: any) {
+      alert('Erro ao fazer upload: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!formData.title || !formData.price) {
+      alert('Preencha título e preço');
+      return;
+    }
+
+    const productData = {
+      ...formData,
+      price: parseFloat(formData.price),
+      vendor_id: currentUser?.id
+    };
+
+    if (editingProduct) {
+      const { error } = await supabase
+        .from('products')
+        .update(productData)
+        .eq('id', editingProduct.id);
+
+      if (!error) {
+        alert('Produto atualizado!');
+        loadProducts();
+        resetForm();
+      }
+    } else {
+      const { error } = await supabase
+        .from('products')
+        .insert([productData]);
+
+      if (!error) {
+        alert('Produto cadastrado!');
+        loadProducts();
+        resetForm();
+      }
+    }
+  };
+
+  const handleEdit = (product: any) => {
+    setEditingProduct(product);
+    setFormData({
+      title: product.title,
+      description: product.description || '',
+      price: product.price.toString(),
+      category: product.category,
+      image_url: product.image_url || ''
+    });
+    setShowForm(true);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Deseja realmente excluir este produto?')) return;
+
+    const { error } = await supabase
+      .from('products')
+      .delete()
+      .eq('id', id);
+
+    if (!error) {
+      alert('Produto excluído!');
+      loadProducts();
+    }
+  };
+
+  const toggleAvailability = async (product: any) => {
+    const { error } = await supabase
+      .from('products')
+      .update({ available: !product.available })
+      .eq('id', product.id);
+
+    if (!error) {
+      loadProducts();
+    }
+  };
+
+  const resetForm = () => {
+    setFormData({ title: '', description: '', price: '', category: 'Outros', image_url: '' });
+    setEditingProduct(null);
+    setShowForm(false);
+    setImageFile(null);
+  };
+
+  const categories = ['Alimentos', 'Artesanato', 'Serviços', 'Outros'];
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Minha Loja</h2>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{products.length} produtos</p>
+          </div>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="w-12 h-12 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/30 active:scale-95 transition-all"
+          >
+            <Plus size={24} />
+          </button>
+        </div>
+      </header>
+
+      <div className="p-6 space-y-4">
+        {/* Formulário */}
+        {showForm && (
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black italic text-slate-900 uppercase">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
+              <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <Input
+              placeholder="Nome do produto"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+              className="h-14 rounded-2xl"
+            />
+
+            <textarea
+              placeholder="Descrição (opcional)"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-violet-500 resize-none"
+            />
+
+            <div className="grid grid-cols-2 gap-4">
               <Input
-                placeholder="Nome do serviço"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                type="number"
+                placeholder="Preço (R$)"
+                value={formData.price}
+                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
                 className="h-14 rounded-2xl"
               />
 
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-emerald-500"
+                className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-violet-500"
               >
-                <option value="">Selecione a categoria</option>
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
                 ))}
               </select>
-
-              <textarea
-                placeholder="Descrição detalhada do serviço"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-emerald-500 resize-none"
-              />
-
-              <Input
-                placeholder="Faixa de preço (ex: R$ 50 - R$ 150)"
-                value={formData.price_range}
-                onChange={(e) => setFormData({ ...formData, price_range: e.target.value })}
-                className="h-14 rounded-2xl"
-              />
-
-              <Button
-                fullWidth
-                onClick={handleSubmit}
-                className="h-14 bg-emerald-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-emerald-600/30"
-              >
-                {editingService ? 'Atualizar' : 'Cadastrar'} Serviço
-              </Button>
             </div>
-          )}
 
-          {/* Lista de Serviços */}
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : services.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Briefcase size={24} className="text-slate-300" />
-              </div>
-              <p className="text-slate-400 font-bold text-sm">Nenhum serviço cadastrado</p>
-              <p className="text-slate-300 text-xs mt-1">Clique no + para adicionar</p>
-            </div>
-          ) : (
-            services.map((service) => (
-              <div key={service.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-3">
-                <div className="flex items-start justify-between gap-2">
-                  <div className="flex-1">
-                    <h4 className="font-black text-slate-900 text-base italic tracking-tight">{service.title}</h4>
-                    <p className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-1 rounded-full inline-block mt-1">{service.category}</p>
+            {/* Upload de Imagem */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Produto</label>
+              <div className="relative">
+                {formData.image_url ? (
+                  <div className="relative">
+                    <img src={formData.image_url} alt="Preview" className="w-full h-48 object-cover rounded-2xl" />
+                    <button
+                      onClick={() => setFormData({ ...formData, image_url: '' })}
+                      className="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 active:scale-95 transition-all"
+                    >
+                      <X size={16} />
+                    </button>
                   </div>
-                  <Badge className={`text-[8px] uppercase px-2 py-1 ${service.active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                    {service.active ? 'Ativo' : 'Inativo'}
-                  </Badge>
-                </div>
-
-                {service.description && (
-                  <p className="text-xs text-slate-500 line-clamp-2">{service.description}</p>
+                ) : (
+                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-violet-400 transition-all bg-slate-50">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+                      className="hidden"
+                      disabled={uploading}
+                    />
+                    {uploading ? (
+                      <div className="flex flex-col items-center gap-2">
+                        <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                        <span className="text-xs font-bold text-slate-400">Enviando...</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col items-center gap-2">
+                        <Camera size={32} className="text-slate-300" />
+                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Clique para adicionar foto</span>
+                      </div>
+                    )}
+                  </label>
                 )}
+              </div>
+            </div>
 
-                {service.price_range && (
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm font-black text-slate-700">{service.price_range}</span>
+            <Button
+              fullWidth
+              onClick={handleSubmit}
+              className="h-14 bg-violet-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-violet-600/30"
+            >
+              {editingProduct ? 'Atualizar' : 'Cadastrar'} Produto
+            </Button>
+          </div>
+        )}
+
+        {/* Lista de Produtos */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : products.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Store size={24} className="text-slate-300" />
+            </div>
+            <p className="text-slate-400 font-bold text-sm">Nenhum produto cadastrado</p>
+            <p className="text-slate-300 text-xs mt-1">Clique no + para adicionar</p>
+          </div>
+        ) : (
+          products.map((product) => (
+            <div key={product.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-4">
+              <div className="flex items-start gap-4">
+                {product.image_url && (
+                  <img src={product.image_url} alt={product.title} className="w-20 h-20 rounded-2xl object-cover bg-slate-100" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-start justify-between gap-2">
+                    <h4 className="font-black text-slate-900 text-base italic tracking-tight">{product.title}</h4>
+                    <Badge className={`text-[8px] uppercase px-2 py-1 ${product.available ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                      {product.available ? 'Disponível' : 'Indisponível'}
+                    </Badge>
                   </div>
-                )}
-
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => toggleActive(service)}
-                    className="flex-1 h-10 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-100 active:scale-95 transition-all"
-                  >
-                    {service.active ? 'Desativar' : 'Ativar'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(service)}
-                    className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(service.id)}
-                    className="h-10 px-4 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all"
-                  >
-                    Excluir
-                  </button>
+                  {product.description && (
+                    <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description}</p>
+                  )}
+                  <div className="flex items-center gap-2 mt-2">
+                    <span className="text-lg font-black text-violet-600">R$ {product.price.toFixed(2)}</span>
+                    <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-1 rounded-full">{product.category}</span>
+                  </div>
                 </div>
               </div>
-            ))
-          )}
-        </div>
-      </div>
-    );
-  };
 
-  export const ProfessionalEarnings = () => (
-    <div className="p-6">
-      <h2 className="text-xl font-black text-slate-900 mb-4">Extrato Financeiro</h2>
-      <p className="text-gray-500">Detalhamento de ganhos.</p>
-    </div>
-  );
-
-  export const ProfessionalProfileView = ({ currentUser, onLogout }: any) => {
-    const [loading, setLoading] = useState(false);
-    const [uploading, setUploading] = useState(false);
-    const fileInputRef = React.useRef<HTMLInputElement>(null);
-    const [formData, setFormData] = useState({
-      name: currentUser?.name || '',
-      phone: currentUser?.phone || '',
-      category: currentUser?.category || '',
-      description: currentUser?.description || ''
-    });
-
-    const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-      try {
-        if (!event.target.files || event.target.files.length === 0) return;
-        setUploading(true);
-        const file = event.target.files[0];
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${currentUser.id}-${Math.random()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage.from('avatars').getPublicUrl(filePath);
-
-        const { error: updateError } = await supabase.from('profiles').update({ avatar: data.publicUrl }).eq('id', currentUser.id);
-        if (updateError) throw updateError;
-
-        alert('Foto atualizada!');
-        window.location.reload();
-      } catch (error: any) {
-        alert('Erro ao atualizar foto: ' + error.message);
-      } finally {
-        setUploading(false);
-      }
-    };
-
-    const handleSave = async () => {
-      setLoading(true);
-      try {
-        const { error } = await supabase.from('profiles').update({
-          name: formData.name,
-          phone: formData.phone,
-          category: formData.category,
-          description: formData.description
-        }).eq('id', currentUser.id);
-
-        if (error) throw error;
-        alert('Perfil atualizado com sucesso!');
-        window.location.reload();
-      } catch (err: any) {
-        alert('Erro ao salvar: ' + err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    return (
-      <div className="p-6 pb-32">
-        <h2 className="text-xl font-black text-slate-900 mb-6">Meu Perfil</h2>
-
-        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 mb-6 flex flex-col items-center">
-          <div
-            className="w-32 h-32 rounded-[40px] border-4 border-slate-50 shadow-xl overflow-hidden mb-4 relative group cursor-pointer"
-            onClick={() => fileInputRef.current?.click()}
-          >
-            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
-            {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
-          </div>
-          <button onClick={() => fileInputRef.current?.click()} className="text-violet-600 font-bold text-xs uppercase bg-violet-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
-            {uploading ? 'Enviando...' : 'Alterar Foto'}
-          </button>
-          <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
-        </div>
-
-        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-4 mb-8">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome / Empresa</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria</label>
-            <select
-              value={formData.category}
-              onChange={e => setFormData({ ...formData, category: e.target.value })}
-              className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 border-none outline-none focus:ring-2 focus:ring-emerald-100"
-            >
-              {['Manutenção', 'Limpeza', 'Beleza', 'Tecnologia', 'Reformas', 'Outros'].map(c => <option key={c} value={c}>{c}</option>)}
-            </select>
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Telefone</label>
-            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
-            <Input value={currentUser?.email} readOnly className="h-14 font-medium bg-slate-50 text-slate-400" />
-          </div>
-        </div>
-
-        <div className="space-y-4">
-          <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase text-xs tracking-widest rounded-[24px]">
-            {loading ? 'Salvando...' : 'Salvar Alterações'}
-          </Button>
-          <Button variant="secondary" onClick={onLogout} className="w-full border-rose-100 text-rose-500 h-16 bg-white rounded-[24px]">Sair da Conta</Button>
-        </div>
-      </div>
-    );
-  };
-
-  export const ProfessionalShop = ({ currentUser }: any) => {
-    const [products, setProducts] = useState<any[]>([]);
-    const [loading, setLoading] = useState(true);
-    const [showForm, setShowForm] = useState(false);
-    const [editingProduct, setEditingProduct] = useState<any>(null);
-    const [formData, setFormData] = useState({
-      title: '',
-      description: '',
-      price: '',
-      category: 'Outros',
-      image_url: ''
-    });
-    const [uploading, setUploading] = useState(false);
-    const [imageFile, setImageFile] = useState<File | null>(null);
-
-    useEffect(() => {
-      loadProducts();
-    }, []);
-
-    const loadProducts = async () => {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('vendor_id', currentUser?.id)
-        .order('created_at', { ascending: false });
-
-      if (data && !error) {
-        setProducts(data);
-      }
-      setLoading(false);
-    };
-
-    const handleImageUpload = async (file: File) => {
-      setUploading(true);
-      try {
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${currentUser?.id}-${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('products')
-          .upload(filePath, file);
-
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage
-          .from('products')
-          .getPublicUrl(filePath);
-
-        setFormData({ ...formData, image_url: publicUrl });
-        setImageFile(file);
-      } catch (error: any) {
-        alert('Erro ao fazer upload: ' + error.message);
-      } finally {
-        setUploading(false);
-      }
-    };
-
-    const handleSubmit = async () => {
-      if (!formData.title || !formData.price) {
-        alert('Preencha título e preço');
-        return;
-      }
-
-      const productData = {
-        ...formData,
-        price: parseFloat(formData.price),
-        vendor_id: currentUser?.id
-      };
-
-      if (editingProduct) {
-        const { error } = await supabase
-          .from('products')
-          .update(productData)
-          .eq('id', editingProduct.id);
-
-        if (!error) {
-          alert('Produto atualizado!');
-          loadProducts();
-          resetForm();
-        }
-      } else {
-        const { error } = await supabase
-          .from('products')
-          .insert([productData]);
-
-        if (!error) {
-          alert('Produto cadastrado!');
-          loadProducts();
-          resetForm();
-        }
-      }
-    };
-
-    const handleEdit = (product: any) => {
-      setEditingProduct(product);
-      setFormData({
-        title: product.title,
-        description: product.description || '',
-        price: product.price.toString(),
-        category: product.category,
-        image_url: product.image_url || ''
-      });
-      setShowForm(true);
-    };
-
-    const handleDelete = async (id: string) => {
-      if (!confirm('Deseja realmente excluir este produto?')) return;
-
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
-
-      if (!error) {
-        alert('Produto excluído!');
-        loadProducts();
-      }
-    };
-
-    const toggleAvailability = async (product: any) => {
-      const { error } = await supabase
-        .from('products')
-        .update({ available: !product.available })
-        .eq('id', product.id);
-
-      if (!error) {
-        loadProducts();
-      }
-    };
-
-    const resetForm = () => {
-      setFormData({ title: '', description: '', price: '', category: 'Outros', image_url: '' });
-      setEditingProduct(null);
-      setShowForm(false);
-      setImageFile(null);
-    };
-
-    const categories = ['Alimentos', 'Artesanato', 'Serviços', 'Outros'];
-
-    return (
-      <div className="min-h-screen bg-[#fcfcfd] pb-32">
-        <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Minha Loja</h2>
-              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{products.length} produtos</p>
-            </div>
-            <button
-              onClick={() => setShowForm(!showForm)}
-              className="w-12 h-12 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/30 active:scale-95 transition-all"
-            >
-              <Plus size={24} />
-            </button>
-          </div>
-        </header>
-
-        <div className="p-6 space-y-4">
-          {/* Formulário */}
-          {showForm && (
-            <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-lg font-black italic text-slate-900 uppercase">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
-                <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
-                  <X size={20} />
+              <div className="flex gap-2">
+                <button
+                  onClick={() => toggleAvailability(product)}
+                  className="flex-1 h-10 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-100 active:scale-95 transition-all"
+                >
+                  {product.available ? 'Desativar' : 'Ativar'}
+                </button>
+                <button
+                  onClick={() => handleEdit(product)}
+                  className="flex-1 h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all"
+                >
+                  Editar
+                </button>
+                <button
+                  onClick={() => handleDelete(product.id)}
+                  className="h-10 px-4 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all"
+                >
+                  Excluir
                 </button>
               </div>
-
-              <Input
-                placeholder="Nome do produto"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="h-14 rounded-2xl"
-              />
-
-              <textarea
-                placeholder="Descrição (opcional)"
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-violet-500 resize-none"
-              />
-
-              <div className="grid grid-cols-2 gap-4">
-                <Input
-                  type="number"
-                  placeholder="Preço (R$)"
-                  value={formData.price}
-                  onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                  className="h-14 rounded-2xl"
-                />
-
-                <select
-                  value={formData.category}
-                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                  className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-violet-500"
-                >
-                  {categories.map(cat => (
-                    <option key={cat} value={cat}>{cat}</option>
-                  ))}
-                </select>
-              </div>
-
-              {/* Upload de Imagem */}
-              <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Produto</label>
-                <div className="relative">
-                  {formData.image_url ? (
-                    <div className="relative">
-                      <img src={formData.image_url} alt="Preview" className="w-full h-48 object-cover rounded-2xl" />
-                      <button
-                        onClick={() => setFormData({ ...formData, image_url: '' })}
-                        className="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 active:scale-95 transition-all"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ) : (
-                    <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-violet-400 transition-all bg-slate-50">
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                        className="hidden"
-                        disabled={uploading}
-                      />
-                      {uploading ? (
-                        <div className="flex flex-col items-center gap-2">
-                          <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-                          <span className="text-xs font-bold text-slate-400">Enviando...</span>
-                        </div>
-                      ) : (
-                        <div className="flex flex-col items-center gap-2">
-                          <Camera size={32} className="text-slate-300" />
-                          <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Clique para adicionar foto</span>
-                        </div>
-                      )}
-                    </label>
-                  )}
-                </div>
-              </div>
-
-              <Button
-                fullWidth
-                onClick={handleSubmit}
-                className="h-14 bg-violet-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-violet-600/30"
-              >
-                {editingProduct ? 'Atualizar' : 'Cadastrar'} Produto
-              </Button>
             </div>
-          )}
-
-          {/* Lista de Produtos */}
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
-          ) : products.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Store size={24} className="text-slate-300" />
-              </div>
-              <p className="text-slate-400 font-bold text-sm">Nenhum produto cadastrado</p>
-              <p className="text-slate-300 text-xs mt-1">Clique no + para adicionar</p>
-            </div>
-          ) : (
-            products.map((product) => (
-              <div key={product.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-4">
-                <div className="flex items-start gap-4">
-                  {product.image_url && (
-                    <img src={product.image_url} alt={product.title} className="w-20 h-20 rounded-2xl object-cover bg-slate-100" />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <h4 className="font-black text-slate-900 text-base italic tracking-tight">{product.title}</h4>
-                      <Badge className={`text-[8px] uppercase px-2 py-1 ${product.available ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                        {product.available ? 'Disponível' : 'Indisponível'}
-                      </Badge>
-                    </div>
-                    {product.description && (
-                      <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description}</p>
-                    )}
-                    <div className="flex items-center gap-2 mt-2">
-                      <span className="text-lg font-black text-violet-600">R$ {product.price.toFixed(2)}</span>
-                      <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-1 rounded-full">{product.category}</span>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => toggleAvailability(product)}
-                    className="flex-1 h-10 bg-slate-50 text-slate-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-slate-100 active:scale-95 transition-all"
-                  >
-                    {product.available ? 'Desativar' : 'Ativar'}
-                  </button>
-                  <button
-                    onClick={() => handleEdit(product)}
-                    className="flex-1 h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all"
-                  >
-                    Editar
-                  </button>
-                  <button
-                    onClick={() => handleDelete(product.id)}
-                    className="h-10 px-4 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all"
-                  >
-                    Excluir
-                  </button>
-                </div>
-              </div>
-            ))
-          )}
-        </div>
+          ))
+        )}
       </div>
-    );
-  };
+    </div>
+  );
+};
 
-  export const ProfessionalNavigation = ({ activeTab, onChange }: any) => {
-    const navItems = [
-      { id: 'dashboard', icon: Grid, label: 'Início' },
-      { id: 'agenda', icon: Calendar, label: 'Agenda' },
-      { id: 'services', icon: Briefcase, label: 'Serviços' },
-      { id: 'shop', icon: Store, label: 'Loja' },
-      { id: 'profile', icon: User, label: 'Perfil' },
-    ];
+export const ProfessionalNavigation = ({ activeTab, onChange }: any) => {
+  const navItems = [
+    { id: 'dashboard', icon: Grid, label: 'Início' },
+    { id: 'agenda', icon: Calendar, label: 'Agenda' },
+    { id: 'services', icon: Briefcase, label: 'Serviços' },
+    { id: 'shop', icon: Store, label: 'Loja' },
+    { id: 'profile', icon: User, label: 'Perfil' },
+  ];
 
-    return (
-      <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
-        {navItems.map((item) => {
-          const isActive = activeTab === item.id;
-          return (
-            <button
-              key={item.id}
-              onClick={() => onChange(item.id)}
-              className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? '-translate-y-2' : ''}`}
-            >
-              <div className={`p-3 rounded-2xl transition-all duration-300 ${isActive ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30' : 'text-slate-300 hover:text-slate-600'}`}>
-                <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-              </div>
-              {isActive && <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 animate-in fade-in slide-in-from-bottom-2">{item.label}</span>}
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
+      {navItems.map((item) => {
+        const isActive = activeTab === item.id;
+        return (
+          <button
+            key={item.id}
+            onClick={() => onChange(item.id)}
+            className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? '-translate-y-2' : ''}`}
+          >
+            <div className={`p-3 rounded-2xl transition-all duration-300 ${isActive ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30' : 'text-slate-300 hover:text-slate-600'}`}>
+              <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
+            </div>
+            {isActive && <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 animate-in fade-in slide-in-from-bottom-2">{item.label}</span>}
+          </button>
+        );
+      })}
+    </div>
+  );
+};
