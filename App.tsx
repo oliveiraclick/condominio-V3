@@ -63,6 +63,7 @@ const App: React.FC = () => {
           await fetchUserProfile(currentSession.user.id);
           fetchCategories();
         } else {
+          setAppState('login');
           setLoading(false);
         }
       } catch (error) {
@@ -73,16 +74,17 @@ const App: React.FC = () => {
 
     initializeAuth();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, newSession) => {
-      setSession(newSession);
-      if (newSession) {
-        await fetchUserProfile(newSession.user.id);
-        fetchCategories();
-      } else {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+      if (event === 'SIGNED_OUT') {
+        setSession(null);
         setUserRole(null);
         setCurrentUser(null);
         setAppState('login');
         setLoading(false);
+      } else if (newSession) {
+        setSession(newSession);
+        await fetchUserProfile(newSession.user.id);
+        fetchCategories();
       }
     });
 
