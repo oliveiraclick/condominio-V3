@@ -15,6 +15,7 @@ import {
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
   Building2, Camera as CameraIcon, Download
 } from 'lucide-react';
+import { CommunicationHub } from './CommunicationHub';
 import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
 
@@ -1242,10 +1243,10 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                           onClick={() => available && setSelectedHour(slot.start)}
                           disabled={!available}
                           className={`p-3 rounded-xl border-2 transition-all text-center ${selectedHour === slot.start
-                              ? 'border-violet-600 bg-violet-50'
-                              : available
-                                ? 'border-slate-200 bg-white hover:border-violet-200 active:scale-95'
-                                : 'border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed'
+                            ? 'border-violet-600 bg-violet-50'
+                            : available
+                              ? 'border-slate-200 bg-white hover:border-violet-200 active:scale-95'
+                              : 'border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed'
                             }`}
                         >
                           <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-violet-600' : available ? 'text-slate-900' : 'text-slate-400'}`}>

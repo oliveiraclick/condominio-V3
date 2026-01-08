@@ -11,6 +11,7 @@ import {
   AssembliesPage, ShopDetailPage, DesapegoDetailView, ProductDetailPage,
   PersonalDataPage, PrivacyPage
 } from './pages/Resident';
+import { CommunicationHub } from './pages/CommunicationHub';
 import {
   ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation,
   ProfessionalServices, ProfessionalEarnings, ProfessionalProfileView, ProfessionalShop
@@ -365,7 +366,7 @@ const App: React.FC = () => {
           if (!error) refreshAppData();
         }} currentUser={currentUser} />;
         case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
-        case 'chamado': return <ChamadosPage onBack={goBack} serviceRequests={serviceRequests} onAddRequest={handleAddServiceRequest} currentUser={currentUser} />;
+        case 'chamado': return <CommunicationHub onBack={goBack} currentUser={currentUser} />;
         case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} onAddReservation={async (res) => {
           const insertData: any = {
             resident_id: session.user.id,

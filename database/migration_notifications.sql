@@ -11,9 +11,19 @@ CREATE TABLE IF NOT EXISTS sent_notifications (
 ALTER TABLE sent_notifications ENABLE ROW LEVEL SECURITY;
 
 -- Super Admins can insert (send) notifications
-CREATE POLICY "Super Admin can send notifications" ON sent_notifications
+-- Admins (Super and Condo) can insert (send) notifications
+DROP POLICY IF EXISTS "Super Admin can send notifications" ON sent_notifications;
+DROP POLICY IF EXISTS "Admins can send notifications" ON sent_notifications;
+
+CREATE POLICY "Admins can send notifications" ON sent_notifications
   FOR INSERT TO authenticated
-  WITH CHECK ((SELECT role FROM profiles WHERE id = auth.uid()) = 'super_admin');
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM profiles
+      WHERE id = auth.uid()
+      AND role IN ('super_admin', 'admin')
+    )
+  );
 
 -- Everyone can read notifications that target them or 'all'
 CREATE POLICY "Users can read relevant notifications" ON sent_notifications
