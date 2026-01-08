@@ -144,6 +144,24 @@ export const ProfessionalDashboard: React.FC<{
   // --- STATE ---
   const [activeTab, setActiveTab] = useState('requests'); // requests, active, wallet, reviews
   const [showNotifications, setShowNotifications] = useState(false);
+  const [reviews, setReviews] = useState<any[]>([]);
+  const [avgRating, setAvgRating] = useState(rating || '5.0');
+
+  useEffect(() => {
+    if (activeTab === 'reviews' && currentUser?.id) {
+      supabase.from('reviews')
+        .select('*, profiles:reviewer_id(name, avatar)')
+        .eq('target_id', currentUser.id)
+        .order('created_at', { ascending: false })
+        .then(({ data }) => {
+          if (data) {
+            setReviews(data);
+            const avg = data.reduce((acc, curr) => acc + curr.rating, 0) / (data.length || 1);
+            setAvgRating(data.length ? avg.toFixed(1) : '5.0');
+          }
+        });
+    }
+  }, [activeTab, currentUser]);
 
   // --- CALCULATIONS ---
   const totalEarnings = completedServices.reduce((acc, curr) => acc + (curr.price || 0), 0);
@@ -155,12 +173,9 @@ export const ProfessionalDashboard: React.FC<{
   const isExpired = daysRemaining <= 0 && subscription?.status === 'trial';
   const kiwifyLink = "https://pay.kiwify.com.br/6CblNjX";
 
-  // --- REVIEWS DATA (MOCK FOR NOW, WOULD FETCH REAL) ---
-  const [reviews, setReviews] = useState([
-    { id: 1, user: 'Ana Maria', rating: 5, comment: 'Excelente profissional! Chegou no horário.', date: 'Ontem' },
-    { id: 2, user: 'Dr. Roberto', rating: 4, comment: 'Bom serviço, mas demorou um pouco.', date: '3 dias atrás' }
-  ]);
-  const averageRating = 4.8;
+  // --- REVIEWS DATA (FETCHED FROM DB) ---
+  // Mock removed in favor of real data fetching above
+
 
   // BLOQUEIO DE ASSINATURA EXPIROU
   if (isExpired) {
@@ -435,138 +450,133 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
     }
   };
 
-  const tabs = [
-    { id: 'pending', label: 'Pendentes', count: serviceRequests?.filter((r: any) => r.status === 'pending').length || 0 },
-    { id: 'accepted', label: 'Aceitos', count: serviceRequests?.filter((r: any) => r.status === 'accepted' && r.provider_id === currentUser?.id).length || 0 },
-    { id: 'completed', label: 'Concluídos', count: serviceRequests?.filter((r: any) => r.status === 'completed' && r.provider_id === currentUser?.id).length || 0 }
-  ];
+};
 
-  return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Agenda</h2>
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Solicitações de serviço</p>
-      </header>
+return (
+  <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Agenda</h2>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Solicitações de serviço</p>
+    </header>
 
-      {/* Tabs */}
-      <div className="bg-white border-b border-slate-100 px-6 flex gap-2 overflow-x-auto no-scrollbar">
-        {tabs.map(tab => (
-          <button
-            key={tab.id}
-            onClick={() => setFilter(tab.id)}
-            className={`py-4 px-4 font-black text-xs uppercase tracking-wider transition-all relative ${filter === tab.id
-              ? 'text-violet-600'
-              : 'text-slate-400 hover:text-slate-600'
-              }`}
-          >
-            {tab.label}
-            {tab.count > 0 && (
-              <span className={`ml-2 px-2 py-0.5 rounded-full text-[9px] font-black ${filter === tab.id ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-400'
-                }`}>
-                {tab.count}
-              </span>
-            )}
-            {filter === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600"></div>
-            )}
-          </button>
-        ))}
-      </div>
-
-      <div className="p-6 space-y-4">
-        {filteredRequests.length === 0 ? (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Calendar size={24} className="text-slate-300" />
-            </div>
-            <p className="text-slate-400 font-bold text-sm">Nenhuma solicitação</p>
-            <p className="text-slate-300 text-xs mt-1">
-              {filter === 'pending' && 'Aguardando novas solicitações'}
-              {filter === 'accepted' && 'Nenhum serviço aceito ainda'}
-              {filter === 'completed' && 'Nenhum serviço concluído'}
-            </p>
-          </div>
-        ) : (
-          filteredRequests.map((request: any) => (
-            <div key={request.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-4">
-              <div className="flex items-start justify-between gap-2">
-                <div className="flex-1">
-                  <h4 className="font-black text-slate-900 text-base italic tracking-tight">{request.title}</h4>
-                  <p className="text-[10px] font-bold text-violet-600 uppercase bg-violet-50 px-2 py-1 rounded-full inline-block mt-1">
-                    {request.category}
-                  </p>
-                </div>
-                <Badge className={`text-[8px] uppercase px-2 py-1 ${request.status === 'pending' ? 'bg-amber-100 text-amber-600' :
-                  request.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
-                    'bg-emerald-100 text-emerald-600'
-                  }`}>
-                  {request.status === 'pending' ? 'Pendente' :
-                    request.status === 'accepted' ? 'Aceito' : 'Concluído'}
-                </Badge>
-              </div>
-
-              {request.description && (
-                <p className="text-xs text-slate-500">{request.description}</p>
-              )}
-
-              <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                <div className="flex items-center gap-1">
-                  <UserCircle2 size={12} />
-                  <span>{request.profiles?.name || 'Morador'}</span>
-                </div>
-                {request.location && (
-                  <div className="flex items-center gap-1">
-                    <MapPin size={12} />
-                    <span>{request.location}</span>
-                  </div>
-                )}
-              </div>
-
-              {request.scheduled_date && (
-                <div className="flex items-center gap-2 text-xs text-slate-600">
-                  <Clock size={14} />
-                  <span className="font-bold">
-                    {new Date(request.scheduled_date).toLocaleDateString('pt-BR')} às{' '}
-                    {new Date(request.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                  </span>
-                </div>
-              )}
-
-              {/* Actions */}
-              {request.status === 'pending' && (
-                <div className="flex gap-2 pt-2">
-                  <button
-                    onClick={() => handleAccept(request.id)}
-                    className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-2"
-                  >
-                    <Check size={16} />
-                    Aceitar
-                  </button>
-                  <button
-                    onClick={() => handleReject(request.id)}
-                    className="flex-1 h-10 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all flex items-center justify-center gap-2"
-                  >
-                    <X size={16} />
-                    Recusar
-                  </button>
-                </div>
-              )}
-
-              {request.status === 'accepted' && (
-                <button
-                  onClick={() => handleComplete(request.id)}
-                  className="w-full h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 size={16} />
-                  Marcar como Concluído
-                </button>
-              )}
-            </div>
-          ))
-        )}
-      </div>
+    {/* Tabs */}
+    <div className="bg-white border-b border-slate-100 px-6 flex gap-2 overflow-x-auto no-scrollbar">
+      {tabs.map(tab => (
+        <button
+          key={tab.id}
+          onClick={() => setFilter(tab.id)}
+          className={`py-4 px-4 font-black text-xs uppercase tracking-wider transition-all relative ${filter === tab.id
+            ? 'text-violet-600'
+            : 'text-slate-400 hover:text-slate-600'
+            }`}
+        >
+          {tab.label}
+          {tab.count > 0 && (
+            <span className={`ml-2 px-2 py-0.5 rounded-full text-[9px] font-black ${filter === tab.id ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-400'
+              }`}>
+              {tab.count}
+            </span>
+          )}
+          {filter === tab.id && (
+            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600"></div>
+          )}
+        </button>
+      ))}
     </div>
-  );
+
+    <div className="p-6 space-y-4">
+      {filteredRequests.length === 0 ? (
+        <div className="text-center py-12">
+          <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Calendar size={24} className="text-slate-300" />
+          </div>
+          <p className="text-slate-400 font-bold text-sm">Nenhuma solicitação</p>
+          <p className="text-slate-300 text-xs mt-1">
+            {filter === 'pending' && 'Aguardando novas solicitações'}
+            {filter === 'accepted' && 'Nenhum serviço aceito ainda'}
+            {filter === 'completed' && 'Nenhum serviço concluído'}
+          </p>
+        </div>
+      ) : (
+        filteredRequests.map((request: any) => (
+          <div key={request.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-4">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1">
+                <h4 className="font-black text-slate-900 text-base italic tracking-tight">{request.title}</h4>
+                <p className="text-[10px] font-bold text-violet-600 uppercase bg-violet-50 px-2 py-1 rounded-full inline-block mt-1">
+                  {request.category}
+                </p>
+              </div>
+              <Badge className={`text-[8px] uppercase px-2 py-1 ${request.status === 'pending' ? 'bg-amber-100 text-amber-600' :
+                request.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
+                  'bg-emerald-100 text-emerald-600'
+                }`}>
+                {request.status === 'pending' ? 'Pendente' :
+                  request.status === 'accepted' ? 'Aceito' : 'Concluído'}
+              </Badge>
+            </div>
+
+            {request.description && (
+              <p className="text-xs text-slate-500">{request.description}</p>
+            )}
+            <div className="flex items-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
+              <div className="flex items-center gap-1">
+                <UserCircle2 size={12} />
+                <span>{request.profiles?.name || 'Morador'}</span>
+              </div>
+              {request.location && (
+                <div className="flex items-center gap-1">
+                  <MapPin size={12} />
+                  <span>{request.location}</span>
+                </div>
+              )}
+            </div>
+
+            {request.scheduled_date && (
+              <div className="flex items-center gap-2 text-xs text-slate-600">
+                <Clock size={14} />
+                <span className="font-bold">
+                  {new Date(request.scheduled_date).toLocaleDateString('pt-BR')} às{' '}
+                  {new Date(request.scheduled_date).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
+              </div>
+            )}
+
+            {/* Actions */}
+            {request.status === 'pending' && (
+              <div className="flex gap-2 pt-2">
+                <button
+                  onClick={() => handleAccept(request.id)}
+                  className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <Check size={16} />
+                  Aceitar
+                </button>
+                <button
+                  onClick={() => handleReject(request.id)}
+                  className="flex-1 h-10 bg-rose-50 text-rose-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                >
+                  <X size={16} />
+                  Recusar
+                </button>
+              </div>
+            )}
+
+            {request.status === 'accepted' && (
+              <button
+                onClick={() => handleComplete(request.id)}
+                className="w-full h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+              >
+                <CheckCircle2 size={16} />
+                Marcar como Concluído
+              </button>
+            )}
+          </div>
+        ))
+      )}
+    </div>
+  </div>
+);
 };
 
 export const ProfessionalServices = ({ currentUser }: any) => {

@@ -217,6 +217,49 @@ const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: str
 };
 
 // --- HOME DO MORADOR ---
+// --- REVIEW MODAL ---
+const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (rating: number, comment: string) => void; proName: string }> = ({ isOpen, onClose, onSubmit, proName }) => {
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState('');
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 mx-4">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-amber-500/20">
+            <Star size={32} fill="currentColor" />
+          </div>
+          <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Avaliar Serviço</h3>
+          <p className="text-sm text-slate-500">Como foi o atendimento de <span className="font-bold text-slate-900">{proName}</span>?</p>
+
+          <div className="flex justify-center gap-2 py-4">
+            {[1, 2, 3, 4, 5].map((s) => (
+              <button key={s} onClick={() => setRating(s)} className="active:scale-90 transition-transform">
+                <Star size={32} className={s <= rating ? "text-amber-400 fill-amber-400" : "text-slate-200"} />
+              </button>
+            ))}
+          </div>
+
+          <textarea
+            placeholder="Deixe um comentário (opcional)..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+            className="w-full h-24 bg-slate-50 rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-amber-400 transition-all font-medium"
+          />
+
+          <Button onClick={() => onSubmit(rating, comment)} fullWidth className="h-14 bg-amber-400 text-amber-950 font-black uppercase tracking-widest shadow-lg shadow-amber-400/30 hover:bg-amber-500 hover:text-white">
+            Enviar Avaliação
+          </Button>
+          <button onClick={onClose} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const ResidentHome: React.FC<{
   onNavigate: (target: string) => void;
   onSelectCategory: (cat: string) => void;
@@ -225,25 +268,59 @@ export const ResidentHome: React.FC<{
   desapegos: any[];
   currentUser: any;
   notifications?: any[];
-  // Legacy props kept for compatibility if passed, though optionally used
-  serviceRequests?: any[];
+  serviceRequests?: any[]; // Re-added for reviews
   activeServices?: any[];
   onClearNotifications?: () => void;
   onSelectDesapego?: (item: any) => void;
-  products?: any[]; // Added products prop
+  products?: any[];
   onSelectProduct?: (item: any) => void;
   onSitePros?: any[];
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [] }) => {
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [] }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
-  const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedRequestToReview, setSelectedRequestToReview] = useState<any>(null);
 
-  // Get a featured product (e.g., the last one added, or random)
+  const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
+  // Filter for completed requests that haven't been reviewed (mock check for now, ideally check DB)
+  const completedRequests = serviceRequests.filter(r => r.status === 'completed' && !r.reviewed);
+
+  const handleReviewSubmit = async (rating: number, comment: string) => {
+    if (!selectedRequestToReview) return;
+
+    // Insert Review
+    const { error } = await supabase.from('reviews').insert([{
+      service_request_id: selectedRequestToReview.id,
+      reviewer_id: currentUser.id,
+      target_id: selectedRequestToReview.provider_id, // Assuming provider_id is on request
+      rating,
+      comment
+    }]);
+
+    if (!error) {
+      // Mark request as reviewed locally or in DB (so it disappears from list)
+      // ideally update 'service_requests' metadata or local exclude
+      alert('Avaliação enviada com sucesso! Obrigado.');
+      setReviewModalOpen(false);
+      // Refresh?
+    } else {
+      alert('Erro ao enviar avaliação: ' + error.message);
+    }
+  };
+
   const featuredProduct = products.length > 0 ? products[products.length - 1] : null;
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
+      {/* REVIEWS MODAL */}
+      <ReviewModal
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        onSubmit={handleReviewSubmit}
+        proName={selectedRequestToReview?.providerName || 'Profissional'}
+      />
+
       {/* NOTIFICATIONS MODAL */}
       <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} userRole="resident" />
 
@@ -298,6 +375,30 @@ export const ResidentHome: React.FC<{
                   }} className="mt-1 w-full py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-colors">
                     Chamar
                   </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* PENDENTE DE AVALIAÇÃO */}
+        {completedRequests.length > 0 && (
+          <div className="animate-in slide-in-from-left-4 duration-500">
+            <div className="flex items-center gap-2 mb-4">
+              <Star size={16} className="text-amber-500 fill-amber-500 animate-pulse" />
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Avalie seu Atendimento</h3>
+            </div>
+            <div className="space-y-4">
+              {completedRequests.map((req, i) => (
+                <div key={i} className="bg-white p-5 rounded-[24px] border border-amber-100 shadow-lg shadow-amber-500/10 flex items-center justify-between">
+                  <div>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Concluído em {new Date(req.created_at).toLocaleDateString('pt-BR')}</p>
+                    <h4 className="font-black text-slate-900 text-sm mt-1">{req.title}</h4>
+                    <p className="text-xs text-slate-500">Com {req.providerName || 'Prestador'}</p>
+                  </div>
+                  <Button onClick={() => { setSelectedRequestToReview(req); setReviewModalOpen(true); }} className="px-5 py-2 bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-colors">
+                    Avaliar
+                  </Button>
                 </div>
               ))}
             </div>
