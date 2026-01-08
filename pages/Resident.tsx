@@ -1249,7 +1249,7 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
       const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.title}* no app do condomínio e tenho interesse!`);
       window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
     } else {
-      alert('Telefone do vendedor não disponível. Tente contactar a portaria.');
+      alert('Telefone do vendedor não disponível.');
     }
   };
 
