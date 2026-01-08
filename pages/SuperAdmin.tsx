@@ -175,15 +175,9 @@ const CondosView = ({ onNavigate }: any) => {
             </div>
             <div className="space-y-1">
               <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">Plano</label>
-              <select
-                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-xl px-4 text-slate-900 font-bold text-xs outline-none focus:border-violet-500"
-                value={newCondo.plan}
-                onChange={e => setNewCondo({ ...newCondo, plan: e.target.value })}
-              >
-                <option value="basic">Basic</option>
-                <option value="pro">Pro</option>
-                <option value="enterprise">Enterprise</option>
-              </select>
+              <div className="w-full h-12 bg-slate-100 border border-slate-200 rounded-xl px-4 flex items-center text-slate-500 font-bold text-xs cursor-not-allowed">
+                Plano Pro (Único)
+              </div>
             </div>
           </div>
 
