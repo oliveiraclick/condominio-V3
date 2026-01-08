@@ -18,9 +18,9 @@ export const SuperAdmin: React.FC<{ onLogout: () => void; currentUser: any }> = 
   const [activeTab, setActiveTab] = useState('dashboard');
 
   return (
-    <div className="min-h-screen bg-[#0f172a] text-white">
+    <div className="min-h-screen bg-[#0f172a] text-white flex">
       {/* Sidebar Navigation */}
-      <div className="fixed left-0 top-0 bottom-0 w-24 bg-[#0f172a] border-r border-slate-800 flex flex-col items-center py-10 z-50">
+      <div className="w-24 bg-[#0f172a] border-r border-slate-800 flex flex-col items-center py-10 z-50 fixed h-full">
         <div className="w-12 h-12 bg-indigo-500 rounded-xl flex items-center justify-center mb-10 shadow-lg shadow-indigo-500/20">
           <ShieldCheck size={24} className="text-white" />
         </div>
@@ -33,9 +33,9 @@ export const SuperAdmin: React.FC<{ onLogout: () => void; currentUser: any }> = 
       </div>
 
       {/* Main Content */}
-      <div className="pl-24 bg-slate-900 min-h-screen rounded-tl-[40px] border-l border-slate-800 overflow-hidden relative">
-        <div className="absolute top-0 right-0 p-8 flex items-center gap-4">
-          <span className="text-sm font-bold text-slate-400">Olá, {currentUser?.name || 'Admin'}</span>
+      <div className="flex-1 ml-24 bg-slate-900 min-h-screen relative overflow-x-hidden">
+        <div className="absolute top-0 right-0 p-8 flex items-center gap-4 z-20">
+          <span className="text-sm font-bold text-slate-400 hidden md:block">Olá, {currentUser?.name || 'Admin'}</span>
           <div className="w-10 h-10 bg-slate-700 rounded-full overflow-hidden border-2 border-slate-600">
             <img src={currentUser?.avatar} className="w-full h-full object-cover" />
           </div>
@@ -45,7 +45,6 @@ export const SuperAdmin: React.FC<{ onLogout: () => void; currentUser: any }> = 
         {activeTab === 'dashboard' && <DashboardView />}
         {activeTab === 'condos' && <CondosView />}
         {activeTab === 'finance' && <SubscriptionsView />}
-
       </div>
     </div>
   );

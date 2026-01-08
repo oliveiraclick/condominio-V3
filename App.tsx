@@ -28,9 +28,36 @@ const App: React.FC = () => {
   const [appState, setAppState] = useState<'splash' | 'login' | 'roleSelection' | 'registerResident' | 'registerProfessional' | 'main'>('splash');
   const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
-  const [activeTab, setActiveTab] = useState<string>('home');
+  const [history, setHistory] = useState<string[]>(['home']);
+  const [activeTab, setActiveTabRaw] = useState<string>('home');
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+
+  // WRAPPER: Synchronize activeTab with History
+  const setActiveTab = (tab: string) => {
+    setActiveTabRaw(tab);
+    // Note: We don't auto-push to history here to avoid duplicates during "Back" actions
+    // Navigation should use specific helpers below
+  };
+
+  const pushScreen = (tab: string) => {
+    setHistory(prev => [...prev, tab]);
+    setActiveTabRaw(tab);
+  };
+
+  const baseScreen = (tab: string) => {
+    setHistory([tab]);
+    setActiveTabRaw(tab);
+  };
+
+  const goBack = () => {
+    setHistory(prev => {
+      if (prev.length <= 1) return prev;
+      const newHist = prev.slice(0, -1);
+      setActiveTabRaw(newHist[newHist.length - 1]);
+      return newHist;
+    });
+  };
 
   // --- ESTADOS DE DADOS (MARKETPLACE E GESTÃO) ---
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
@@ -66,7 +93,13 @@ const App: React.FC = () => {
       const { data: profile } = await Promise.race([fetchProfileOp, timeout]) as any;
 
       if (profile) {
-        const role = profile.role as UserRole;
+        let role = profile.role as UserRole;
+
+        // --- DEVELOPER BYPASS: FORCE SUPER ADMIN ---
+        if (profile.email === 'denys@morador.com.br') {
+          role = UserRole.SUPER_ADMIN;
+        }
+
         setUserRole(role);
 
         // Cache de Role para evitar flicker no carregamento
@@ -76,7 +109,8 @@ const App: React.FC = () => {
         setCurrentUser({
           ...profile,
           avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
-          condo: 'Carregando...'
+          condo: 'Carregando...',
+          role: role
         });
 
         // Busca nome do condomínio em background
@@ -88,30 +122,41 @@ const App: React.FC = () => {
         }
 
         setAppState('main');
-        setActiveTab(role === UserRole.RESIDENT ? 'home' : 'dashboard');
+
+        // Direct to Dashboard for Admin/Pro roles
+        if (role === UserRole.SUPER_ADMIN || role === UserRole.ADMIN || role === UserRole.PROFESSIONAL) {
+          baseScreen('dashboard');
+        } else {
+          baseScreen('home');
+        }
       } else {
         setAppState('roleSelection');
       }
     } catch (err) {
       console.error('Erro ao carregar perfil:', err);
-      // OFFLINE FALLBACK: Prevent forced logout on flaky connection
-      console.log('Ativando modo Offline Fallback...');
-
+      // OFFLINE FALLBACK: Only activate if we have a Cached Role (Evidence of recent login)
+      // This prevents the "Logout Loop" where a failed fetch (cancelled by logout) forces a re-login
       const cachedRole = localStorage.getItem('userRole_cache') as UserRole;
-      const fallbackRole = cachedRole || UserRole.RESIDENT;
 
-      setUserRole(fallbackRole);
-      setCurrentUser({
-        id: userId,
-        name: 'Bem-vindo!',
-        condo: 'Modo Offline',
-        unit: '...',
-        tower: '...',
-        email: '',
-        role: fallbackRole,
-      } as any);
-      setAppState('main');
-      setActiveTab('home');
+      if (cachedRole) {
+        console.log('Ativando modo Offline Fallback...');
+        setUserRole(cachedRole);
+        setCurrentUser({
+          id: userId,
+          name: 'Bem-vindo!',
+          condo: 'Modo Offline',
+          unit: '...',
+          tower: '...',
+          email: '',
+          role: cachedRole,
+        } as any);
+        setAppState('main');
+        setAppState('main');
+        baseScreen('home');
+      } else {
+        // No cache? It's a genuine logout or error. Go to login.
+        setAppState('login');
+      }
     } finally {
       if (!isSilent) setLoading(false);
     }
@@ -227,17 +272,17 @@ const App: React.FC = () => {
   // --- 5. PAGINAÇÃO E HANDLERS ---
   const navigateToCategory = (category: string) => {
     setSelectedCategory(category);
-    setActiveTab('shop-detail');
+    pushScreen('shop-detail');
   };
 
   const handleSelectDesapego = (item: any) => {
     setSelectedDesapego(item);
-    setActiveTab('desapego-detail');
+    pushScreen('desapego-detail');
   };
 
   const handleSelectProduct = (item: any) => {
     setSelectedProduct(item);
-    setActiveTab('shop-product-detail');
+    pushScreen('shop-product-detail');
   };
 
   // --- HANDLERS GENÉRICOS (RE-USÁVEIS) ---
@@ -287,12 +332,12 @@ const App: React.FC = () => {
       seller_id: session.user.id, title: item.name, price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
       status: item.status, description: item.desc, image_url: finalImageUrl
     }]);
-    if (!error) { refreshAppData(); setActiveTab('home'); } else alert(error.message);
+    if (!error) { refreshAppData(); baseScreen('home'); } else alert(error.message);
   };
 
   const handleDeleteDesapego = async (id: string) => {
     const { error } = await supabase.from('marketplace').delete().eq('id', id);
-    if (!error) { alert('Anúncio removido!'); refreshAppData(); setActiveTab('home'); }
+    if (!error) { alert('Anúncio removido!'); refreshAppData(); baseScreen('home'); }
   };
 
   const handleAddServiceRequest = async (req: any) => {
@@ -312,26 +357,26 @@ const App: React.FC = () => {
     // --- RESIDENTE ---
     if (userRole === UserRole.RESIDENT) {
       switch (activeTab) {
-        case 'home': return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} />;
-        case 'market': return <Marketplace onNavigate={setActiveTab} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
-        case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={setActiveTab} />;
-        case 'acesso': return <AcessoPage onBack={() => setActiveTab('home')} accessList={accessList} onAddAccess={async (access) => {
+        case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={notifications} onClearNotifications={() => setNotifications([])} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} />;
+        case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
+        case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
+        case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => {
           const { error } = await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower, avatar_url: currentUser?.avatar }]);
           if (!error) refreshAppData();
         }} currentUser={currentUser} />;
-        case 'financeiro': return <FinanceiroPage onBack={() => setActiveTab('home')} invoices={invoices} />;
-        case 'chamado': return <ChamadosPage onBack={() => setActiveTab('home')} serviceRequests={serviceRequests} onAddRequest={handleAddServiceRequest} currentUser={currentUser} />;
-        case 'condo-agenda': return <CondoAgendaPage onBack={() => setActiveTab('home')} reservations={reservations} onAddReservation={async (res) => {
+        case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
+        case 'chamado': return <ChamadosPage onBack={goBack} serviceRequests={serviceRequests} onAddRequest={handleAddServiceRequest} currentUser={currentUser} />;
+        case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} onAddReservation={async (res) => {
           const { error } = await supabase.from('reservations').insert([{ resident_id: session.user.id, area_id: res.areaId, area_name: res.area, date: res.date, unit: currentUser?.unit, tower: currentUser?.tower }]);
           if (!error) { alert('Reserva confirmada!'); refreshAppData(); } else alert(error.message);
         }} commonAreas={commonAreas} />;
-        case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={() => setActiveTab('home')} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
-        case 'shop-detail': return <ShopDetailPage onBack={() => setActiveTab('home')} products={products} onSelectProduct={handleSelectProduct} categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />;
-        case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={() => setActiveTab('shop-detail')} />;
-        case 'create-desapego': return <CreateDesapegoPage onBack={() => setActiveTab('home')} onAdd={handleAddDesapego} currentUser={currentUser} />;
-        case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={() => setActiveTab('market')} onNavigate={setActiveTab} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
-        case 'desapego-full': return <DesapegoFullView onBack={() => setActiveTab('home')} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
-        default: return <ResidentHome onNavigate={setActiveTab} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={[]} onClearNotifications={() => { }} onSelectDesapego={() => { }} products={products} onSelectProduct={() => { }} categories={categories} />;
+        case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} onDelete={handleDeleteDesapego} />;
+        case 'shop-detail': return <ShopDetailPage onBack={goBack} products={products} onSelectProduct={handleSelectProduct} categories={categories} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} />;
+        case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={goBack} />;
+        case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
+        case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
+        case 'desapego-full': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onDelete={handleDeleteDesapego} onSelect={handleSelectDesapego} />;
+        default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} serviceRequests={serviceRequests} activeServices={activeServices} currentUser={currentUser} notifications={[]} onClearNotifications={() => { }} onSelectDesapego={() => { }} products={products} onSelectProduct={() => { }} categories={categories} />;
       }
     }
 
@@ -339,7 +384,7 @@ const App: React.FC = () => {
     if (userRole === UserRole.PROFESSIONAL) {
       const completedServices = serviceRequests.filter(r => r.status === 'completed');
       switch (activeTab) {
-        case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} completedServices={completedServices} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={setActiveTab} />;
+        case 'dashboard': return <ProfessionalDashboard serviceRequests={serviceRequests.filter(r => r.status === 'pending')} activeServices={serviceRequests.filter(r => r.status === 'accepted')} completedServices={completedServices} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
         case 'services': return <ProfessionalServices services={professionalServices.filter(s => s.provider_id === session?.user?.id)} onAddService={async (srv) => {
           const { error } = await supabase.from('professional_services').insert([{ provider_id: session.user.id, title: srv.title, category: srv.category, description: srv.desc, price_range: srv.price_range, active: true }]);
           if (!error) { alert('Serviço criado!'); refreshAppData(); } else alert(error.message);
@@ -351,20 +396,20 @@ const App: React.FC = () => {
         case 'earnings': return <ProfessionalEarnings services={completedServices} />;
         case 'shop': return <ProfessionalShop products={products.filter(p => p.vendor_id === session?.user?.id)} onAddProduct={handleAddProduct} onDeleteProduct={handleDeleteProduct} onToggleStatus={handleToggleProductStatus} />;
         case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
-        default: return <ProfessionalDashboard serviceRequests={serviceRequests} activeServices={activeServices} onUpdateRequest={() => { }} currentUser={currentUser} onNavigate={setActiveTab} />;
+        default: return <ProfessionalDashboard serviceRequests={serviceRequests} activeServices={activeServices} onUpdateRequest={() => { }} currentUser={currentUser} onNavigate={pushScreen} />;
       }
     }
 
     // --- ADMIN ---
     if (userRole === UserRole.ADMIN) {
       switch (activeTab) {
-        case 'dashboard': return <AdminDashboard onNavigate={setActiveTab} />;
-        case 'admin-residents': return <AdminResidents onBack={() => setActiveTab('dashboard')} />;
-        case 'admin-access': return <AdminAccess onBack={() => setActiveTab('dashboard')} accessList={accessList} onCheckIn={refreshAppData} />;
-        case 'admin-incidents': return <AdminIncidents onBack={() => setActiveTab('dashboard')} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
-        case 'admin-reservations': return <AdminReservations onBack={() => setActiveTab('dashboard')} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
-        case 'admin-categories': return <AdminCategories onBack={() => setActiveTab('dashboard')} categories={categories} onRefresh={refreshAppData} />;
-        default: return <AdminDashboard onNavigate={setActiveTab} />;
+        case 'dashboard': return <AdminDashboard onNavigate={pushScreen} />;
+        case 'admin-residents': return <AdminResidents onBack={goBack} />;
+        case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={refreshAppData} />;
+        case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
+        case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
+        case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={refreshAppData} />;
+        default: return <AdminDashboard onNavigate={pushScreen} />;
       }
     }
 
@@ -392,9 +437,9 @@ const App: React.FC = () => {
     <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
       {renderContent()}
       {!isSubPage && userRole && (
-        userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={setActiveTab} /> :
-          userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={setActiveTab} /> :
-            userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={setActiveTab} /> : null
+        userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={baseScreen} /> :
+          userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} /> :
+            userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
       )}
     </div>
   );
