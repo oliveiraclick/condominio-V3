@@ -199,7 +199,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         Criar Nova Conta
       </Button>
 
-      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.5.3 • App Morador</p>
+      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.5.6 • App Morador</p>
     </div>
   );
 };
