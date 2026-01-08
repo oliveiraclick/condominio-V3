@@ -259,6 +259,8 @@ const App: React.FC = () => {
 
     // Let's correct the destructuring in the ReplacementContent to be explicit.
 
+    if (onSite.data) setOnSitePros(onSite.data);
+
     if (prods.data) setProducts(prods.data);
     if (cats.data) setCategories(cats.data);
 
