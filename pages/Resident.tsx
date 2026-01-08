@@ -546,71 +546,178 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 };
 
 export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[] }> = ({ initialCategory, onBack, onServiceRequest, services = [] }) => {
-  // Fallback mocks if no services passed (or filtered list)
-  const filteredPros = initialCategory === 'Todos' ? services : services.filter(s => s.category === initialCategory);
-  const displayPros = filteredPros.length > 0 ? filteredPros : [
-    { id: 1, providerName: 'Marcos Silva', category: 'Hidráulica', rating: 4.8, img: 'https://picsum.photos/seed/pro1/100', price: 'Sob Consulta', providerPhone: '5511999999999' },
-    { id: 2, providerName: 'Juliana Mendes', category: 'Limpeza Profissional', rating: 5.0, img: 'https://picsum.photos/seed/pro2/100', price: 'R$ 120/visita', providerPhone: '5511999999999' }
-  ].filter(s => s.category === initialCategory || initialCategory === 'Todos');
+  const [activeCategory, setActiveCategory] = useState(initialCategory);
+  const [searchTerm, setSearchTerm] = useState('');
 
-  const handleRequest = (proName: string) => {
+  // Extract unique categories from services or use defaults
+  const availableCategories = useMemo(() => {
+    const cats = new Set(services.map(s => s.category || 'Outros'));
+    return Array.from(cats);
+  }, [services]);
+
+  // CATEGORY DEFINITIONS (Icons & Colors)
+  const categoryConfig: any = {
+    'Jardinagem': { icon: <Leaf size={24} />, color: 'text-green-600', bg: 'bg-green-50' },
+    'Eletricista': { icon: <Zap size={24} />, color: 'text-yellow-600', bg: 'bg-yellow-50' },
+    'Limpeza': { icon: <Droplets size={24} />, color: 'text-cyan-600', bg: 'bg-cyan-50' },
+    'Pintor': { icon: <Paintbrush size={24} />, color: 'text-pink-600', bg: 'bg-pink-50' },
+    'Manutenção': { icon: <Wrench size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
+    'Tecnologia': { icon: <Monitor size={24} />, color: 'text-violet-600', bg: 'bg-violet-50' },
+    'Beleza': { icon: <Scissors size={24} />, color: 'text-rose-600', bg: 'bg-rose-50' },
+    'Outros': { icon: <Briefcase size={24} />, color: 'text-slate-600', bg: 'bg-slate-50' },
+  };
+
+  const getCatConfig = (cat: string) => categoryConfig[cat] || categoryConfig['Outros'];
+
+  // FILTERED LIST
+  const filteredPros = useMemo(() => {
+    let filtered = services;
+
+    // Filter by Category
+    if (activeCategory !== 'Todos') {
+      filtered = filtered.filter(s => s.category === activeCategory);
+    }
+
+    // Filter by Search (Name or Category if in Todos)
+    if (searchTerm) {
+      const lower = searchTerm.toLowerCase();
+      filtered = filtered.filter(s =>
+        s.title.toLowerCase().includes(lower) ||
+        s.providerName?.toLowerCase().includes(lower) ||
+        s.category?.toLowerCase().includes(lower)
+      );
+    }
+    return filtered;
+  }, [services, activeCategory, searchTerm]);
+
+  const handleRequest = (proName: string, proId: string) => {
     onServiceRequest({
       id: Date.now(),
-      name: `Serviço em ${initialCategory}`,
-      user: 'Alex Ferreira',
+      name: `Serviço com ${proName}`,
+      user: 'Morador',
       time: 'Agora',
-      location: 'Torre B - 402',
-      status: 'pending'
+      location: 'Minha Unidade',
+      status: 'pending',
+      professional_id: proId
     });
-    alert(`Solicitação enviada para ${proName}! Ele entrará em contato em breve.`);
+    alert(`Solicitação enviada para ${proName}!`);
   };
 
   const openWhatsApp = (phone: string) => {
     const cleanPhone = phone?.replace(/\D/g, '');
-    if (cleanPhone) window.open(`https://wa.me/${cleanPhone}`, '_blank');
+    if (cleanPhone) window.open(`https://wa.me/55${cleanPhone}`, '_blank');
     else alert('Telefone não disponível');
   };
 
+  // --- VIEW: CATEGORY GRID (When 'Todos' is Active AND no search term that forces a list) ---
+  const showCategoryGrid = activeCategory === 'Todos' && !searchTerm;
+
   return (
-    <div className="min-h-screen bg-slate-50">
+    <div className="min-h-screen bg-[#f8fafc] pb-10">
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter leading-none">{initialCategory}</h2>
+        <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100">
+          <ArrowLeft size={20} className="text-slate-600" />
+        </button>
+        <div className="flex-1">
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
+            {activeCategory === 'Todos' ? 'Prestadores' : activeCategory}
+          </h2>
+        </div>
       </header>
+
       <div className="p-6 space-y-6">
-        {displayPros.length > 0 ? displayPros.map(pro => (
-          <Card key={pro.id} className="p-8 border-none shadow-xl rounded-[44px] bg-white space-y-6">
-            <div className="flex items-center gap-5">
-              <div className="w-18 h-18 rounded-[28px] overflow-hidden border-2 border-slate-50 shadow-sm">
-                <img src={pro.img || `https://picsum.photos/seed/${pro.id}/100`} className="w-full h-full object-cover" />
-              </div>
-              <div className="flex-1">
-                <h4 className="font-black text-slate-900 italic text-xl leading-none">{pro.providerName || pro.title}</h4>
-                <div className="flex items-center gap-2 mt-2">
-                  <div className="flex items-center gap-1 bg-amber-50 text-amber-600 px-2 py-0.5 rounded-lg border border-amber-100">
-                    <Star size={10} fill="currentColor" />
-                    <span className="text-[10px] font-black">{pro.rating || 5.0}</span>
+        {/* SEARCH BAR */}
+        <div className="relative group">
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-600 transition-colors" size={20} />
+          <Input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder={activeCategory === 'Todos' ? "Busque por serviço (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
+            className="pl-12 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-violet-600 focus:ring-1 focus:ring-violet-600 transition-all"
+          />
+        </div>
+
+        {/* CONTENT */}
+        {showCategoryGrid ? (
+          <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* Map through extracted categories */}
+            {availableCategories.length > 0 ? availableCategories.map((cat) => {
+              const conf = getCatConfig(cat);
+              const count = services.filter(s => s.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => setActiveCategory(cat)}
+                  className="bg-white p-6 rounded-[32px] border border-slate-50 shadow-sm flex flex-col items-center gap-4 active:scale-95 transition-all hover:border-violet-200 group"
+                >
+                  <div className={`w-16 h-16 ${conf.bg} ${conf.color} rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform`}>
+                    {conf.icon}
                   </div>
-                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">{pro.category || pro.sector}</span>
-                </div>
+                  <div className="text-center">
+                    <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight">{cat}</h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{count} Profissionais</p>
+                  </div>
+                </button>
+              );
+            }) : (
+              <div className="col-span-2 text-center py-12 text-slate-400">
+                <p className="text-sm">Nenhuma categoria encontrada.</p>
               </div>
-            </div>
-            <div className="flex items-center justify-between p-5 bg-slate-50 rounded-2xl">
-              <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Base de Preço</span>
-              <span className="font-black text-slate-900 italic">{pro.price}</span>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <Button onClick={() => openWhatsApp(pro.providerPhone)} className="h-14 rounded-[22px] bg-emerald-500 text-white text-[10px] font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-95 space-x-2">
-                <MessageSquare size={16} />
-                <span>WhatsApp</span>
-              </Button>
-              <Button onClick={() => handleRequest(pro.providerName)} className="h-14 rounded-[22px] bg-violet-600/10 text-violet-600 text-[10px] font-black uppercase tracking-widest hover:bg-violet-600 hover:text-white transition-all active:scale-95">
-                Solicitar
-              </Button>
-            </div>
-          </Card>
-        )) : (
-          <div className="text-center py-10 text-slate-300 font-bold">Nenhum prestador encontrado nesta categoria.</div>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {filteredPros.length > 0 ? filteredPros.map(pro => (
+              <Card key={pro.id} className="p-0 border-none shadow-xl shadow-slate-200/50 rounded-[40px] bg-white overflow-hidden group">
+                <div className="p-6 pb-0 flex items-start gap-5">
+                  <div className="w-20 h-20 rounded-[28px] overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100">
+                    <img src={pro.avatar || pro.img || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.providerName}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0 pt-2">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <Badge variant="secondary" className="mb-2 bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest px-2 py-1">{pro.category || 'Geral'}</Badge>
+                        <h4 className="font-black text-slate-900 italic text-xl leading-none truncate">{pro.providerName || pro.title}</h4>
+                      </div>
+                      {pro.rating && (
+                        <div className="flex items-center gap-1 bg-amber-50 text-amber-500 px-2 py-1 rounded-lg">
+                          <Star size={12} fill="currentColor" />
+                          <span className="text-xs font-black">{pro.rating}</span>
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomínio.'}</p>
+                  </div>
+                </div>
+
+                <div className="mt-6 p-6 bg-slate-50/50 border-t border-slate-100 flex items-center gap-3">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Aproximado</p>
+                    <p className="font-black text-slate-900 text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button onClick={() => openWhatsApp(pro.providerPhone)} className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center active:scale-95 transition-all hover:bg-emerald-100 border border-emerald-100">
+                      <MessageCircle size={24} />
+                    </button>
+                    <Button onClick={() => handleRequest(pro.providerName, pro.provider_id)} className="h-12 px-6 rounded-2xl bg-slate-900 text-white font-black uppercase text-xs tracking-widest shadow-lg shadow-black/10 active:scale-95">
+                      Solicitar
+                    </Button>
+                  </div>
+                </div>
+              </Card>
+            )) : (
+              <div className="text-center py-20">
+                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
+                  <Search size={32} />
+                </div>
+                <h3 className="text-slate-900 font-bold text-lg">Nenhum profissional encontrado</h3>
+                <p className="text-slate-400 text-sm mt-1">Tente buscar por outra categoria ou termo.</p>
+                <button onClick={() => { setActiveCategory('Todos'); setSearchTerm(''); }} className="mt-6 text-violet-600 font-black uppercase text-xs tracking-widest hover:underline">
+                  Limpar Filtros
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
