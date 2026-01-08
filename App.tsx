@@ -60,6 +60,15 @@ const App: React.FC = () => {
 
         if (currentSession) {
           setSession(currentSession);
+
+          // SPEED OPTIMIZATION: Check cache first to render correct UI immediately
+          const cachedRole = localStorage.getItem('userRole_cache');
+          if (cachedRole) {
+            setUserRole(cachedRole as UserRole);
+            setAppState('main');
+            setActiveTab(cachedRole === 'resident' ? 'home' : 'dashboard');
+          }
+
           await fetchUserProfile(currentSession.user.id);
           fetchCategories();
         } else {
@@ -168,6 +177,9 @@ const App: React.FC = () => {
 
         const role = profile.role as UserRole;
         setUserRole(role);
+        // CACHE: Save role to prevent flicker on next load
+        localStorage.setItem('userRole_cache', role);
+
         setCurrentUser({
           ...profile,
           avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
@@ -181,8 +193,11 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error('Erro ao buscar perfil:', err);
-      // Fallback for timeout/offline to prevent login loop
-      setUserRole(UserRole.RESIDENT);
+      // Fallback for timeout/offline
+      const cachedRole = localStorage.getItem('userRole_cache') as UserRole;
+      const fallbackRole = cachedRole || UserRole.RESIDENT; // Only default to resident if NO cache matches
+
+      setUserRole(fallbackRole);
       setCurrentUser({
         id: userId,
         name: 'Bem-vindo!',
