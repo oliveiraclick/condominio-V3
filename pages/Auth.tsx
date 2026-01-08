@@ -9,26 +9,28 @@ import {
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
 
+// --- UTILITÁRIOS DE VALIDAÇÃO ---
 const translateError = (error: any): string => {
   const message = error?.message || '';
   if (message.includes('User already registered') || message.includes('already exists')) {
-    return 'Este e-mail já está cadastrado. Tente fazer login ou use outro e-mail.';
+    return 'Este e-mail já está cadastrado. Tente fazer login.';
   }
   if (message.includes('Invalid login credentials')) {
     return 'E-mail ou senha incorretos.';
   }
   if (message.includes('Email not confirmed')) {
-    return 'Por favor, confirme seu e-mail na sua caixa de entrada antes de entrar.';
+    return 'Confirme seu e-mail na sua caixa de entrada antes de entrar.';
   }
   if (message.includes('Password should be at least 6 characters')) {
     return 'A senha deve ter pelo menos 6 caracteres.';
   }
-  if (message.includes('should be a valid email')) {
+  if (message.includes('valid email')) {
     return 'Digite um e-mail válido.';
   }
-  return 'Erro ao conectar. Tente novamente.';
+  return 'Erro de conexão ou dados inválidos.';
 };
 
+// --- COMPONENTE: SPLASH SCREEN ---
 export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
   const [progress, setProgress] = useState(0);
 
@@ -48,18 +50,19 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-8 z-50">
-      <div className="w-40 h-40 bg-white rounded-3xl flex items-center justify-center mb-8 animate-pulse overflow-hidden">
-        <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-4" />
+      <div className="w-40 h-40 bg-white rounded-[40px] flex items-center justify-center mb-8 animate-pulse shadow-2xl shadow-violet-100">
+        <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-6" />
       </div>
       <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">APP MORADOR</h1>
       <p className="text-violet-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Conecte-se. Clicou, Achou.</p>
-      <div className="w-full max-w-xs bg-slate-100 h-1 rounded-full overflow-hidden">
+      <div className="w-full max-w-xs bg-slate-100 h-1.5 rounded-full overflow-hidden">
         <div className="bg-violet-600 h-full transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
 };
 
+// --- COMPONENTE: LOGIN ---
 export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegister: () => void }> = ({ onLogin, onRegister }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -68,20 +71,15 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
   const handleSignIn = async () => {
     if (!email || !password) {
-      setError('Preencha e-mail e senha.');
+      setError('Preencha todos os campos para entrar.');
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
-        console.warn("Supabase not configured, using mock login.");
-        onLogin();
-        return;
-      }
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
-      onLogin(data.session); // App.tsx will handle the rest via onAuthStateChange and direct session usage
+      onLogin(data.session);
     } catch (err: any) {
       setError(translateError(err));
     } finally {
@@ -90,136 +88,91 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 flex flex-col">
-      <div className="mt-16 mb-12">
-        <div className="w-20 h-20 bg-white rounded-2xl flex items-center justify-center mb-6 shadow-xl border border-slate-100 p-3">
-          <img src="/logo.png" alt="Morador" className="w-full h-full object-contain" />
+    <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
+      <div className="mb-12">
+        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-xl border border-white p-4">
+          <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
         </div>
-        <h2 className="text-3xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">APP MORADOR</h2>
-        <p className="text-slate-500 font-medium italic">Faça login para continuar.</p>
+        <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">Entrar</h2>
+        <p className="text-slate-500 font-medium italic">Bem-vindo de volta ao seu condomínio.</p>
       </div>
 
       <div className="space-y-4 mb-8">
-        {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
-        <div className="relative">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <Input placeholder="Seu email" className="pl-12" value={email} onChange={e => setEmail(e.target.value)} />
+        {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic animate-shake">{error}</div>}
+        <div className="relative group">
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
+          <Input placeholder="Seu e-mail" className="pl-12 h-14 bg-white border-none shadow-sm" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
-        <div className="relative">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-          <Input type="password" placeholder="Sua senha" className="pl-12" value={password} onChange={e => setPassword(e.target.value)} />
+        <div className="relative group">
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
+          <Input type="password" placeholder="Sua senha" className="pl-12 h-14 bg-white border-none shadow-sm" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
-        <div className="text-right">
-          <button className="text-violet-600 text-sm font-medium">Esqueceu a senha?</button>
-        </div>
+        <button className="w-full text-right text-violet-600 text-xs font-black uppercase tracking-widest mt-2">Esqueceu a senha?</button>
       </div>
 
-      <Button fullWidth onClick={handleSignIn} disabled={loading} className="mb-8 font-black uppercase tracking-widest italic">
-        {loading ? 'Entrando...' : 'Entrar'}
+      <Button fullWidth onClick={handleSignIn} disabled={loading} className="h-16 bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 mb-6">
+        {loading ? 'Validando...' : 'Entrar Agora'}
       </Button>
 
-      <div className="relative mb-8 text-center">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-slate-200"></div>
-        </div>
-        <span className="relative px-2 bg-slate-50 text-xs text-slate-400 uppercase tracking-widest font-black italic">Ou</span>
+      <div className="relative mb-8">
+        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
+        <span className="relative px-4 bg-slate-50 mx-auto block w-fit text-[10px] text-slate-400 uppercase font-black italic">Novo por aqui?</span>
       </div>
 
-      <Button fullWidth variant="secondary" onClick={onRegister} className="bg-white border-2 border-slate-100 text-slate-900 font-black uppercase tracking-widest italic">
-        Novo Cadastro
+      <Button fullWidth variant="secondary" onClick={onRegister} className="h-16 bg-white border-2 border-slate-200 text-slate-900 font-black uppercase tracking-widest italic hover:border-violet-600 transition-all">
+        Criar Nova Conta
       </Button>
 
-      <div className="flex items-center justify-center gap-2 text-slate-300 mt-auto flex-col text-center">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
-          <p className="text-[10px] font-black uppercase tracking-widest px-2">
-            APP MORADOR • Conecte-se. Clicou, Achou.
-          </p>
-          <div className="w-1.5 h-1.5 rounded-full bg-violet-400 opacity-50"></div>
-        </div>
-      </div>
-      <p className="text-[11px] font-black uppercase tracking-widest text-slate-800 mt-1 shadow-sm text-center w-full">v1.1.5</p>
+      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.1.5 • App Morador</p>
     </div>
   );
 };
 
+// --- COMPONENTE: REGISTRO DE MORADOR (COM SAFEGUARDS) ---
 export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [condos, setCondos] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', cpf: '', rg: '', phone: '',
     condo: '', tower: '', unit: '', spouse: '',
     dependents: [] as Dependent[],
-    docs: { rg: false, cpf: false, residence: false }
+    docs: { rg: false, residence: false }
   });
-  const [condos, setCondos] = useState<any[]>([]);
 
   useEffect(() => {
-    const fetchCondos = async () => {
-      const { data } = await supabase.from('condominiums').select('*').eq('status', 'active');
-      if (data && data.length > 0) {
-        setCondos(data);
-      } else {
-        // Fallback or Mock if DB empty
-        setCondos([
-          { id: '1', name: 'Vila Verde Residence', type: 'vertical' },
-          { id: '2', name: 'Splendido Residencial', type: 'vertical' },
-          { id: '3', name: 'Grand Park', type: 'horizontal' }
-        ]);
-      }
-    };
-    fetchCondos();
+    supabase.from('condominiums').select('*').eq('status', 'active')
+      .then(({ data }) => data && setCondos(data));
   }, []);
 
   const selectedCondoData = condos.find(c => c.id === formData.condo);
   const isHorizontal = selectedCondoData?.type === 'horizontal';
-  const labelTower = isHorizontal ? 'Número' : 'Torre / Bloco';
-  const placeholderTower = isHorizontal ? 'Ex: 1200' : 'Bloco A';
-  const labelUnit = isHorizontal ? 'Rua / Alameda' : 'Unidade';
-  const placeholderUnit = isHorizontal ? 'Ex: Rua das Flores' : 'Apto 101';
 
   const handleFinish = async () => {
-    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
-      console.warn("Supabase not configured, using mock registration.");
-      onFinish(formData);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
       let userId = '';
       let sessionExists = false;
 
-      // 0. CHECK FOR EXISTING SESSION (Robust Logic)
+      // 1. BLINDAGEM: Verifica se já existe sessão ativa "fantasma"
       const { data: { user: currentUser } } = await supabase.auth.getUser();
 
       if (currentUser) {
-        console.log('🔵 [RES REG] Usuário já autenticado, pulando signUp:', currentUser.id);
+        // Se já está logado, aproveita a sessão para evitar erro de "User already registered"
         userId = currentUser.id;
         sessionExists = true;
-        // Update metadata just in case
+        // Atualiza metadados apenas
         await supabase.auth.updateUser({
-          data: {
-            full_name: formData.name,
-            role: UserRole.RESIDENT,
-            tower: formData.tower,
-            unit: formData.unit
-          }
+          data: { full_name: formData.name, role: UserRole.RESIDENT, tower: formData.tower, unit: formData.unit }
         });
       } else {
-        // 1. Normal SignUp
+        // Se não está logado, tenta criar
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email,
           password: formData.password,
-          options: {
-            data: {
-              full_name: formData.name,
-              role: UserRole.RESIDENT,
-              tower: formData.tower,
-              unit: formData.unit
-            }
-          }
+          options: { data: { full_name: formData.name, role: UserRole.RESIDENT, tower: formData.tower, unit: formData.unit } }
         });
 
         if (authError) throw authError;
@@ -230,39 +183,35 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         }
       }
 
+      // 2. Cria/Atualiza Perfil se tivermos um ID
       if (userId) {
+        // Se tiver sessão, salva o perfil direto
         if (sessionExists) {
-          // 2. Upsert Profile
           const { error: profileError } = await supabase.from('profiles').upsert({
             id: userId,
             name: formData.name,
             email: formData.email,
             role: UserRole.RESIDENT,
-            condo_id: formData.condo,
+            condominium_id: formData.condo,
             tower: formData.tower,
             unit: formData.unit,
             phone: formData.phone,
             cpf: formData.cpf,
-            is_free: true
+            is_free: true // Garante acesso free básico
           });
-
           if (profileError) throw profileError;
 
-          // 3. Save Dependents (if any)
+          // Salva dependentes
           if (formData.dependents.length > 0) {
-            const depsToInsert = formData.dependents.map(d => ({
-              profile_id: userId,
-              name: d.name,
-              kinship: d.kinship,
-              birth_date: d.birthDate
-            }));
-            const { error: depsError } = await supabase.from('dependents').insert(depsToInsert);
-            if (depsError) throw depsError; // Non-fatal but could log
+            await supabase.from('dependents').insert(
+              formData.dependents.map(d => ({ profile_id: userId, name: d.name, kinship: d.kinship, birth_date: d.birthDate }))
+            );
           }
 
           onFinish(formData);
         } else {
-          alert("✅ Cadastro realizado! Verifique seu e-mail para confirmar a conta antes de entrar.");
+          // Sem sessão (Email confirmation required)
+          alert("✅ Quase lá! Enviamos um e-mail de confirmação para " + formData.email + ". Verifique-o para ativar sua conta.");
           onBack();
         }
       }
@@ -273,113 +222,75 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
     }
   };
 
-  const addDependent = () => {
-    const newDep: Dependent = { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' };
-    setFormData({ ...formData, dependents: [...formData.dependents, newDep] });
-  };
-
-  const removeDependent = (id: string) => {
-    setFormData({ ...formData, dependents: formData.dependents.filter(d => d.id !== id) });
-  };
-
-  const updateDependent = (id: string, field: keyof Dependent, value: string) => {
-    setFormData({
-      ...formData,
-      dependents: formData.dependents.map(d => d.id === id ? { ...d, [field]: value } : d)
-    });
-  };
-
-  const renderStepIndicator = () => (
-    <div className="flex justify-between items-center mb-10 px-2">
-      {[1, 2, 3, 4].map((s) => (
-        <div key={s} className="flex items-center">
-          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all ${step >= s ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/30' : 'bg-slate-100 text-slate-400'}`}>
-            {step > s ? <Check size={16} /> : s}
-          </div>
-          {s < 4 && <div className={`w-12 h-1 mx-2 rounded-full ${step > s ? 'bg-violet-600' : 'bg-slate-100'}`} />}
-        </div>
-      ))}
-    </div>
-  );
-
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
-      <header className="p-6 pt-12 flex items-center gap-4">
-        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-sm">
-          <ArrowLeft size={20} />
+    <div className="min-h-screen bg-[#fcfcfd] flex flex-col">
+      <header className="p-8 pt-12 flex items-center gap-4 bg-white border-b border-slate-50">
+        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shadow-sm active:scale-90 transition-transform">
+          <ArrowLeft size={24} />
         </button>
         <div>
-          <h2 className="text-xl font-black text-slate-900 italic uppercase">Cadastro Morador</h2>
-          <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Etapa {step} de 4</p>
+          <h2 className="text-2xl font-black text-slate-950 italic uppercase tracking-tighter leading-none">Cadastro</h2>
+          <div className="flex gap-1 mt-2">
+            {[1, 2, 3, 4].map(i => <div key={i} className={`h-1 rounded-full transition-all ${step >= i ? 'w-6 bg-violet-600' : 'w-2 bg-slate-100'}`} />)}
+          </div>
         </div>
       </header>
 
-      <div className="px-6 flex-1 overflow-y-auto no-scrollbar">
-        {step < 5 && renderStepIndicator()}
-        {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
+      <div className="px-8 flex-1 overflow-y-auto pt-8 pb-32 no-scrollbar">
+        {error && <div className="mb-6 p-5 bg-rose-50 text-rose-600 rounded-3xl text-xs font-bold italic border border-rose-100">{error}</div>}
 
         {step === 1 && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Dados de Acesso</h3>
-            <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-            <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
-            <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            <Input placeholder="Telefone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
-            <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} />
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            <h3 className="text-xl font-black italic text-slate-900 uppercase">1. Dados Pessoais</h3>
+            <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-16 rounded-3xl px-6" />
+            <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-16 rounded-3xl px-6" />
+            <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-16 rounded-3xl px-6" />
+            <div className="grid grid-cols-2 gap-4">
+              <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="h-16 rounded-3xl px-6" />
+              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-16 rounded-3xl px-6" />
+            </div>
           </div>
         )}
 
         {step === 2 && (
-          <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Onde você mora?</h3>
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            <h3 className="text-xl font-black italic text-slate-900 uppercase">2. Localização</h3>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Selecione o Condomínio</label>
-              <select
-                value={formData.condo}
-                onChange={e => setFormData({ ...formData, condo: e.target.value })}
-                className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 border-r-[16px] border-transparent outline-none"
-              >
-                <option value="">Selecione...</option>
-                {condos.map(c => (
-                  <option key={c.id} value={c.id}>{c.name}</option>
-                ))}
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Escolha seu Condomínio</label>
+              <select value={formData.condo} onChange={e => setFormData({ ...formData, condo: e.target.value })} className="w-full h-16 bg-white rounded-3xl px-6 font-bold shadow-sm border-none outline-none focus:ring-2 focus:ring-violet-100">
+                <option value="">Selecione na lista...</option>
+                {condos.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{labelUnit}</label>
-                <Input placeholder={placeholderUnit} value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
+                <Input placeholder="Ex: 402" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-16 rounded-3xl px-6" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{labelTower}</label>
-                <Input placeholder={placeholderTower} value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} />
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
+                <Input placeholder="Ex: Torre A" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-16 rounded-3xl px-6" />
               </div>
             </div>
           </div>
         )}
 
         {step === 3 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300 pb-10">
-            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Núcleo Familiar</h3>
-            <Input placeholder="Nome do Cônjuge (opcional)" value={formData.spouse} onChange={e => setFormData({ ...formData, spouse: e.target.value })} />
-
+          <div className="space-y-8 animate-in slide-in-from-right-4">
+            <h3 className="text-xl font-black italic text-slate-900 uppercase">3. Dependentes</h3>
+            <Button onClick={() => setFormData({ ...formData, dependents: [...formData.dependents, { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' }] })} className="bg-violet-50 text-violet-600 text-[10px] font-black uppercase tracking-widest h-12 rounded-2xl w-full border-none">
+              <Plus size={16} className="mr-2" /> Adicionar Dependente
+            </Button>
             <div className="space-y-4">
-              <div className="flex justify-between items-center px-2">
-                <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dependentes</p>
-                <button onClick={addDependent} className="text-violet-600 text-[10px] font-black uppercase flex items-center gap-1 bg-violet-50 px-3 py-1.5 rounded-lg"><Plus size={12} /> Adicionar</button>
-              </div>
-              {formData.dependents.map((dep) => (
-                <div key={dep.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm space-y-2">
-                  <Input placeholder="Nome" value={dep.name} onChange={e => updateDependent(dep.id, 'name', e.target.value)} />
-                  <div className="flex gap-2">
-                    <Input type="date" value={dep.birthDate} onChange={e => updateDependent(dep.id, 'birthDate', e.target.value)} />
-                    <select value={dep.kinship} onChange={e => updateDependent(dep.id, 'kinship', e.target.value as any)} className="bg-slate-50 rounded-xl px-2 text-xs font-bold">
-                      <option>Filho(a)</option>
-                      <option>Parente</option>
-                      <option>Outro</option>
+              {formData.dependents.map(dep => (
+                <div key={dep.id} className="bg-white p-6 rounded-[32px] shadow-sm space-y-4 border border-slate-50 relative animate-in zoom-in-95">
+                  <button onClick={() => setFormData({ ...formData, dependents: formData.dependents.filter(d => d.id !== dep.id) })} className="absolute top-4 right-4 text-rose-300 hover:text-rose-500"><Trash2 size={18} /></button>
+                  <Input placeholder="Nome Completo" value={dep.name} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, name: e.target.value } : d) })} className="h-12 border-slate-100 rounded-2xl" />
+                  <div className="grid grid-cols-2 gap-3">
+                    <Input type="date" value={dep.birthDate} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, birthDate: e.target.value } : d) })} className="h-12 border-slate-100 rounded-2xl" />
+                    <select className="bg-slate-50 rounded-2xl px-4 text-xs font-bold border-none" value={dep.kinship} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, kinship: e.target.value as any } : d) })}>
+                      <option>Filho(a)</option><option>Cônjuge</option><option>Outro</option>
                     </select>
-                    <button onClick={() => removeDependent(dep.id)} className="text-rose-500 p-2"><Trash2 size={16} /></button>
                   </div>
                 </div>
               ))}
@@ -388,20 +299,14 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         )}
 
         {step === 4 && (
-          <div className="space-y-8 animate-in fade-in slide-in-from-right-4 duration-300">
-            <h3 className="text-2xl font-black text-slate-950 italic tracking-tighter">Documentação (Opcional)</h3>
-            <div className="space-y-4">
-              {[
-                { key: 'rg', label: 'RG ou CNH', icon: <IdCard size={24} /> },
-                { key: 'residence', label: 'Comp. Residência', icon: <MapPin size={24} /> }
-              ].map((doc) => (
-                <button
-                  key={doc.key}
-                  onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })}
-                  className={`w-full p-4 rounded-2xl border-2 border-dashed flex items-center gap-4 ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200'}`}
-                >
-                  {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={24} /> : doc.icon}
-                  <span className="font-bold text-sm">{doc.label}</span>
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            <h3 className="text-xl font-black italic text-slate-900 uppercase">4. Validação</h3>
+            <p className="text-sm text-slate-400 font-medium italic">Opcional: Anexe documentos para acelerar sua aprovação.</p>
+            <div className="grid grid-cols-1 gap-4">
+              {[{ k: 'rg', l: 'RG / CNH' }, { k: 'res', l: 'Comprovante' }].map(d => (
+                <button key={d.k} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [d.k === 'rg' ? 'rg' : 'residence']: true } })} className={`h-24 rounded-[32px] border-2 border-dashed flex items-center justify-center gap-4 transition-all ${formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-white border-slate-200 text-slate-300 hover:border-violet-300'}`}>
+                  {formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? <Check size={28} /> : <Camera size={28} />}
+                  <span className="font-black uppercase text-[10px] tracking-widest">{d.l}</span>
                 </button>
               ))}
             </div>
@@ -409,17 +314,17 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         )}
       </div>
 
-      <footer className="p-6">
-        <Button fullWidth onClick={step === 4 ? handleFinish : () => setStep(step + 1)} disabled={loading} className="h-14 rounded-2xl font-black uppercase tracking-widest">
-          {loading ? 'Salvando...' : step === 4 ? 'Finalizar Cadastro' : 'Próxima Etapa'}
+      <footer className="p-8 bg-white border-t border-slate-50 fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40">
+        <Button fullWidth onClick={step === 4 ? handleFinish : () => setStep(step + 1)} disabled={loading} className="h-16 rounded-3xl bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 active:scale-95 transition-all">
+          {loading ? 'Processando...' : step === 4 ? 'Finalizar Cadastro' : 'Próxima Etapa'}
         </Button>
       </footer>
     </div>
   );
 };
 
+// --- COMPONENTE: REGISTRO DE PROFISSIONAL (MANTIDO) ---
 export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
-  // Professional Registration reusing similar logic
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
@@ -429,58 +334,34 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
   });
 
   const handleFinish = async () => {
-    if (!supabase || !import.meta.env.VITE_SUPABASE_URL) {
-      onFinish(formData);
-      return;
-    }
     setLoading(true);
     setError(null);
     try {
       let userId = '';
       let sessionExists = false;
 
+      // Check Existing User
       const { data: { user: currentUser } } = await supabase.auth.getUser();
-
       if (currentUser) {
         userId = currentUser.id;
         sessionExists = true;
-        await supabase.auth.updateUser({
-          data: {
-            full_name: formData.name,
-            role: UserRole.PROFESSIONAL,
-            phone: formData.phone,
-            category: formData.category
-          }
-        });
+        await supabase.auth.updateUser({ data: { full_name: formData.name, role: UserRole.PROFESSIONAL, phone: formData.phone, category: formData.category } });
       } else {
         const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-          options: {
-            data: {
-              full_name: formData.name,
-              role: UserRole.PROFESSIONAL,
-              phone: formData.phone,
-              category: formData.category
-            }
-          }
+          email: formData.email, password: formData.password,
+          options: { data: { full_name: formData.name, role: UserRole.PROFESSIONAL, phone: formData.phone, category: formData.category } }
         });
         if (authError) throw authError;
-        if (authData.user) {
-          userId = authData.user.id;
-          sessionExists = !!authData.session;
-        }
+        if (authData.user) { userId = authData.user.id; sessionExists = !!authData.session; }
       }
 
       if (userId && sessionExists) {
         const { error: profileError } = await supabase.from('profiles').upsert({
-          id: userId,
-          name: formData.name,
-          email: formData.email,
-          phone: formData.phone,
-          cpf: formData.cpf,
-          category: formData.category,
-          role: UserRole.PROFESSIONAL
+          id: userId, name: formData.name, email: formData.email, phone: formData.phone, cpf: formData.cpf,
+          category: formData.category, role: UserRole.PROFESSIONAL,
+          // CRITICAL: Set 60 Days Free Trial
+          trial_ends_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_status: 'trial'
         });
         if (profileError) throw profileError;
         onFinish(formData);
@@ -488,11 +369,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         alert("✅ Cadastro realizado! Verifique seu e-mail.");
         onBack();
       }
-    } catch (err: any) {
-      setError(translateError(err));
-    } finally {
-      setLoading(false);
-    }
+    } catch (err: any) { setError(translateError(err)); } finally { setLoading(false); }
   };
 
   return (
@@ -505,18 +382,10 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
       </header>
       <div className="px-6 flex-1 overflow-y-auto">
         {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
-
-        {/* Trial Info Banner */}
         <div className="mb-6 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
-          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600">
-            <Briefcase size={20} />
-          </div>
-          <div>
-            <h4 className="font-black text-emerald-900 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4>
-            <p className="text-emerald-700 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p>
-          </div>
+          <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><Briefcase size={20} /></div>
+          <div><h4 className="font-black text-emerald-900 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4><p className="text-emerald-700 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p></div>
         </div>
-
         {step === 1 && (
           <div className="space-y-4">
             <Input placeholder="Nome / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
@@ -526,10 +395,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria</label>
               <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600">
-                <option value="Manutenção">Manutenção</option>
-                <option value="Limpeza">Limpeza</option>
-                <option value="Beleza">Beleza</option>
-                <option value="Tecnologia">Tecnologia</option>
+                <option value="Manutenção">Manutenção</option><option value="Limpeza">Limpeza</option><option value="Beleza">Beleza</option><option value="Tecnologia">Tecnologia</option>
               </select>
             </div>
           </div>
@@ -537,13 +403,8 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         {step === 2 && (
           <div className="space-y-4">
             <h3 className="text-xl font-black">Documentos</h3>
-            <p className="text-sm text-slate-500">Opcional para validação.</p>
-            {[
-              { key: 'rg', label: 'RG / CNH' },
-              { key: 'license', label: 'Certificados' }
-            ].map((doc) => (
-              <button key={doc.key} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })}
-                className={`w-full p-4 rounded-2xl border-2 border-dashed flex items-center gap-4 ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200'}`}>
+            {[{ key: 'rg', label: 'RG / CNH' }, { key: 'license', label: 'Certificados' }].map((doc) => (
+              <button key={doc.key} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [doc.key]: true } })} className={`w-full p-4 rounded-2xl border-2 border-dashed flex items-center gap-4 ${formData.docs[doc.key as keyof typeof formData.docs] ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-white border-slate-200'}`}>
                 {formData.docs[doc.key as keyof typeof formData.docs] ? <Check size={24} /> : <FileText size={24} />}
                 <span className="font-bold text-sm">{doc.label}</span>
               </button>
@@ -552,14 +413,13 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         )}
       </div>
       <footer className="p-6">
-        <Button fullWidth onClick={step === 2 ? handleFinish : () => setStep(2)} disabled={loading}>
-          {loading ? 'Salvando...' : step === 2 ? 'Finalizar' : 'Próxima'}
-        </Button>
+        <Button fullWidth onClick={step === 2 ? handleFinish : () => setStep(2)} disabled={loading}>{loading ? 'Salvando...' : step === 2 ? 'Finalizar' : 'Próxima'}</Button>
       </footer>
     </div>
   );
 }
 
+// --- COMPONENTE: SELEÇÃO DE PERFIL (MANTIDO) ---
 export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBack: () => void }> = ({ onSelect, onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 p-8 flex flex-col">
