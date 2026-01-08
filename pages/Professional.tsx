@@ -703,15 +703,23 @@ export const ProfessionalServices = ({ currentUser }: any) => {
 
   // Period Management Functions
   const loadPeriods = async (serviceId: string) => {
-    const { data, error } = await supabase
-      .from('service_time_periods')
-      .select('*')
-      .eq('service_id', serviceId)
-      .eq('active', true)
-      .order('start_time');
+    try {
+      const { data, error } = await supabase
+        .from('service_time_periods')
+        .select('*')
+        .eq('service_id', serviceId)
+        .eq('active', true)
+        .order('start_time');
 
-    if (data && !error) {
-      setPeriods(data);
+      if (data && !error) {
+        setPeriods(data);
+      } else if (error) {
+        console.warn('Períodos não disponíveis:', error.message);
+        setPeriods([]);
+      }
+    } catch (err) {
+      console.error('Erro ao carregar períodos:', err);
+      setPeriods([]);
     }
   };
 
