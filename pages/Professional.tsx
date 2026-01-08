@@ -344,9 +344,9 @@ export const ProfessionalDashboard: React.FC<{
         {activeTab === 'reviews' && (
           <div className="animate-in fade-in zoom-in duration-300 space-y-4">
             <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-center">
-              <h2 className="text-5xl font-black text-amber-500 tracking-tighter mb-2">{averageRating}</h2>
+              <h2 className="text-5xl font-black text-amber-500 tracking-tighter mb-2">{avgRating}</h2>
               <div className="flex justify-center mb-2 text-amber-400 gap-1">
-                <StarRating rating={Math.round(averageRating)} />
+                <StarRating rating={Math.round(parseFloat(avgRating))} />
               </div>
               <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{reviews.length} Avaliações</p>
             </div>
