@@ -153,7 +153,7 @@ export const ProfessionalDashboard: React.FC<{
     : 0;
 
   const isExpired = daysRemaining <= 0 && subscription?.status === 'trial';
-  const kiwifyLink = "https://pay.kiwify.com.br/PRESTADOR-PRO";
+  const kiwifyLink = "https://pay.kiwify.com.br/6CblNjX";
 
   // --- REVIEWS DATA (MOCK FOR NOW, WOULD FETCH REAL) ---
   const [reviews, setReviews] = useState([
