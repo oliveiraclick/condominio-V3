@@ -273,7 +273,7 @@ const App: React.FC = () => {
   // --- 5. PAGINAÇÃO E HANDLERS ---
   const navigateToCategory = (category: string) => {
     setSelectedCategory(category);
-    pushScreen('shop-detail');
+    pushScreen('servicos-full');
   };
 
   const handleSelectDesapego = (item: any) => {
