@@ -81,7 +81,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                 </div>
 
                 <div className="space-y-4 mb-8">
-                    <div className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 focus-within:bg-white/10 focus-within:border-violet-500/50 transition-all">
+                    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-violet-500 transition-all">
                         <div className="flex items-center gap-3">
                             <Mail size={18} className="text-slate-400 group-focus-within:text-violet-400 transition-colors" />
                             <input
@@ -94,7 +94,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                         </div>
                     </div>
 
-                    <div className="group bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl p-4 focus-within:bg-white/10 focus-within:border-violet-500/50 transition-all">
+                    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-violet-500 transition-all">
                         <div className="flex items-center gap-3">
                             <Lock size={18} className="text-slate-400 group-focus-within:text-violet-400 transition-colors" />
                             <input
@@ -317,7 +317,7 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
 
 // Helper Input Component
 const InputModern = ({ icon: Icon, label, value, onChange, type = "text" }: any) => (
-    <div className="group bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-4 focus-within:bg-white/10 focus-within:border-white/30 transition-all">
+    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-white transition-all">
         <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">{label}</label>
         <div className="flex items-center gap-3">
             <Icon size={18} className="text-slate-400 group-focus-within:text-white transition-colors" />
