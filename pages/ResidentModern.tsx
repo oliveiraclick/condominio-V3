@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import {
     Building, LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
-    Bell, Search, MapPin, ChevronRight, Star
+    Bell, Search, MapPin, ChevronRight, Star, Key, Zap, CreditCard,
+    MessageSquare, Settings, LogOut
 } from 'lucide-react';
 
 export const ResidentModern: React.FC<{
@@ -11,13 +12,16 @@ export const ResidentModern: React.FC<{
     notifications?: any[];
     desapegos?: any[];
     packages?: any[];
-}> = ({ user, activeTab, onChangeTab, notifications = [], desapegos = [], packages = [] }) => {
+    onNavigate?: (screen: string) => void;
+    onSelectDesapego?: (item: any) => void;
+}> = ({ user, activeTab, onChangeTab, notifications = [], desapegos = [], packages = [], onNavigate, onSelectDesapego }) => {
     const unreadCount = notifications.filter(n => !n.read).length;
+    const myPackages = packages.filter(p => p.unit === (user?.unit || ''));
 
     return (
         <div className="min-h-screen bg-[#0f111a] text-slate-200 font-sans pb-24">
 
-            {/* HEADER LUXO */}
+            {/* HEADER LUXO (Igual ao Original mas com tema Gold) */}
             <header className="fixed top-0 left-0 right-0 z-40 bg-[#0f111a]/80 backdrop-blur-md border-b border-amber-500/10 px-6 pt-12 pb-4">
                 <div className="flex justify-between items-center">
                     <div>
@@ -37,22 +41,17 @@ export const ResidentModern: React.FC<{
             {/* CONTENT SCROLLABLE */}
             <main className="pt-32 px-6">
 
-                {/* GOLD CARD */}
-                <div className="relative w-full h-48 rounded-[32px] overflow-hidden mb-8 shadow-2xl shadow-amber-500/10 group">
+                {/* GOLD CARD INFO (Mantendo a ideia do card de unidade que substitui o cabeçalho original) */}
+                <div className="relative w-full h-40 rounded-[32px] overflow-hidden mb-8 shadow-2xl shadow-amber-500/10 group">
                     <div className="absolute inset-0 bg-gradient-to-br from-amber-300 via-yellow-500 to-amber-700 opacity-90" />
                     <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30 mix-blend-overlay" />
 
-                    <div className="absolute top-0 right-0 p-6 opacity-50">
-                        <Building size={120} className="text-amber-900 mix-blend-overlay -rotate-12 translate-x-4 -translate-y-4" />
-                    </div>
-
                     <div className="relative z-10 p-6 h-full flex flex-col justify-between text-[#0f111a]">
-                        {/* ... card content same as before ... */}
                         <div className="flex justify-between items-start">
                             <span className="bg-black/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-black/5">
                                 Residencial Luxury
                             </span>
-                            <img src="/logo-icon.png" className="w-8 h-8 opacity-80" alt="" onError={(e) => e.currentTarget.style.display = 'none'} />
+                            <Building size={32} className="text-amber-900 mix-blend-overlay" />
                         </div>
 
                         <div>
@@ -64,32 +63,59 @@ export const ResidentModern: React.FC<{
                     </div>
                 </div>
 
-                {/* PACKAGE ALERT */}
-                {packages.length > 0 && (
-                    <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-4 animate-pulse">
+                {/* PACKAGE ALERT (Igual ao Original) */}
+                {myPackages.length > 0 && (
+                    <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-4 animate-pulse cursor-pointer" onClick={() => onChangeTab('chamado')}>
                         <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400">
                             <ShoppingBag size={24} />
                         </div>
                         <div>
-                            <h3 className="font-bold text-emerald-400">Encomenda Chegou!</h3>
-                            <p className="text-xs text-emerald-400/80">Você tem {packages.length} pacote(s) na portaria.</p>
+                            <h3 className="font-bold text-emerald-400">Encomenda na Portaria!</h3>
+                            <p className="text-xs text-emerald-400/80">Você tem {myPackages.length} pacote(s) aguardando retirada.</p>
                         </div>
                     </div>
                 )}
 
-                {/* DESAPEGOS SECTION */}
-                <div className="flex items-center justify-between mb-6">
+                {/* QUICK ACTIONS GRID (Igual ao ResidentHome original) */}
+                <div className="grid grid-cols-2 gap-4 mb-8">
+                    <button onClick={() => onChangeTab('acesso')} className="bg-[#161b22] p-5 rounded-[24px] border border-white/5 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-all group">
+                        <div className="w-12 h-12 rounded-2xl bg-violet-500/10 text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Key size={24} />
+                        </div>
+                        <span className="text-sm font-bold text-slate-300">Acesso</span>
+                    </button>
+                    <button onClick={() => onChangeTab('market')} className="bg-[#161b22] p-5 rounded-[24px] border border-white/5 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-all group">
+                        <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <ShoppingBag size={24} />
+                        </div>
+                        <span className="text-sm font-bold text-slate-300">Mercadinho</span>
+                    </button>
+                    <button onClick={() => onChangeTab('servicos-full')} className="bg-[#161b22] p-5 rounded-[24px] border border-white/5 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-all group">
+                        <div className="w-12 h-12 rounded-2xl bg-amber-500/10 text-amber-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <Zap size={24} />
+                        </div>
+                        <span className="text-sm font-bold text-slate-300">Serviços</span>
+                    </button>
+                    <button onClick={() => onChangeTab('financeiro')} className="bg-[#161b22] p-5 rounded-[24px] border border-white/5 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-all group">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-500/10 text-blue-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <CreditCard size={24} />
+                        </div>
+                        <span className="text-sm font-bold text-slate-300">Fatura</span>
+                    </button>
+                </div>
+
+                {/* VITRINE DO CONDOMÍNIO (Igual ao Original "Desapegos") */}
+                <div className="flex items-center justify-between mb-4">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
                         <Star size={16} className="text-amber-400 fill-amber-400" />
-                        Vitrine do Condomínio
+                        Vitrine (Desapegos)
                     </h3>
                     <button className="text-[10px] font-bold text-amber-500 uppercase tracking-widest" onClick={() => onChangeTab('market')}>Ver tudo</button>
                 </div>
 
-                {/* HORIZONTAL SCROLL (REAL DATA) */}
                 <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
                     {desapegos.length > 0 ? desapegos.slice(0, 5).map(item => (
-                        <div key={item.id} className="min-w-[200px] h-48 bg-[#161b22] border border-white/5 rounded-[24px] p-4 flex flex-col justify-between relative group overflow-hidden">
+                        <div key={item.id} onClick={() => onSelectDesapego && onSelectDesapego(item)} className="min-w-[200px] h-48 bg-[#161b22] border border-white/5 rounded-[24px] p-4 flex flex-col justify-between relative group overflow-hidden cursor-pointer">
                             {item.image_url ? (
                                 <div className="absolute inset-0">
                                     <img src={item.image_url} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
@@ -123,18 +149,18 @@ export const ResidentModern: React.FC<{
 
             </main>
 
-            {/* BOTTOM NAVIGATION (GOLD) */}
-            <nav className="fixed bottom-0 left-0 right-0 bg-[#0f111a]/90 backdrop-blur-xl border-t border-amber-500/10 px-6 py-4 flex justify-between items-end z-50 rounded-t-[32px]">
+            {/* BOTTOM NAVIGATION (Mantida a nova versão Gold pois é apenas visual) */}
+            <nav className="fixed bottom-0 left-0 right-0 bg-[#0f111a]/95 backdrop-blur-xl border-t border-amber-500/10 px-6 py-4 flex justify-between items-end z-50 rounded-t-[32px]">
                 {[
                     { id: 'home', icon: LayoutGrid, label: 'Home' },
                     { id: 'market', icon: ShoppingBag, label: 'Shop' },
                     { id: 'create', icon: Plus, isBig: true },
-                    { id: 'booking', icon: CalendarDays, label: 'Reservas' },
+                    { id: 'condo-agenda', icon: CalendarDays, label: 'Agenda' },
                     { id: 'profile', icon: User, label: 'Perfil' },
                 ].map(item => {
                     if (item.isBig) {
                         return (
-                            <button key={item.id} className="-mt-12 w-16 h-16 bg-gradient-to-tr from-amber-300 via-amber-500 to-amber-600 rounded-full flex items-center justify-center text-[#0f111a] shadow-xl shadow-amber-500/30 border-4 border-[#0f111a] active:scale-95 transition-transform">
+                            <button key={item.id} onClick={() => onChangeTab('create-desapego')} className="-mt-12 w-16 h-16 bg-gradient-to-tr from-amber-300 via-amber-500 to-amber-600 rounded-full flex items-center justify-center text-[#0f111a] shadow-xl shadow-amber-500/30 border-4 border-[#0f111a] active:scale-95 transition-transform">
                                 <Plus size={32} />
                             </button>
                         )
