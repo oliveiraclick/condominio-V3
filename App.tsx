@@ -196,7 +196,17 @@ const App: React.FC = () => {
       }
       if (desap.data) {
         console.log('[App] Desapegos carregados:', desap.data.length, desap.data);
-        setDesapegos(desap.data);
+        setDesapegos(desap.data.map(i => ({
+          id: i.id,
+          name: i.title,
+          price: `R$ ${i.price}`,
+          img: i.image_url,
+          user: i.seller?.name || 'Vizinho',
+          status: i.status.toUpperCase(),
+          desc: i.description,
+          tower: i.seller ? `${i.seller.tower} - ${i.seller.unit}` : 'Residencial',
+          phone: i.seller?.phone
+        })));
       }
     } catch (e) { console.error("Erro refresh", e); }
   }, [appState, session]);
