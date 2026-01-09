@@ -80,7 +80,14 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   // --- STATE DESIGN MODERNO (BETA) ---
-  const [useModernDesign, setUseModernDesign] = useState(false);
+  const [useModernDesign, setUseModernDesign] = useState(() => localStorage.getItem('beta_modern_design') === 'true');
+
+  const toggleModernDesign = () => {
+    const newValue = !useModernDesign;
+    setUseModernDesign(newValue);
+    localStorage.setItem('beta_modern_design', String(newValue));
+    if (newValue) window.location.reload(); // Recarrega para mostrar o Splash novo
+  };
 
   // --- 1. LÓGICA DE BUSCA DE PERFIL (COM BLINDAGEM ANTI-LOOP) ---
   const fetchUserProfile = useCallback(async (userId: string, isSilent = false) => {
@@ -430,10 +437,10 @@ const App: React.FC = () => {
 
       {/* BOTÃO BETA TOGGLE */}
       <button
-        onClick={() => setUseModernDesign(!useModernDesign)}
+        onClick={toggleModernDesign}
         className={`fixed bottom-4 right-4 z-50 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl transition-all ${useModernDesign ? 'bg-violet-600 text-white shadow-violet-500/50' : 'bg-white text-slate-400 border border-slate-200'}`}
       >
-        {useModernDesign ? '✨ Design: Moderno' : '🏳️ Design: Clássico'}
+        {useModernDesign ? '✨ Design: Moderno (Ativo)' : '🏳️ Design: Clássico'}
       </button>
     </>
   );
