@@ -169,8 +169,8 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-xl border border-white p-4">
           <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
         </div>
-        <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">Entrar</h2>
-        <p className="text-slate-500 font-medium italic">Bem-vindo de volta ao seu condomínio.</p>
+        <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">App Morador</h2>
+        <p className="text-slate-500 font-medium italic">Clicou, Achou!</p>
       </div>
 
       <div className="space-y-4 mb-8">
@@ -199,7 +199,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         Criar Nova Conta
       </Button>
 
-      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.6.8 • App Morador</p>
+      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.6.9 • App Morador</p>
     </div>
   );
 };
