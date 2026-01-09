@@ -71,6 +71,18 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
             </div>
 
+            {/* Autofill CSS Fix */}
+            <style>{`
+                input:-webkit-autofill,
+                input:-webkit-autofill:hover, 
+                input:-webkit-autofill:focus, 
+                input:-webkit-autofill:active {
+                    -webkit-box-shadow: 0 0 0 30px #020617 inset !important;
+                    -webkit-text-fill-color: white !important;
+                    transition: background-color 5000s ease-in-out 0s;
+                }
+            `}</style>
+
             <div className="relative z-10 w-full max-w-sm">
                 <div className="text-center mb-10">
                     <div className="w-20 h-20 bg-gradient-to-tr from-white/10 to-white/5 backdrop-blur-xl rounded-[24px] border border-white/10 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-violet-500/10">
@@ -123,7 +135,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                     Criar Nova Conta
                 </button>
 
-                <p className="text-center text-[10px] text-white/20 uppercase tracking-[0.2em] mt-8">v1.6.2 • Modern Beta</p>
+                <p className="text-center text-[10px] text-white/20 uppercase tracking-[0.2em] mt-8">v1.6.3 • Modern Beta</p>
             </div>
         </div>
     );
