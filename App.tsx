@@ -25,7 +25,7 @@ import {
 import { SuperAdmin } from './pages/SuperAdmin';
 
 // IMPORTS MODO MODERNO (BETA)
-import { SplashScreenModern, ResidentRegistrationModern } from './pages/AuthModern';
+import { SplashScreenModern, ResidentRegistrationModern, LoginScreenModern, ProfessionalRegistrationModern } from './pages/AuthModern';
 import { AdminDashboardModern } from './pages/AdminModern';
 
 const App: React.FC = () => {
