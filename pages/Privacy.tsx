@@ -85,7 +85,7 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({ onBack }) => {
 
                     <h3 className="font-bold text-slate-900 mb-2">Exclusão de Conta</h3>
                     <p className="text-slate-600">
-                        Para excluir sua conta e dados associados, acesse a seção "Perfil" no aplicativo e selecione a opção "Excluir Conta", ou entre em contato conosco.
+                        Para excluir sua conta e dados associados, acesse a seção "Perfil" no aplicativo e selecione a opção "Excluir Conta", ou <a href="mailto:suporte@oliveiraclick.com.br?subject=Solicitação de Exclusão de Dados - App Morador" className="text-violet-600 hover:underline">entre em contato conosco para solicitar a remoção manual</a>.
                     </p>
                 </div>
 

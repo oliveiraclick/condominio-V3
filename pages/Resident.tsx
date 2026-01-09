@@ -973,13 +973,16 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
 
 export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: any) => void; currentUser: any }> = ({ onBack, onAdd, currentUser }) => {
   const [form, setForm] = useState({ name: '', price: '', desc: '', status: 'USADO' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [image, setImage] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handlePublish = () => {
-    if (!form.name || !form.price) return;
+  const handlePublish = async () => {
+    if (!form.name || !form.price || isSubmitting) return;
+
+    setIsSubmitting(true);
     const newItem = {
       id: Date.now(),
       name: form.name,
@@ -991,9 +994,10 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
       image_file: imageFile,
       desc: form.desc
     };
-    onAdd(newItem);
-    alert('Anúncio publicado com sucesso! Seus vizinhos já podem ver seu desapego.');
-    onBack();
+
+    // O onAdd (App.tsx > handleAddDesapego) cuida do alert e do navigateHome
+    await onAdd(newItem);
+    setIsSubmitting(false);
   };
 
   return (
@@ -1075,7 +1079,14 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
         </div>
 
         <div className="pt-4">
-          <Button fullWidth onClick={handlePublish} className="h-20 rounded-[32px] bg-slate-950 text-white text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl shadow-slate-950/20 active:scale-[0.98]">Publicar Desapego</Button>
+          <Button
+            fullWidth
+            onClick={handlePublish}
+            disabled={!form.name || !form.price || isSubmitting}
+            className={`h-20 rounded-[32px] text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all ${!form.name || !form.price || isSubmitting ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-slate-950 text-white shadow-slate-950/20 active:scale-[0.98]'}`}
+          >
+            {isSubmitting ? 'Publicando...' : 'Publicar Desapego'}
+          </Button>
           <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu anúncio ficará visível para todo o condomínio</p>
         </div>
       </div>

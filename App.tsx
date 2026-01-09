@@ -107,19 +107,32 @@ const App: React.FC = () => {
 
         console.log('[App] Perfil carregado:', { role, name: profile.name });
         setUserRole(role);
+
+        // CACHE ROBUSTO: Salva tudo, não só a role
+        const fullProfile = {
+          ...profile,
+          avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
+          role: role,
+          name: profile.name || 'Morador'
+        };
+        localStorage.setItem('userProfile_cache', JSON.stringify(fullProfile));
         localStorage.setItem('userRole_cache', role);
 
         setCurrentUser({
-          ...profile,
-          avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
+          ...fullProfile,
           condo: 'Carregando...',
-          role: role
         });
 
         if (profile.condominium_id) {
           supabase.from('condominiums').select('name').eq('id', profile.condominium_id).maybeSingle()
             .then(({ data: condo }) => {
-              if (condo) setCurrentUser((prev: any) => ({ ...prev, condo: condo.name }));
+              if (condo) {
+                setCurrentUser((prev: any) => {
+                  const updated = { ...prev, condo: condo.name };
+                  localStorage.setItem('userProfile_cache', JSON.stringify(updated)); // Atualiza cache com condo
+                  return updated;
+                });
+              }
             });
         }
 
@@ -135,8 +148,25 @@ const App: React.FC = () => {
       }
     } catch (err) {
       console.error('Erro ao carregar perfil:', err);
+
+      // RECUPERAÇÃO ROBUSTA: Tenta ler o perfil completo do cache
+      const cachedProfileStr = localStorage.getItem('userProfile_cache');
       const cachedRole = localStorage.getItem('userRole_cache') as UserRole;
-      if (cachedRole) {
+
+      if (cachedProfileStr && cachedRole) {
+        const cachedProfile = JSON.parse(cachedProfileStr);
+        console.log('Recuperando perfil do cache:', cachedProfile);
+
+        setUserRole(cachedRole);
+        setCurrentUser(cachedProfile);
+
+        setAppState('main');
+        // Não reseta a tela se já estiver navegando
+        if (!activeTab || activeTab === 'splash') {
+          baseScreen(cachedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
+        }
+      } else if (cachedRole) {
+        // Fallback antigo (mínimo)
         setUserRole(cachedRole);
         setCurrentUser({ id: userId, name: 'Usuário', condo: 'Offline', role: cachedRole });
         setAppState('main');
@@ -362,7 +392,7 @@ const App: React.FC = () => {
           case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={goBack} />;
           case 'desapegos-all': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onSelect={handleSelectDesapego} />;
           case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} />;
-          case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={() => refreshAppData()} currentUser={currentUser} />;
+          case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
 
           default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} onSitePros={onSitePros} />;
         }
