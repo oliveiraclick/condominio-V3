@@ -319,6 +319,11 @@ const App: React.FC = () => {
 
       // LÓGICA RESIDENTE
       if (userRole === UserRole.RESIDENT) {
+        // [MODERN BETA] - Se ativado, renderiza o novo painel
+        if (useModernDesign) {
+          return <ResidentModern user={currentUser} activeTab={activeTab} onChangeTab={navigateTo} />;
+        }
+
         switch (activeTab) {
           case 'resident':
           case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} categories={categories} />;
