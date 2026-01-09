@@ -265,6 +265,14 @@ const App: React.FC = () => {
           case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
+
+          // --- E-SHOP & DESAPEGO ROUTES ---
+          case 'shop-detail': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
+          case 'shop-product-detail': return <ProductFullView product={selectedProduct} onBack={goBack} currentUser={currentUser} />;
+          case 'desapegos-all': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onSelect={handleSelectDesapego} />;
+          case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} />;
+          case 'create-desapego': return <CreateDesapegoView onBack={goBack} onFinish={refreshAppData} currentUser={currentUser} />;
+
           default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} onSitePros={onSitePros} />;
         }
       }
