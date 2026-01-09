@@ -2011,7 +2011,7 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
     })}
     {/* Version Display */}
     <div className="absolute bottom-1 left-0 right-0 text-center">
-      <span className="text-[8px] text-slate-300 font-bold">v1.6.0</span>
+      <span className="text-[8px] text-slate-300 font-bold">v1.6.1</span>
     </div>
   </div>
 );
