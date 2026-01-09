@@ -284,7 +284,7 @@ const App: React.FC = () => {
   };
 
   const navigateToCategory = (category: string) => { setSelectedCategory(category); pushScreen('servicos-full'); };
-  const navigateToCategory = (category: string) => { setSelectedCategory(category); pushScreen('servicos-full'); };
+
 
   // --- RENDERIZAÇÃO ---
   const renderContent = () => {
