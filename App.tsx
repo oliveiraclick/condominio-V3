@@ -284,8 +284,7 @@ const App: React.FC = () => {
   };
 
   const navigateToCategory = (category: string) => { setSelectedCategory(category); pushScreen('servicos-full'); };
-  const handleSelectDesapego = (item: any) => { setSelectedDesapego(item); pushScreen('desapego-detail'); };
-  const handleSelectProduct = (item: any) => { setSelectedProduct(item); pushScreen('shop-product-detail'); };
+  const navigateToCategory = (category: string) => { setSelectedCategory(category); pushScreen('servicos-full'); };
 
   // --- RENDERIZAÇÃO ---
   const renderContent = () => {
