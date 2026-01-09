@@ -24,6 +24,10 @@ import {
 } from './pages/Admin';
 import { SuperAdmin } from './pages/SuperAdmin';
 
+// IMPORTS MODO MODERNO (BETA)
+import { SplashScreenModern, ResidentRegistrationModern } from './pages/AuthModern';
+import { AdminDashboardModern } from './pages/AdminModern';
+
 const App: React.FC = () => {
   // --- ESTADOS DE CONTROLE DE FLUXO ---
   const [appState, setAppState] = useState<'splash' | 'login' | 'roleSelection' | 'registerResident' | 'registerProfessional' | 'main'>('splash');
@@ -75,10 +79,15 @@ const App: React.FC = () => {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
 
-  // --- 1. LÓGICA DE BUSCA DE PERFIL ---
+  // --- STATE DESIGN MODERNO (BETA) ---
+  const [useModernDesign, setUseModernDesign] = useState(false);
+
+  // --- 1. LÓGICA DE BUSCA DE PERFIL (COM BLINDAGEM ANTI-LOOP) ---
   const fetchUserProfile = useCallback(async (userId: string, isSilent = false) => {
     if (!isSilent) setLoading(true);
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 2500));
+
+    // Timeout safeguard for Login Loop Protection
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 2500));
 
     try {
       const fetchProfileOp = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
@@ -362,8 +371,12 @@ const App: React.FC = () => {
         }
       }
 
-      // LÓGICA ADMIN
+      // --- ADMIN ---
       if (userRole === UserRole.ADMIN) {
+        if (useModernDesign && activeTab === 'dashboard') {
+          return <AdminDashboardModern onNavigate={pushScreen} />;
+        }
+
         switch (activeTab) {
           case 'dashboard': return <AdminDashboard onNavigate={pushScreen} />;
           case 'admin-residents': return <AdminResidents onBack={goBack} />;
@@ -400,11 +413,38 @@ const App: React.FC = () => {
     }
   };
 
-  if (appState === 'splash') return <SplashScreen onFinish={() => { if (session && userRole) setAppState('main'); else setAppState('login'); }} />;
+  if (appState === 'splash') {
+    if (useModernDesign) return <SplashScreenModern onFinish={() => { if (session && userRole) setAppState('main'); else setAppState('login'); }} />;
+    return <SplashScreen onFinish={() => { if (session && userRole) setAppState('main'); else setAppState('login'); }} />;
+  }
+
   if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div></div>;
-  if (appState === 'login') return <LoginScreen onLogin={async (session) => { const s = session || (await supabase.auth.getSession()).data.session; if (s) fetchUserProfile(s.user.id); }} onRegister={() => setAppState('roleSelection')} />;
+
+  if (appState === 'login') return (
+    <>
+      <LoginScreen onLogin={async (session) => {
+        // If login component returns session, use it immediately
+        const s = session || (await supabase.auth.getSession()).data.session;
+        if (s) fetchUserProfile(s.user.id);
+      }} onRegister={() => setAppState('roleSelection')} />
+
+      {/* BOTÃO BETA TOGGLE */}
+      <button
+        onClick={() => setUseModernDesign(!useModernDesign)}
+        className={`fixed bottom-4 right-4 z-50 px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-widest shadow-xl transition-all ${useModernDesign ? 'bg-violet-600 text-white shadow-violet-500/50' : 'bg-white text-slate-400 border border-slate-200'}`}
+      >
+        {useModernDesign ? '✨ Design: Moderno' : '🏳️ Design: Clássico'}
+      </button>
+    </>
+  );
+
   if (appState === 'roleSelection') return <RoleSelection onSelect={(role) => { setUserRole(role); setAppState(role === UserRole.RESIDENT ? 'registerResident' : 'registerProfessional'); }} onBack={() => setAppState('login')} />;
-  if (appState === 'registerResident') return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+
+  if (appState === 'registerResident') {
+    if (useModernDesign) return <ResidentRegistrationModern onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+    return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+  }
+
   if (appState === 'registerProfessional') return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
 
   const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
