@@ -195,8 +195,7 @@ const App: React.FC = () => {
         setProducts(prods.data);
       }
       if (desap.data) {
-        console.log('[App] Desapegos carregados (RAW):', desap.data);
-        const mappedDesapegos = desap.data.map(i => ({
+        setDesapegos(desap.data.map(i => ({
           id: i.id,
           name: i.title,
           price: `R$ ${i.price}`,
@@ -206,9 +205,7 @@ const App: React.FC = () => {
           desc: i.description,
           tower: i.seller ? `${i.seller.tower} - ${i.seller.unit}` : 'Residencial',
           phone: i.seller?.phone
-        }));
-        console.log('[App] Desapegos Mapeados:', mappedDesapegos);
-        setDesapegos(mappedDesapegos);
+        })));
       }
     } catch (e) { console.error("Erro refresh", e); }
   }, [appState, session]);
