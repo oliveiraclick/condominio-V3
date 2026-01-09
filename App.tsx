@@ -177,7 +177,7 @@ const App: React.FC = () => {
         supabase.from('categories').select('*').order('name'),
         supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true),
         supabase.from('products').select('*, vendor:profiles!vendor_id(name, avatar)').eq('available', true).order('created_at', { ascending: false }),
-        supabase.from('marketplace').select('*, seller:profiles!seller_id(name, avatar)').eq('status', 'available').order('created_at', { ascending: false })
+        supabase.from('marketplace').select('*, seller:profiles!seller_id(name, avatar)').order('created_at', { ascending: false }) // TESTE: Sem filtro
       ]);
 
       if (areas.data) setCommonAreas(areas.data);
@@ -195,18 +195,20 @@ const App: React.FC = () => {
         setProducts(prods.data);
       }
       if (desap.data) {
-        console.log('[App] Desapegos carregados:', desap.data.length, desap.data);
-        setDesapegos(desap.data.map(i => ({
+        console.log('[App] Desapegos carregados (RAW):', desap.data);
+        const mappedDesapegos = desap.data.map(i => ({
           id: i.id,
           name: i.title,
           price: `R$ ${i.price}`,
           img: i.image_url,
           user: i.seller?.name || 'Vizinho',
-          status: i.status.toUpperCase(),
+          status: i.status ? i.status.toUpperCase() : 'DISPONÍVEL', // Fallback status
           desc: i.description,
           tower: i.seller ? `${i.seller.tower} - ${i.seller.unit}` : 'Residencial',
           phone: i.seller?.phone
-        })));
+        }));
+        console.log('[App] Desapegos Mapeados:', mappedDesapegos);
+        setDesapegos(mappedDesapegos);
       }
     } catch (e) { console.error("Erro refresh", e); }
   }, [appState, session]);
