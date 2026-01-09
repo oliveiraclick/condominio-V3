@@ -321,7 +321,14 @@ const App: React.FC = () => {
       if (userRole === UserRole.RESIDENT) {
         // [MODERN BETA] - Se ativado, renderiza o novo painel (apenas na TAB HOME)
         if (useModernDesign && activeTab === 'home') {
-          return <ResidentModern user={currentUser} activeTab={activeTab} onChangeTab={baseScreen} />;
+          return <ResidentModern
+            user={currentUser}
+            activeTab={activeTab}
+            onChangeTab={baseScreen}
+            notifications={notifications}
+            desapegos={desapegos}
+            packages={packages}
+          />;
         }
 
         switch (activeTab) {
