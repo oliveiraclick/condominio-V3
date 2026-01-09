@@ -258,6 +258,16 @@ const App: React.FC = () => {
     if (!error) { alert('Anúncio removido!'); refreshAppData(); baseScreen('home'); }
   };
 
+  const handleSelectDesapego = (item: any) => {
+    setSelectedDesapego(item);
+    pushScreen('desapego-detail');
+  };
+
+  const handleSelectProduct = (item: any) => {
+    setSelectedProduct(item);
+    pushScreen('shop-product-detail');
+  };
+
   const handleAddServiceRequest = async (req: any) => {
     if (!session?.user) return;
     const { error } = await supabase.from('service_requests').insert([{
