@@ -19,7 +19,7 @@ export const ResidentModern: React.FC<{
                     <div>
                         <p className="text-amber-500/80 text-[10px] uppercase tracking-[0.2em] font-bold mb-1">Bem-vindo de volta</p>
                         <h1 className="text-2xl font-bold text-white tracking-tight flex items-center gap-2">
-                            {user?.name?.split(' ')[0] || 'Morador'}
+                            {user?.name ? user.name.split(' ')[0] : 'Morador'}
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_10px_#10b981]" />
                         </h1>
                     </div>
@@ -47,13 +47,13 @@ export const ResidentModern: React.FC<{
                             <span className="bg-black/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-black/5">
                                 Residencial Luxury
                             </span>
-                            <img src="/logo-icon.png" className="w-8 h-8 opacity-80" alt="" />
+                            <img src="/logo-icon.png" className="w-8 h-8 opacity-80" alt="" onError={(e) => e.currentTarget.style.display = 'none'} />
                         </div>
 
                         <div>
                             <p className="text-xs font-bold uppercase tracking-widest opacity-60 mb-1">Sua Unidade</p>
                             <h2 className="text-3xl font-black tracking-tighter flex items-center gap-2">
-                                {user?.tower || 'A'} <span className="opacity-40">|</span> {user?.unit || '101'}
+                                {user?.tower || 'A'} <span className="opacity-40">|</span> {user?.unit || '...'}
                             </h2>
                         </div>
                     </div>
