@@ -7,8 +7,12 @@ import {
 export const ResidentModern: React.FC<{
     user: any;
     activeTab: string;
-    onChangeTab: (tab: string) => void
-}> = ({ user, activeTab, onChangeTab }) => {
+    onChangeTab: (tab: string) => void;
+    notifications?: any[];
+    desapegos?: any[];
+    packages?: any[];
+}> = ({ user, activeTab, onChangeTab, notifications = [], desapegos = [], packages = [] }) => {
+    const unreadCount = notifications.filter(n => !n.read).length;
 
     return (
         <div className="min-h-screen bg-[#0f111a] text-slate-200 font-sans pb-24">
@@ -25,7 +29,7 @@ export const ResidentModern: React.FC<{
                     </div>
                     <button className="w-10 h-10 rounded-full border border-amber-500/20 bg-amber-500/5 flex items-center justify-center text-amber-400 relative">
                         <Bell size={20} />
-                        <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full" />
+                        {unreadCount > 0 && <span className="absolute top-2 right-2.5 w-2 h-2 bg-rose-500 rounded-full" />}
                     </button>
                 </div>
             </header>
@@ -43,6 +47,7 @@ export const ResidentModern: React.FC<{
                     </div>
 
                     <div className="relative z-10 p-6 h-full flex flex-col justify-between text-[#0f111a]">
+                        {/* ... card content same as before ... */}
                         <div className="flex justify-between items-start">
                             <span className="bg-black/10 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-black/5">
                                 Residencial Luxury
@@ -59,32 +64,61 @@ export const ResidentModern: React.FC<{
                     </div>
                 </div>
 
-                {/* SECTION TITLE */}
+                {/* PACKAGE ALERT */}
+                {packages.length > 0 && (
+                    <div className="mb-8 p-4 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center gap-4 animate-pulse">
+                        <div className="w-12 h-12 bg-emerald-500/20 rounded-full flex items-center justify-center text-emerald-400">
+                            <ShoppingBag size={24} />
+                        </div>
+                        <div>
+                            <h3 className="font-bold text-emerald-400">Encomenda Chegou!</h3>
+                            <p className="text-xs text-emerald-400/80">Você tem {packages.length} pacote(s) na portaria.</p>
+                        </div>
+                    </div>
+                )}
+
+                {/* DESAPEGOS SECTION */}
                 <div className="flex items-center justify-between mb-6">
                     <h3 className="font-bold text-lg text-white flex items-center gap-2">
                         <Star size={16} className="text-amber-400 fill-amber-400" />
-                        Destaques
+                        Vitrine do Condomínio
                     </h3>
-                    <button className="text-[10px] font-bold text-amber-500 uppercase tracking-widest">Ver tudo</button>
+                    <button className="text-[10px] font-bold text-amber-500 uppercase tracking-widest" onClick={() => onChangeTab('market')}>Ver tudo</button>
                 </div>
 
-                {/* HORIZONTAL SCROLL (MOCK) */}
+                {/* HORIZONTAL SCROLL (REAL DATA) */}
                 <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 scrollbar-hide">
-                    {[1, 2, 3].map(i => (
-                        <div key={i} className="min-w-[280px] h-40 bg-[#161b22] border border-white/5 rounded-[24px] p-4 flex flex-col justify-between relative group overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-r from-amber-500/0 to-amber-500/0 group-hover:from-amber-500/5 group-hover:to-transparent transition-all duration-500" />
-                            <div className="flex justify-between items-start">
-                                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-amber-400">
-                                    <ShoppingBag size={20} />
+                    {desapegos.length > 0 ? desapegos.slice(0, 5).map(item => (
+                        <div key={item.id} className="min-w-[200px] h-48 bg-[#161b22] border border-white/5 rounded-[24px] p-4 flex flex-col justify-between relative group overflow-hidden">
+                            {item.image_url ? (
+                                <div className="absolute inset-0">
+                                    <img src={item.image_url} className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity" />
+                                    <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent" />
                                 </div>
-                                <span className="text-[10px] text-slate-500 font-bold uppercase">Novidade</span>
+                            ) : (
+                                <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
+                            )}
+
+                            <div className="relative z-10 flex justify-between items-start">
+                                <div className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-md flex items-center justify-center text-amber-400 border border-white/10">
+                                    <ShoppingBag size={14} />
+                                </div>
+                                <span className="bg-amber-500 text-[#0f111a] text-[10px] font-bold px-2 py-0.5 rounded-full">R$ {item.price}</span>
                             </div>
-                            <div>
-                                <h4 className="font-bold text-white">Apple Watch Ultra</h4>
-                                <p className="text-xs text-slate-400">Desapego do Vizinho</p>
+
+                            <div className="relative z-10">
+                                <h4 className="font-bold text-white text-sm line-clamp-2 leading-tight mb-1">{item.title}</h4>
+                                <p className="text-[10px] text-slate-300 flex items-center gap-1">
+                                    <User size={10} /> {item.profiles?.name?.split(' ')[0]}
+                                </p>
                             </div>
                         </div>
-                    ))}
+                    )) : (
+                        <div className="min-w-[280px] h-40 flex flex-col items-center justify-center border border-dashed border-white/10 rounded-2xl text-slate-500">
+                            <ShoppingBag size={32} className="mb-2 opacity-50" />
+                            <p className="text-xs">Nenhum item anunciado</p>
+                        </div>
+                    )}
                 </div>
 
             </main>
