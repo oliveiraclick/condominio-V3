@@ -31,10 +31,10 @@ export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinis
                     </div>
                 </div>
 
-                <h1 className={`text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-white via-violet-200 to-white tracking-tighter mb-2 transition-all duration-1000 delay-300 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+                <h1 className={`text-5xl font-black text-transparent bg-clip-text bg-gradient-to-b from-amber-200 via-yellow-400 to-amber-600 tracking-tighter mb-2 transition-all duration-1000 delay-300 drop-shadow-[0_0_15px_rgba(251,191,36,0.5)] ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                     MORADOR
                 </h1>
-                <p className={`text-sm font-medium text-violet-300 tracking-[0.3em] uppercase transition-all duration-1000 delay-500 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
+                <p className={`text-sm font-bold text-amber-200/80 tracking-[0.4em] uppercase transition-all duration-1000 delay-500 ${mounted ? 'translate-y-0 opacity-100' : 'translate-y-10 opacity-0'}`}>
                     Clicou, Achou.
                 </p>
             </div>
@@ -85,11 +85,11 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
 
             <div className="relative z-10 w-full max-w-sm">
                 <div className="text-center mb-10">
-                    <div className="w-20 h-20 bg-gradient-to-tr from-white/10 to-white/5 backdrop-blur-xl rounded-[24px] border border-white/10 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-violet-500/10">
-                        <Building size={32} className="text-white" />
+                    <div className="w-20 h-20 bg-gradient-to-tr from-amber-200/10 to-amber-500/20 backdrop-blur-xl rounded-[24px] border border-amber-500/30 flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-amber-500/20">
+                        <Building size={32} className="text-amber-400" />
                     </div>
-                    <h1 className="text-3xl font-black tracking-tight mb-2">Bem-vindo</h1>
-                    <p className="text-slate-400">Acesse seu condomínio inteligente</p>
+                    <h1 className="text-3xl font-black tracking-tight mb-2 text-transparent bg-clip-text bg-gradient-to-r from-amber-200 to-amber-500">Bem-vindo</h1>
+                    <p className="text-amber-200/60 font-medium">Acesse seu condomínio exclusivo</p>
                 </div>
 
                 <div className="space-y-4 mb-8">

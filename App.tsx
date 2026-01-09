@@ -27,6 +27,7 @@ import { SuperAdmin } from './pages/SuperAdmin';
 // IMPORTS MODO MODERNO (BETA)
 import { SplashScreenModern, ResidentRegistrationModern, LoginScreenModern, ProfessionalRegistrationModern } from './pages/AuthModern';
 import { AdminDashboardModern } from './pages/AdminModern';
+import { ResidentModern } from './pages/ResidentModern';
 
 const App: React.FC = () => {
   // --- ESTADOS DE CONTROLE DE FLUXO ---
