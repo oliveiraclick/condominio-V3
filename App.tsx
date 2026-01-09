@@ -443,6 +443,7 @@ const App: React.FC = () => {
           const s = session || (await supabase.auth.getSession()).data.session;
           if (s) fetchUserProfile(s.user.id);
         }} onRegister={() => setAppState('roleSelection')} />
+      )}
     </>
   );
 
