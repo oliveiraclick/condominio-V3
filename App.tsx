@@ -81,7 +81,10 @@ const App: React.FC = () => {
   const [notifications, setNotifications] = useState<any[]>([]);
 
   // --- STATE DESIGN MODERNO (BETA) ---
-  const [useModernDesign, setUseModernDesign] = useState(() => localStorage.getItem('beta_modern_design') === 'true');
+  const [useModernDesign, setUseModernDesign] = useState(() => {
+    const stored = localStorage.getItem('beta_modern_design');
+    return stored === null ? true : stored === 'true'; // Default to TRUE (Modern Login)
+  });
 
   const toggleModernDesign = () => {
     const newValue = !useModernDesign;
