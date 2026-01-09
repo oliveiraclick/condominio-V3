@@ -169,14 +169,15 @@ const App: React.FC = () => {
   const refreshAppData = useCallback(async () => {
     if (appState !== 'main' || !session) return;
     try {
-      const [areas, resvs, requests, pros, cats, onSite, prods] = await Promise.all([
+      const [areas, resvs, requests, pros, cats, onSite, prods, desap] = await Promise.all([
         supabase.from('common_areas').select('*').order('name'),
         supabase.from('reservations').select('*').order('date'),
         supabase.from('service_requests').select('*, profiles(name, phone)').order('created_at', { ascending: false }),
         supabase.from('professional_services').select('*, profiles(name, phone, is_on_site)').eq('active', true),
         supabase.from('categories').select('*').order('name'),
         supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true),
-        supabase.from('products').select('*, profiles(name, avatar)').eq('active', true).order('created_at', { ascending: false })
+        supabase.from('products').select('*, profiles(name, avatar)').eq('active', true).order('created_at', { ascending: false }),
+        supabase.from('marketplace_items').select('*, profiles(name, avatar)').eq('active', true).order('created_at', { ascending: false })
       ]);
 
       if (areas.data) setCommonAreas(areas.data);
@@ -190,6 +191,7 @@ const App: React.FC = () => {
       if (onSite.data) setOnSitePros(onSite.data);
       if (cats.data) setCategories(cats.data);
       if (prods.data) setProducts(prods.data);
+      if (desap.data) setDesapegos(desap.data);
     } catch (e) { console.error("Erro refresh", e); }
   }, [appState, session]);
 
