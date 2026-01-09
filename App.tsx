@@ -328,6 +328,8 @@ const App: React.FC = () => {
             notifications={notifications}
             desapegos={desapegos}
             packages={packages}
+            onNavigate={pushScreen}
+            onSelectDesapego={handleSelectDesapego}
           />;
         }
 
