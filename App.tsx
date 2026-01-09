@@ -190,8 +190,14 @@ const App: React.FC = () => {
       if (pros.data) setProfessionalServices(pros.data.map(p => ({ ...p, providerName: p.profiles?.name, providerPhone: p.profiles?.phone })));
       if (onSite.data) setOnSitePros(onSite.data);
       if (cats.data) setCategories(cats.data);
-      if (prods.data) setProducts(prods.data);
-      if (desap.data) setDesapegos(desap.data);
+      if (prods.data) {
+        console.log('[App] Produtos carregados:', prods.data.length);
+        setProducts(prods.data);
+      }
+      if (desap.data) {
+        console.log('[App] Desapegos carregados:', desap.data.length, desap.data);
+        setDesapegos(desap.data);
+      }
     } catch (e) { console.error("Erro refresh", e); }
   }, [appState, session]);
 
