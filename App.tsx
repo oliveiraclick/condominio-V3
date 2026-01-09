@@ -429,11 +429,21 @@ const App: React.FC = () => {
 
   if (appState === 'login') return (
     <>
-      <LoginScreen onLogin={async (session) => {
-        // If login component returns session, use it immediately
-        const s = session || (await supabase.auth.getSession()).data.session;
-        if (s) fetchUserProfile(s.user.id);
-      }} onRegister={() => setAppState('roleSelection')} />
+      {useModernDesign ? (
+        <LoginScreenModern
+          onLogin={async (session) => {
+            const s = session || (await supabase.auth.getSession()).data.session;
+            if (s) fetchUserProfile(s.user.id);
+          }}
+          onRegister={() => setAppState('roleSelection')}
+        />
+      ) : (
+        <LoginScreen onLogin={async (session) => {
+          // If login component returns session, use it immediately
+          const s = session || (await supabase.auth.getSession()).data.session;
+          if (s) fetchUserProfile(s.user.id);
+        }} onRegister={() => setAppState('roleSelection')} />
+      )}
 
       {/* BOTÃO BETA TOGGLE */}
       <button
@@ -452,7 +462,10 @@ const App: React.FC = () => {
     return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
   }
 
-  if (appState === 'registerProfessional') return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+  if (appState === 'registerProfessional') {
+    if (useModernDesign) return <ProfessionalRegistrationModern onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+    return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+  }
 
   const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
 
