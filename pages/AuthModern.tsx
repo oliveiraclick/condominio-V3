@@ -123,7 +123,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                     Criar Nova Conta
                 </button>
 
-                <p className="text-center text-[10px] text-white/20 uppercase tracking-[0.2em] mt-8">v1.6.1 • Modern Beta</p>
+                <p className="text-center text-[10px] text-white/20 uppercase tracking-[0.2em] mt-8">v1.6.2 • Modern Beta</p>
             </div>
         </div>
     );
@@ -278,7 +278,7 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
                         <div className="space-y-4">
                             <InputModern icon={User} label="Nome Profissional" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} />
                             <InputModern icon={Smartphone} label="Celular" value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} />
-                            <div className="group bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-4">
+                            <div className="group bg-transparent border-b border-white/20 p-4">
                                 <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">Categoria</label>
                                 <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="bg-transparent border-none outline-none w-full text-lg text-white [&>option]:text-black">
                                     <option>Limpeza</option><option>Manutenção</option><option>Aulas</option><option>Beleza</option><option>Outros</option>
