@@ -176,8 +176,8 @@ const App: React.FC = () => {
         supabase.from('professional_services').select('*, profiles(name, phone, is_on_site)').eq('active', true),
         supabase.from('categories').select('*').order('name'),
         supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true),
-        supabase.from('products').select('*, profiles(name, avatar)').eq('available', true).order('created_at', { ascending: false }),
-        supabase.from('marketplace').select('*, profiles(name, avatar)').eq('status', 'available').order('created_at', { ascending: false })
+        supabase.from('products').select('*, vendor:profiles!vendor_id(name, avatar)').eq('available', true).order('created_at', { ascending: false }),
+        supabase.from('marketplace').select('*, seller:profiles!seller_id(name, avatar)').eq('status', 'available').order('created_at', { ascending: false })
       ]);
 
       if (areas.data) setCommonAreas(areas.data);
