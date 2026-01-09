@@ -522,6 +522,36 @@ export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBac
             <p className="text-slate-500 text-xs">Gerencie seus serviços e clientes.</p>
           </div>
         </button>
+      </div>
+    </div>
+  );
+};
+export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBack: () => void }> = ({ onSelect, onBack }) => {
+  return (
+    <div className="min-h-screen bg-slate-50 p-8 flex flex-col">
+      <button onClick={onBack} className="w-10 h-10 bg-white shadow-sm border border-slate-200 rounded-full flex items-center justify-center mb-12">
+        <ArrowLeft size={20} className="text-slate-600" />
+      </button>
+      <h2 className="text-2xl font-bold text-center mb-8 italic text-slate-900 tracking-tighter">Como você quer entrar?</h2>
+      <div className="space-y-4">
+        <button onClick={() => onSelect(UserRole.RESIDENT)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group">
+          <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 transition-colors">
+            <UserCircle size={32} className="text-violet-600 group-hover:text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Sou Morador</h3>
+            <p className="text-slate-500 text-xs">Acesse avisos, serviços e o marketplace.</p>
+          </div>
+        </button>
+        <button onClick={() => onSelect(UserRole.PROFESSIONAL)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-emerald-600 hover:ring-2 hover:ring-emerald-100 transition-all group">
+          <div className="w-14 h-14 bg-emerald-50 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 transition-colors">
+            <Briefcase size={32} className="text-emerald-600 group-hover:text-white" />
+          </div>
+          <div>
+            <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Sou Profissional</h3>
+            <p className="text-slate-500 text-xs">Gerencie seus serviços e clientes.</p>
+          </div>
+        </button>
         <button onClick={() => onSelect(UserRole.ADMIN)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group">
           <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 transition-colors">
             <ShieldCheck size={32} className="text-violet-600 group-hover:text-white" />
