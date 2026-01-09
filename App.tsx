@@ -203,10 +203,59 @@ const App: React.FC = () => {
 
   useEffect(() => { refreshAppData(); }, [refreshAppData]);
 
-  // --- HANDLERS ---
+  // --- HANDLERS GENÉRICOS (RE-USÁVEIS) ---
   const handleUpdateServiceRequest = async (id: number | string, status: string) => {
     const { error } = await supabase.from('service_requests').update({ status }).eq('id', id);
     if (!error) refreshAppData();
+  };
+
+  const handleAddProduct = async (product: any) => {
+    if (!session?.user) return;
+    let finalImageUrl = product.image_url;
+    if (product.image_file) {
+      const fileName = `${Math.random()}.${product.image_file.name.split('.').pop()}`;
+      const { error: upErr } = await supabase.storage.from('products').upload(`${session.user.id}/${fileName}`, product.image_file);
+      if (!upErr) {
+        const { data } = supabase.storage.from('products').getPublicUrl(`${session.user.id}/${fileName}`);
+        finalImageUrl = data.publicUrl;
+      }
+    }
+    const { image_file, ...productData } = product;
+    const { error } = await supabase.from('products').insert([{ ...productData, image_url: finalImageUrl, vendor_id: session.user.id }]);
+    if (!error) refreshAppData(); else alert(error.message);
+  };
+
+  const handleDeleteProduct = async (id: string) => {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    if (!error) refreshAppData();
+  };
+
+  const handleToggleProductStatus = async (product: any) => {
+    const { error } = await supabase.from('products').update({ available: !product.available }).eq('id', product.id);
+    if (!error) refreshAppData();
+  };
+
+  const handleAddDesapego = async (item: any) => {
+    if (!session?.user) return;
+    let finalImageUrl = item.img;
+    if (item.image_file) {
+      const fileName = `${Date.now()}.${item.image_file.name.split('.').pop()}`;
+      const { error: upErr } = await supabase.storage.from('marketplace').upload(`${session.user.id}/${fileName}`, item.image_file);
+      if (!upErr) {
+        const { data } = supabase.storage.from('marketplace').getPublicUrl(`${session.user.id}/${fileName}`);
+        finalImageUrl = data.publicUrl;
+      }
+    }
+    const { error } = await supabase.from('marketplace').insert([{
+      seller_id: session.user.id, title: item.name, price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
+      status: item.status, description: item.desc, image_url: finalImageUrl
+    }]);
+    if (!error) { refreshAppData(); baseScreen('home'); } else alert(error.message);
+  };
+
+  const handleDeleteDesapego = async (id: string) => {
+    const { error } = await supabase.from('marketplace').delete().eq('id', id);
+    if (!error) { alert('Anúncio removido!'); refreshAppData(); baseScreen('home'); }
   };
 
   const handleAddServiceRequest = async (req: any) => {
