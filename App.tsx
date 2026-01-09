@@ -4,12 +4,13 @@ import { supabase } from './supabase';
 
 // Imports de Páginas e Componentes
 import { SplashScreen, LoginScreen, RoleSelection, ResidentRegistration, ProfessionalRegistration } from './pages/Auth';
+import { PrivacyPage } from './pages/Privacy';
 import {
   ResidentHome, Marketplace, AppNavigation, AcessoPage,
   FinanceiroPage, ChamadosPage, CondoAgendaPage, ServicosFullView,
   DesapegoFullView, ResidentProfile, ResidentBookings, CreateDesapegoPage,
   AssembliesPage, ShopDetailPage, DesapegoDetailView, ProductDetailPage,
-  PersonalDataPage, PrivacyPage
+  PersonalDataPage
 } from './pages/Resident';
 import { CommunicationHub } from './pages/CommunicationHub';
 import {
@@ -31,7 +32,7 @@ import { ResidentModern } from './pages/ResidentModern';
 
 const App: React.FC = () => {
   // --- ESTADOS DE CONTROLE DE FLUXO ---
-  const [appState, setAppState] = useState<'splash' | 'login' | 'roleSelection' | 'registerResident' | 'registerProfessional' | 'main'>('splash');
+  const [appState, setAppState] = useState<'splash' | 'login' | 'roleSelection' | 'registerResident' | 'registerProfessional' | 'main' | 'privacy'>('splash');
   const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [history, setHistory] = useState<string[]>(['home']);
@@ -166,7 +167,14 @@ const App: React.FC = () => {
         setLoading(false);
       }
     };
-    initAuth();
+
+    // Check for privacy route on load
+    if (window.location.hash === '#/privacy') {
+      setAppState('privacy');
+      setLoading(false);
+    } else {
+      initAuth();
+    }
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       if (event === 'SIGNED_OUT') {
@@ -458,6 +466,8 @@ const App: React.FC = () => {
     if (useModernDesign) return <ProfessionalRegistrationModern onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
     return <ProfessionalRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
   }
+
+  if (appState === 'privacy') return <PrivacyPage onBack={() => { window.location.hash = ''; setAppState('login'); }} />;
 
   const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
 
