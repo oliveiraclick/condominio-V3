@@ -268,10 +268,10 @@ const App: React.FC = () => {
 
           // --- E-SHOP & DESAPEGO ROUTES ---
           case 'shop-detail': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
-          case 'shop-product-detail': return <ProductDetailPage product={selectedProduct} onBack={goBack} />;
+          case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={goBack} />;
           case 'desapegos-all': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onSelect={handleSelectDesapego} />;
           case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} />;
-          case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onFinish={refreshAppData} currentUser={currentUser} />;
+          case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={() => refreshAppData()} currentUser={currentUser} />;
 
           default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} onSitePros={onSitePros} />;
         }
