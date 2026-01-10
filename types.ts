@@ -54,6 +54,8 @@ export interface ProfessionalProfile extends Profile {
   description: string;
   verified: boolean;
   price_info?: string;
+  company_name?: string;
+  company_address?: string;
 }
 
 export interface Condo {

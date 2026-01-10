@@ -408,6 +408,8 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', phone: '', cpf: '', category: 'Manutenção',
+    name: '', email: '', password: '', phone: '', cpf: '', category: 'Manutenção',
+    company_name: '', company_address: '',
     docs: { rg: false, cpf: false, license: false }
   });
 
@@ -427,7 +429,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
       } else {
         const { data: authData, error: authError } = await supabase.auth.signUp({
           email: formData.email, password: formData.password,
-          options: { data: { full_name: formData.name, role: UserRole.PROFESSIONAL, phone: formData.phone, category: formData.category } }
+          options: { data: { full_name: formData.name, role: UserRole.PROFESSIONAL, phone: formData.phone, category: formData.category, company_name: formData.company_name } }
         });
         if (authError) throw authError;
         if (authData.user) { userId = authData.user.id; sessionExists = !!authData.session; }
@@ -437,6 +439,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         const { error: profileError } = await supabase.from('profiles').upsert({
           id: userId, name: formData.name, email: formData.email, phone: formData.phone, cpf: formData.cpf,
           category: formData.category, role: UserRole.PROFESSIONAL,
+          company_name: formData.company_name, company_address: formData.company_address,
           // CRITICAL: Set 60 Days Free Trial
           trial_ends_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
           subscription_status: 'trial'
@@ -466,10 +469,17 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         </div>
         {step === 1 && (
           <div className="space-y-4">
-            <Input placeholder="Nome / Empresa" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            <Input placeholder="E-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+            <Input placeholder="Nome Completo do Responsável" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
+            <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+
+            <div className="grid grid-cols-1 gap-4 pt-2 pb-2">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Dados da Empresa (Opcional)</p>
+              <Input placeholder="Nome da Empresa (Fantasia)" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} />
+              <Input placeholder="Endereço da Empresa" value={formData.company_address} onChange={e => setFormData({ ...formData, company_address: e.target.value })} />
+            </div>
+
+            <Input placeholder="E-mail de Login" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
             <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
-            <Input placeholder="Telefone" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria</label>
               <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600">
