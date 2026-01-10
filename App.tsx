@@ -2,6 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from './types';
 import { supabase } from './supabase';
 
+import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
 // Imports de Páginas e Componentes
 import { SplashScreen, LoginScreen, RoleSelection, ResidentRegistration, ProfessionalRegistration } from './pages/Auth';
 import { PrivacyPage } from './pages/Privacy';
@@ -177,6 +178,14 @@ const App: React.FC = () => {
     } finally {
       if (!isSilent) setLoading(false);
     }
+  }, []);
+
+  // --- HIDE NATIVE SPLASH ---
+  useEffect(() => {
+    const hideSplash = async () => {
+      await SplashScreenPlugin.hide();
+    };
+    hideSplash();
   }, []);
 
   // --- 2. GERENCIADOR DE AUTENTICAÇÃO ---

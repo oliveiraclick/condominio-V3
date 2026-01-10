@@ -35,16 +35,18 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
   const [progress, setProgress] = useState(0);
 
   useEffect(() => {
+    // 3500ms total duration
+    // Update every 35ms -> 100 steps
     const timer = setInterval(() => {
       setProgress(prev => {
         if (prev >= 100) {
           clearInterval(timer);
-          setTimeout(onFinish, 500);
+          setTimeout(onFinish, 200);
           return 100;
         }
-        return prev + 5;
+        return prev + 1; // 1% per 35ms ~= 3.5s total
       });
-    }, 30);
+    }, 35);
     return () => clearInterval(timer);
   }, [onFinish]);
 
