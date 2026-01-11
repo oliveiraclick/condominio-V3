@@ -305,6 +305,13 @@ export const ResidentHome: React.FC<{
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedRequestToReview, setSelectedRequestToReview] = useState<any>(null);
+  const [homeSearch, setHomeSearch] = useState('');
+
+  const handleHomeSearch = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && homeSearch.trim()) {
+      onSelectCategory('Todos', homeSearch.trim());
+    }
+  };
 
   const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
   // Filter for completed requests that haven't been reviewed (mock check for now, ideally check DB)
@@ -383,7 +390,13 @@ export const ResidentHome: React.FC<{
 
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-300" size={18} />
-          <Input placeholder="O que você precisa hoje?" className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder-violet-200/70 focus:bg-white/20 transition-all" />
+          <Input
+            placeholder="O que você precisa hoje?"
+            className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder-violet-200/70 focus:bg-white/20 transition-all"
+            value={homeSearch}
+            onChange={(e) => setHomeSearch(e.target.value)}
+            onKeyDown={handleHomeSearch}
+          />
         </div>
       </div>
 
@@ -715,9 +728,9 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
   );
 };
 
-export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[] }> = ({ initialCategory, onBack, onServiceRequest, services = [] }) => {
+export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[] }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [] }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(initialSearch);
 
   // CATEGORY DEFINITIONS (Icons & Colors)
   const categoryConfig: any = {

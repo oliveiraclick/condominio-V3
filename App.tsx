@@ -66,6 +66,7 @@ const App: React.FC = () => {
 
   // --- ESTADOS DE DADOS ---
   const [selectedCategory, setSelectedCategory] = useState<string>('Todos');
+  const [selectedSearch, setSelectedSearch] = useState<string>('');
   const [selectedDesapego, setSelectedDesapego] = useState<any>(null);
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [packages, setPackages] = useState<any[]>([]);
@@ -404,7 +405,11 @@ const App: React.FC = () => {
     if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(error.message);
   };
 
-  const navigateToCategory = (category: string) => { setSelectedCategory(category); pushScreen('servicos-full'); };
+  const navigateToCategory = (category: string, search = '') => {
+    setSelectedCategory(category);
+    setSelectedSearch(search);
+    pushScreen('servicos-full');
+  };
 
 
   // --- RENDERIZAÇÃO ---
@@ -441,7 +446,7 @@ const App: React.FC = () => {
             const { error } = await supabase.from('reservations').insert([insertData]);
             if (!error) { refreshAppData(); } else { throw new Error(error.message); }
           }} />;
-          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
+          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
 
