@@ -128,6 +128,55 @@ const StarRating = ({ rating }: { rating: number }) => (
   </div>
 );
 
+// --- COMPONENTE COMPARTILHADO: MODAL DE COMPLETAR PERFIL ---
+const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; userId: string }> = ({ isOpen, onClose, userId }) => {
+  const [loading, setLoading] = useState(false);
+  const [formData, setFormData] = useState({
+    cpf: '',
+    company_name: '',
+    company_address: ''
+  });
+
+  const handleSave = async () => {
+    if (!formData.cpf || !formData.company_name) {
+      alert('Por favor, preencha o CPF e o Nome da Empresa.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from('profiles').update(formData).eq('id', userId);
+    if (!error) {
+      alert('Perfil completado com sucesso!');
+      window.location.reload();
+    } else {
+      alert('Erro ao salvar: ' + error.message);
+    }
+    setLoading(false);
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-6 animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-sm bg-white rounded-[40px] shadow-2xl p-8 animate-in zoom-in-95 duration-300">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <UserPlus size={32} />
+          </div>
+          <h2 className="text-xl font-black italic uppercase text-slate-900 leading-none">Complete seu Perfil</h2>
+          <p className="text-xs text-slate-500 mt-2">Para cadastrar serviços ou produtos, precisamos de alguns dados adicionais.</p>
+        </div>
+        <div className="space-y-4">
+          <Input placeholder="Seu CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="h-14" />
+          <Input placeholder="Nome da Empresa / Fantasia" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} className="h-14" />
+          <Input placeholder="Endereço Comercial" value={formData.company_address} onChange={e => setFormData({ ...formData, company_address: e.target.value })} className="h-14" />
+          <Button fullWidth onClick={handleSave} disabled={loading} className="h-14 bg-slate-900 text-white font-black uppercase text-xs tracking-widest mt-2">{loading ? 'Salvando...' : 'Salvar e Continuar'}</Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- DASHBOARD DO PROFISSIONAL ---
 export const ProfessionalDashboard: React.FC<{
   serviceRequests?: any[];
@@ -175,7 +224,6 @@ export const ProfessionalDashboard: React.FC<{
 
   // --- REVIEWS DATA (FETCHED FROM DB) ---
   // Mock removed in favor of real data fetching above
-
 
   // BLOQUEIO DE ASSINATURA EXPIROU
   if (isExpired) {
@@ -610,6 +658,16 @@ export const ProfessionalServices = ({ currentUser }: any) => {
     loadServices();
   }, []);
 
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
+  const checkProfileCompletion = () => {
+    if (!currentUser?.cpf || !currentUser?.company_name) {
+      setShowCompletionModal(true);
+      return false;
+    }
+    return true;
+  };
+
   const loadServices = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -622,6 +680,12 @@ export const ProfessionalServices = ({ currentUser }: any) => {
       setServices(data);
     }
     setLoading(false);
+  };
+
+  const handleAddClick = () => {
+    if (checkProfileCompletion()) {
+      setShowForm(true);
+    }
   };
 
   const handleSubmit = async () => {
@@ -789,13 +853,20 @@ export const ProfessionalServices = ({ currentUser }: any) => {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{services.length} serviços</p>
           </div>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={handleAddClick}
             className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
           >
             <Plus size={24} />
           </button>
         </div>
       </header>
+
+      {/* Completion Modal */}
+      <ProfileCompletionModal
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        userId={currentUser?.id}
+      />
 
       <div className="p-6 space-y-4">
         {/* Formulário */}
@@ -1182,6 +1253,22 @@ export const ProfessionalShop = ({ currentUser }: any) => {
     loadProducts();
   }, []);
 
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
+
+  const checkProfileCompletion = () => {
+    if (!currentUser?.cpf || !currentUser?.company_name) {
+      setShowCompletionModal(true);
+      return false;
+    }
+    return true;
+  };
+
+  const handleAddClick = () => {
+    if (checkProfileCompletion()) {
+      setShowForm(true);
+    }
+  };
+
   const loadProducts = async () => {
     setLoading(true);
     const { data, error } = await supabase
@@ -1313,13 +1400,20 @@ export const ProfessionalShop = ({ currentUser }: any) => {
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{products.length} produtos</p>
           </div>
           <button
-            onClick={() => setShowForm(!showForm)}
+            onClick={handleAddClick}
             className="w-12 h-12 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/30 active:scale-95 transition-all"
           >
             <Plus size={24} />
           </button>
         </div>
       </header>
+
+      {/* Completion Modal */}
+      <ProfileCompletionModal
+        isOpen={showCompletionModal}
+        onClose={() => setShowCompletionModal(false)}
+        userId={currentUser?.id}
+      />
 
       <div className="p-6 space-y-4">
         {/* Formulário */}

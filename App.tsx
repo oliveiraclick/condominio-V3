@@ -232,45 +232,94 @@ const App: React.FC = () => {
   const refreshAppData = useCallback(async () => {
     if (appState !== 'main' || !session) return;
     try {
-      const [areas, resvs, requests, pros, cats, onSite, prods, desap] = await Promise.all([
-        supabase.from('common_areas').select('*').order('name'),
-        supabase.from('reservations').select('*').order('date'),
-        supabase.from('service_requests').select('*, profiles(name, phone)').order('created_at', { ascending: false }),
-        supabase.from('professional_services').select('*, profiles(name, phone, is_on_site)').eq('active', true),
-        supabase.from('categories').select('*').order('name'),
-        supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true),
-        supabase.from('products').select('*, vendor:profiles!vendor_id(name, avatar)').eq('available', true).order('created_at', { ascending: false }),
-        supabase.from('marketplace').select('*, seller:profiles!seller_id(name, avatar)').order('created_at', { ascending: false }) // TESTE: Sem filtro
+      console.log('[App] Iniciando refreshAppData...');
+
+      const fetchTable = async (table: string, query: any) => {
+        const { data, error } = await query;
+        if (error) {
+          console.error(`[App] Erro na tabela ${table}:`, error.message, error.details);
+          return null;
+        }
+        return data;
+      };
+
+      const [areas, resvs, requests, pros, cats, onSite, prods, desap, allProfiles] = await Promise.all([
+        fetchTable('common_areas', supabase.from('common_areas').select('*').order('name')),
+        fetchTable('reservations', supabase.from('reservations').select('*').order('date')),
+        fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false })),
+        fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
+        fetchTable('categories', supabase.from('categories').select('*').order('name')),
+        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional')),
+        fetchTable('products', supabase.from('products').select('*').eq('available', true)),
+        fetchTable('marketplace', supabase.from('marketplace').select('*')),
+        fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar'))
       ]);
 
-      if (areas.data) setCommonAreas(areas.data);
-      if (resvs.data) setReservations(resvs.data);
-      if (requests.data) {
-        const mapped = requests.data.map(r => ({ ...r, user: r.profiles?.name, phone: r.profiles?.phone }));
+      const profileMap = (allProfiles || []).reduce((acc: any, p: any) => {
+        acc[p.id] = p;
+        return acc;
+      }, {});
+
+      if (areas) setCommonAreas(areas);
+      if (resvs) setReservations(resvs);
+      if (requests) {
+        const mapped = requests.map((r: any) => {
+          const resident = profileMap[r.resident_id || r.profile_id];
+          const provider = profileMap[r.provider_id];
+          return {
+            ...r,
+            user: resident?.name || 'Morador',
+            phone: resident?.phone || '',
+            providerName: provider?.name || 'Prestador'
+          };
+        });
         setServiceRequests(mapped);
         setActiveServices(mapped.filter((r: any) => r.status === 'accepted'));
       }
-      if (pros.data) setProfessionalServices(pros.data.map(p => ({ ...p, providerName: p.profiles?.name, providerPhone: p.profiles?.phone })));
-      if (onSite.data) setOnSitePros(onSite.data);
-      if (cats.data) setCategories(cats.data);
-      if (prods.data) {
-        console.log('[App] Produtos carregados:', prods.data.length);
-        setProducts(prods.data);
+      if (pros) {
+        console.log('[App] Prestadores carregados:', pros.length);
+        setProfessionalServices(pros.map((p: any) => {
+          const profile = profileMap[p.provider_id];
+          return {
+            ...p,
+            providerName: profile?.name || 'Prestador',
+            providerPhone: profile?.phone || '',
+            providerAvatar: profile?.avatar
+          };
+        }));
       }
-      if (desap.data) {
-        setDesapegos(desap.data.map(i => ({
-          id: i.id,
-          name: i.title,
-          price: `R$ ${i.price}`,
-          img: i.image_url,
-          user: i.seller?.name || 'Vizinho',
-          status: i.status ? i.status.toUpperCase() : 'DISPONÍVEL', // Fallback status
-          desc: i.description,
-          tower: i.seller ? `${i.seller.tower} - ${i.seller.unit}` : 'Residencial',
-          phone: i.seller?.phone
-        })));
+      if (onSite) setOnSitePros(onSite);
+      if (cats) setCategories(cats);
+      if (prods) {
+        console.log('[App] Produtos carregados:', prods.length);
+        setProducts(prods.map((p: any) => {
+          const vendor = profileMap[p.vendor_id];
+          return {
+            ...p,
+            profiles: vendor || { name: 'Vizinho', avatar: null } // Pass full object or safe fallback
+          };
+        }));
       }
-    } catch (e) { console.error("Erro refresh", e); }
+      if (desap) {
+        console.log('[App] Desapegos carregados:', desap.length);
+        setDesapegos(desap.map((i: any) => {
+          const seller = profileMap[i.seller_id];
+          return {
+            id: i.id,
+            name: i.title,
+            price: `R$ ${i.price}`,
+            img: i.image_url,
+            user: seller?.name || 'Vizinho',
+            status: i.status ? i.status.toUpperCase() : 'DISPONÍVEL',
+            desc: i.description,
+            tower: seller ? `${seller.tower} - ${seller.unit}` : 'Residencial',
+            phone: seller?.phone || ''
+          };
+        }));
+      }
+    } catch (e) {
+      console.error("[App] Erro fatal no refresh", e);
+    }
   }, [appState, session]);
 
   useEffect(() => { refreshAppData(); }, [refreshAppData]);

@@ -1881,6 +1881,10 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
     }
   };
 
+
+  const selectedCondoData = condos.find(c => c.id === formData.condo);
+  const isHorizontal = selectedCondoData?.type === 'horizontal';
+
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
@@ -1925,11 +1929,11 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Unidade</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Unidade'}</label>
               <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Torre/Bloco</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Torre/Bloco'}</label>
               <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium" />
             </div>
           </div>

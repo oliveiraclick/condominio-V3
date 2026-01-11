@@ -406,12 +406,22 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
+  const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: '', cpf: '', category: 'Manutenção',
     name: '', email: '', password: '', phone: '', cpf: '', category: 'Manutenção',
     company_name: '', company_address: '',
     docs: { rg: false, cpf: false, license: false }
   });
+
+  useEffect(() => {
+    supabase.from('categories').select('*').eq('type', 'service').order('name')
+      .then(({ data }) => {
+        if (data && data.length > 0) {
+          setCategories(data);
+          setFormData(prev => ({ ...prev, category: data[0].name }));
+        }
+      });
+  }, []);
 
   const handleFinish = async () => {
     setLoading(true);
@@ -453,6 +463,26 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
     } catch (err: any) { setError(translateError(err)); } finally { setLoading(false); }
   };
 
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Normalization Logic
+  const handleCategoryBlur = () => {
+    setTimeout(() => {
+      setShowSuggestions(false);
+      if (formData.category) {
+        const match = categories.find(c => c.name.toLowerCase() === formData.category.toLowerCase());
+        if (match) {
+          setFormData(prev => ({ ...prev, category: match.name }));
+        }
+      }
+    }, 200);
+  };
+
+  const filteredCategories = categories.filter(c =>
+    c.name.toLowerCase().includes(formData.category.toLowerCase())
+  );
+
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
       <header className="p-6 pt-12 flex items-center gap-4">
@@ -468,24 +498,63 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
           <div><h4 className="font-black text-emerald-900 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4><p className="text-emerald-700 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p></div>
         </div>
         {step === 1 && (
-          <div className="space-y-4">
-            <Input placeholder="Nome Completo do Responsável" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} />
-            <Input placeholder="Telefone / WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+          <div className="space-y-8 animate-in slide-in-from-right-4 pb-8">
 
-            <div className="grid grid-cols-1 gap-4 pt-2 pb-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">Dados da Empresa (Opcional)</p>
-              <Input placeholder="Nome da Empresa (Fantasia)" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} />
-              <Input placeholder="Endereço da Empresa" value={formData.company_address} onChange={e => setFormData({ ...formData, company_address: e.target.value })} />
+            {/* Seção 1: Dados Pessoais */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">1. Dados Pessoais</h3>
+              <Input placeholder="Nome Completo do Responsável" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
+              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
             </div>
 
-            <Input placeholder="E-mail de Login" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
-            <Input type="password" placeholder="Senha" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} />
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Categoria</label>
-              <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600">
-                <option value="Manutenção">Manutenção</option><option value="Limpeza">Limpeza</option><option value="Beleza">Beleza</option><option value="Tecnologia">Tecnologia</option>
-              </select>
+            {/* Seção 2: Acesso */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">2. Dados de Acesso</h3>
+              <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-14 font-medium" />
+              <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-14 font-medium" />
             </div>
+
+            {/* Seção 3: Profissional */}
+            <div className="space-y-4">
+              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">3. Perfil Profissional</h3>
+              <div className="space-y-2 relative">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria de Serviço</label>
+                <div className="relative">
+                  <Input
+                    placeholder="Ex: Eletricista, Encanador..."
+                    value={formData.category}
+                    onChange={e => {
+                      setFormData({ ...formData, category: e.target.value });
+                      setShowSuggestions(true);
+                    }}
+                    onFocus={() => setShowSuggestions(true)}
+                    onBlur={handleCategoryBlur}
+                    className="h-14 font-medium"
+                  />
+                  {showSuggestions && (
+                    <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto z-50">
+                      {filteredCategories.length > 0 ? filteredCategories.map(c => (
+                        <button
+                          key={c.id}
+                          className="w-full text-left px-4 py-3 hover:bg-violet-50 text-slate-700 font-medium text-sm transition-colors border-b border-slate-50 last:border-none"
+                          onClick={() => {
+                            setFormData({ ...formData, category: c.name });
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {c.name}
+                        </button>
+                      )) : (
+                        <div className="px-4 py-3 text-xs text-slate-400 font-medium italic">
+                          Nova categoria: "{formData.category}"
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+
           </div>
         )}
         {step === 2 && (
