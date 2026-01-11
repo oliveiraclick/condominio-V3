@@ -20,6 +20,30 @@ import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
 
 // --- COMPONENTES DE APOIO ---
+const FloatingBackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setShow(window.scrollY > 300);
+    };
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  return (
+    <button
+      onClick={(e) => {
+        e.stopPropagation();
+        onClick();
+      }}
+      className={`fixed bottom-24 right-6 w-14 h-14 bg-violet-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 transition-all duration-300 transform ${show ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
+        } active:scale-95 hover:bg-violet-700 active:bg-violet-800`}
+    >
+      <ArrowLeft size={24} />
+    </button>
+  );
+};
 
 const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () => void }> = ({ title, action, onAction }) => (
   <div className="flex justify-between items-end mb-6 px-1">
@@ -641,6 +665,7 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <FloatingBackButton onClick={() => onNavigate('home')} />
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100"><ArrowLeft size={20} className="text-slate-900" /></button>
         <div className="flex-1 flex items-center justify-between">
@@ -761,6 +786,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
+      <FloatingBackButton onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} />
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100">
           <ArrowLeft size={20} className="text-slate-600" />
@@ -880,6 +906,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; onBack: () =>
 
 export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; currentUser?: any; onDelete?: (id: string) => void; onSelect?: (item: any) => void }> = ({ onBack, desapegos, currentUser, onDelete, onSelect }) => (
   <div className="min-h-screen bg-slate-50 pb-32">
+    <FloatingBackButton onClick={onBack} />
     <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
       <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90"><ArrowLeft size={20} /></button>
       <h2 className="text-xl font-black italic uppercase">Desapego</h2>
@@ -1624,6 +1651,7 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
+      <FloatingBackButton onClick={onBack} />
       <div className="h-64 relative bg-violet-600 overflow-hidden">
         {activeCategoryData?.image_url ? (
           <div className="absolute inset-0 bg-cover bg-center animate-in fade-in duration-700" style={{ backgroundImage: `url(${activeCategoryData.image_url})` }}>
