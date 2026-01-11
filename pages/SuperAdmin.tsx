@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, User, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, User, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/UI';
 import { supabase } from '../supabase';
 
@@ -383,6 +383,115 @@ const NotificationsView = () => {
   );
 };
 
+// --- PROFESSIONAL GUIDE VIEW ---
+const ProfessionalGuideView = () => {
+  const [cards, setCards] = useState<any[]>([]);
+  const [showNew, setShowNew] = useState(false);
+  const [newCard, setNewCard] = useState({
+    title: '',
+    description: '',
+    icon_name: 'BookOpen',
+    bg_color: 'bg-white',
+    text_color: 'text-slate-900',
+    icon_bg_color: 'bg-emerald-100',
+    icon_color: 'text-emerald-600',
+    sort_order: 0
+  });
+
+  useEffect(() => { loadCards(); }, []);
+
+  const loadCards = async () => {
+    const { data } = await supabase.from('pro_guide_cards').select('*').order('sort_order', { ascending: true });
+    if (data) setCards(data);
+  };
+
+  const handleCreate = async () => {
+    if (!newCard.title) return;
+    const { error } = await supabase.from('pro_guide_cards').insert([newCard]);
+    if (!error) {
+      setShowNew(false);
+      loadCards();
+      setNewCard({
+        title: '',
+        description: '',
+        icon_name: 'BookOpen',
+        bg_color: 'bg-white',
+        text_color: 'text-slate-900',
+        icon_bg_color: 'bg-emerald-100',
+        icon_color: 'text-emerald-600',
+        sort_order: 0
+      });
+    } else {
+      alert(error.message);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Excluir este card?')) return;
+    const { error } = await supabase.from('pro_guide_cards').delete().eq('id', id);
+    if (!error) loadCards();
+  };
+
+  return (
+    <div className="p-6 space-y-6 pt-12 animate-in slide-in-from-right-8">
+      <div className="flex justify-between items-end">
+        <h1 className="text-2xl font-black italic text-slate-900 uppercase">Guia do Prestador</h1>
+        <button onClick={() => setShowNew(true)} className="w-10 h-10 bg-violet-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-violet-200"><Plus size={24} /></button>
+      </div>
+
+      {showNew && (
+        <div className="bg-white p-6 rounded-3xl shadow-xl border border-slate-100 space-y-4 animate-in zoom-in-95">
+          <h3 className="font-bold text-slate-900">Novo Card no Guia</h3>
+          <Input placeholder="Título" value={newCard.title} onChange={e => setNewCard({ ...newCard, title: e.target.value })} />
+          <Input placeholder="Descrição" value={newCard.description} onChange={e => setNewCard({ ...newCard, description: e.target.value })} />
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">Ícone (Nome Lucide)</label>
+              <Input placeholder="Ex: Zap, Store..." value={newCard.icon_name} onChange={e => setNewCard({ ...newCard, icon_name: e.target.value })} />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-bold text-slate-400 uppercase ml-2">Ordem</label>
+              <Input type="number" value={newCard.sort_order} onChange={e => setNewCard({ ...newCard, sort_order: parseInt(e.target.value) })} />
+            </div>
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-2xl space-y-3">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest text-center">Configurações Visuais (Tailwind)</p>
+            <div className="grid grid-cols-2 gap-2">
+              <Input placeholder="BG Color" value={newCard.bg_color} onChange={e => setNewCard({ ...newCard, bg_color: e.target.value })} />
+              <Input placeholder="Text Color" value={newCard.text_color} onChange={e => setNewCard({ ...newCard, text_color: e.target.value })} />
+              <Input placeholder="Icon BG" value={newCard.icon_bg_color} onChange={e => setNewCard({ ...newCard, icon_bg_color: e.target.value })} />
+              <Input placeholder="Icon Color" value={newCard.icon_color} onChange={e => setNewCard({ ...newCard, icon_color: e.target.value })} />
+            </div>
+          </div>
+
+          <Button fullWidth onClick={handleCreate} className="bg-slate-900 text-white h-12 uppercase font-black text-xs">Adicionar ao Guia</Button>
+          <button onClick={() => setShowNew(false)} className="w-full text-center text-xs text-slate-400 font-bold uppercase mt-2">Cancelar</button>
+        </div>
+      )}
+
+      <div className="space-y-3 pb-20">
+        {cards.map(c => (
+          <div key={c.id} className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${c.icon_bg_color} ${c.icon_color}`}>
+                <Star size={20} />
+              </div>
+              <div className="max-w-[200px]">
+                <h4 className="font-bold text-slate-900 text-sm">{c.title}</h4>
+                <p className="text-[10px] text-slate-400 font-bold uppercase truncate">{c.description}</p>
+              </div>
+            </div>
+            <button onClick={() => handleDelete(c.id)} className="w-8 h-8 rounded-lg bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100">
+              <Trash2 size={14} />
+            </button>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
 // --- USERS VIEW (STATS) ---
 const UsersView = () => {
   const [activeTab, setActiveTab] = useState<'users' | 'stats'>('stats');
@@ -405,8 +514,6 @@ const UsersView = () => {
 
   const loadStats = async () => {
     setLoading(true);
-    // Fetch all login history to aggregate locally (Supabase free tier limitation on complex aggregation queries)
-    // For V1 this is acceptable. For V2 we should use a Postgres Function or View.
     const { data } = await supabase.from('login_history').select('user_id, role, condo_id');
 
     if (data) {
@@ -415,12 +522,9 @@ const UsersView = () => {
         counts[r.user_id] = (counts[r.user_id] || 0) + 1;
       });
 
-      // Get User Info
       const userIds = Object.keys(counts);
       const { data: profiles } = await supabase.from('profiles').select('id, name, avatar, role, condominium_id').in('id', userIds);
-
       const { data: condos } = await supabase.from('condominiums').select('id, name');
-
       const condoMap = condos?.reduce((acc: any, c: any) => ({ ...acc, [c.id]: c.name }), {}) || {};
 
       const ranked = profiles?.map((p: any) => ({
@@ -503,7 +607,7 @@ const UsersView = () => {
       )}
     </div>
   );
-}
+};
 
 // --- MAIN SUPER ADMIN COMPONENT ---
 export const SuperAdmin = () => {
@@ -522,6 +626,7 @@ export const SuperAdmin = () => {
           {activeTab === 'subscriptions' && <SubscriptionsView />}
           {activeTab === 'finance' && <FinanceView />}
           {activeTab === 'notifications' && <NotificationsView />}
+          {activeTab === 'guide' && <ProfessionalGuideView />}
         </div>
         <SuperAdminNavigation activeTab={history[0]} onChange={baseScreen} />
       </div>
@@ -535,6 +640,7 @@ const SuperAdminNavigation = ({ activeTab, onChange }: { activeTab: string, onCh
     { id: 'condos', icon: Building, label: 'Condos' },
     { id: 'users', icon: Users, label: 'Users' },
     { id: 'finance', icon: DollarSign, label: 'Finan.' },
+    { id: 'guide', icon: BookOpen, label: 'Guia' },
     { id: 'notifications', icon: Bell, label: 'Push' },
   ];
   return (

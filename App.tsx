@@ -113,7 +113,7 @@ const App: React.FC = () => {
         // CACHE ROBUSTO: Salva tudo, não só a role
         const fullProfile = {
           ...profile,
-          avatar: profile.avatar || `https://picsum.photos/seed/${profile.name}/150`,
+          avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`,
           role: role,
           name: profile.name || 'Morador'
         };
@@ -139,14 +139,36 @@ const App: React.FC = () => {
         }
 
         setAppState('main');
-        // Redirecionamento correto por Role
         if (role === UserRole.RESIDENT) {
           baseScreen('home');
         } else {
           baseScreen('dashboard');
         }
       } else {
-        setAppState('roleSelection');
+        // BLINDAGEM: Tenta recuperar do Metadata do Auth se o trigger falhou
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.raw_user_meta_data?.role) {
+          const metaRole = user.raw_user_meta_data.role as UserRole;
+          const metaName = user.raw_user_meta_data.full_name || user.email?.split('@')[0] || 'Usuário';
+
+          console.log('[App] Perfil não encontrado no DB, recuperando do Metadata:', { metaRole, metaName });
+
+          // Auto-repara o perfil no DB (Upsert)
+          await supabase.from('profiles').upsert({
+            id: userId,
+            email: user.email,
+            name: metaName,
+            role: metaRole,
+            is_free: true
+          });
+
+          setUserRole(metaRole);
+          setCurrentUser({ id: userId, name: metaName, role: metaRole, condo: 'Recuperado' });
+          setAppState('main');
+          baseScreen(metaRole === UserRole.RESIDENT ? 'home' : 'dashboard');
+        } else {
+          setAppState('roleSelection');
+        }
       }
     } catch (err) {
       console.error('Erro ao carregar perfil:', err);

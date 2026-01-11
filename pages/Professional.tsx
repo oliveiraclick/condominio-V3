@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Badge, Input } from '../components/UI';
 import {
   BarChart3, Calendar, MessageSquare, Bell,
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -195,6 +195,31 @@ export const ProfessionalDashboard: React.FC<{
   const [showNotifications, setShowNotifications] = useState(false);
   const [reviews, setReviews] = useState<any[]>([]);
   const [avgRating, setAvgRating] = useState(rating || '5.0');
+  const [guideCards, setGuideCards] = useState<any[]>([]);
+  const [loadingGuide, setLoadingGuide] = useState(false);
+  const [isOnSite, setIsOnSite] = useState(currentUser?.is_on_site || false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const handleScrollCarousel = (direction: 'left' | 'right') => {
+    if (carouselRef.current) {
+      const scrollAmount = 240;
+      carouselRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      });
+    }
+  };
+
+  useEffect(() => {
+    loadGuideCards();
+  }, []);
+
+  const loadGuideCards = async () => {
+    setLoadingGuide(true);
+    const { data } = await supabase.from('pro_guide_cards').select('*').eq('active', true).order('sort_order', { ascending: true });
+    if (data) setGuideCards(data);
+    setLoadingGuide(false);
+  };
 
   useEffect(() => {
     if (activeTab === 'reviews' && currentUser?.id) {
@@ -211,6 +236,10 @@ export const ProfessionalDashboard: React.FC<{
         });
     }
   }, [activeTab, currentUser]);
+
+  useEffect(() => {
+    setIsOnSite(currentUser?.is_on_site || false);
+  }, [currentUser?.is_on_site]);
 
   // --- CALCULATIONS ---
   const totalEarnings = completedServices.reduce((acc, curr) => acc + (curr.price || 0), 0);
@@ -262,48 +291,59 @@ export const ProfessionalDashboard: React.FC<{
 
       <div className="p-6">
         {/* Header */}
-        <div className="flex justify-between items-center mb-8 pt-4">
+        {/* Status Dashboard Header */}
+        <div className="flex justify-between items-center mb-6 pt-4">
           <div className="flex items-center gap-4">
-            <div className="w-14 h-14 rounded-2xl bg-violet-600 border-4 border-white shadow-xl overflow-hidden">
-              <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" alt="Pro" />
+            <div className="w-16 h-16 rounded-[24px] bg-white border-2 border-slate-100 shadow-xl overflow-hidden p-1">
+              <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover rounded-[18px]" alt="Pro" />
             </div>
             <div>
               <div className="flex items-center gap-1">
-                <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest">Painel Profissional</p>
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">Painel Pro Prestador</p>
                 {currentUser?.is_verified && <Badge variant="secondary" className="bg-blue-100 text-blue-600 text-[8px] h-4 px-1"><ShieldCheck size={8} className="mr-0.5" /> Verificado</Badge>}
               </div>
-              <h2 className="font-black text-slate-950 italic tracking-tighter text-xl leading-none">{currentUser?.name || "Prestador"}</h2>
+              <h2 className="font-black text-slate-950 italic tracking-tighter text-2xl leading-none">{currentUser?.name || "Prestador"}</h2>
             </div>
           </div>
 
-          <div className="flex items-center gap-3">
-            {/* STATUS TOGGLE */}
-            <div className="flex flex-col items-end mr-2">
-              <span className="text-[8px] font-bold text-slate-400 uppercase tracking-widest mb-1">Status Local</span>
-              <button
-                onClick={async () => {
-                  const newState = !currentUser?.is_on_site;
-                  // Optimistic update (would need actual state update from parent or re-fetch)
-                  // For now assuming parent 'onUpdateRequest' might not cover profile, so we call supabase directly here or pass a callback
-                  try {
-                    const { error } = await supabase.from('profiles').update({ is_on_site: newState }).eq('id', currentUser.id);
-                    if (!error) {
-                      alert(newState ? "Você está visível como 'No Condomínio'!" : "Status alterado para 'Fora do Condomínio'.");
-                      window.location.reload(); // Simple reload to refresh context for now
-                    }
-                  } catch (e) { console.error(e); }
-                }}
-                className={`w-12 h-6 rounded-full transition-colors flex items-center px-1 ${currentUser?.is_on_site ? 'bg-emerald-500' : 'bg-slate-200'}`}
-              >
-                <div className={`w-4 h-4 rounded-full bg-white shadow-sm transition-transform ${currentUser?.is_on_site ? 'translate-x-6' : 'translate-x-0'}`}></div>
-              </button>
-            </div>
+          <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform relative">
+            <Bell size={22} />
+            <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+          </button>
+        </div>
 
-            <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform relative">
-              <Bell size={22} />
-              <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
-            </button>
+        {/* VISIBILIDADE EM DESTAQUE (PROMOTED) */}
+        <div className={`mb-8 p-6 rounded-[32px] border-2 transition-all flex items-center justify-between shadow-lg ${isOnSite ? 'bg-emerald-50 border-emerald-200' : 'bg-white border-slate-100'}`}>
+          <div className="flex items-center gap-4">
+            <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${isOnSite ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'bg-slate-100 text-slate-400'}`}>
+              <Zap size={24} className={isOnSite ? 'animate-pulse' : ''} />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-0.5">Status Presencial</p>
+              <h4 className={`font-black uppercase text-xs italic ${isOnSite ? 'text-emerald-700' : 'text-slate-900'}`}>
+                {isOnSite ? 'Você está No Condomínio!' : 'Você está no Condomínio agora?'}
+              </h4>
+            </div>
           </div>
+          <button
+            onClick={async () => {
+              const newState = !isOnSite;
+              setIsOnSite(newState); // Instant UI feedback
+              try {
+                const { error } = await supabase.from('profiles').update({ is_on_site: newState }).eq('id', currentUser.id);
+                if (error) {
+                  setIsOnSite(!newState); // Rollback on error
+                  console.error('Erro ao atualizar status:', error);
+                }
+              } catch (e) {
+                setIsOnSite(!newState); // Rollback on catch
+                console.error(e);
+              }
+            }}
+            className={`w-14 h-8 rounded-full transition-all flex items-center px-1.5 ${isOnSite ? 'bg-emerald-500' : 'bg-slate-200'}`}
+          >
+            <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${isOnSite ? 'translate-x-6' : 'translate-x-0'}`}></div>
+          </button>
         </div>
 
         {/* Trial Banner */}
@@ -320,143 +360,138 @@ export const ProfessionalDashboard: React.FC<{
           </div>
         )}
 
-        {/* QUICK ACCESS (NEW) */}
+        {/* PERFORMANCE SECTION */}
         <div className="mb-6">
-          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest mb-4 ml-1">Acesso Rápido</h3>
+          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest mb-4 ml-1">Performance (Últimos 30 dias)</h3>
           <div className="grid grid-cols-2 gap-3">
+            <div className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Perfil Visto</p>
+              <div className="flex items-end gap-2">
+                <span className="text-2xl font-black text-slate-900 italic tracking-tighter">142</span>
+                <span className="text-[10px] text-emerald-500 font-bold mb-1">+12%</span>
+              </div>
+            </div>
+            <div className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm">
+              <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliques Whats</p>
+              <div className="flex items-end gap-2">
+                <span className="text-2xl font-black text-slate-900 italic tracking-tighter">48</span>
+                <span className="text-[10px] text-emerald-500 font-bold mb-1">+5%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* GUIA DO PRESTADOR (DYNAMIC) */}
+        <div className="mb-8 relative group">
+          <div className="flex items-center justify-between mb-3 px-1">
+            <h3 className="font-bold text-slate-900 uppercase text-[10px] tracking-widest">Guia do Prestador</h3>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleScrollCarousel('left')}
+                className="w-8 h-8 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 hover:text-slate-900 active:scale-90 transition-all"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                onClick={() => handleScrollCarousel('right')}
+                className="w-8 h-8 rounded-full bg-white border border-slate-100 shadow-sm flex items-center justify-center text-slate-400 hover:text-slate-900 active:scale-90 transition-all"
+              >
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={carouselRef}
+            className="flex gap-3 overflow-x-auto no-scrollbar pb-2 scroll-smooth"
+          >
+            {loadingGuide ? (
+              <div className="flex-1 flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-slate-200 border-t-violet-600 rounded-full animate-spin"></div>
+              </div>
+            ) : guideCards.length > 0 ? (
+              guideCards.map((card) => {
+                const Icons: any = { Zap, BadgePercent, Store, Briefcase, BookOpen, Star };
+                const IconComponent = Icons[card.icon_name] || BookOpen;
+
+                return (
+                  <div key={card.id} className={`min-w-[220px] ${card.bg_color || 'bg-white'} p-5 rounded-[32px] shadow-sm border border-slate-100 relative overflow-hidden transition-all hover:shadow-md`}>
+                    <div className={`w-8 h-8 ${card.icon_bg_color || 'bg-slate-100'} ${card.icon_color || 'text-slate-600'} rounded-xl flex items-center justify-center mb-3`}>
+                      <IconComponent size={16} />
+                    </div>
+                    <h4 className={`${card.text_color || 'text-slate-900'} font-black italic uppercase text-xs tracking-tight mb-2`}>{card.title}</h4>
+                    <p className="text-slate-400 text-[10px] leading-relaxed">{card.description}</p>
+                  </div>
+                );
+              })
+            ) : (
+              <div className="text-[10px] font-bold text-slate-300 uppercase py-4">Nenhuma dica disponível</div>
+            )}
+          </div>
+        </div>
+
+        {/* QUICK ACCESS */}
+        <div className="mb-10">
+          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest mb-4 ml-1">Gerenciamento</h3>
+          <div className="grid grid-cols-2 gap-4">
             <button
               onClick={() => onNavigate?.('services')}
-              className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-violet-200 group"
+              className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center gap-4 active:scale-95 transition-all group"
             >
-              <div className="w-12 h-12 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
-                <Briefcase size={22} />
+              <div className="w-14 h-14 bg-violet-50 text-violet-600 rounded-[22px] flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+                <Briefcase size={26} />
               </div>
               <div className="text-center">
-                <span className="block font-black text-slate-900 text-xs uppercase mb-0.5">Meus Serviços</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Gerenciar</span>
+                <span className="block font-black text-slate-900 text-sm uppercase mb-1">Meus Serviços</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ajustar Perfil</span>
               </div>
             </button>
 
             <button
               onClick={() => onNavigate?.('shop')}
-              className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center gap-3 active:scale-95 transition-all hover:border-violet-200 group"
+              className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center gap-4 active:scale-95 transition-all group"
             >
-              <div className="w-12 h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
-                <Store size={22} />
+              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[22px] flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                <Store size={26} />
               </div>
               <div className="text-center">
-                <span className="block font-black text-slate-900 text-xs uppercase mb-0.5">Minha Loja</span>
-                <span className="text-[9px] font-bold text-slate-400 uppercase">Gerenciar</span>
+                <span className="block font-black text-slate-900 text-sm uppercase mb-1">Minha Loja</span>
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Produtos E-Shop</span>
               </div>
             </button>
           </div>
         </div>
 
-        {/* DASHBOARD TABS */}
-        <div className="flex p-1 bg-white rounded-2xl mb-6 shadow-sm border border-slate-100">
-          <button onClick={() => setActiveTab('requests')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'requests' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}>Novos ({serviceRequests.length})</button>
-          <button onClick={() => setActiveTab('active')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'active' ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-400 hover:bg-slate-50'}`}>Agenda ({activeServices.length})</button>
-          <button onClick={() => setActiveTab('wallet')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'wallet' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30' : 'text-slate-400 hover:bg-slate-50'}`}>Carteira</button>
-          <button onClick={() => setActiveTab('reviews')} className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'bg-amber-400 text-white shadow-lg shadow-amber-400/30' : 'text-slate-400 hover:bg-slate-50'}`}>Reput.</button>
+        {/* DASHBOARD TABS (SIMPLIFIED TO REPUTATION & WALLET) */}
+        <div className="flex p-1.5 bg-white rounded-3xl mb-8 shadow-sm border border-slate-100">
+          <button onClick={() => setActiveTab('reviews')} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'reviews' ? 'bg-amber-400 text-white shadow-lg' : 'text-slate-400'}`}>Reputação</button>
+          <button onClick={() => setActiveTab('wallet')} className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'wallet' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400'}`}>Faturamento</button>
         </div>
 
         {/* CONTENT: WALLET */}
         {activeTab === 'wallet' && (
-          <div className="animate-in fade-in zoom-in duration-300 space-y-4">
-            <Card className="p-6 bg-slate-900 text-white border-none shadow-2xl shadow-slate-900/30 relative overflow-hidden">
-              <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-5 rounded-full -mr-10 -mt-10"></div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-1">Saldo Total (Estimado)</p>
-              <h2 className="text-4xl font-black tracking-tighter mb-4">R$ {totalEarnings.toFixed(2)}</h2>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-4">
+            <Card className="p-8 bg-slate-900 text-white border-none shadow-2xl relative overflow-hidden rounded-[40px]">
+              <div className="absolute top-0 right-0 w-40 h-40 bg-white opacity-5 rounded-full -mr-16 -mt-16"></div>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Faturamento via Plataforma</p>
+              <h2 className="text-5xl font-black tracking-tighter mb-4 italic">R$ {totalEarnings.toFixed(2)}</h2>
               <div className="flex gap-2">
-                <div className="px-3 py-1 bg-white/10 rounded-lg text-[10px] font-bold uppercase">{completedCount} Serviços Realizados</div>
+                <div className="px-4 py-1.5 bg-white/10 rounded-xl text-[10px] font-black uppercase tracking-widest">{completedCount} Serviços Finalizados</div>
               </div>
             </Card>
-            <h3 className="font-black italic text-slate-900 text-lg mt-6">Histórico Recente</h3>
-            {completedServices.length === 0 ? (
-              <p className="text-center text-xs text-slate-400 py-8">Nenhum serviço finalizado ainda.</p>
-            ) : (
-              completedServices.map((service, i) => (
-                <div key={i} className="bg-white p-4 rounded-3xl border border-slate-50 shadow-sm flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-slate-900 text-sm">{service.title || 'Serviço'}</h4>
-                    <p className="text-[10px] text-slate-400 font-bold uppercase">{new Date(service.date).toLocaleDateString()}</p>
-                  </div>
-                  <span className="text-emerald-600 font-black">+ R$ {service.price}</span>
-                </div>
-              ))
-            )}
           </div>
         )}
 
         {/* CONTENT: REVIEWS */}
         {activeTab === 'reviews' && (
-          <div className="animate-in fade-in zoom-in duration-300 space-y-4">
-            <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm text-center">
-              <h2 className="text-5xl font-black text-amber-500 tracking-tighter mb-2">{avgRating}</h2>
-              <div className="flex justify-center mb-2 text-amber-400 gap-1">
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300 space-y-4">
+            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm text-center">
+              <h2 className="text-6xl font-black text-amber-500 tracking-tighter mb-2 italic">{avgRating}</h2>
+              <div className="flex justify-center mb-3 text-amber-400 gap-1.5">
                 <StarRating rating={Math.round(parseFloat(avgRating))} />
               </div>
-              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{reviews.length} Avaliações</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">{reviews.length} Depoimentos</p>
             </div>
-
-            <h3 className="font-black italic text-slate-900 text-lg mt-6">Comentários</h3>
-            {reviews.map(review => (
-              <div key={review.id} className="bg-white p-5 rounded-3xl border border-slate-50 shadow-sm space-y-2">
-                <div className="flex justify-between items-start">
-                  <h4 className="font-bold text-slate-900 text-sm">{review.user}</h4>
-                  <span className="text-[10px] text-slate-300 font-bold uppercase">{review.date}</span>
-                </div>
-                <StarRating rating={review.rating} />
-                <p className="text-xs text-slate-500 leading-relaxed">"{review.comment}"</p>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {/* CONTENT: REQUESTS & ACTIVE (Keep logic) */}
-        {(activeTab === 'requests' || activeTab === 'active') && (
-          <div className="space-y-4 mt-6">
-            {activeTab === 'requests' && serviceRequests.length === 0 && (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><MessageSquare size={24} /></div>
-                <p className="text-slate-400 text-xs font-bold uppercase">Nenhum serviço pendente</p>
-              </div>
-            )}
-            {activeTab === 'active' && activeServices.length === 0 && (
-              <div className="text-center py-12">
-                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300"><Calendar size={24} /></div>
-                <p className="text-slate-400 text-xs font-bold uppercase">Agenda vazia</p>
-              </div>
-            )}
-
-            {(activeTab === 'requests' ? serviceRequests : activeServices).map((request) => (
-              <div key={request.id} className={`bg-white p-6 rounded-[32px] border shadow-sm relative overflow-hidden ${request.priority === 'urgent' ? 'border-rose-100' : 'border-slate-50'}`}>
-                {request.priority === 'urgent' && <div className="absolute top-0 right-0 bg-rose-500 text-white text-[9px] font-black uppercase px-3 py-1 rounded-bl-xl">Urgente</div>}
-                <div className="flex gap-4">
-                  <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center text-2xl">
-                    {request.type === 'manutencao' ? '🔧' : request.type === 'limpeza' ? '🧹' : '📦'}
-                  </div>
-                  <div>
-                    <h3 className="font-black text-slate-900 text-lg italic tracking-tight">{request.title}</h3>
-                    <p className="text-xs text-slate-500 font-medium mt-1 mb-4 leading-relaxed">{request.description}</p>
-                    <div className="bg-slate-50 rounded-xl p-3 flex items-center gap-3 mb-4">
-                      <Clock size={16} className="text-slate-400" />
-                      <span className="text-xs font-bold text-slate-600">{request.date} • {request.time}</span>
-                    </div>
-                    {activeTab === 'active' ? (
-                      <Button variant="secondary" className="w-full bg-emerald-50 text-emerald-600 border-emerald-100 h-10 font-black uppercase text-[10px]">
-                        <CheckCircle2 size={16} className="mr-2" /> Em Andamento
-                      </Button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button onClick={() => handleAction(request.id, 'reject')} variant="secondary" className="flex-1 bg-slate-100 text-slate-500 border-none font-black uppercase text-[10px] h-10">Recusar</Button>
-                        <Button onClick={() => handleAction(request.id, 'accept')} className="flex-1 bg-slate-900 text-white font-black uppercase text-[10px] h-10">Aceitar</Button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         )}
       </div>
