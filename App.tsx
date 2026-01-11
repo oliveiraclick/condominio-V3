@@ -229,6 +229,11 @@ const App: React.FC = () => {
     return () => subscription.unsubscribe();
   }, [fetchUserProfile]);
 
+  // --- 3. SCROLL RESET ON NAVIGATION ---
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [activeTab, selectedCategory]);
+
   // --- 4. CARREGAMENTO DE DADOS ---
   const refreshAppData = useCallback(async () => {
     if (appState !== 'main' || !session) return;

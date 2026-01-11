@@ -25,7 +25,7 @@ const FloatingBackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
 
   useEffect(() => {
     const handleScroll = () => {
-      setShow(window.scrollY > 300);
+      setShow(window.scrollY > 100);
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
@@ -888,14 +888,13 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Aproximado</p>
                     <p className="font-black text-slate-900 text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
                   </div>
-                  <div className="flex gap-2">
-                    <button onClick={() => openWhatsApp(pro.providerPhone)} className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center active:scale-95 transition-all hover:bg-emerald-100 border border-emerald-100">
-                      <MessageCircle size={24} />
-                    </button>
-                    <Button onClick={() => handleRequest(pro.providerName, pro.provider_id)} className="h-12 px-6 rounded-2xl bg-slate-900 text-white font-black uppercase text-xs tracking-widest shadow-lg shadow-black/10 active:scale-95">
-                      Solicitar
-                    </Button>
-                  </div>
+                  <button
+                    onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone); }}
+                    className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black uppercase text-[10px] tracking-[0.2em] rounded-[22px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                  >
+                    <MessageCircle size={20} className="text-slate-950" />
+                    Fale Comigo
+                  </button>
                 </div>
               </Card>
             )) : (
