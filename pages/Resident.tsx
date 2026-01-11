@@ -890,10 +890,10 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   </div>
                   <button
                     onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone); }}
-                    className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-black uppercase text-[10px] tracking-[0.2em] rounded-[22px] shadow-lg shadow-emerald-500/20 active:scale-95 transition-all flex items-center justify-center gap-3"
+                    className="flex-1 h-14 bg-[#b0ff0c] hover:opacity-90 text-slate-950 font-black uppercase text-[10px] tracking-[0.2em] rounded-[22px] shadow-lg shadow-[#b0ff0c]/20 active:scale-95 transition-all flex items-center justify-center gap-3"
                   >
                     <MessageCircle size={20} className="text-slate-950" />
-                    Fale Comigo
+                    Fale no WhatsApp
                   </button>
                 </div>
               </Card>
