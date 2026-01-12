@@ -344,6 +344,10 @@ export const ResidentHome: React.FC<{
   const [homeSearch, setHomeSearch] = useState('');
   const [muralOpen, setMuralOpen] = useState(false);
 
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   const handleHomeSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && homeSearch.trim()) {
       onSelectCategory('Todos', homeSearch.trim());
@@ -431,32 +435,34 @@ export const ResidentHome: React.FC<{
 
       <div className="p-6 space-y-12">
         {/* MURAL DE DEMANDAS INTRO */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[44px] p-8 text-white shadow-2xl relative overflow-hidden group">
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[32px] md:rounded-[44px] p-6 md:p-8 text-white shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/20 blur-3xl group-hover:bg-violet-600/30 transition-all"></div>
-          <div className="relative z-10 flex items-center justify-between gap-6">
+          <div className="relative z-10 flex items-center justify-between gap-4 md:gap-6">
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-3">
                 <Megaphone size={16} className="text-violet-400" />
                 <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">Mural de Oportunidades</span>
               </div>
-              <h3 className="font-black text-2xl tracking-tighter leading-none italic mb-2">Não encontrou o que procurava?</h3>
+              <h3 className="font-black text-xl md:text-2xl tracking-tighter leading-none italic mb-2">Não encontrou o que procurava?</h3>
               <p className="text-slate-400 text-xs leading-relaxed max-w-[200px]">Publique no Mural e deixe os profissionais virem até você!</p>
             </div>
-            <button
-              onClick={() => onNavigate('minhas-demandas')}
-              className="w-16 h-16 bg-slate-800 border border-slate-700 rounded-[28px] flex flex-col items-center justify-center shadow-xl active:scale-90 transition-all relative overflow-hidden group/btn"
-            >
-              <Megaphone size={20} className="text-violet-400 mb-1 group-hover/btn:scale-110 transition-transform" />
-              <span className="text-[7px] font-black uppercase text-slate-400">Ver Minhas</span>
-              {/* Badge Dinâmico (Sinalização de Propostas) */}
-              <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-            </button>
-            <button
-              onClick={() => setMuralOpen(true)}
-              className="w-16 h-16 bg-violet-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-violet-600/40 active:scale-90 transition-all"
-            >
-              <Plus size={32} className="text-white" />
-            </button>
+            <div className="flex flex-col gap-3 shrink-0">
+              <button
+                onClick={() => onNavigate('minhas-demandas')}
+                className="w-14 h-14 md:w-16 md:h-16 bg-slate-800 border border-slate-700 rounded-[24px] md:rounded-[28px] flex flex-col items-center justify-center shadow-xl active:scale-90 transition-all relative overflow-hidden group/btn"
+              >
+                <Megaphone size={20} className="text-violet-400 mb-1 group-hover/btn:scale-110 transition-transform" />
+                <span className="text-[7px] font-black uppercase text-slate-400 leading-none text-center px-1">Ver Minhas</span>
+                {/* Badge Dinâmico (Sinalização de Propostas) */}
+                <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+              </button>
+              <button
+                onClick={() => setMuralOpen(true)}
+                className="w-14 h-14 md:w-16 md:h-16 bg-violet-600 rounded-[24px] md:rounded-[28px] flex items-center justify-center shadow-xl shadow-violet-600/40 active:scale-90 transition-all"
+              >
+                <Plus size={28} className="text-white md:w-8 md:h-8" />
+              </button>
+            </div>
           </div>
         </div>
 
