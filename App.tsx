@@ -1,17 +1,18 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from './types';
 import { supabase } from './supabase';
+import { ToastProvider } from './components/UI';
 
 import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
 // Imports de Páginas e Componentes
 import { SplashScreen, LoginScreen, RoleSelection, ResidentRegistration, ProfessionalRegistration } from './pages/Auth';
 import { PrivacyPage } from './pages/Privacy';
 import {
-  ResidentHome, Marketplace, AppNavigation, AcessoPage,
-  FinanceiroPage, ChamadosPage, CondoAgendaPage, ServicosFullView,
-  DesapegoFullView, ResidentProfile, ResidentBookings, CreateDesapegoPage,
-  AssembliesPage, ShopDetailPage, DesapegoDetailView, ProductDetailPage,
-  PersonalDataPage
+  ResidentHome, Marketplace, AppNavigation, AcessoPage, FinanceiroPage, ChamadosPage,
+  FloatingBackButton, SectionHeader, NotificationsModal, DesapegoCard, ResidentProfile,
+  ServicosFullView, MuralDemandModal, MinhasDemandasPage, ServiceRequestsPage, CondoAgendaPage,
+  ResidentBookings, AssembliesPage, ShopDetailPage, PersonalDataPage, ProductDetailPage,
+  DesapegoFullView, DesapegoDetailView, CreateDesapegoPage
 } from './pages/Resident';
 import { CommunicationHub } from './pages/CommunicationHub';
 import {
@@ -97,7 +98,7 @@ const App: React.FC = () => {
     if (!isSilent) setLoading(true);
 
     // Timeout safeguard for Login Loop Protection
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 2500));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 8000));
 
     try {
       const fetchProfileOp = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
@@ -167,7 +168,35 @@ const App: React.FC = () => {
           setAppState('main');
           baseScreen(metaRole === UserRole.RESIDENT ? 'home' : 'dashboard');
         } else {
-          setAppState('roleSelection');
+          // --- EMERGENCY RECOVERY FOR EXISTING USERS WITHOUT METADATA ---
+          // If the user has a valid session but no profile and no metadata, we create a default profile.
+          // This fixes the "Login Loop" for legacy users or cleaned databases.
+
+          const email = user?.email || '';
+          const isDenys = email.includes('denys');
+          const forcedRole = isDenys ? UserRole.PROFESSIONAL : UserRole.RESIDENT; // Default to Resident for others
+          const forcedName = user?.user_metadata?.full_name || email.split('@')[0];
+
+          console.log('[App] RECOVERY: Creating default profile for', email);
+
+          await supabase.from('profiles').upsert({
+            id: userId,
+            email: email,
+            name: forcedName,
+            role: forcedRole,
+            is_free: true,
+            created_at: new Date().toISOString()
+          });
+
+          // Update Cache & State
+          const recoveredProfile = { id: userId, name: forcedName, role: forcedRole, condo: 'Recuperado' };
+          localStorage.setItem('userProfile_cache', JSON.stringify(recoveredProfile));
+          localStorage.setItem('userRole_cache', forcedRole);
+
+          setUserRole(forcedRole);
+          setCurrentUser(recoveredProfile);
+          setAppState('main');
+          baseScreen(forcedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
         }
       }
     } catch (err) {
@@ -277,7 +306,7 @@ const App: React.FC = () => {
         fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false })),
         fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
         fetchTable('categories', supabase.from('categories').select('*').order('name')),
-        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional')),
+        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString())),
         fetchTable('products', supabase.from('products').select('*').eq('available', true)),
         fetchTable('marketplace', supabase.from('marketplace').select('*')),
         fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar'))
@@ -432,6 +461,25 @@ const App: React.FC = () => {
     if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(error.message);
   };
 
+
+  const handlePostMuralDemand = async (category: string, description: string) => {
+    if (!session?.user) return;
+    const { error } = await supabase.from('service_demands').insert([{
+      resident_id: session.user.id,
+      category,
+      description,
+      status: 'open',
+      unit: currentUser?.unit,
+      tower: currentUser?.tower
+    }]);
+    if (!error) {
+      alert('Demanda publicada no Mural! Profissionais serão notificados.');
+      refreshAppData();
+    } else {
+      alert('Erro ao publicar: ' + error.message);
+    }
+  };
+
   const navigateToCategory = (category: string, search = '') => {
     setSelectedCategory(category);
     setSelectedSearch(search);
@@ -448,7 +496,7 @@ const App: React.FC = () => {
       if (userRole === UserRole.RESIDENT) {
         switch (activeTab) {
           case 'resident':
-          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} categories={categories} />;
+          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} />;
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
@@ -473,7 +521,8 @@ const App: React.FC = () => {
             const { error } = await supabase.from('reservations').insert([insertData]);
             if (!error) { refreshAppData(); } else { throw new Error(error.message); }
           }} />;
-          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} />;
+          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} currentUser={currentUser} />;
+          case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
 
@@ -484,7 +533,7 @@ const App: React.FC = () => {
           case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} />;
           case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
 
-          default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} categories={categories} onSitePros={onSitePros} />;
+          default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} />;
         }
       }
 
@@ -592,14 +641,16 @@ const App: React.FC = () => {
   const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
 
   return (
-    <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
-      {renderContent()}
-      {!isSubPage && userRole && (
-        userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={baseScreen} /> :
-          userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} /> :
-            userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
-      )}
-    </div>
+    <ToastProvider>
+      <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
+        {renderContent()}
+        {!isSubPage && userRole && (
+          userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={baseScreen} /> :
+            userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} /> :
+              userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
+        )}
+      </div>
+    </ToastProvider>
   );
 };
 

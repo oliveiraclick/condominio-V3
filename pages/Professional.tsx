@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Badge, Input } from '../components/UI';
+import { Card, Button, Badge, Input, useToast } from '../components/UI';
+import { MuralSkeleton, LeadsSkeleton } from '../components/skeletons';
 import {
   BarChart3, Calendar, MessageSquare, Bell,
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2,
+  Megaphone, MessageCircle, UserCheck,
   LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star
 } from 'lucide-react';
 import { supabase } from '../supabase';
@@ -177,6 +179,333 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
   );
 };
 
+const ProposalModal: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  demand: any;
+  currentUser: any;
+  onSubmit: () => void;
+}> = ({ isOpen, onClose, demand, currentUser, onSubmit }) => {
+  const [price, setPrice] = useState('');
+  const [message, setMessage] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleSubmit = async () => {
+    if (!message) {
+      alert('Por favor, escreva uma mensagem para sua proposta.');
+      return;
+    }
+    setLoading(true);
+    const { error } = await supabase.from('service_proposals').insert([{
+      demand_id: demand.id,
+      professional_id: currentUser.id,
+      price: price ? parseFloat(price) : null,
+      message,
+      status: 'pending'
+    }]);
+
+    if (!error) {
+      alert('Proposta enviada com sucesso!');
+      onSubmit();
+      onClose();
+    } else {
+      if (error.code === '23505') {
+        alert('Você já enviou uma proposta para esta demanda.');
+      } else {
+        alert('Erro ao enviar proposta: ' + error.message);
+      }
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-sm bg-white rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
+        <div className="text-center space-y-4">
+          <div className="w-16 h-16 bg-violet-100 text-violet-600 rounded-[24px] flex items-center justify-center mx-auto mb-2 shadow-lg shadow-violet-600/10">
+            <Megaphone size={32} />
+          </div>
+          <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Enviar Proposta</h3>
+          <p className="text-sm text-slate-500">Para: <span className="font-bold text-slate-900">{demand.profiles?.name}</span> • {demand.category}</p>
+
+          <div className="space-y-4 py-4">
+            <div className="text-left">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-1 block tracking-widest">Preço Sugerido (Opcional)</label>
+              <Input
+                type="number"
+                placeholder="R$ 0,00"
+                value={price}
+                onChange={(e) => setPrice(e.target.value)}
+                className="h-14 bg-slate-50 border-none rounded-2xl px-6 font-bold text-slate-900"
+              />
+            </div>
+            <div className="text-left">
+              <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-1 block tracking-widest">Sua Mensagem</label>
+              <textarea
+                placeholder="Explique como você pode ajudar..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                className="w-full h-32 bg-slate-50 border-none rounded-2xl p-6 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-violet-500/20 transition-all text-slate-600"
+              />
+            </div>
+          </div>
+
+          <Button
+            onClick={handleSubmit}
+            disabled={loading}
+            fullWidth
+            className="h-14 bg-violet-600 text-white font-black uppercase tracking-widest shadow-xl shadow-violet-600/30 active:scale-95 transition-all"
+          >
+            {loading ? 'Enviando...' : 'Confirmar Proposta'}
+          </Button>
+          <button onClick={onClose} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancelar</button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => {
+  const [demands, setDemands] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState<'my_category' | 'all'>('my_category');
+  const [selectedDemand, setSelectedDemand] = useState<any>(null);
+  const [proposalModalOpen, setProposalModalOpen] = useState(false);
+  const { showToast } = useToast();
+
+  const [myProposals, setMyProposals] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    loadDemands();
+    loadMyProposals();
+  }, [filter, currentUser]);
+
+  const loadMyProposals = async () => {
+    if (!currentUser?.id) return;
+    const { data } = await supabase.from('service_proposals').select('demand_id').eq('professional_id', currentUser.id);
+    if (data) {
+      setMyProposals(new Set(data.map(p => p.demand_id)));
+    }
+  };
+
+  const loadDemands = async () => {
+    setLoading(true);
+    let query = supabase
+      .from('service_demands')
+      .select('*, profiles:resident_id(name, avatar, phone)')
+      .eq('status', 'open')
+      .order('created_at', { ascending: false });
+
+    // STRICT FILTER: Only show demands from the professional's category
+    if (currentUser?.category) {
+      query = query.eq('category', currentUser.category);
+    } else {
+      // If no category is set, show nothing (or handle specially)
+      // For now, we'll let it show all but the UI will warn them
+      // actually, let's play safe and show nothing to encourage profile completion
+      setDemands([]);
+      setLoading(false);
+      return;
+    }
+
+    const { data } = await query;
+    if (data) setDemands(data);
+    setLoading(false);
+  };
+
+  const handleContact = (demand: any) => {
+    const phone = demand.profiles?.phone;
+    if (phone) {
+      const cleanPhone = phone.replace(/\D/g, '');
+      const message = encodeURIComponent(`Olá ${demand.profiles.name}, vi seu pedido de *${demand.category}* no Mural do condomínio e posso te ajudar!`);
+      window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
+    } else {
+      showToast('Telefone do morador não disponível.', 'error');
+    }
+  };
+
+  return (
+    <div className="space-y-4">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-1">Mural de Oportunidades</h3>
+        {currentUser?.category && (
+          <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-violet-600 text-white shadow-md shadow-violet-600/20">
+            {currentUser.category}
+          </span>
+        )}
+      </div>
+
+      {loading ? (
+        <MuralSkeleton />
+      ) : demands.length === 0 ? (
+        <div className="bg-white p-8 rounded-[24px] shadow-sm text-center">
+          <Megaphone size={24} className="text-slate-200 mx-auto mb-3" />
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">
+            {!currentUser?.category ? "Perfil Incompleto" : "Nenhuma oportunidade"}
+          </p>
+          <p className="text-slate-300 text-[10px] mt-1">
+            {!currentUser?.category
+              ? "Para ver demandas, atualize seu perfil com sua categoria de serviço."
+              : "Avise moradores que você está online!"}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {demands.map((demand, index) => {
+            const hasProposal = myProposals.has(demand.id);
+            return (
+              <div key={demand.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className={`bg-white p-5 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-right-4 fade-in ${hasProposal ? 'bg-violet-50/50 shadow-violet-100 ring-1 ring-violet-100' : 'bg-white'}`}>
+                <div className="flex items-start gap-4 mb-3">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 shrink-0">
+                    <img src={demand.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${demand.profiles?.name}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h4 className="font-black text-slate-900 text-sm italic leading-none">{demand.profiles?.name}</h4>
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-[9px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-2 py-0.5 rounded-full inline-block">{demand.category}</p>
+                          {hasProposal && (
+                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                              <Check size={8} /> Enviada
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <span className="text-[8px] font-bold text-slate-300 uppercase shrink-0">{new Date(demand.created_at).toLocaleDateString()}</span>
+                    </div>
+                  </div>
+                </div>
+                <p className="text-slate-600 text-xs leading-relaxed mb-4 italic">"{demand.description}"</p>
+
+                {hasProposal ? (
+                  <button
+                    disabled
+                    className="w-full h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest border border-emerald-100 cursor-not-allowed opacity-80"
+                  >
+                    <CheckCircle2 size={16} />
+                    Proposta Enviada
+                  </button>
+                ) : (
+                  <button
+                    onClick={() => {
+                      setSelectedDemand(demand);
+                      setProposalModalOpen(true);
+                    }}
+                    className="w-full h-12 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-violet-600 hover:text-white transition-all active:scale-95"
+                  >
+                    <Zap size={16} />
+                    Enviar Proposta
+                  </button>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {selectedDemand && (
+        <ProposalModal
+          isOpen={proposalModalOpen}
+          onClose={() => {
+            setProposalModalOpen(false);
+            setSelectedDemand(null);
+          }}
+          demand={selectedDemand}
+          currentUser={currentUser}
+          onSubmit={() => {
+            loadDemands();
+            loadMyProposals();
+          }}
+        />
+      )}
+    </div>
+  );
+};
+
+const LeadsCRM: React.FC<{ currentUser: any }> = ({ currentUser }) => {
+  const [leads, setLeads] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const { showToast } = useToast();
+
+  useEffect(() => {
+    loadLeads();
+  }, [currentUser]);
+
+  const loadLeads = async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+    const { data } = await supabase
+      .from('professional_leads')
+      .select('*, profiles:resident_id(name, avatar, unit, tower)')
+      .eq('professional_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (data) setLeads(data);
+    setLoading(false);
+  };
+
+  return (
+    <div className="space-y-6">
+      <div className="flex items-center justify-between mb-4">
+        <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-1">Meus Leads (CRM)</h3>
+        <button onClick={loadLeads} className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-colors">
+          <Zap size={16} />
+        </button>
+      </div>
+
+      {loading ? (
+        <LeadsSkeleton />
+      ) : leads.length === 0 ? (
+        <div className="bg-white p-12 rounded-[24px] shadow-sm text-center">
+          <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <UserCheck size={32} className="text-slate-200" />
+          </div>
+          <p className="text-slate-400 font-bold text-xs uppercase tracking-widest leading-relaxed">Nenhuma interação registrada ainda.</p>
+          <p className="text-slate-300 text-[10px] mt-2">Fique 'No Condomínio' para atrair mais clientes!</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {leads.map((lead, index) => {
+            const isAuction = lead.source === 'proposal_accepted';
+            return (
+              <div key={lead.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className="bg-white p-5 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4 animate-in slide-in-from-right-4 fade-in group bg-white ring-1 ring-slate-50 hover:ring-violet-100">
+                <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 shrink-0 relative">
+                  <img src={lead.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${lead.profiles?.name}`} className="w-full h-full object-cover" />
+                  <div className={`absolute bottom-0 inset-x-0 h-1 ${isAuction ? 'bg-violet-500' : 'bg-emerald-500'}`}></div>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h4 className="font-black text-slate-900 text-sm italic leading-none">{lead.profiles?.name}</h4>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">Unidade {lead.profiles?.unit || '---'} {lead.profiles?.tower || ''}</p>
+                    </div>
+                    <span className="text-[8px] font-bold text-slate-300 uppercase shrink-0">{new Date(lead.created_at).toLocaleDateString()}</span>
+                  </div>
+                  <div className="mt-2 flex items-center justify-between">
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isAuction ? 'bg-violet-50 text-violet-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                      {isAuction ? 'Leilão Vencido' : 'WhatsApp Direto'}
+                    </span>
+                    <button
+                      onClick={() => window.open(`https://wa.me/55${lead.profiles?.phone?.replace(/\D/g, '')}`, '_blank')}
+                      className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-emerald-50 hover:text-emerald-500 transition-colors"
+                    >
+                      <MessageSquare size={14} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // --- DASHBOARD DO PROFISSIONAL ---
 export const ProfessionalDashboard: React.FC<{
   serviceRequests?: any[];
@@ -199,6 +528,7 @@ export const ProfessionalDashboard: React.FC<{
   const [loadingGuide, setLoadingGuide] = useState(false);
   const [isOnSite, setIsOnSite] = useState(currentUser?.is_on_site || false);
   const carouselRef = useRef<HTMLDivElement>(null);
+  const { showToast } = useToast();
 
   const handleScrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -237,8 +567,13 @@ export const ProfessionalDashboard: React.FC<{
     }
   }, [activeTab, currentUser]);
 
+  const hasInteracted = useRef(false);
+
   useEffect(() => {
-    setIsOnSite(currentUser?.is_on_site || false);
+    // Only sync from prop if user hasn't interacted locally to avoid stale overwrites
+    if (!hasInteracted.current && currentUser?.is_on_site !== undefined) {
+      setIsOnSite(currentUser.is_on_site);
+    }
   }, [currentUser?.is_on_site]);
 
   // --- CALCULATIONS ---
@@ -280,7 +615,7 @@ export const ProfessionalDashboard: React.FC<{
   const handleAction = (id: number, action: 'accept' | 'reject') => {
     onUpdateRequest?.(id, action === 'accept' ? 'accepted' : 'rejected');
     if (action === 'accept') {
-      alert('Serviço aceito! O morador foi notificado em tempo real.');
+      showToast('Serviço aceito! O morador foi notificado.', 'success');
     }
   };
 
@@ -327,10 +662,15 @@ export const ProfessionalDashboard: React.FC<{
           </div>
           <button
             onClick={async () => {
+              hasInteracted.current = true; // Lock local state against stale props
               const newState = !isOnSite;
               setIsOnSite(newState); // Instant UI feedback
               try {
                 const { error } = await supabase.from('profiles').update({ is_on_site: newState }).eq('id', currentUser.id);
+
+                // NOTIFICAÇÃO AUTOMÁTICA (MARKETING HI-LOCAL)
+                // Gerada via Database Trigger "on_professional_online"
+
                 if (error) {
                   setIsOnSite(!newState); // Rollback on error
                   console.error('Erro ao atualizar status:', error);
@@ -366,10 +706,7 @@ export const ProfessionalDashboard: React.FC<{
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Perfil Visto</p>
-              <div className="flex items-end gap-2">
-                <span className="text-2xl font-black text-slate-900 italic tracking-tighter">142</span>
-                <span className="text-[10px] text-emerald-500 font-bold mb-1">+12%</span>
-              </div>
+              <span className="text-2xl font-black text-slate-900 italic tracking-tighter">{currentUser?.views_count || 0}</span>
             </div>
             <div className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm">
               <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Cliques Whats</p>
@@ -379,6 +716,11 @@ export const ProfessionalDashboard: React.FC<{
               </div>
             </div>
           </div>
+        </div>
+
+        {/* MURAL DE OPORTUNIDADES (NEW) */}
+        <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+          <MuralOpportunities currentUser={currentUser} />
         </div>
 
         {/* GUIA DO PRESTADOR (DYNAMIC) */}
@@ -494,6 +836,11 @@ export const ProfessionalDashboard: React.FC<{
             </div>
           </div>
         )}
+
+        {/* CRM DE LEADS (NEW) */}
+        <div className="mt-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+          <LeadsCRM currentUser={currentUser} />
+        </div>
       </div>
     </div>
   );

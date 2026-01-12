@@ -1,23 +1,133 @@
-import React from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { X, CheckCircle2, AlertCircle, Info, Loader2 } from 'lucide-react';
+
+// --- TOAST SYSTEM ---
+export type ToastType = 'success' | 'error' | 'info' | 'loading';
+
+interface Toast {
+  id: string;
+  message: string;
+  type: ToastType;
+  duration?: number;
+}
+
+interface ToastContextType {
+  showToast: (message: string, type: ToastType, duration?: number) => void;
+  hideToast: (id: string) => void;
+}
+
+const ToastContext = createContext<ToastContextType | undefined>(undefined);
+
+export const useToast = () => {
+  const context = useContext(ToastContext);
+  if (!context) {
+    throw new Error('useToast must be used within a ToastProvider');
+  }
+  return context;
+};
+
+export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [toasts, setToasts] = useState<Toast[]>([]);
+
+  const showToast = useCallback((message: string, type: ToastType, duration = 3000) => {
+    const id = Math.random().toString(36).substring(7);
+    setToasts((prev) => [...prev, { id, message, type, duration }]);
+
+    if (duration > 0) {
+      setTimeout(() => {
+        hideToast(id);
+      }, duration);
+    }
+  }, []);
+
+  const hideToast = useCallback((id: string) => {
+    setToasts((prev) => prev.filter((t) => t.id !== id));
+  }, []);
+
+  return (
+    <ToastContext.Provider value={{ showToast, hideToast }}>
+      {children}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-[100] flex flex-col items-center gap-2 w-full max-w-sm px-4 pointer-events-none">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`
+              pointer-events-auto
+              flex items-center gap-3 px-4 py-3 rounded-2xl shadow-2xl backdrop-blur-md
+              animate-in slide-in-from-bottom-5 fade-in duration-300
+              ${toast.type === 'success' ? 'bg-emerald-900/95 text-emerald-100 border border-emerald-500/30' : ''}
+              ${toast.type === 'error' ? 'bg-rose-900/95 text-rose-100 border border-rose-500/30' : ''}
+              ${toast.type === 'info' ? 'bg-slate-900/95 text-slate-100 border border-slate-700/30' : ''}
+              ${toast.type === 'loading' ? 'bg-slate-900/95 text-slate-100 border border-slate-700/30' : ''}
+            `}
+          >
+            {toast.type === 'success' && <CheckCircle2 size={18} className="text-emerald-400 shrink-0" />}
+            {toast.type === 'error' && <AlertCircle size={18} className="text-rose-400 shrink-0" />}
+            {toast.type === 'info' && <Info size={18} className="text-blue-400 shrink-0" />}
+            {toast.type === 'loading' && <Loader2 size={18} className="text-slate-400 animate-spin shrink-0" />}
+
+            <p className="text-xs font-bold leading-tight">{toast.message}</p>
+
+            <button
+              onClick={() => hideToast(toast.id)}
+              className="ml-auto p-1 hover:bg-white/10 rounded-full transition-colors"
+            >
+              <X size={14} className="opacity-60" />
+            </button>
+          </div>
+        ))}
+      </div>
+    </ToastContext.Provider>
+  );
+};
+
+// --- BASE COMPONENTS ---
+
+export const Card: React.FC<React.HTMLAttributes<HTMLDivElement>> = ({ className, children, ...props }) => {
+  return (
+    <div className={`bg-white rounded-[24px] shadow-sm border border-slate-100 ${className}`} {...props}>
+      {children}
+    </div>
+  );
+};
 
 interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
   fullWidth?: boolean;
+  isLoading?: boolean;
 }
 
 export const Button: React.FC<ButtonProps> = ({
-  children, variant = 'primary', fullWidth = false, className = '', ...props
+  className = '',
+  variant = 'primary',
+  fullWidth = false,
+  isLoading = false,
+  children,
+  disabled,
+  ...props
 }) => {
-  const baseStyles = 'px-8 py-4 rounded-[22px] font-bold uppercase tracking-[0.2em] text-[10px] transition-all duration-500 flex items-center justify-center gap-3 active:scale-[0.97]';
+  const baseStyles = "inline-flex items-center justify-center rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
+
   const variants = {
-    primary: 'bg-slate-950 text-white shadow-[0_20px_40px_-12px_rgba(0,0,0,0.3)] hover:shadow-slate-950/20',
-    secondary: 'bg-white border border-slate-100 text-slate-900 shadow-sm hover:bg-slate-50',
-    outline: 'border-[1.5px] border-slate-200 text-slate-900 hover:border-slate-950 hover:bg-slate-950 hover:text-white',
-    ghost: 'text-slate-500 hover:text-slate-950 hover:bg-slate-50/50',
+    primary: "bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-600/20",
+    secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
+    outline: "border-2 border-slate-200 text-slate-600 hover:border-slate-300",
+    ghost: "text-slate-600 hover:bg-slate-50",
+    danger: "bg-rose-50 text-rose-600 hover:bg-rose-100"
   };
 
   return (
-    <button className={`${baseStyles} ${variants[variant]} ${fullWidth ? 'w-full' : ''} ${className}`} {...props}>
+    <button
+      className={`
+        ${baseStyles} 
+        ${variants[variant]} 
+        ${fullWidth ? 'w-full' : ''} 
+        ${className}
+      `}
+      disabled={disabled || isLoading}
+      {...props}
+    >
+      {isLoading ? <Loader2 size={18} className="animate-spin mr-2" /> : null}
       {children}
     </button>
   );
@@ -26,23 +136,20 @@ export const Button: React.FC<ButtonProps> = ({
 export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className = '', ...props }) => {
   return (
     <input
-      className={`w-full bg-slate-50/50 border-[1.5px] border-slate-100 rounded-[22px] px-6 py-5 text-sm font-medium text-slate-900 placeholder:text-slate-300 focus:outline-none focus:bg-white focus:border-slate-950 focus:ring-4 focus:ring-slate-950/5 transition-all duration-300 ${className}`}
+      className={`
+        w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 
+        text-sm font-medium text-slate-900 placeholder:text-slate-400
+        outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all
+        ${className}
+      `}
       {...props}
     />
   );
 };
 
-export const Card: React.FC<{ children: React.ReactNode; className?: string }> = ({ children, className = '' }) => {
+export const Badge: React.FC<React.HTMLAttributes<HTMLSpanElement>> = ({ className = '', children, ...props }) => {
   return (
-    <div className={`bg-white border border-slate-50 shadow-[0_20px_40px_rgba(0,0,0,0.03)] rounded-[40px] p-8 transition-all duration-500 hover:shadow-slate-900/5 ${className}`}>
-      {children}
-    </div>
-  );
-};
-
-export const Badge: React.FC<{ children: React.ReactNode; color?: string }> = ({ children, color = 'bg-slate-900 text-white' }) => {
-  return (
-    <span className={`px-4 py-1.5 rounded-full text-[9px] font-black uppercase tracking-[0.2em] ${color}`}>
+    <span className={`inline-flex items-center justify-center rounded-full font-black uppercase tracking-wider ${className}`} {...props}>
       {children}
     </span>
   );

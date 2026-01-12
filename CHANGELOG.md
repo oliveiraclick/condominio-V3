@@ -4,6 +4,11 @@
 ### Fixed
 - **E-Shop & Desapego & Fornecedores**: Garantindo a exibição dos cadastros no domínio morador.app.
 - **Version Consistency**: Sincronização de versão para v1.7.2 em todo o projeto.
+### Added (Visual Polish)
+- **Toast Notifications**: Substituídos alertas nativos por sistema de Toasts (popups) elegantes.
+- **Skeleton Loaders**: Adicionado carregamento esqueleto para Mural e Leads (aspecto premium).
+- **Staggered Animations**: Itens de lista agora entram em cascata suave.
+- **Clean UI**: Layout do Profissional atualizado para estilo "Clean & Floating" (sem bordas, sombras suaves, raio 24px) para paridade com o App Morador.
 
 ## [v1.7.1] - 2026-01-11
 ### Fixed

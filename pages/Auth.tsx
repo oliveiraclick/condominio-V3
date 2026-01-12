@@ -4,7 +4,7 @@ import {
   Mail, Lock, ArrowLeft, Building2,
   UserCircle, ShieldCheck, User, IdCard, Phone as PhoneIcon,
   MapPin, Heart, Baby, Plus, Trash2, Camera, FileText, Check,
-  Zap, GraduationCap, Briefcase
+  Zap, GraduationCap, Briefcase, LogOut
 } from 'lucide-react';
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
@@ -602,6 +602,10 @@ export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBac
             <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Sou Profissional</h3>
             <p className="text-slate-500 text-xs">Gerencie seus serviços e clientes.</p>
           </div>
+        </button>
+        <button onClick={async () => { await supabase.auth.signOut(); window.location.reload(); }} className="w-full p-4 mt-8 rounded-2xl flex items-center justify-center gap-2 text-rose-500 font-bold uppercase text-xs tracking-widest hover:bg-rose-50 transition-colors">
+          <LogOut size={16} />
+          Sair da Conta
         </button>
       </div>
     </div>

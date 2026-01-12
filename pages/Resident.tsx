@@ -20,7 +20,7 @@ import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
 
 // --- COMPONENTES DE APOIO ---
-const FloatingBackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
+export const FloatingBackButton: React.FC<{ onClick: () => void; visible?: boolean }> = ({ onClick, visible = true }) => {
   const [show, setShow] = useState(false);
 
   useEffect(() => {
@@ -37,7 +37,7 @@ const FloatingBackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
         e.stopPropagation();
         onClick();
       }}
-      className={`fixed bottom-24 right-6 w-14 h-14 bg-violet-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 transition-all duration-300 transform ${show ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
+      className={`fixed bottom-24 right-6 w-14 h-14 bg-violet-600 text-white rounded-full shadow-2xl flex items-center justify-center z-50 transition-all duration-300 transform ${show && visible ? 'scale-100 opacity-100' : 'scale-0 opacity-0 pointer-events-none'
         } active:scale-95 hover:bg-violet-700 active:bg-violet-800`}
     >
       <ArrowLeft size={24} />
@@ -45,19 +45,19 @@ const FloatingBackButton: React.FC<{ onClick: () => void }> = ({ onClick }) => {
   );
 };
 
-const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () => void }> = ({ title, action, onAction }) => (
+export const SectionHeader: React.FC<{ title: string; onAction?: () => void; actionLabel?: string }> = ({ title, onAction, actionLabel }) => (
   <div className="flex justify-between items-end mb-6 px-1">
     <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">{title}</h3>
-    {action && (
+    {actionLabel && (
       <button onClick={onAction} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all">
-        {action}
+        {actionLabel}
       </button>
     )}
   </div>
 );
 
 // --- NOTIFICATIONS MODAL ---
-const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userRole: string }> = ({ isOpen, onClose, userRole }) => {
+export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any }> = ({ isOpen, onClose, currentUser }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,7 +72,9 @@ const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userR
     const { data, error } = await supabase
       .from('sent_notifications')
       .select('*')
-      .or(`target_role.eq.all,target_role.eq.${userRole}`)
+      .or(`target_role.eq.all,target_role.eq.${currentUser.role}`)
+      // NEW: Filter by global (null) or user's condominium
+      .or(`condominium_id.is.null,condominium_id.eq.${currentUser.condominium_id}`)
       .order('created_at', { ascending: false })
       .limit(50);
 
@@ -166,36 +168,78 @@ const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userR
   );
 };
 
-const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: string) => void; variant?: 'preview' | 'detail'; onSelect?: () => void }> = ({ item, currentUser, onDelete, variant = 'preview', onSelect }) => {
-  const isOwner = currentUser?.name === item.user;
+export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; onPost: (category: string, description: string) => void; categories: string[] }> = ({ isOpen, onClose, onPost, categories }) => {
+  const [category, setCategory] = useState('');
+  const [description, setDescription] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleInterest = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (variant === 'preview' && onSelect) {
-      onSelect();
+  const handleSubmit = async () => {
+    if (!category || !description) {
+      alert('Por favor, preencha todos os campos.');
       return;
     }
 
-    if (item.phone) {
-      const cleanPhone = item.phone.replace(/\D/g, '');
-      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.name}* no app do condomínio e tenho interesse!`);
-      window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
-    } else {
-      alert('Telefone do vendedor não disponível.');
-    }
+    setLoading(true);
+    await onPost(category, description);
+    setLoading(false);
+    onClose();
+    setCategory('');
+    setDescription('');
   };
 
-  const handleDelete = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (onDelete && confirm('Tem certeza que deseja remover este anúncio?')) {
-      onDelete(item.id);
-    }
-  };
+  if (!isOpen) return null;
 
   return (
+    <div className="fixed inset-0 z-50 flex items-end justify-center animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-md bg-white rounded-t-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-12">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Publicar no Mural</h2>
+          <button onClick={onClose} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all">
+            <X size={20} className="text-slate-600" />
+          </button>
+        </div>
+
+        <div className="space-y-6">
+          <div>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">O que você precisa?</label>
+            <div className="grid grid-cols-2 gap-2">
+              {categories.map(cat => (
+                <button
+                  key={cat}
+                  onClick={() => setCategory(cat)}
+                  className={`py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all border ${category === cat ? 'bg-violet-600 text-white border-violet-600' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                >
+                  {cat}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Dê mais detalhes</label>
+            <textarea
+              className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+              placeholder="Ex: Preciso consertar uma torneira na cozinha amanhã de manhã..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+
+          <Button fullWidth className="bg-slate-950 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs" onClick={handleSubmit} loading={loading}>
+            Publicar Agora
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ item, onClick }) => {
+  return (
     <Card
-      onClick={() => onSelect && onSelect()}
-      className={`p-0 overflow-hidden border-none shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group transition-all ${onSelect ? 'cursor-pointer active:scale-[0.98]' : ''}`}
+      onClick={onClick}
+      className={`p-0 overflow-hidden border-none shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group transition-all cursor-pointer active:scale-[0.98]`}
     >
       <div className="relative h-72 p-5">
         <img src={item.img} className="w-full h-full object-cover rounded-[32px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
@@ -218,23 +262,13 @@ const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: str
           </div>
         </div>
 
-        {isOwner ? (
-          <button
-            onClick={handleDelete}
-            className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] bg-rose-50 text-rose-500 flex items-center justify-center gap-2 hover:bg-rose-100 transition-colors"
-          >
-            <Trash2 size={16} />
-            Remover Anúncio
-          </button>
-        ) : (
-          <button
-            onClick={handleInterest}
-            className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
-          >
-            <MessageSquare size={16} />
-            {variant === 'preview' ? 'Ver Detalhes' : 'Tenho Interesse'}
-          </button>
-        )}
+        <button
+          onClick={onClick}
+          className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
+        >
+          <MessageSquare size={16} />
+          Ver Detalhes
+        </button>
       </div>
     </Card>
   );
@@ -242,7 +276,7 @@ const DesapegoCard: React.FC<{ item: any; currentUser?: any; onDelete?: (id: str
 
 // --- HOME DO MORADOR ---
 // --- REVIEW MODAL ---
-const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (rating: number, comment: string) => void; proName: string }> = ({ isOpen, onClose, onSubmit, proName }) => {
+export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (rating: number, comment: string) => void; proName: string }> = ({ isOpen, onClose, onSubmit, proName }) => {
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
 
@@ -286,7 +320,7 @@ const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSubmit: (r
 
 export const ResidentHome: React.FC<{
   onNavigate: (target: string) => void;
-  onSelectCategory: (cat: string) => void;
+  onSelectCategory: (cat: string, search?: string) => void;
   packages: any[];
   setPackages: (pkgs: any[]) => void;
   desapegos: any[];
@@ -299,13 +333,16 @@ export const ResidentHome: React.FC<{
   products?: any[];
   onSelectProduct?: (item: any) => void;
   onSitePros?: any[];
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [] }) => {
+  onPostMuralDemand: (category: string, description: string) => void;
+  muralCategories: string[];
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
   const [reviewModalOpen, setReviewModalOpen] = useState(false);
   const [selectedRequestToReview, setSelectedRequestToReview] = useState<any>(null);
   const [homeSearch, setHomeSearch] = useState('');
+  const [muralOpen, setMuralOpen] = useState(false);
 
   const handleHomeSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && homeSearch.trim()) {
@@ -344,18 +381,7 @@ export const ResidentHome: React.FC<{
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32 relative">
-      {/* HEADER: ON-SITE BANNER */}
-      {onSitePros.length > 0 && (
-        <div onClick={() => onSelectCategory('Todos')} className="bg-gradient-to-r from-amber-500 via-orange-500 to-amber-500 animate-gradient-x text-white py-3 px-6 shadow-lg cursor-pointer sticky top-0 z-50 flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="w-2 h-2 rounded-full bg-white animate-pulse"></div>
-            <span className="text-xs font-black uppercase tracking-widest">{onSitePros.length} Prestador{onSitePros.length > 1 ? 'es' : ''} no condomínio agora!</span>
-          </div>
-          <div className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest opacity-90">
-            Ver todos <ChevronRight size={12} />
-          </div>
-        </div>
-      )}
+      {/* HEADER: ON-SITE BANNER REMOVED AS REQUESTED */}
 
       {/* REVIEWS MODAL */}
       <ReviewModal
@@ -366,7 +392,10 @@ export const ResidentHome: React.FC<{
       />
 
       {/* NOTIFICATIONS MODAL */}
-      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} userRole="resident" />
+      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} currentUser={currentUser} />
+
+      {/* MURAL MODAL */}
+      <MuralDemandModal isOpen={muralOpen} onClose={() => setMuralOpen(false)} onPost={onPostMuralDemand} categories={muralCategories} />
 
       {/* HEADER DINÂMICO */}
       <div className="bg-violet-600 p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-violet-500">
@@ -401,6 +430,36 @@ export const ResidentHome: React.FC<{
       </div>
 
       <div className="p-6 space-y-12">
+        {/* MURAL DE DEMANDAS INTRO */}
+        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[44px] p-8 text-white shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/20 blur-3xl group-hover:bg-violet-600/30 transition-all"></div>
+          <div className="relative z-10 flex items-center justify-between gap-6">
+            <div className="flex-1">
+              <div className="flex items-center gap-2 mb-3">
+                <Megaphone size={16} className="text-violet-400" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">Mural de Oportunidades</span>
+              </div>
+              <h3 className="font-black text-2xl tracking-tighter leading-none italic mb-2">Não encontrou o que procurava?</h3>
+              <p className="text-slate-400 text-xs leading-relaxed max-w-[200px]">Publique no Mural e deixe os profissionais virem até você!</p>
+            </div>
+            <button
+              onClick={() => onNavigate('minhas-demandas')}
+              className="w-16 h-16 bg-slate-800 border border-slate-700 rounded-[28px] flex flex-col items-center justify-center shadow-xl active:scale-90 transition-all relative overflow-hidden group/btn"
+            >
+              <Megaphone size={20} className="text-violet-400 mb-1 group-hover/btn:scale-110 transition-transform" />
+              <span className="text-[7px] font-black uppercase text-slate-400">Ver Minhas</span>
+              {/* Badge Dinâmico (Sinalização de Propostas) */}
+              <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+            </button>
+            <button
+              onClick={() => setMuralOpen(true)}
+              className="w-16 h-16 bg-violet-600 rounded-[28px] flex items-center justify-center shadow-xl shadow-violet-600/40 active:scale-90 transition-all"
+            >
+              <Plus size={32} className="text-white" />
+            </button>
+          </div>
+        </div>
+
         {/* PRESTADORES NO LOCAL (NEW) */}
         {onSitePros.length > 0 && (
           <div className="animate-in slide-in-from-left-4 duration-500">
@@ -419,9 +478,19 @@ export const ResidentHome: React.FC<{
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{pro.category || 'Prestador'}</p>
                     <h4 className="font-bold text-slate-900 text-xs leading-tight line-clamp-1">{pro.name}</h4>
                   </div>
-                  <button onClick={() => {
+                  <button onClick={async () => {
                     const cleanPhone = pro.phone?.replace(/\D/g, '');
-                    if (cleanPhone) window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+                    if (cleanPhone) {
+                      if (currentUser?.id) {
+                        await supabase.from('professional_leads').insert([{
+                          professional_id: pro.id,
+                          resident_id: currentUser.id,
+                          source: 'whatsapp_click',
+                          metadata: { origin: 'home_onsite_banner' }
+                        }]);
+                      }
+                      window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+                    }
                   }} className="mt-1 w-full py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-colors">
                     Chamar
                   </button>
@@ -491,7 +560,7 @@ export const ResidentHome: React.FC<{
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             {activeSection === 'gestao' ? (
               <div>
-                <SectionHeader title="Gestão Condomínio" action="Ver Todos" onAction={() => onNavigate('home')} />
+                <SectionHeader title="Gestão Condomínio" actionLabel="Ver Todos" onAction={() => onNavigate('home')} />
                 <div className="grid grid-cols-4 gap-3">
                   {[
                     { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
@@ -508,7 +577,7 @@ export const ResidentHome: React.FC<{
               </div>
             ) : (
               <div>
-                <SectionHeader title="Prestadores" action="Ver Todos" onAction={() => onSelectCategory('Todos')} />
+                <SectionHeader title="Prestadores" actionLabel="Ver Todos" onAction={() => onSelectCategory('Todos')} />
                 <div className="grid grid-cols-4 gap-3">
                   {[
                     { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
@@ -530,7 +599,7 @@ export const ResidentHome: React.FC<{
 
         {/* E-SHOP (Carousel Dinâmico) */}
         <div>
-          <SectionHeader title="e-Shop" action="Ver Todos" onAction={() => onNavigate('shop-detail')} />
+          <SectionHeader title="e-Shop" actionLabel="Ver Todos" onAction={() => onNavigate('shop-detail')} />
           {products.length > 0 ? (
             <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
               {products.map((item, i) => (
@@ -586,35 +655,41 @@ export const ResidentHome: React.FC<{
 
         {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
         <div>
-          <SectionHeader title="Mural do Desapego" action="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
+          <SectionHeader title="Mural do Desapego" actionLabel="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
 
           <div className="relative group">
             {desapegos.length > 0 && (
-              <div className="transform transition-all duration-300" onClick={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])}>
-                <DesapegoCard item={desapegos[currentDesapegoIndex]} currentUser={currentUser} variant="preview" onSelect={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])} />
+              <div className="transform transition-all duration-300">
+                <DesapegoCard item={desapegos[currentDesapegoIndex]} onClick={() => onSelectDesapego && onSelectDesapego(desapegos[currentDesapegoIndex])} />
               </div>
             )}
 
             {/* Navigation Arrows */}
-            <button
-              onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === 0 ? desapegos.length - 1 : prev - 1); }}
-              className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === desapegos.length - 1 ? 0 : prev + 1); }}
-              className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
-            >
-              <ChevronRight size={24} />
-            </button>
+            {desapegos.length > 1 && (
+              <>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === 0 ? desapegos.length - 1 : prev - 1); }}
+                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
+                >
+                  <ChevronLeft size={24} />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === desapegos.length - 1 ? 0 : prev + 1); }}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
+                >
+                  <ChevronRight size={24} />
+                </button>
+              </>
+            )}
 
             {/* Dots Indicator */}
-            <div className="flex justify-center gap-2 mt-6">
-              {desapegos.map((_, idx) => (
-                <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-violet-600' : 'w-2 bg-slate-200'}`} />
-              ))}
-            </div>
+            {desapegos.length > 1 && (
+              <div className="flex justify-center gap-2 mt-6">
+                {desapegos.map((_, idx) => (
+                  <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-violet-600' : 'w-2 bg-slate-200'}`} />
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -623,10 +698,39 @@ export const ResidentHome: React.FC<{
 };
 
 // --- PERFIL DO MORADOR ---
+// --- PERFIL DO MORADOR ---
 export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: string) => void }> = ({ currentUser, onNavigate }) => {
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploading, setUploading] = useState(false);
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    // No reload needed, onAuthStateChange in App.tsx handles the state switch
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    setUploading(true);
+    const file = e.target.files[0];
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${currentUser.id}-${Date.now()}.${fileExt}`;
+    const filePath = `${fileName}`;
+
+    try {
+      const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, file);
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
+
+      const { error: updateError } = await supabase.from('profiles').update({ avatar: publicUrl }).eq('id', currentUser.id);
+      if (updateError) throw updateError;
+
+      alert('Foto atualizada com sucesso!');
+      window.location.reload(); // Simple reload to refresh app state
+    } catch (error: any) {
+      alert('Erro ao atualizar foto: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
   };
 
   return (
@@ -634,11 +738,25 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
       <div className="h-64 bg-violet-600 relative flex items-end px-10 pb-10">
         <div className="absolute inset-0 bg-gradient-to-br from-violet-600 to-indigo-700"></div>
         <div className="relative z-10 flex items-center gap-6">
-          <div className="w-24 h-24 rounded-[30px] border-4 border-white bg-white overflow-hidden shadow-2xl">
-            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" />
+          <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+            <div className="w-24 h-24 rounded-[30px] border-4 border-white bg-white overflow-hidden shadow-2xl relative">
+              <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" />
+              {uploading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div></div>}
+            </div>
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-violet-600 border border-slate-50">
+              <Camera size={20} />
+            </div>
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={handleAvatarUpload}
+              disabled={uploading}
+            />
           </div>
           <div className="text-white">
-            <h2 className="text-3xl font-black italic tracking-tighter leading-none">{currentUser?.name || 'Morador'}</h2>
+            <h2 className="text-3xl font-black italic tracking-tighter leading-none italic">{currentUser?.name || 'Morador'}</h2>
             <p className="text-[10px] font-black uppercase tracking-widest opacity-70 mt-2">Unidade {currentUser?.unit || '---'}</p>
           </div>
         </div>
@@ -728,9 +846,22 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
   );
 };
 
-export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[] }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [] }) => {
+export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedPro, setSelectedPro] = useState<any>(null);
+
+  const handleProClick = async (pro: any) => {
+    setSelectedPro(pro);
+    try {
+      if (pro.provider_id || pro.id) {
+        await supabase.rpc('increment_profile_view', { profile_uuid: pro.provider_id || pro.id });
+      }
+    } catch (err) {
+      console.error('Error incrementing view:', err);
+    }
+  };
+
 
   // CATEGORY DEFINITIONS (Icons & Colors)
   const categoryConfig: any = {
@@ -788,10 +919,22 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
     alert(`Solicitação enviada para ${proName}!`);
   };
 
-  const openWhatsApp = (phone: string) => {
+  const openWhatsApp = async (phone: string, proId: string) => {
     const cleanPhone = phone?.replace(/\D/g, '');
-    if (cleanPhone) window.open(`https://wa.me/55${cleanPhone}`, '_blank');
-    else alert('Telefone não disponível');
+    if (cleanPhone) {
+      // Registrar Lead (CRM)
+      if (currentUser?.id) {
+        await supabase.from('professional_leads').insert([{
+          professional_id: proId,
+          resident_id: currentUser.id,
+          source: 'whatsapp_click',
+          metadata: { origin: 'servicos_full', category: activeCategory }
+        }]);
+      }
+      window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+    } else {
+      alert('Telefone não disponível');
+    }
   };
 
   // --- VIEW: CATEGORY GRID (When 'Todos' is Active AND no search term that forces a list) ---
@@ -854,7 +997,11 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {filteredPros.length > 0 ? filteredPros.map(pro => (
-              <Card key={pro.id} className="p-0 border-none shadow-xl shadow-slate-200/50 rounded-[40px] bg-white overflow-hidden group">
+              <Card
+                key={pro.id}
+                className="p-0 border-none shadow-xl shadow-slate-200/50 rounded-[40px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all active:scale-[0.98]"
+                onClick={() => handleProClick(pro)}
+              >
                 <div className="p-6 pb-0 flex items-start gap-5">
                   <div className="w-20 h-20 rounded-[28px] overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100">
                     <img src={pro.avatar || pro.img || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.providerName}`} className="w-full h-full object-cover" />
@@ -888,13 +1035,20 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Aproximado</p>
                     <p className="font-black text-slate-900 text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
                   </div>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone); }}
-                    className="flex-1 h-14 bg-[#b0ff0c] hover:opacity-90 text-slate-950 font-black uppercase text-[10px] tracking-[0.2em] rounded-[22px] shadow-lg shadow-[#b0ff0c]/20 active:scale-95 transition-all flex items-center justify-center gap-3"
-                  >
-                    <MessageCircle size={20} className="text-slate-950" />
-                    Fale no WhatsApp
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone, pro.id); }}
+                      className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-emerald-500 hover:text-white"
+                    >
+                      <Phone size={18} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRequest(pro.providerName, pro.id); }}
+                      className="w-10 h-10 bg-violet-50 text-violet-600 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-violet-600 hover:text-white"
+                    >
+                      <Zap size={18} />
+                    </button>
+                  </div>
                 </div>
               </Card>
             )) : (
@@ -912,6 +1066,88 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           </div>
         )}
       </div>
+
+      {/* PROFESSIONAL DETAIL MODAL */}
+      {selectedPro && (
+        <div className="fixed inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedPro(null)}></div>
+          <div className="relative w-full max-w-md bg-white rounded-t-[40px] shadow-2xl animate-in slide-in-from-bottom-10 duration-300 overflow-hidden max-h-[90vh] overflow-y-auto">
+            <div className="h-48 relative">
+              <div className="absolute inset-0 bg-violet-600"></div>
+              {selectedPro.photos?.[0] && <img src={selectedPro.photos[0]} className="w-full h-full object-cover opacity-50" />}
+              <button
+                onClick={() => setSelectedPro(null)}
+                className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/40 transition-colors z-20"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="px-8 pb-10 -mt-16 relative z-10">
+              <div className="w-28 h-28 rounded-[32px] border-4 border-white shadow-xl bg-white overflow-hidden mb-6 relative">
+                {selectedPro.is_on_site && (
+                  <div className="absolute top-2 right-2 w-4 h-4 bg-emerald-500 border-2 border-white rounded-full z-10 animate-pulse"></div>
+                )}
+                <img src={selectedPro.avatar || selectedPro.img || `https://api.dicebear.com/7.x/avataaars/svg?seed=${selectedPro.providerName}`} className="w-full h-full object-cover" />
+              </div>
+
+              <div className="flex justify-between items-start mb-6">
+                <div>
+                  <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
+                  <div className="flex items-center gap-2 mt-2">
+                    <Badge className="bg-violet-100 text-violet-700">{selectedPro.category}</Badge>
+                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condomínio!</Badge>}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="flex items-center gap-1 justify-end">
+                    <Star size={16} className="text-amber-400 fill-amber-400" />
+                    <span className="text-lg font-black text-slate-900">{selectedPro.rating || '4.8'}</span>
+                  </div>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avaliações</span>
+                </div>
+              </div>
+
+              <div className="space-y-6">
+                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                  <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Sobre o Profissional</h4>
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomínio.'}</p>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                    <Clock size={20} className="text-violet-500 mb-2" />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horário</p>
+                    <p className="font-bold text-slate-700">Seg - Sex, 08h-18h</p>
+                  </div>
+                  <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
+                    <MapPin size={20} className="text-violet-500 mb-2" />
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atende</p>
+                    <p className="font-bold text-slate-700">Todas as Torres</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-4 border-t border-slate-100">
+                  <Button
+                    fullWidth
+                    className="h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-500/20"
+                    onClick={() => openWhatsApp(selectedPro.providerPhone, selectedPro.id)}
+                  >
+                    <Phone className="mr-2" size={18} /> WhatsApp
+                  </Button>
+                  <Button
+                    fullWidth
+                    className="h-14 bg-violet-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-violet-600/20"
+                    onClick={() => handleRequest(selectedPro.providerName, selectedPro.id)}
+                  >
+                    <Zap className="mr-2" size={18} /> Solicitar
+                  </Button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
@@ -925,8 +1161,8 @@ export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; 
     </header>
     <div className="p-6 space-y-10">
       {desapegos.map(item => (
-        <div key={item.id} onClick={() => onSelect && onSelect(item)}>
-          <DesapegoCard item={item} currentUser={currentUser} onDelete={onDelete} variant="preview" onSelect={() => onSelect && onSelect(item)} />
+        <div key={item.id}>
+          <DesapegoCard item={item} onClick={() => onSelect && onSelect(item)} />
         </div>
       ))}
     </div>
@@ -1042,7 +1278,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
   return (
     <div className="min-h-screen bg-white pb-10">
       <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 backdrop-blur-md sticky top-0 z-40">
-        <button onClick={onBack} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center active:scale-90 transition-all border border-slate-100 shadow-sm"><ArrowLeft size={24} className="text-slate-900" /></button>
+        <button onClick={onBack} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shadow-sm"><ArrowLeft size={24} className="text-slate-900" /></button>
         <h2 className="text-2xl font-black italic uppercase tracking-tighter">Novo Desapego</h2>
       </header>
 
@@ -1160,7 +1396,7 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-transform"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Controle de Acesso</h2>
       </header>
       <div className="p-6 space-y-8">
@@ -1325,6 +1561,222 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
             />
             <Button fullWidth onClick={handleOpen} className="bg-slate-950 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar para Adm</Button>
           </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests: any[]; currentUser: any }> = ({ onBack, serviceRequests, currentUser }) => {
+  const [isNew, setIsNew] = useState(false);
+  const [form, setForm] = useState({ title: '', category: 'Manutenção', desc: '' });
+
+  const handleOpen = async () => {
+    if (form.title && form.desc) {
+      // Registrar no banco (Simulação ou Supabase dependendo da implementação)
+      alert('Chamado aberto com sucesso!');
+      setIsNew(false);
+      setForm({ title: '', category: 'Manutenção', desc: '' });
+    }
+  };
+
+  const myRequests = serviceRequests.filter(req => req.unit === (currentUser?.unit || '---'));
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase">Atendimento</h2>
+      </header>
+
+      <div className="p-6 space-y-8">
+        {!isNew ? (
+          <>
+            <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl shadow-slate-900/20 text-center relative overflow-hidden">
+              <div className="relative z-10">
+                <MessageSquare className="mx-auto text-violet-400 mb-4" size={48} />
+                <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
+                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
+                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-violet-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Meus Chamados</h4>
+              {myRequests.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-8">Nenhum chamado aberto.</p> : myRequests.map((req) => (
+                <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
+                  <div className="flex justify-between items-start">
+                    <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
+                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                  </div>
+                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} • {req.date}</p>
+                </div>
+              ))}
+            </div>
+          </>
+        ) : (
+          <Card className="p-8 border-none shadow-xl rounded-[40px] bg-white space-y-6 animate-in slide-in-from-bottom-4">
+            <div className="flex items-center gap-3 mb-2">
+              <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
+              <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
+            </div>
+            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
+            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
+              <option>Manutenção</option>
+              <option>Limpeza</option>
+              <option>Segurança</option>
+              <option>Sugestão</option>
+              <option>Reclamação</option>
+            </select>
+            <textarea
+              placeholder="Descreva a situação..."
+              className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-violet-500/20 transition-all resize-none"
+              value={form.desc}
+              onChange={e => setForm({ ...form, desc: e.target.value })}
+            />
+            <Button fullWidth onClick={handleOpen} className="bg-slate-950 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar para Adm</Button>
+          </Card>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any }> = ({ onBack, currentUser }) => {
+  const [demands, setDemands] = useState<any[]>([]);
+  const [proposals, setProposals] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadData();
+  }, [currentUser]);
+
+  const loadData = async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+
+    // Fetch demands
+    const { data: demandsData } = await supabase
+      .from('service_demands')
+      .select('*')
+      .eq('resident_id', currentUser.id)
+      .order('created_at', { ascending: false });
+
+    if (demandsData) setDemands(demandsData);
+
+    // Fetch proposals for all these demands
+    if (demandsData && demandsData.length > 0) {
+      const demandIds = demandsData.map(d => d.id);
+      const { data: proposalsData } = await supabase
+        .from('service_proposals')
+        .select('*, profiles:professional_id(name, avatar, phone, category)')
+        .in('demand_id', demandIds)
+        .order('created_at', { ascending: false });
+
+      if (proposalsData) setProposals(proposalsData);
+    }
+
+    setLoading(false);
+  };
+
+  const handleAcceptProposal = async (proposal: any) => {
+    setLoading(true);
+    // 1. Update proposal status
+    const { error: pError } = await supabase.from('service_proposals').update({ status: 'accepted' }).eq('id', proposal.id);
+    // 2. Update demand status
+    await supabase.from('service_demands').update({ status: 'closed' }).eq('id', proposal.demand_id);
+
+    if (!pError) {
+      // 3. Registrar Lead (CRM)
+      await supabase.from('professional_leads').insert([{
+        professional_id: proposal.professional_id,
+        resident_id: currentUser.id,
+        source: 'proposal_accepted',
+        metadata: { origin: 'auction_acceptance', demand_id: proposal.demand_id }
+      }]);
+
+      // 4. Open WhatsApp
+      const cleanPhone = proposal.profiles?.phone?.replace(/\D/g, '');
+      if (cleanPhone) {
+        const message = encodeURIComponent(`Olá ${proposal.profiles.name}, aceitei sua proposta no Mural para o serviço de *${proposal.profiles.category}*!`);
+        window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
+      }
+      loadData();
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className="min-h-screen bg-[#f8fafc] pb-32">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase">Minhas Demandas</h2>
+      </header>
+
+      <div className="p-6 space-y-6">
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : demands.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-[40px] border border-slate-100 shadow-sm px-8">
+            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Megaphone size={32} className="text-slate-200" />
+            </div>
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">Você ainda não publicou nenhuma necessidade.</p>
+            <p className="text-slate-300 text-[10px] mt-2">Publique no Mural para receber propostas de profissionais!</p>
+          </div>
+        ) : (
+          <div className="space-y-6">
+            {demands.map(demand => {
+              const demandProposals = proposals.filter(p => p.demand_id === demand.id);
+              return (
+                <div key={demand.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-4">
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <span className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-2 py-0.5 rounded-full">{demand.category}</span>
+                      <h4 className="font-black text-slate-900 italic text-lg mt-2">{demand.description}</h4>
+                    </div>
+                    <Badge color={demand.status === 'open' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}>{demand.status === 'open' ? 'Ativo' : 'Finalizado'}</Badge>
+                  </div>
+
+                  {demandProposals.length > 0 ? (
+                    <div className="space-y-3 pt-4 border-t border-slate-50">
+                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{demandProposals.length} Propostas Recebidas</p>
+                      {demandProposals.map(prop => (
+                        <div key={prop.id} className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
+                          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 shadow-sm leading-none">
+                            <img src={prop.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${prop.profiles?.name}`} className="w-full h-full object-cover" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <h5 className="font-bold text-slate-900 text-sm italic">{prop.profiles?.name}</h5>
+                                <p className="text-[9px] font-medium text-slate-500 line-clamp-1">{prop.message}</p>
+                              </div>
+                              <div className="text-right">
+                                {prop.price && <p className="text-xs font-black text-slate-900">R$ {prop.price}</p>}
+                                <button
+                                  onClick={() => handleAcceptProposal(prop)}
+                                  disabled={demand.status !== 'open'}
+                                  className={`mt-1 h-8 rounded-lg px-3 text-[9px] font-black uppercase tracking-widest transition-all ${prop.status === 'accepted' ? 'bg-emerald-500 text-white' : demand.status === 'open' ? 'bg-violet-600 text-white shadow-lg shadow-violet-600/20 active:scale-95' : 'bg-slate-200 text-slate-400 opacity-50'}`}
+                                >
+                                  {prop.status === 'accepted' ? 'Aceito' : 'Aceitar'}
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-[10px] font-bold text-slate-300 italic text-center py-2">Aguardando propostas...</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>
@@ -1680,7 +2132,7 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
         </div>
       </div>
 
-      <div className="-mt-8 px-6 relative z-20 mb-6">
+      <div className="px-6 -mt-8 relative z-20 mb-6">
         <div className="bg-white p-4 rounded-3xl shadow-xl shadow-slate-200/50 flex items-center gap-3">
           <Search className="text-slate-400" size={20} />
           <input
