@@ -309,7 +309,7 @@ const App: React.FC = () => {
         fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString())),
         fetchTable('products', supabase.from('products').select('*').eq('available', true)),
         fetchTable('marketplace', supabase.from('marketplace').select('*')),
-        fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar'))
+        fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar, specialties'))
       ]);
 
       const profileMap = (allProfiles || []).reduce((acc: any, p: any) => {
@@ -341,7 +341,8 @@ const App: React.FC = () => {
             ...p,
             providerName: profile?.name || 'Prestador',
             providerPhone: profile?.phone || '',
-            providerAvatar: profile?.avatar
+            providerAvatar: profile?.avatar,
+            specialties: profile?.specialties // NEW: Pass tags to UI
           };
         }));
       }

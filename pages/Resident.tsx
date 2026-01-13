@@ -418,7 +418,12 @@ export const ResidentHome: React.FC<{
         </div>
 
         <div className="relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-violet-300" size={18} />
+          <button
+            onClick={() => onSelectCategory('Todos', homeSearch.trim())}
+            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 active:scale-90 transition-transform"
+          >
+            <Search className="text-violet-300" size={18} />
+          </button>
           <Input
             placeholder="O que você precisa hoje?"
             className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder-violet-200/70 focus:bg-white/20 transition-all"
@@ -849,6 +854,10 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+
+  useEffect(() => {
+    if (initialSearch) setSearchTerm(initialSearch);
+  }, [initialSearch]);
   const [selectedPro, setSelectedPro] = useState<any>(null);
 
   const handleProClick = async (pro: any) => {
@@ -900,7 +909,9 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       filtered = filtered.filter(s =>
         s.title.toLowerCase().includes(lower) ||
         s.providerName?.toLowerCase().includes(lower) ||
-        s.category?.toLowerCase().includes(lower)
+        s.category?.toLowerCase().includes(lower) ||
+        s.description?.toLowerCase().includes(lower) ||
+        (s.specialties && s.specialties.some((tag: string) => tag.toLowerCase().includes(lower))) // Check tags
       );
     }
     return filtered;
