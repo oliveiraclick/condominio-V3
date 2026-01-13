@@ -715,7 +715,10 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
   const [uploading, setUploading] = useState(false);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    if (window.confirm('Deseja realmente sair?')) {
+      await supabase.auth.signOut();
+      window.location.reload();
+    }
   };
 
   const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {

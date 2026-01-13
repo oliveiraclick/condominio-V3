@@ -14,7 +14,7 @@ import {
   Activity, Shield, Camera, Image as ImageIcon,
   Droplets, Leaf, Waves, Heart, Baby, Calendar, Mail, IdCard,
   Lock, Settings, Eye, EyeOff, User, Paperclip, Mic, CheckCheck,
-  Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell
+  Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell, LogOut
 } from 'lucide-react';
 
 export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
@@ -89,6 +89,12 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ 
               <span className="mt-4 text-[10px] font-black text-slate-700 text-center uppercase">{op.label}</span>
             </button>
           ))}
+          <button onClick={async () => { if (window.confirm('Sair do sistema?')) { await supabase.auth.signOut(); window.location.reload(); } }} className="flex flex-col items-center group">
+            <div className="w-[80px] h-[80px] bg-rose-50 rounded-[28px] shadow-lg flex items-center justify-center text-rose-500 border border-rose-100 hover:bg-rose-500 hover:text-white transition-all">
+              <LogOut size={28} />
+            </div>
+            <span className="mt-4 text-[10px] font-black text-rose-500 text-center uppercase">Sair</span>
+          </button>
         </div>
       </div>
     </div>
@@ -100,7 +106,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ 
 export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: any; onUpdateArea?: (a: any) => void }> = ({ commonAreas, setCommonAreas, onUpdateArea }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '' });
+  const [form, setForm] = useState({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -116,21 +122,14 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         const fileExt = imageFile.name.split('.').pop();
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
-
-        // Upload to 'common_areas' bucket (ensure this bucket exists or use 'public')
-        // Optimistic fallback to 'public' if 'common_areas' not setup
         const bucketName = 'common_areas';
 
-        const { error: uploadError } = await supabase.storage
-          .from(bucketName)
-          .upload(filePath, imageFile);
+        const { error: uploadError } = await supabase.storage.from(bucketName).upload(filePath, imageFile);
 
         if (uploadError) {
-          // Fallback to 'public' or 'avatars' if specific bucket fails (usually implies missing bucket)
-          console.warn('Upload to common_areas failed, trying avatars/public...');
-          const { error: retryError } = await supabase.storage.from('avatars').upload(`areas/${filePath}`, imageFile);
-          if (retryError) throw uploadError; // Throw original if retry also fails
-          const { data } = supabase.storage.from('avatars').getPublicUrl(`areas/${filePath}`);
+          const { error: retryError } = await supabase.storage.from('public').upload(`areas/${filePath}`, imageFile);
+          if (retryError) throw uploadError;
+          const { data } = supabase.storage.from('public').getPublicUrl(`areas/${filePath}`);
           publicUrl = data.publicUrl;
         } else {
           const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
@@ -138,32 +137,36 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         }
       }
 
-      // Default Image if none provided
       if (!publicUrl) publicUrl = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80';
 
-      const areaData = {
-        id: editingId || Date.now().toString(),
+      const payload = {
         name: form.name,
-        desc: form.desc,
-        price: form.price,
+        description: form.desc,
+        price: parseFloat(form.price.toString().replace(',', '.')) || 0,
         hours: form.hours,
         inventory: form.inventory,
-        photos: [publicUrl],
-        icon: 'Building2'
+        category: form.category || 'Gourmet',
+        photos: [publicUrl]
       };
 
-      if (editingId && onUpdateArea) {
-        onUpdateArea(areaData);
+      if (editingId) {
+        const { error } = await supabase.from('common_areas').update(payload).eq('id', editingId);
+        if (error) throw error;
+        setCommonAreas(commonAreas.map(a => a.id === editingId ? { ...a, ...payload, desc: payload.description } : a));
       } else {
-        setCommonAreas([...commonAreas, areaData]);
+        const { data, error } = await supabase.from('common_areas').insert([payload]).select();
+        if (error) throw error;
+        if (data) setCommonAreas([...commonAreas, { ...data[0], desc: data[0].description }]);
       }
 
       setIsAdding(false);
       setEditingId(null);
-      setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '' });
+      setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' });
       setImageFile(null);
+      alert('Área salva com sucesso!');
+
     } catch (error: any) {
-      alert('Erro ao salvar imagem: ' + error.message);
+      alert('Erro ao salvar área: ' + error.message);
     } finally {
       setUploading(false);
     }
@@ -172,28 +175,56 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
   const startEdit = (area: any) => {
     setForm({
       name: area.name,
-      desc: area.desc,
+      desc: area.description || area.desc || '',
       price: area.price || '',
       hours: area.hours || '',
       inventory: area.inventory || '',
-      photo: area.photos?.[0] || ''
+      photo: area.photos?.[0] || '',
+      category: area.category || 'Gourmet'
     });
     setEditingId(area.id);
     setIsAdding(true);
     setImageFile(null);
   };
 
-  const handleDelete = (id: string) => {
+  const handleDelete = async (id: string) => {
     if (window.confirm('Excluir esta área? Isso pode afetar reservas futuras.')) {
-      setCommonAreas(commonAreas.filter(a => a.id !== id));
+      try {
+        const { error } = await supabase.from('common_areas').delete().eq('id', id);
+        if (error) throw error;
+        setCommonAreas(commonAreas.filter(a => a.id !== id));
+      } catch (error: any) {
+        alert('Erro ao excluir: ' + error.message);
+      }
     }
   };
+
+  const gourmetAreas = commonAreas.filter(a => !a.category || a.category === 'Gourmet');
+  const sportsAreas = commonAreas.filter(a => a.category === 'Esportes');
+
+  const renderAreaCard = (area: any) => (
+    <div key={area.id} onClick={() => startEdit(area)} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm group cursor-pointer hover:border-violet-200 transition-all">
+      <div className="flex items-center gap-4">
+        <div className="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden relative">
+          {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>}
+        </div>
+        <div>
+          <h5 className="font-black text-slate-900 italic leading-none">{area.name}</h5>
+          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest truncate max-w-[200px]">{area.hours} • R$ {area.price}</p>
+          <p className="text-[9px] text-slate-300 truncate max-w-[200px] mt-0.5">{area.inventory}</p>
+        </div>
+      </div>
+      <button onClick={(e) => { e.stopPropagation(); handleDelete(area.id); }} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all active:scale-90 hover:bg-rose-100">
+        <Trash2 size={18} />
+      </button>
+    </div>
+  );
 
   return (
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center px-2">
         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configuração de Espaços</h4>
-        <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '' }); }} className="text-[10px] font-black text-violet-600 uppercase bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all flex items-center gap-1">
+        <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' }); }} className="text-[10px] font-black text-violet-600 uppercase bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all flex items-center gap-1">
           <Plus size={14} /> Novo Espaço
         </button>
       </div>
@@ -202,7 +233,6 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         <Card className="p-8 space-y-4 border-2 border-dashed border-violet-200 bg-violet-50/30 rounded-[40px] animate-in slide-in-from-top-4">
           <h3 className="text-lg font-black italic text-slate-900">{editingId ? 'Editar Espaço' : 'Novo Espaço'}</h3>
 
-          {/* PHOTO UPLOAD INPUT */}
           <div
             onClick={() => fileInputRef.current?.click()}
             className="h-40 bg-white/50 rounded-3xl border-2 border-dashed border-violet-300 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white hover:border-violet-500 transition-all overflow-hidden relative"
@@ -225,10 +255,22 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
               onChange={e => {
                 if (e.target.files?.[0]) {
                   setImageFile(e.target.files[0]);
-                  setForm({ ...form, photo: '' }); // Clear URL if file selected
+                  setForm({ ...form, photo: '' });
                 }
               }}
             />
+          </div>
+
+          <div className="space-y-2">
+            <label className="text-[10px] font-black text-slate-900 uppercase">Categoria</label>
+            <select
+              className="w-full h-14 bg-white rounded-2xl px-4 font-bold text-slate-700 outline-none border border-violet-100"
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+            >
+              <option value="Gourmet">Gourmet & Festas</option>
+              <option value="Esportes">Esportes & Lazer</option>
+            </select>
           </div>
 
           <Input placeholder="Nome da Área (Ex: Salão de Festas)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
@@ -249,24 +291,24 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         </Card>
       )}
 
-      <div className="space-y-4">
-        {commonAreas.map((area) => (
-          <div key={area.id} onClick={() => startEdit(area)} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm group cursor-pointer hover:border-violet-200 transition-all">
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden relative">
-                {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>}
-              </div>
-              <div>
-                <h5 className="font-black text-slate-900 italic leading-none">{area.name}</h5>
-                <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest truncate max-w-[200px]">{area.hours} • R$ {area.price}</p>
-                <p className="text-[9px] text-slate-300 truncate max-w-[200px] mt-0.5">{area.inventory}</p>
-              </div>
-            </div>
-            <button onClick={(e) => { e.stopPropagation(); handleDelete(area.id); }} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all active:scale-90 hover:bg-rose-100">
-              <Trash2 size={18} />
-            </button>
+      <div className="space-y-8">
+        {gourmetAreas.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-black text-slate-900 italic text-lg flex items-center gap-2"><PartyPopper size={20} className="text-violet-500" /> Gourmet & Festas</h3>
+            {gourmetAreas.map(renderAreaCard)}
           </div>
-        ))}
+        )}
+
+        {sportsAreas.length > 0 && (
+          <div className="space-y-4">
+            <h3 className="font-black text-slate-900 italic text-lg flex items-center gap-2"><Dumbbell size={20} className="text-emerald-500" /> Esportes & Lazer</h3>
+            {sportsAreas.map(renderAreaCard)}
+          </div>
+        )}
+
+        {gourmetAreas.length === 0 && sportsAreas.length === 0 && (
+          <div className="text-center py-10 text-slate-400 font-bold italic">Nenhuma área cadastrada.</div>
+        )}
       </div>
     </div>
   );
@@ -274,7 +316,9 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
 
 // --- RESERVAS (ADMIN) ---
 export const AdminReservations: React.FC<{ onBack: () => void; reservations: any[]; setReservations: any; commonAreas: any[]; setCommonAreas: any; onUpdateArea?: (a: any) => void }> = ({ onBack, reservations, setReservations, commonAreas, setCommonAreas, onUpdateArea }) => {
-  const [view, setView] = useState<'list' | 'config'>('list');
+  const [view, setView] = useState<'list' | 'config' | 'check'>('list');
+  const [selectedDate, setSelectedDate] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState<'Gourmet' | 'Esportes' | null>(null);
 
   const handleCancel = (id: number, resDate: string) => {
     if (window.confirm('Confirmar cancelamento desta reserva no sistema?')) {
@@ -283,22 +327,120 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
     }
   };
 
+  const getHeaderTitle = () => {
+    if (view === 'config') return 'CONFIGURAÇÃO';
+    if (view === 'check') return 'DISPONIBILIDADE';
+    return 'GESTÃO DE RESERVAS';
+  };
+
+  const filteredAreas = selectedCategory
+    ? commonAreas.filter(a => (a.category || 'Gourmet') === selectedCategory)
+    : [];
+
+  const checkAvailability = (areaName: string) => {
+    if (!selectedDate) return null;
+    // Normalizing date strings to compare YYYY-MM-DD
+    const targetDate = selectedDate;
+    const res = reservations.find(r => {
+      const rDate = new Date(r.date).toISOString().split('T')[0];
+      return r.area === areaName && rDate === targetDate;
+    });
+    return res ? res : null; // Returns reservation if exists
+  };
+
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
       <AdminHeader
-        title={view === 'list' ? "GESTÃO DE RESERVAS" : "CONFIGURAÇÃO"}
-        onBack={onBack}
+        title={getHeaderTitle()}
+        onBack={view === 'list' ? onBack : () => { setView('list'); setSelectedCategory(null); setSelectedDate(''); }}
         rightElement={
-          <button onClick={() => setView(view === 'list' ? 'config' : 'list')} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all border border-violet-100">
-            {view === 'list' ? 'Gerenciar Áreas' : 'Ver Agenda'}
-          </button>
+          view === 'list' ? (
+            <div className="flex gap-2">
+              <button onClick={() => setView('check')} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-3 py-2 rounded-xl active:scale-95 transition-all border border-violet-100">
+                Nova Consulta
+              </button>
+              <button onClick={() => setView('config')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white px-3 py-2 rounded-xl active:scale-95 transition-all border border-slate-200">
+                Configurar
+              </button>
+            </div>
+          ) : null
         }
       />
       <div className="p-6 space-y-8">
 
-        {view === 'config' ? (
+        {view === 'config' && (
           <AdminCommonAreas commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={onUpdateArea} />
-        ) : (
+        )}
+
+        {view === 'check' && (
+          <div className="space-y-6 animate-in slide-in-from-right-4">
+            {/* Category Selection */}
+            {!selectedCategory ? (
+              <div className="grid grid-cols-2 gap-4">
+                <button onClick={() => setSelectedCategory('Gourmet')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:border-violet-500 hover:bg-violet-50 transition-all active:scale-95">
+                  <div className="w-16 h-16 bg-violet-100 text-violet-600 rounded-full flex items-center justify-center">
+                    <PartyPopper size={32} />
+                  </div>
+                  <span className="font-black text-slate-700 uppercase tracking-widest text-xs">Gourmet & Festas</span>
+                </button>
+                <button onClick={() => setSelectedCategory('Esportes')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:border-emerald-500 hover:bg-emerald-50 transition-all active:scale-95">
+                  <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                    <Dumbbell size={32} />
+                  </div>
+                  <span className="font-black text-slate-700 uppercase tracking-widest text-xs">Esportes & Lazer</span>
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-6">
+                <div className="flex items-center gap-2 mb-4">
+                  <button onClick={() => setSelectedCategory(null)} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                    <ChevronRight className="rotate-180" size={20} />
+                  </button>
+                  <h3 className="text-lg font-black italic text-slate-900">{selectedCategory}</h3>
+                </div>
+
+                {/* Date Picker */}
+                <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Selecione uma Data</label>
+                  <input
+                    type="date"
+                    className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 outline-none border border-slate-200"
+                    value={selectedDate}
+                    onChange={(e) => setSelectedDate(e.target.value)}
+                  />
+                </div>
+
+                {/* Results List */}
+                {selectedDate && (
+                  <div className="space-y-3">
+                    <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Disponibilidade</h4>
+                    {filteredAreas.map(area => {
+                      const reservation = checkAvailability(area.name);
+                      return (
+                        <div key={area.id} className={`p-4 rounded-2xl border flex items-center justify-between ${reservation ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                          <div className="flex items-center gap-3">
+                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/50">
+                              {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={16} className="text-slate-300" /></div>}
+                            </div>
+                            <div>
+                              <p className="font-bold text-slate-900 text-sm">{area.name}</p>
+                              {reservation && <p className="text-[10px] font-bold text-rose-500 uppercase">Reservado: {reservation.resident} (Apto {reservation.unit})</p>}
+                              {!reservation && <p className="text-[10px] font-bold text-emerald-600 uppercase">Disponível</p>}
+                            </div>
+                          </div>
+                          {reservation ? <X size={20} className="text-rose-400" /> : <CheckCheck size={20} className="text-emerald-500" />}
+                        </div>
+                      );
+                    })}
+                    {filteredAreas.length === 0 && <p className="text-center text-slate-400 text-xs italic">Nenhuma área nesta categoria.</p>}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {view === 'list' && (
           <>
             <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl shadow-slate-900/20">
               <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 mb-4">Status do Condomínio</h3>
@@ -365,12 +507,19 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
 // --- LISTA DE MORADORES (Atualizado com versão simplificada) ---
 export const AdminResidents: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [searchTerm, setSearchTerm] = useState('');
-  const residents = [
-    { id: 1, name: 'Alex Ferreira', unit: '402-B', tower: 'A' },
-    { id: 2, name: 'Clara Mendes', unit: '105-B', tower: 'B' }
-  ];
+  const [residents, setResidents] = useState<any[]>([]);
 
-  const filtered = residents.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase()));
+  useEffect(() => {
+    supabase.from('profiles').select('*').eq('role', 'resident').order('created_at', { ascending: false })
+      .then(({ data }) => {
+        if (data) setResidents(data);
+      });
+  }, []);
+
+  const filtered = residents.filter(r =>
+    r.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    r.unit?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
@@ -381,13 +530,20 @@ export const AdminResidents: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-300" size={20} />
         </div>
         <div className="space-y-4">
+          {filtered.length === 0 && <p className="text-center text-slate-300 font-bold italic py-8">Nenhum morador encontrado.</p>}
+
           {filtered.map(res => (
-            <div key={res.id} className="bg-white p-6 rounded-[32px] border flex items-center justify-between shadow-sm hover:border-violet-200 transition-colors cursor-pointer">
-              <div>
-                <h4 className="font-black text-slate-900 italic">{res.name}</h4>
-                <p className="text-[10px] font-bold text-violet-500 uppercase">Apto {res.unit} • Torre {res.tower}</p>
+            <div key={res.id} className="bg-white p-6 rounded-[32px] border flex items-center justify-between shadow-sm hover:border-violet-200 transition-colors cursor-pointer group">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100">
+                  {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-300">{res.name?.[0]}</span>}
+                </div>
+                <div>
+                  <h4 className="font-black text-slate-900 italic">{res.name}</h4>
+                  <p className="text-[10px] font-bold text-violet-500 uppercase">Apto {res.unit || '---'} • Torre {res.tower || ''}</p>
+                </div>
               </div>
-              <ChevronRight size={20} className="text-slate-200" />
+              <ChevronRight size={20} className="text-slate-200 group-hover:text-violet-400 transition-colors" />
             </div>
           ))}
         </div>

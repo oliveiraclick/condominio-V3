@@ -352,8 +352,175 @@ const ProfessionalGuideView = () => {
 };
 
 // --- USERS VIEW ---
+// --- USERS VIEW ---
 const UsersView = () => {
-  return <div className={PAGE_CONTAINER}><h1 className={HEADER_TITLE}>Usuários</h1><p className="text-slate-400">Em construção...</p></div>
+  const [users, setUsers] = useState<any[]>([]);
+  const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadUsers(); }, []);
+
+  const loadUsers = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('profiles').select('*').eq('role', 'resident').order('created_at', { ascending: false });
+    if (data) setUsers(data);
+    setLoading(false);
+  };
+
+  const filteredUsers = users.filter(u =>
+    u.name?.toLowerCase().includes(search.toLowerCase()) ||
+    u.email?.toLowerCase().includes(search.toLowerCase()) ||
+    u.unit?.toLowerCase().includes(search.toLowerCase())
+  );
+
+  return (
+    <div className={PAGE_CONTAINER}>
+      <h1 className={HEADER_TITLE}>Clientes <span className="text-violet-600">Moradores</span></h1>
+
+      <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 flex items-center gap-3 mb-6">
+        <Search className="text-slate-400" size={20} />
+        <Input
+          placeholder="Buscar por nome, unidade ou email..."
+          className="h-10 border-none bg-transparent p-0 focus:ring-0"
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
+      </div>
+
+      {loading ? (
+        <div className="flex justify-center p-10"><div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div></div>
+      ) : (
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Total: {filteredUsers.length}</h3>
+
+          {filteredUsers.map(u => (
+            <div key={u.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm flex items-center justify-between group hover:shadow-md transition-all">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-50">
+                  <img src={u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`} className="w-full h-full object-cover" />
+                </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 text-sm">{u.name}</h4>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                    <Building size={10} /> {u.tower || 'Torre A'} - {u.unit || '---'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="text-right">
+                <Badge className={u.status === 'blocked' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-600'}>
+                  {u.status === 'blocked' ? 'Bloqueado' : 'Ativo'}
+                </Badge>
+              </div>
+            </div>
+          ))}
+
+          {filteredUsers.length === 0 && (
+            <div className="text-center py-10 opacity-50">
+              <Users size={48} className="mx-auto mb-2 text-slate-300" />
+              <p className="text-sm font-bold text-slate-400">Nenhum morador encontrado</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+
+// --- PUSH VIEW ---
+const PushView = () => {
+  const [form, setForm] = useState({ title: '', body: '', target_role: 'all' });
+  const [loading, setLoading] = useState(false);
+  const [history, setHistory] = useState<any[]>([]);
+
+  useEffect(() => { loadHistory(); }, []);
+
+  const loadHistory = async () => {
+    const { data } = await supabase.from('sent_notifications').select('*').order('created_at', { ascending: false }).limit(10);
+    if (data) setHistory(data);
+  };
+
+  const handleSend = async () => {
+    if (!form.title || !form.body) return alert('Preencha título e mensagem');
+    setLoading(true);
+
+    // 1. Insert into DB (Triggers will handle external Push API if configured)
+    const { error } = await supabase.from('sent_notifications').insert([{
+      title: form.title,
+      body: form.body,
+      target_role: form.target_role
+    }]);
+
+    if (error) {
+      alert('Erro ao enviar: ' + error.message);
+    } else {
+      alert('Notificação enviada com sucesso!');
+      setForm({ title: '', body: '', target_role: 'all' });
+      loadHistory();
+    }
+    setLoading(false);
+  };
+
+  return (
+    <div className={PAGE_CONTAINER}>
+      <h1 className={HEADER_TITLE}>Notificações <span className="text-violet-600">Push</span></h1>
+
+      <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-4 mb-8">
+        <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest">Nova Mensagem</h3>
+
+        <Input
+          placeholder="Título da Notificação"
+          value={form.title}
+          onChange={e => setForm({ ...form, title: e.target.value })}
+          className="h-12 bg-slate-50"
+        />
+
+        <textarea
+          placeholder="Digite sua mensagem aqui..."
+          className="w-full h-24 bg-slate-50 border-none rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-violet-500/20 transition-all font-medium text-slate-700"
+          value={form.body}
+          onChange={e => setForm({ ...form, body: e.target.value })}
+        />
+
+        <div className="flex gap-4">
+          <select
+            className="flex-1 h-12 bg-slate-50 rounded-xl px-4 text-sm font-bold text-slate-600 outline-none"
+            value={form.target_role}
+            onChange={e => setForm({ ...form, target_role: e.target.value })}
+          >
+            <option value="all">Todos os Usuários</option>
+            <option value="resident">Apenas Moradores</option>
+            <option value="professional">Apenas Prestadores</option>
+          </select>
+
+          <Button
+            onClick={handleSend}
+            disabled={loading}
+            className="h-12 px-8 bg-slate-900 text-white font-black uppercase text-xs tracking-widest"
+          >
+            {loading ? 'Enviando...' : 'Enviar Push'}
+          </Button>
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Histórico de Envios</h3>
+        {history.map(item => (
+          <div key={item.id} className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex justify-between items-center opacity-70 hover:opacity-100 transition-opacity">
+            <div>
+              <h4 className="font-bold text-slate-900 text-sm">{item.title}</h4>
+              <p className="text-xs text-slate-500 line-clamp-1">{item.body}</p>
+            </div>
+            <div className="text-right">
+              <Badge className="mb-1 bg-slate-100 text-slate-500 text-[10px]">{item.target_role === 'all' ? 'Geral' : item.target_role}</Badge>
+              <p className="text-[9px] font-bold text-slate-300 uppercase">{new Date(item.created_at).toLocaleDateString()}</p>
+            </div>
+          </div>
+        ))}
+        {history.length === 0 && <p className="text-center text-slate-300 text-xs font-bold py-4">Nenhum envio recente.</p>}
+      </div>
+    </div>
+  );
 };
 
 // --- MAIN LAYOUT ---
@@ -369,7 +536,7 @@ export const SuperAdmin = () => {
           {activeTab === 'condos' && <CondosView />}
           {activeTab === 'users' && <UsersView />}
           {activeTab === 'professionals' && <ProfessionalsView />}
-          {activeTab === 'notifications' && <div className={PAGE_CONTAINER}><h1 className={HEADER_TITLE}>Push</h1></div>}
+          {activeTab === 'notifications' && <PushView />}
         </div>
 
         {/* BOTTOM NAV */}
