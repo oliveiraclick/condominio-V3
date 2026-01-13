@@ -318,7 +318,20 @@ const App: React.FC = () => {
       }, {});
 
       if (areas) setCommonAreas(areas);
-      if (resvs) setReservations(resvs);
+      if (resvs) {
+        // Enriched Mapping for Reservations
+        const mappedResvs = resvs.map((r: any) => {
+          const resident = profileMap[r.resident_id];
+          return {
+            ...r,
+            displayName: resident?.name || 'Morador', // Fallback for safety
+            resident: resident?.name || 'Morador',    // Explicitly for Admin UI
+            area: r.area_name || r.area_id,           // UI expects 'area'
+            avatar: resident?.avatar
+          };
+        });
+        setReservations(mappedResvs);
+      }
       if (requests) {
         const mapped = requests.map((r: any) => {
           const resident = profileMap[r.resident_id || r.profile_id];
@@ -522,7 +535,7 @@ const App: React.FC = () => {
             const { error } = await supabase.from('reservations').insert([insertData]);
             if (!error) { refreshAppData(); } else { throw new Error(error.message); }
           }} />;
-          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} currentUser={currentUser} />;
+          case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} currentUser={currentUser} categories={categories} />;
           case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
@@ -547,11 +560,11 @@ const App: React.FC = () => {
 
         switch (activeTab) {
           case 'dashboard': return <ProfessionalDashboard serviceRequests={pending} activeServices={accepted} completedServices={completed} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
-          case 'services': return <ProfessionalServices currentUser={currentUser} />;
+          case 'services': return <ProfessionalServices currentUser={currentUser} categories={categories} />;
           case 'agenda': return <ProfessionalAgenda activeServices={accepted} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} serviceRequests={serviceRequests} />;
           case 'earnings': return <ProfessionalEarnings services={completed} />;
           case 'shop': return <ProfessionalShop currentUser={currentUser} />;
-          case 'profile': return <ProfessionalProfileView currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
+          case 'profile': return <ProfessionalProfileView currentUser={currentUser} categories={categories} onLogout={() => supabase.auth.signOut()} />;
           default: return <ProfessionalDashboard serviceRequests={pending} activeServices={accepted} completedServices={completed} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
         }
       }

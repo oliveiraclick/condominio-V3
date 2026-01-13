@@ -1014,7 +1014,7 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
 };
 
 
-export const ProfessionalServices = ({ currentUser }: any) => {
+export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
   const [services, setServices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -1224,7 +1224,8 @@ export const ProfessionalServices = ({ currentUser }: any) => {
     setShowPeriodForm(false);
   };
 
-  const categories = ['Eletricista', 'Encanador', 'Limpeza', 'Jardinagem', 'Pintura', 'Manutenção', 'Beleza', 'Tecnologia', 'Outros'];
+  const parentCategories = categories.filter((c: any) => !c.parent_id && c.type === 'service');
+  const getSubCategories = (parentId: string) => categories.filter((c: any) => c.parent_id === parentId);
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
@@ -1274,9 +1275,17 @@ export const ProfessionalServices = ({ currentUser }: any) => {
               className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-emerald-500"
             >
               <option value="">Selecione a categoria</option>
-              {categories.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
-              ))}
+              {parentCategories.map((parent: any) => {
+                const subs = getSubCategories(parent.id);
+                if (subs.length > 0) {
+                  return (
+                    <optgroup key={parent.id} label={parent.name}>
+                      {subs.map((sub: any) => <option key={sub.id} value={sub.name}>{sub.name}</option>)}
+                    </optgroup>
+                  );
+                }
+                return <option key={parent.id} value={parent.name}>{parent.name}</option>;
+              })}
             </select>
 
             <textarea
@@ -1494,7 +1503,7 @@ export const ProfessionalEarnings = () => (
   </div>
 );
 
-export const ProfessionalProfileView = ({ currentUser, onLogout }: any) => {
+export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout }: any) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -1581,7 +1590,18 @@ export const ProfessionalProfileView = ({ currentUser, onLogout }: any) => {
             onChange={e => setFormData({ ...formData, category: e.target.value })}
             className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 border-none outline-none focus:ring-2 focus:ring-emerald-100"
           >
-            {['Manutenção', 'Limpeza', 'Beleza', 'Tecnologia', 'Reformas', 'Outros'].map(c => <option key={c} value={c}>{c}</option>)}
+            <option value="">Selecione a categoria</option>
+            {categories.filter((c: any) => !c.parent_id && c.type === 'service').map((parent: any) => {
+              const subs = categories.filter((s: any) => s.parent_id === parent.id);
+              if (subs.length > 0) {
+                return (
+                  <optgroup key={parent.id} label={parent.name}>
+                    {subs.map((s: any) => <option key={s.id} value={s.name}>{s.name}</option>)}
+                  </optgroup>
+                );
+              }
+              return <option key={parent.id} value={parent.name}>{parent.name}</option>;
+            })}
           </select>
         </div>
         <div className="space-y-2">

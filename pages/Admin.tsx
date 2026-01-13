@@ -101,30 +101,72 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '' });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.name) return;
+    setUploading(true);
 
-    const areaData = {
-      id: editingId || Date.now().toString(),
-      name: form.name,
-      desc: form.desc,
-      price: form.price,
-      hours: form.hours,
-      inventory: form.inventory,
-      photos: [form.photo || 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80'],
-      icon: 'Building2'
-    };
+    try {
+      let publicUrl = form.photo;
 
-    if (editingId && onUpdateArea) {
-      onUpdateArea(areaData);
-    } else {
-      setCommonAreas([...commonAreas, areaData]);
+      if (imageFile) {
+        const fileExt = imageFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        // Upload to 'common_areas' bucket (ensure this bucket exists or use 'public')
+        // Optimistic fallback to 'public' if 'common_areas' not setup
+        const bucketName = 'common_areas';
+
+        const { error: uploadError } = await supabase.storage
+          .from(bucketName)
+          .upload(filePath, imageFile);
+
+        if (uploadError) {
+          // Fallback to 'public' or 'avatars' if specific bucket fails (usually implies missing bucket)
+          console.warn('Upload to common_areas failed, trying avatars/public...');
+          const { error: retryError } = await supabase.storage.from('avatars').upload(`areas/${filePath}`, imageFile);
+          if (retryError) throw uploadError; // Throw original if retry also fails
+          const { data } = supabase.storage.from('avatars').getPublicUrl(`areas/${filePath}`);
+          publicUrl = data.publicUrl;
+        } else {
+          const { data } = supabase.storage.from(bucketName).getPublicUrl(filePath);
+          publicUrl = data.publicUrl;
+        }
+      }
+
+      // Default Image if none provided
+      if (!publicUrl) publicUrl = 'https://images.unsplash.com/photo-1519167758481-83f550bb49b3?auto=format&fit=crop&w=800&q=80';
+
+      const areaData = {
+        id: editingId || Date.now().toString(),
+        name: form.name,
+        desc: form.desc,
+        price: form.price,
+        hours: form.hours,
+        inventory: form.inventory,
+        photos: [publicUrl],
+        icon: 'Building2'
+      };
+
+      if (editingId && onUpdateArea) {
+        onUpdateArea(areaData);
+      } else {
+        setCommonAreas([...commonAreas, areaData]);
+      }
+
+      setIsAdding(false);
+      setEditingId(null);
+      setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '' });
+      setImageFile(null);
+    } catch (error: any) {
+      alert('Erro ao salvar imagem: ' + error.message);
+    } finally {
+      setUploading(false);
     }
-
-    setIsAdding(false);
-    setEditingId(null);
-    setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '' });
   };
 
   const startEdit = (area: any) => {
@@ -138,6 +180,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
     });
     setEditingId(area.id);
     setIsAdding(true);
+    setImageFile(null);
   };
 
   const handleDelete = (id: string) => {
@@ -158,8 +201,38 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
       {isAdding && (
         <Card className="p-8 space-y-4 border-2 border-dashed border-violet-200 bg-violet-50/30 rounded-[40px] animate-in slide-in-from-top-4">
           <h3 className="text-lg font-black italic text-slate-900">{editingId ? 'Editar Espaço' : 'Novo Espaço'}</h3>
+
+          {/* PHOTO UPLOAD INPUT */}
+          <div
+            onClick={() => fileInputRef.current?.click()}
+            className="h-40 bg-white/50 rounded-3xl border-2 border-dashed border-violet-300 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white hover:border-violet-500 transition-all overflow-hidden relative"
+          >
+            {imageFile ? (
+              <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
+            ) : form.photo ? (
+              <img src={form.photo} className="w-full h-full object-cover opacity-50" />
+            ) : (
+              <>
+                <Camera className="text-violet-400" size={32} />
+                <span className="text-[10px] font-bold text-violet-400 uppercase">Toque para adicionar foto</span>
+              </>
+            )}
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              accept="image/*"
+              onChange={e => {
+                if (e.target.files?.[0]) {
+                  setImageFile(e.target.files[0]);
+                  setForm({ ...form, photo: '' }); // Clear URL if file selected
+                }
+              }}
+            />
+          </div>
+
           <Input placeholder="Nome da Área (Ex: Salão de Festas)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
-          <Input placeholder="Foto URL (Ex: https://...)" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="h-14" />
+          <Input placeholder="URL da Foto (Opcional se enviou arquivo)" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="h-14" />
           <div className="grid grid-cols-2 gap-4">
             <Input placeholder="Preço (R$ 0,00)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-14" />
             <Input placeholder="Horário (Ex: 08h - 22h)" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} className="h-14" />
@@ -169,7 +242,9 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
 
           <div className="flex gap-3 pt-2">
             <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
-            <Button fullWidth onClick={handleSave} className="bg-slate-950">Salvar</Button>
+            <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950">
+              {uploading ? 'Enviando...' : 'Salvar'}
+            </Button>
           </div>
         </Card>
       )}
@@ -606,17 +681,34 @@ export const AdminIncidents: React.FC<{ onBack: () => void; serviceRequests?: an
   );
 };
 export const AdminGarage: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="GARAGEM" onBack={onBack} /><div className="p-8 text-center text-slate-400 text-xs font-black uppercase tracking-widest py-32">Mapa de vagas em manutenção.</div></div>;
-export const AdminMaintenance: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="MANUTENÇÃO" onBack={onBack} /><div className="p-8 text-center text-slate-400 text-xs font-black uppercase tracking-widest py-32">Checklist diário de infraestrutura.</div></div>;
-export const AdminSystemUsers: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="SISTEMA" onBack={onBack} /><div className="p-8 text-center text-slate-400 text-xs font-black uppercase tracking-widest py-32">Configurações de níveis de acesso.</div></div>;
-export const AdminLostFound: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="ACHADOS" onBack={onBack} /></div>;
-export const AdminPolls: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="VOTAÇÕES" onBack={onBack} /></div>;
 
+// --- CATEGORIAS (COM SUB-CATEGORIAS) ---
 export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; onRefresh: () => void }> = ({ onBack, categories, onRefresh }) => {
   const [isAdding, setIsAdding] = useState(false);
-  const [form, setForm] = useState({ name: '', image: '' });
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState({ name: '', image: '', type: 'product', parent_id: '' });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Separate parents and children for UI logic
+  const parentCategories = categories.filter(c => !c.parent_id);
+  const subCategories = categories.filter(c => c.parent_id);
+
+  const getChildren = (parentId: string) => subCategories.filter(sc => sc.parent_id === parentId);
+
+  const handleEdit = (category: any) => {
+    setEditingId(category.id);
+    setForm({
+      name: category.name,
+      image: category.image_url || '',
+      type: category.type,
+      parent_id: category.parent_id || ''
+    });
+    setImageFile(null);
+    setIsAdding(true);
+    window.scrollTo(0, 0);
+  };
 
   const handleSave = async () => {
     if (!form.name) return;
@@ -630,107 +722,145 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
         const fileName = `${Date.now()}.${fileExt}`;
         const filePath = `${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
-          .from('categories')
-          .upload(filePath, imageFile);
-
-        if (uploadError) throw uploadError;
-
-        const { data } = supabase.storage
-          .from('categories')
-          .getPublicUrl(filePath);
-
-        publicUrl = data.publicUrl;
+        // Upload to 'categories' bucket or fallback
+        const { error: uploadError } = await supabase.storage.from('categories').upload(filePath, imageFile);
+        if (uploadError) {
+          console.warn('Bucket categories not found, trying public...');
+          const { error: retryError } = await supabase.storage.from('public').upload(`categories/${filePath}`, imageFile);
+          if (retryError) throw uploadError;
+          const { data } = supabase.storage.from('public').getPublicUrl(`categories/${filePath}`);
+          publicUrl = data.publicUrl;
+        } else {
+          const { data } = supabase.storage.from('categories').getPublicUrl(filePath);
+          publicUrl = data.publicUrl;
+        }
       }
 
-      const { error } = await supabase.from('categories').insert([{
+      // If parent_id is set, force type to match parent
+      let finalType = form.type;
+      if (form.parent_id) {
+        const parent = parentCategories.find(p => p.id === form.parent_id);
+        if (parent) finalType = parent.type;
+      }
+
+      const payload: any = {
         name: form.name,
         image_url: publicUrl,
-        type: 'product'
-      }]);
+        type: finalType,
+        parent_id: form.parent_id || null
+      };
 
-      if (error) throw error;
+      if (editingId) {
+        const { error } = await supabase.from('categories').update(payload).eq('id', editingId);
+        if (error) throw error;
+        alert('Categoria atualizada!');
+      } else {
+        const { error } = await supabase.from('categories').insert([payload]);
+        if (error) throw error;
+        alert('Categoria criada!');
+      }
 
-      alert('Categoria criada com sucesso!');
       setIsAdding(false);
-      setForm({ name: '', image: '' });
+      setEditingId(null);
+      setForm({ name: '', image: '', type: 'product', parent_id: '' });
       setImageFile(null);
       onRefresh();
 
     } catch (error: any) {
-      alert('Erro ao salvar categoria: ' + error.message);
+      alert('Erro: ' + error.message);
     } finally {
       setUploading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Tem certeza? Isso pode afetar produtos desta categoria.')) return;
+    if (!confirm('Excluir? Isso apagará também as sub-categorias.')) return;
     const { error } = await supabase.from('categories').delete().eq('id', id);
     if (!error) onRefresh();
-    else alert('Erro ao excluir: ' + error.message);
+    else alert('Erro: ' + error.message);
   };
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
       <AdminHeader title="CATEGORIAS" onBack={onBack} />
       <div className="p-6 space-y-6">
-        <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2"><Plus size={20} /> Nova Categoria</Button>
+        {!isAdding && (
+          <Button fullWidth onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: 'product', parent_id: '' }); }} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2">
+            <Plus size={20} /> Nova Categoria
+          </Button>
+        )}
 
         {isAdding && (
           <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
-            <h3 className="text-lg font-black italic text-slate-900">Nova Categoria</h3>
+            <h3 className="text-lg font-black italic text-slate-900">{editingId ? 'Editar Categoria' : 'Nova Categoria'}</h3>
 
+            {/* PREVIEW/UPLOAD */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-violet-400 transition-all overflow-hidden relative"
+              className="h-32 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-violet-400 overflow-hidden relative"
             >
-              {imageFile ? (
-                <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
-              ) : form.image ? (
-                <img src={form.image} className="w-full h-full object-cover opacity-50" />
-              ) : (
-                <>
-                  <ImageIcon className="text-slate-300" size={32} />
-                  <span className="text-[10px] font-bold text-slate-400 uppercase">Toque para Upload</span>
-                </>
-              )}
-              <input
-                type="file"
-                ref={fileInputRef}
-                className="hidden"
-                accept="image/*"
-                onChange={e => {
-                  if (e.target.files?.[0]) {
-                    setImageFile(e.target.files[0]);
-                    setForm({ ...form, image: '' });
-                  }
-                }}
-              />
+              {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> :
+                form.image ? <img src={form.image} className="w-full h-full object-cover opacity-50" /> : <ImageIcon className="text-slate-300" size={32} />}
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => { if (e.target.files?.[0]) setImageFile(e.target.files[0]); }} />
             </div>
 
-            <Input placeholder="Nome da Categoria (Ex: Elétrica)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
-            <Input placeholder="OU Cole uma URL de Imagem..." value={form.image} onChange={e => setForm({ ...form, image: e.target.value })} className="h-14" />
+            <Input placeholder="Nome (Ex: Manutenção ou Piscina)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Tipo</label>
+                <select value={form.type} disabled={!!form.parent_id} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full h-14 bg-white rounded-3xl px-4 font-bold border border-slate-100 text-xs text-slate-700 outline-none">
+                  <option value="product">Produto</option>
+                  <option value="service">Serviço</option>
+                </select>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Categoria Pai (Opcional)</label>
+                <select value={form.parent_id} onChange={e => setForm({ ...form, parent_id: e.target.value })} className="w-full h-14 bg-white rounded-3xl px-4 font-bold border border-slate-100 text-xs text-slate-600 outline-none">
+                  <option value="">Nenhuma (Raiz)</option>
+                  {parentCategories.map(p => <option key={p.id} value={p.id}>{p.name} ({p.type === 'service' ? 'Serviço' : 'Produto'})</option>)}
+                </select>
+              </div>
+            </div>
 
             <div className="flex gap-3">
-              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
-              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-violet-600 font-black uppercase text-[10px]">
-                {uploading ? 'Salvando...' : 'Criar Categoria'}
-              </Button>
+              <Button fullWidth variant="secondary" onClick={() => { setIsAdding(false); setEditingId(null); }}>Cancelar</Button>
+              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950 text-[10px] uppercase font-black">{uploading ? '...' : (editingId ? 'Atualizar' : 'Salvar')}</Button>
             </div>
           </Card>
         )}
 
-        <div className="grid grid-cols-2 gap-4">
-          {categories.map(cat => (
-            <div key={cat.id} className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm flex flex-col gap-3 group relative overflow-hidden">
-              <div className="h-32 bg-slate-100 rounded-2xl overflow-hidden relative">
-                <img src={cat.image_url || `https://ui-avatars.com/api/?name=${cat.name}&background=random`} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-black/20 group-hover:bg-black/0 transition-all" />
+        <div className="space-y-6">
+          {parentCategories.map(parent => (
+            <div key={parent.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group overflow-hidden">
+              {/* PARENT HEADER */}
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden cursor-pointer" onClick={() => handleEdit(parent)}>
+                  <img src={parent.image_url || `https://ui-avatars.com/api/?name=${parent.name}&background=random`} className="w-full h-full object-cover" />
+                </div>
+                <div className="cursor-pointer" onClick={() => handleEdit(parent)}>
+                  <h4 className="font-black text-slate-900 text-xl italic">{parent.name}</h4>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{parent.type === 'service' ? 'Serviços' : 'Marketplace'}</p>
+                </div>
+                <div className="ml-auto flex gap-2">
+                  <button onClick={() => handleEdit(parent)} className="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center active:scale-95"><Settings size={18} /></button>
+                  <button onClick={() => handleDelete(parent.id)} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center active:scale-95"><Trash2 size={18} /></button>
+                </div>
               </div>
-              <div className="flex justify-between items-center px-1">
-                <span className="font-black text-slate-900 italic">{cat.name}</span>
-                <button onClick={() => handleDelete(cat.id)} className="w-8 h-8 bg-rose-50 text-rose-500 rounded-full flex items-center justify-center active:scale-90"><Trash2 size={14} /></button>
+
+              {/* SUB CATEGORIES CHIPS */}
+              <div className="flex flex-wrap gap-2">
+                {getChildren(parent.id).map(child => (
+                  <div key={child.id} className="pl-3 pr-2 py-1.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2 group/child">
+                    <span className="text-xs font-bold text-slate-600 cursor-pointer hover:text-violet-600" onClick={() => handleEdit(child)}>{child.name}</span>
+                    <button onClick={() => handleEdit(child)} className="w-5 h-5 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center opacity-0 group-hover/child:opacity-100 transition-opacity"><Settings size={10} /></button>
+                    <button onClick={() => handleDelete(child.id)} className="w-5 h-5 bg-rose-200 text-rose-600 rounded-full flex items-center justify-center opacity-50 group-hover/child:opacity-100"><X size={12} strokeWidth={3} /></button>
+                  </div>
+                ))}
+                <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: parent.type, parent_id: parent.id }); }} className="px-4 py-1.5 bg-violet-50 text-violet-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 border border-violet-100 hover:bg-violet-100 transition-colors">
+                  <Plus size={12} /> Add Sub
+                </button>
               </div>
             </div>
           ))}
@@ -850,3 +980,4 @@ export const AdminProfile: React.FC<{ currentUser: any; onLogout: () => void }> 
     </div>
   );
 };
+

@@ -857,7 +857,7 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
   );
 };
 
-export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser }) => {
+export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any; categories?: any[] }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser, categories = [] }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
 
@@ -900,28 +900,47 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
     return Array.from(new Set([...configCats, ...serviceCats])).filter(c => c !== 'Outros').concat('Outros'); // Ensure Outros is last
   }, [services]);
 
-  // FILTERED LIST
+  // FILTERED LIST - SMART SEARCH IMPLEMENTATION
   const filteredPros = useMemo(() => {
     let filtered = services;
 
-    // Filter by Category
+    // Filter by Category (Active Category Tab)
     if (activeCategory !== 'Todos') {
-      filtered = filtered.filter(s => s.category === activeCategory);
+      const targetCats = [activeCategory];
+      // Include sub-categories if activeCategory is a parent
+      const catObj = categories.find(c => c.name === activeCategory);
+      if (catObj) {
+        const children = categories.filter(c => c.parent_id === catObj.id).map(c => c.name);
+        targetCats.push(...children);
+      }
+      filtered = filtered.filter(s => targetCats.includes(s.category));
     }
 
-    // Filter by Search (Name or Category if in Todos)
+    // Filter by Search (Name, Description, OR Smart Category Match)
     if (searchTerm) {
       const lower = searchTerm.toLowerCase();
+
+      // Find relevant category names based on search term (Parent -> Children)
+      const relevantCatNames = new Set<string>();
+      const matchedCats = categories.filter(c => c.name.toLowerCase().includes(lower));
+
+      matchedCats.forEach(c => {
+        relevantCatNames.add(c.name);
+        // If it's a parent, add its children
+        categories.filter(child => child.parent_id === c.id).forEach(child => relevantCatNames.add(child.name));
+      });
+
       filtered = filtered.filter(s =>
         s.title.toLowerCase().includes(lower) ||
         s.providerName?.toLowerCase().includes(lower) ||
         s.category?.toLowerCase().includes(lower) ||
+        relevantCatNames.has(s.category) ||
         s.description?.toLowerCase().includes(lower) ||
-        (s.specialties && s.specialties.some((tag: string) => tag.toLowerCase().includes(lower))) // Check tags
+        (s.specialties && s.specialties.some((tag: string) => tag.toLowerCase().includes(lower)))
       );
     }
     return filtered;
-  }, [services, activeCategory, searchTerm]);
+  }, [services, activeCategory, searchTerm, categories]);
 
   const handleRequest = (proName: string, proId: string) => {
     onServiceRequest({

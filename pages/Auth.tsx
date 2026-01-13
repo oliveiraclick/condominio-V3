@@ -201,10 +201,123 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         Criar Nova Conta
       </Button>
 
-      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.7.2 • App Morador</p>
+      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.7.3 • App Morador</p>
+
+      {/* TEST USERS SETUP BUTTON */}
+      <div className="mt-8">
+        <CreateTestUsers />
+      </div>
     </div>
   );
 };
+
+// --- COMPONENTE: SETUP DE USUÁRIOS DE TESTE ---
+const CreateTestUsers: React.FC = () => {
+  const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [log, setLog] = useState<string[]>([]);
+
+  const createUsers = async () => {
+    setStatus('loading');
+    setLog([]);
+    const users = [
+      { email: 'morador@morador.app', pass: '102030', role: UserRole.RESIDENT, name: 'Morador Teste', unit: '101', tower: 'A' },
+      { email: 'prestador@morador.app', pass: '102030', role: UserRole.PROFESSIONAL, name: 'Prestador Teste', category: 'Manutenção' },
+      { email: 'adm@morador.app', pass: '102030', role: UserRole.ADMIN, name: 'Síndico Teste' },
+      { email: 'sadm@morador.app', pass: '102030', role: UserRole.SUPER_ADMIN, name: 'Super Admin' },
+    ];
+
+    try {
+      for (const u of users) {
+        setLog(prev => [...prev, `Criando ${u.email}...`]);
+
+        // 1. Sign Up
+        const { data, error } = await supabase.auth.signUp({
+          email: u.email,
+          password: u.pass,
+          options: {
+            data: { full_name: u.name, role: u.role }
+          }
+        });
+
+        if (error) {
+          if (error.message.includes('already registered')) {
+            setLog(prev => [...prev, `⚠️ ${u.email} já existe. Tentando atualizar perfil...`]);
+            // Tenta recuperar ID se possível? Não dá sem login.
+            // Mas se já existe, podemos tentar fazer login para pegar o ID?
+            // Simplificação: Assume que se existe, o usuário deve fazer login manual.
+            // Mas podemos tentar UPDATE na tabela profiles se soubermos o ID? Não sabemos.
+            continue;
+          } else {
+            throw error;
+          }
+        }
+
+        if (data.user) {
+          // 2. Setup Profile immediatelly
+          const profileData: any = {
+            id: data.user.id,
+            email: u.email,
+            name: u.name,
+            role: u.role,
+            is_free: true
+          };
+
+          if (u.role === UserRole.RESIDENT) {
+            profileData.unit = u.unit;
+            profileData.tower = u.tower;
+          }
+          if (u.role === UserRole.PROFESSIONAL) {
+            profileData.category = u.category;
+            profileData.subscription_status = 'trial';
+            profileData.trial_ends_at = new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString();
+          }
+
+          const { error: profileError } = await supabase.from('profiles').upsert(profileData);
+          if (profileError) {
+            console.error('Erro ao criar perfil:', profileError);
+            setLog(prev => [...prev, `❌ Erro perfil ${u.email}: ${profileError.message}`]);
+          } else {
+            setLog(prev => [...prev, `✅ ${u.email} criado com sucesso!`]);
+          }
+        }
+      }
+      setStatus('success');
+    } catch (err: any) {
+      console.error(err);
+      setLog(prev => [...prev, `❌ Erro Geral: ${err.message}`]);
+      setStatus('error');
+    }
+  };
+
+  if (status === 'success') {
+    return (
+      <div className="p-4 bg-emerald-50 rounded-xl border border-emerald-100 text-center">
+        <p className="text-emerald-700 font-bold text-xs">Usuários Criados!</p>
+        <div className="text-[10px] text-emerald-600 mt-2 text-left space-y-1">
+          {log.map((l, i) => <div key={i}>{l}</div>)}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="w-full">
+      <button
+        onClick={createUsers}
+        disabled={status === 'loading'}
+        className="w-full py-3 bg-slate-100 text-slate-500 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-slate-200 transition-colors"
+      >
+        {status === 'loading' ? 'Criando...' : '⚙️ Configurar Usuários de Teste'}
+      </button>
+      {status === 'loading' && (
+        <div className="mt-2 text-[9px] text-slate-400 font-mono text-left bg-slate-50 p-2 rounded-lg">
+          {log.map((l, i) => <div key={i}>{l}</div>)}
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 // --- COMPONENTE: REGISTRO DE MORADOR (COM SAFEGUARDS) ---
 export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onBack: () => void }> = ({ onFinish, onBack }) => {
