@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from './types';
 import { supabase } from './supabase';
-import { ToastProvider } from './components/UI';
+import { ToastProvider } from './components/ui';
 
 import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
 // Imports de Páginas e Componentes
@@ -22,8 +22,7 @@ import {
 import {
   AdminDashboard, AdminResidents, AdminNotices, AdminAccess,
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
-  AdminNavigation, AdminIncidents, AdminGarage, AdminLostFound, AdminPolls, AdminMaintenance,
-  AdminSystemUsers, AdminCategories, AdminProfile
+  AdminNavigation, AdminIncidents, AdminGarage, AdminCategories, AdminProfile
 } from './pages/Admin';
 import { SuperAdmin } from './pages/SuperAdmin';
 
@@ -302,7 +301,7 @@ const App: React.FC = () => {
 
       const [areas, resvs, requests, pros, cats, onSite, prods, desap, allProfiles] = await Promise.all([
         fetchTable('common_areas', supabase.from('common_areas').select('*').order('name')),
-        fetchTable('reservations', supabase.from('reservations').select('*').order('date')),
+        fetchTable('reservations', supabase.from('reservations').select('*, common_areas(name)').order('date')),
         fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false })),
         fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
         fetchTable('categories', supabase.from('categories').select('*').order('name')),
@@ -326,7 +325,7 @@ const App: React.FC = () => {
             ...r,
             displayName: resident?.name || 'Morador', // Fallback for safety
             resident: resident?.name || 'Morador',    // Explicitly for Admin UI
-            area: r.area_name || r.area_id,           // UI expects 'area'
+            area: r.common_areas?.name || r.area_name || r.area_id,           // UI expects 'area'
             avatar: resident?.avatar
           };
         });
@@ -520,7 +519,6 @@ const App: React.FC = () => {
             const insertData: any = {
               resident_id: session.user.id,
               area_id: res.areaId,
-              area_name: res.area,
               date: res.date,
               status: 'confirmed',
               unit: currentUser?.unit,

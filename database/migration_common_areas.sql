@@ -16,9 +16,11 @@ CREATE TABLE IF NOT EXISTS common_areas (
 ALTER TABLE common_areas ENABLE ROW LEVEL SECURITY;
 
 -- Policies
+DROP POLICY IF EXISTS "Public read access" ON common_areas;
 CREATE POLICY "Public read access" ON common_areas
   FOR SELECT USING (true);
 
+DROP POLICY IF EXISTS "Admin write access" ON common_areas;
 CREATE POLICY "Admin write access" ON common_areas
   FOR ALL USING (
     (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'super_admin')

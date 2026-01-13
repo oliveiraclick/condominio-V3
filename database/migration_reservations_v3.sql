@@ -4,7 +4,8 @@
 -- Adicionar campos de horário específico
 ALTER TABLE public.reservations 
 ADD COLUMN IF NOT EXISTS start_time time,
-ADD COLUMN IF NOT EXISTS end_time time;
+ADD COLUMN IF NOT EXISTS end_time time,
+ADD COLUMN IF NOT EXISTS time_slot text DEFAULT 'all_day';
 
 -- Adicionar campos de horário disponível nas áreas comuns
 ALTER TABLE public.common_areas
@@ -23,6 +24,9 @@ SET reservation_type = 'full_day'
 WHERE category IN ('Quiosques', 'Salão de Festas', 'Churrasqueira');
 
 -- Criar constraint para validar horários
+ALTER TABLE public.reservations
+DROP CONSTRAINT IF EXISTS check_time_slot_or_times;
+
 ALTER TABLE public.reservations
 ADD CONSTRAINT check_time_slot_or_times 
 CHECK (
