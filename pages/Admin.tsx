@@ -1035,7 +1035,9 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                     <Package size={24} />
                   </div>
                   <div className="flex-1">
-                    <h5 className="font-bold text-slate-900 italic">RUA {p.profiles?.tower}, {p.unit}</h5>
+                    <h5 className="font-bold text-slate-900 italic uppercase">
+                      {p.unit}, {p.profiles?.tower}
+                    </h5>
                     <p className="text-[10px] font-black text-slate-400 uppercase">{p.resident_name}</p>
                     <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
                   </div>
@@ -1063,7 +1065,9 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                       <CheckCircle2 size={24} className="stroke-[3]" />
                     </div>
                     <div className="flex-1">
-                      <h5 className="font-bold text-slate-900 italic">RUA {p.profiles?.tower}, {p.unit}</h5>
+                      <h5 className="font-bold text-slate-900 italic uppercase">
+                        {p.unit}, {p.profiles?.tower}
+                      </h5>
                       <p className="text-[10px] font-black text-slate-400 uppercase">
                         RETIRADO EM {new Date(p.picked_up_at).toLocaleDateString()} ÀS {new Date(p.picked_up_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} POR {p.profiles?.name || 'Morador'}
                       </p>
