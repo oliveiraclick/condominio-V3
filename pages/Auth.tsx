@@ -203,10 +203,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
       <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v1.7.3 • App Morador</p>
 
-      {/* TEST USERS SETUP BUTTON */}
-      <div className="mt-8">
-        <CreateTestUsers />
-      </div>
+      {/* TEST USERS SETUP BUTTON REMOVED */}
     </div>
   );
 };
