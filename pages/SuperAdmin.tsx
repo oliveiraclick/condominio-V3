@@ -162,6 +162,7 @@ const CondosView = () => {
     setEditingId(condo.id);
     setShowNew(true);
     setLogoFile(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleDelete = async (id: string) => {
