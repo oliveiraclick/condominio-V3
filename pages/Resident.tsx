@@ -457,8 +457,8 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
           <div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-brand-500">
               {item.unit && item.unit.toUpperCase().includes('CASA')
-                ? `(Rua ${item.tower}, ${item.unit})`
-                : item.tower ? `(${item.tower}, ${item.unit})` : ''}
+                ? `, Rua ${item.tower}, ${item.unit.replace(/casa/i, '').trim()}`
+                : item.tower ? `, ${item.tower} - ${item.unit}` : ''}
             </span></p>
           </div>
         </div>
@@ -1578,7 +1578,7 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
             <p className="text-xs text-slate-900 font-bold">Vendido por {item.user}</p>
             <p className="text-[10px] text-slate-400 font-medium">
               {item.unit && item.unit.toUpperCase().includes('CASA')
-                ? `Rua ${item.tower}, ${item.unit}`
+                ? `Rua ${item.tower}, ${item.unit.replace(/casa/i, '').trim()}`
                 : `${item.tower || ''} - ${item.unit || 'Morador Verificado'}`}
             </p>
           </div>
