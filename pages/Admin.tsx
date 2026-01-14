@@ -718,11 +718,16 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   }, []);
 
   const fetchPackages = async () => {
-    // Fixed Join Syntax: Explicitly use resident FK to avoid ambiguity with picked_up_by
-    const { data } = await supabase
+    // Explicit FK to profiles (v2)
+    const { data, error } = await supabase
       .from('packages')
-      .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
+      .select('*, profiles:profiles!packages_resident_profile_fkey(name, unit, tower)')
       .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Fetch Error:', error);
+      alert('Erro ao buscar encomendas: ' + error.message);
+    }
     if (data) setPkgList(data);
   };
 
@@ -801,8 +806,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       // Corrected Join Syntax: profiles(...) relies on the FK constraint.
       const { data: freshPackages, error: fetchError } = await supabase
         .from('packages')
-        // Explicitly specify the FK constraint to avoid ambiguity with picked_up_by
-        .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
+        // Explicitly specify the FK constraint (v2)
+        .select('*, profiles:profiles!packages_resident_profile_fkey(name, unit, tower)')
         .eq('status', 'pending');
 
       if (fetchError) {
@@ -1012,20 +1017,26 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
             {/* FILTERS */}
             <div className="flex gap-3">
               <div className="flex-1 relative">
-                <Search className="absolute left-4 top-4 text-slate-400" size={20} />
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input
                   placeholder="Buscar morador, unidade..."
-                  className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold"
+                  className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold focus:ring-2 focus:ring-violet-500/20 outline-none transition-all"
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-              <input
-                type="date"
-                className="h-14 px-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 outline-none"
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                }}
-              />
+              <div className="relative shrink-0">
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
+                  <Calendar size={20} className="text-slate-500" />
+                </div>
+                <input
+                  type="date"
+                  className="h-14 w-14 opacity-0 cursor-pointer absolute inset-0 z-20"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="h-14 w-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-sm">
+                  {/* Visual container only */}
+                </div>
+              </div>
             </div>
 
             <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
