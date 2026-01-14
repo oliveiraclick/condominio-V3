@@ -793,9 +793,10 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       const allRelevantIds = [resident.id, ...authorizedGrantorIds];
 
       // 1. Force Fetch fresh packages (Attempt 1: Strict Pending)
+      // Corrected Join Syntax: profiles(...) relies on the FK constraint.
       const { data: freshPackages, error: fetchError } = await supabase
         .from('packages')
-        .select('*, profiles:resident_id(name, unit, tower)')
+        .select('*, profiles(name, unit, tower)')
         .eq('status', 'pending');
 
       if (fetchError) {
