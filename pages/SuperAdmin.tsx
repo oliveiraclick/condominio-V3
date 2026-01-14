@@ -239,6 +239,43 @@ const CondosView = () => {
             </div>
           </div>
 
+          {/* SYMBOL UPLOAD & OPACITY */}
+          <div className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200">
+            <div
+              onClick={() => symbolInputRef.current?.click()}
+              className="w-20 h-20 bg-white rounded-xl border-2 border-dashed border-slate-300 flex flex-col items-center justify-center cursor-pointer hover:border-brand-500 overflow-hidden relative shrink-0"
+            >
+              {symbolFile ? <img src={URL.createObjectURL(symbolFile)} className="w-full h-full object-contain p-2" /> :
+                newCondo.symbol_url ? <img src={newCondo.symbol_url} className="w-full h-full object-contain p-2 bg-slate-900/10" /> : <div className="text-center p-2"><ImageIcon size={20} className="mx-auto text-slate-400" /><span className="text-[8px] font-bold text-slate-400 uppercase leading-none block mt-1">Símbolo</span></div>}
+              <input type="file" ref={symbolInputRef} className="hidden" accept="image/*" onChange={e => { if (e.target.files?.[0]) setSymbolFile(e.target.files[0]); }} />
+            </div>
+
+            <div className="flex-1 space-y-2">
+              <div className="flex justify-between">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Opacidade do Símbolo</label>
+                <span className="text-xs font-bold text-brand-600">{newCondo.symbol_opacity}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={newCondo.symbol_opacity}
+                onChange={(e) => setNewCondo({ ...newCondo, symbol_opacity: parseInt(e.target.value) })}
+                className="w-full h-2 bg-slate-200 rounded-lg appearance-none cursor-pointer accent-brand-600"
+              />
+              <div className="h-10 bg-brand-600 rounded-lg flex items-center justify-center relative overflow-hidden">
+                <span className="text-[10px] text-white font-bold opacity-50 z-10 uppercase tracking-widest">Preview Fundo</span>
+                {(symbolFile || newCondo.symbol_url) && (
+                  <img
+                    src={symbolFile ? URL.createObjectURL(symbolFile) : newCondo.symbol_url}
+                    className="absolute center h-16 w-16 object-contain"
+                    style={{ opacity: newCondo.symbol_opacity / 100 }}
+                  />
+                )}
+              </div>
+            </div>
+          </div>
+
           <Input placeholder="Nome do Condomínio" value={newCondo.name} onChange={e => setNewCondo({ ...newCondo, name: e.target.value })} />
           <Input placeholder="Endereço Completo" value={newCondo.address} onChange={e => setNewCondo({ ...newCondo, address: e.target.value })} />
 
