@@ -126,7 +126,7 @@ const App: React.FC = () => {
         });
 
         if (profile.condominium_id) {
-          supabase.from('condominiums').select('name, primary_color, logo_url').eq('id', profile.condominium_id).maybeSingle()
+          supabase.from('condominiums').select('name, primary_color, logo_url, symbol_url, symbol_opacity').eq('id', profile.condominium_id).maybeSingle()
             .then(({ data: condo }) => {
               if (condo) {
                 // Apply Branding
@@ -136,7 +136,14 @@ const App: React.FC = () => {
                 }
 
                 setCurrentUser((prev: any) => {
-                  const updated = { ...prev, condo: condo.name, logo: condo.logo_url, primaryColor: condo.primary_color };
+                  const updated = {
+                    ...prev,
+                    condo: condo.name,
+                    logo: condo.logo_url,
+                    primaryColor: condo.primary_color,
+                    symbol: condo.symbol_url,
+                    symbolOpacity: condo.symbol_opacity
+                  };
                   localStorage.setItem('userProfile_cache', JSON.stringify(updated)); // Atualiza cache com condo e branding
                   return updated;
                 });

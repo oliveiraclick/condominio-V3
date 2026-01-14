@@ -681,66 +681,73 @@ export const ResidentHome: React.FC<{
       />
 
       {/* HEADER DINÂMICO */}
-      <div className="bg-primary p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-hidden">
-        {/* WATERMARK LOGO (Novo) */}
-        {currentUser?.logo && (
-          <div className="absolute -top-10 -right-10 w-64 h-64 opacity-[0.15] pointer-events-none rotate-12 z-0 mix-blend-overlay">
-            <img src={currentUser.logo} className="w-full h-full object-contain" />
+      {/* HEADER DINÂMICO */}
+      <div className="bg-primary pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
+        {/* WATERMARK SYMBOL (Novo) */}
+        {(currentUser?.symbol || currentUser?.logo) && (
+          <div
+            className="absolute top-0 right-0 w-64 h-64 pointer-events-none rotate-12 z-0 mix-blend-overlay"
+            style={{ opacity: (currentUser.symbolOpacity || 15) / 100 }}
+          >
+            <img src={currentUser.symbol || currentUser.logo} className="w-full h-full object-contain" />
           </div>
         )}
 
-        <div className="flex items-center justify-between mb-8 relative z-10">
-          {/* Left Side: Avatar & Name */}
-          <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-xl bg-white/10 backdrop-blur-sm">
-              <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
-            </div>
-            <div>
-              <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
-              <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1">
-                <MapPin size={12} className="text-white/70" />
-                {currentUser?.unit?.toString().toUpperCase().includes('RUA')
-                  ? `${currentUser.unit}, ${currentUser.tower}`
-                  : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
-                }
-              </p>
-            </div>
-          </div>
-
-          {/* Right Side: Logo & Actions */}
-          <div className="flex items-center gap-3">
-            {currentUser?.logo && (
-              <div className="w-12 h-12 bg-white rounded-xl p-1.5 flex items-center justify-center shadow-lg">
-                <img src={currentUser.logo} className="w-full h-full object-contain" />
+        <div className="px-6 pb-20 relative z-10">
+          <div className="flex items-center justify-between mb-8">
+            {/* Left Side: Avatar & Name */}
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-xl bg-white/10 backdrop-blur-sm">
+                <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
-            )}
+              <div>
+                <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
+                <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1">
+                  <MapPin size={12} className="text-white/70" />
+                  {currentUser?.unit?.toString().toUpperCase().includes('RUA')
+                    ? `${currentUser.unit}, ${currentUser.tower}`
+                    : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
+                  }
+                </p>
+              </div>
+            </div>
 
-            <button onClick={() => setDigitalIdOpen(true)} className="bg-white p-2.5 rounded-xl shadow-sm active:scale-95 transition-all">
-              <QrCode size={20} className="text-slate-900" />
-            </button>
+            {/* Right Side: Actions (Logo removed) */}
+            <div className="flex items-center gap-3">
+              <button onClick={() => setDigitalIdOpen(true)} className="bg-white p-2.5 rounded-xl shadow-sm active:scale-95 transition-all">
+                <QrCode size={20} className="text-slate-900" />
+              </button>
 
-            <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
-              <Bell size={24} className="text-white" />
-              <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
+              <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
+                <Bell size={24} className="text-white" />
+                <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
+              </button>
+            </div>
+          </div>
+
+          <div className="relative">
+            <button
+              onClick={() => onSelectCategory('Todos', homeSearch.trim())}
+              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 active:scale-90 transition-transform"
+            >
+              <Search className="text-white/70" size={18} />
             </button>
+            <Input
+              placeholder="Procurar produto ou serviço..."
+              className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder:text-white/60 focus:bg-white/20 transition-all font-sans"
+              value={homeSearch}
+              onChange={(e) => setHomeSearch(e.target.value)}
+              onKeyDown={handleHomeSearch}
+            />
           </div>
         </div>
 
-        <div className="relative">
-          <button
-            onClick={() => onSelectCategory('Todos', homeSearch.trim())}
-            className="absolute left-4 top-1/2 -translate-y-1/2 p-2 active:scale-90 transition-transform"
-          >
-            <Search className="text-white/70" size={18} />
-          </button>
-          <Input
-            placeholder="Procurar produto ou serviço..."
-            className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder:text-white/60 focus:bg-white/20 transition-all"
-            value={homeSearch}
-            onChange={(e) => setHomeSearch(e.target.value)}
-            onKeyDown={handleHomeSearch}
-          />
-        </div>
+        {/* LOGO CENTRALIZADA (BAIXO) */}
+        {currentUser?.logo && (
+          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-24 h-24 bg-white rounded-full p-2 shadow-xl flex items-center justify-center z-20">
+            <img src={currentUser.logo} className="w-full h-full object-contain" />
+          </div>
+        )}
       </div>
 
       <div className="p-6 space-y-12">
