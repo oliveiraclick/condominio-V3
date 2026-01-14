@@ -1032,17 +1032,20 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
         <div className="space-y-4 pt-8 border-t border-slate-100">
           <SectionHeader title="Histórico de Entregas" />
-          {pkgList.filter(p => p.status === 'delivered').map(p => (
-            <div key={p.id} className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 opacity-100 transition-opacity">
-              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
-                <CheckCircle2 size={24} />
+          {pkgList
+            .filter(p => p.status === 'delivered')
+            .sort((a, b) => new Date(b.picked_up_at || 0).getTime() - new Date(a.picked_up_at || 0).getTime())
+            .map(p => (
+              <div key={p.id} className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 opacity-100 transition-opacity">
+                <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                  <CheckCircle2 size={24} />
+                </div>
+                <div className="flex-1">
+                  <h5 className="font-bold text-slate-900 italic">RUA {p.profiles?.tower}, {p.unit}</h5>
+                  <p className="text-[10px] font-black text-slate-400 uppercase">Retirado em {new Date(p.picked_up_at).toLocaleDateString()} às {new Date(p.picked_up_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} por {p.profiles?.name || 'Morador'}</p>
+                </div>
               </div>
-              <div className="flex-1">
-                <h5 className="font-bold text-slate-900 italic">RUA {p.profiles?.tower}, {p.unit}</h5>
-                <p className="text-[10px] font-black text-slate-400 uppercase">Retirado em {new Date(p.picked_up_at).toLocaleDateString()} por {p.profiles?.name || 'Morador'}</p>
-              </div>
-            </div>
-          ))}
+            ))}
         </div>
       </div>
 
