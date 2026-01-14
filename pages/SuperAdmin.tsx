@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon, Key, Lock, CircleAlert } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 
@@ -722,10 +722,21 @@ const AccessDevicesView = () => {
                 {condos.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
             </div>
+
+            {/* API Key (Auto-generated) */}
+            <div className="space-y-2 col-span-1 md:col-span-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Token de Acesso (Gerado Automaticamente)</label>
+              <div className="flex bg-slate-100 rounded-xl p-3 items-center justify-between border border-slate-200">
+                <code className="text-xs font-mono font-bold text-slate-600 tracking-wider">
+                  {newDevice.api_key || 'Será gerado ao salvar...'}
+                </code>
+                <Lock key="lock-icon" size={14} className="text-slate-400" />
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-3">
-            <Button onClick={handleSave} className="flex-1 bg-brand-600 text-white h-12 rounded-xl font-black uppercase tracking-widest hover:scale-[1.02]">
+            <Button onClick={handleSave} className="flex-1 bg-brand-600 text-white h-12 rounded-xl font-black uppercase tracking-widest hover:scale-[1.02] shadow-lg shadow-brand-500/20">
               Salvar Dispositivo
             </Button>
             <button onClick={() => setShowNew(false)} className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-400">
@@ -735,7 +746,7 @@ const AccessDevicesView = () => {
         </div>
       )}
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-10">
         {devices.map(d => (
           <div key={d.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group hover:shadow-lg transition-all">
             <div className="absolute top-6 right-6 flex items-center gap-2">
@@ -760,9 +771,20 @@ const AccessDevicesView = () => {
                 <span className="text-slate-400 font-bold">IP:</span>
                 <span className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">{d.ip_address || '---'}</span>
               </div>
-              <div className="flex justify-between items-center text-xs">
+              <div className="flex justify-between items-center text-xs mb-2">
                 <span className="text-slate-400 font-bold">Tipo:</span>
                 <span className="font-bold text-slate-700">{d.device_type}</span>
+              </div>
+
+              <div className="pt-2 flex justify-between items-center">
+                <button className="text-[10px] font-bold text-brand-600 hover:text-brand-700 uppercase tracking-widest flex items-center gap-1" onClick={() => alert('Pinging device...' + d.ip_address)}>
+                  <Activity size={12} /> Testar Conexão
+                </button>
+                {d.api_key && (
+                  <div className="flex items-center gap-1 text-[10px] text-slate-400 font-mono bg-slate-50 px-2 py-1 rounded-full">
+                    <Key size={10} /> {d.api_key.substring(0, 8)}...
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -774,6 +796,44 @@ const AccessDevicesView = () => {
             <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum dispositivo encontrado</p>
           </div>
         )}
+      </div>
+
+      {/* --- RECENT ACCESS LOGS --- */}
+      <div className="bg-slate-900 text-white rounded-[40px] p-8 shadow-2xl relative overflow-hidden">
+        <div className="relative z-10">
+          <div className="flex justify-between items-center mb-6">
+            <div>
+              <h3 className="text-xl font-black italic tracking-tighter">Últimos Acessos</h3>
+              <p className="text-slate-400 text-xs font-bold uppercase tracking-widest mt-1">Monitoramento em Tempo Real</p>
+            </div>
+            <div className="w-10 h-10 rounded-full bg-slate-800 flex items-center justify-center animate-pulse">
+              <div className="w-3 h-3 bg-emerald-500 rounded-full shadow-[0_0_10px_#10b981]"></div>
+            </div>
+          </div>
+
+          <div className="space-y-4">
+            {/* Mock Logs for now, effectively waiting for real data */}
+            {[
+              { id: 1, user: 'Visitante Desconhecido', type: 'entry_denied', time: 'Agora', condo: 'Vila Flora' },
+              { id: 2, user: 'Ricardo Oliveira', type: 'entry_granted', time: '2 min atrás', condo: 'Vila Flora' },
+              { id: 3, user: 'Ana Paula', type: 'entry_granted', time: '15 min atrás', condo: 'Reserva do Bosque' }
+            ].map(log => (
+              <div key={log.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50 hover:bg-slate-800 transition-colors">
+                <div className="flex items-center gap-4">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${log.type === 'entry_granted' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>
+                    {log.type === 'entry_granted' ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
+                  </div>
+                  <div>
+                    <h4 className="font-bold text-sm">{log.user}</h4>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">{log.condo}</p>
+                  </div>
+                </div>
+                <span className="text-xs font-mono text-slate-500">{log.time}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2"></div>
       </div>
     </div>
   );
