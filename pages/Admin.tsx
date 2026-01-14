@@ -700,6 +700,7 @@ export const AdminAccess: React.FC<{ onBack: () => void; accessList?: any[]; onC
 export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; setPackages?: any }> = ({ onBack }) => {
   const [isRegistering, setIsRegistering] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
+  const [isViewingAll, setIsViewingAll] = useState(false); // NEW
   const [scannedResident, setScannedResident] = useState<any>(null);
   const [pendingDeliveryList, setPendingDeliveryList] = useState<any[]>([]);
 
@@ -717,7 +718,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   }, []);
 
   const fetchPackages = async () => {
-    const { data } = await supabase.from('packages').select('*, profiles:resident_id(name, unit, tower)').order('created_at', { ascending: false });
+    // Fixed Join Syntax: profiles(...)
+    const { data } = await supabase.from('packages').select('*, profiles(name, unit, tower)').order('created_at', { ascending: false });
     if (data) setPkgList(data);
   };
 
@@ -858,6 +860,11 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           </Button>
         </div>
 
+        {/* MANAGE ALL BUTTON */}
+        <button onClick={() => setIsViewingAll(true)} className="w-full py-3 bg-white border border-slate-200 rounded-[20px] text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors">
+          Ver Todas / Gerenciar
+        </button>
+
         {/* SCANNER MODAL */}
         {isScanning && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
@@ -987,6 +994,79 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           ))}
         </div>
       </div>
+
+      {/* MANAGE ALL PACKAGES MODAL/VIEW */}
+      {isViewingAll && (
+        <div className="fixed inset-0 z-50 bg-[#fcfcfd] overflow-y-auto animate-in slide-in-from-bottom-4">
+          <div className="p-6 pb-32 space-y-6">
+            <div className="flex items-center gap-4 mb-2">
+              <button onClick={() => setIsViewingAll(false)} className="w-12 h-12 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm">
+                <ArrowLeft size={20} className="text-slate-900" />
+              </button>
+              <h1 className="text-2xl font-black italic text-slate-900">TODAS AS ENCOMENDAS</h1>
+            </div>
+
+            {/* FILTERS */}
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <Search className="absolute left-4 top-4 text-slate-400" size={20} />
+                <input
+                  placeholder="Buscar morador, unidade..."
+                  className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold"
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </div>
+              <input
+                type="date"
+                className="h-14 px-4 bg-white border border-slate-200 rounded-2xl font-bold text-slate-600 outline-none"
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                }}
+              />
+            </div>
+
+            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
+              {pkgList.length === 0 ? (
+                <p className="p-8 text-center text-slate-400 font-bold italic">Nenhuma encomenda registrada.</p>
+              ) : (
+                <div className="divide-y divide-slate-50">
+                  {pkgList
+                    .filter(p => !searchTerm ||
+                      JSON.stringify(p).toLowerCase().includes(searchTerm.toLowerCase()) ||
+                      (p.picked_up_at && p.picked_up_at.includes(searchTerm))
+                    )
+                    .map((p) => (
+                      <div key={p.id} className="p-6 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-center gap-2">
+                            <span className={`w-2.5 h-2.5 rounded-full ${p.status === 'pending' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
+                            <span className="font-black text-slate-900 text-lg">RUA {p.profiles?.tower}, {p.unit}</span>
+                          </div>
+                          {p.status === 'pending' ? (
+                            <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Pendente</span>
+                          ) : (
+                            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Entregue</span>
+                          )}
+                        </div>
+
+                        <div className="pl-4 border-l-2 border-slate-100 space-y-1">
+                          <p className="text-sm text-slate-600 font-medium"><strong>Morador:</strong> {p.resident_name}</p>
+                          <p className="text-sm text-slate-600 font-medium"><strong>Descrição:</strong> {p.description}</p>
+                          <p className="text-xs text-slate-400"><strong>Data Chegada:</strong> {new Date(p.created_at).toLocaleString()}</p>
+                          {p.picked_up_at && (
+                            <p className="text-xs text-emerald-600 font-bold mt-1">
+                              Retirado em: {new Date(p.picked_up_at).toLocaleString()} por {p.picked_up_by ? (pkgList.find(x => x.resident_id === p.picked_up_by)?.profiles?.name || 'Morador') : 'Morador'}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
