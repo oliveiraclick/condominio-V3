@@ -92,6 +92,7 @@ const CondosView = () => {
   const [newCondo, setNewCondo] = useState({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '' });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => { loadCondos(); }, []);
 
@@ -100,7 +101,7 @@ const CondosView = () => {
     if (data) setCondos(data);
   }
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     if (!newCondo.name) return;
     setUploading(true);
     let finalLogoUrl = newCondo.logo_url;
@@ -123,11 +124,22 @@ const CondosView = () => {
       }
     }
 
-    // 2. Insert Condo
-    const { error } = await supabase.from('condominiums').insert([{ ...newCondo, logo_url: finalLogoUrl }]);
+    const condoData = { ...newCondo, logo_url: finalLogoUrl };
+
+    let error;
+    if (editingId) {
+      // UPDATE
+      const { error: updateError } = await supabase.from('condominiums').update(condoData).eq('id', editingId);
+      error = updateError;
+    } else {
+      // CREATE
+      const { error: insertError } = await supabase.from('condominiums').insert([condoData]);
+      error = insertError;
+    }
 
     if (!error) {
       setShowNew(false);
+      setEditingId(null);
       loadCondos();
       setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '' });
       setLogoFile(null);
@@ -135,6 +147,21 @@ const CondosView = () => {
       alert(error.message);
     }
     setUploading(false);
+  };
+
+  const handleEdit = (condo: any) => {
+    setNewCondo({
+      name: condo.name,
+      address: condo.address,
+      plan: condo.plan || 'basic',
+      type: condo.type || 'vertical',
+      status: condo.status || 'active',
+      primary_color: condo.primary_color || '#7c3aed',
+      logo_url: condo.logo_url || ''
+    });
+    setEditingId(condo.id);
+    setShowNew(true);
+    setLogoFile(null);
   };
 
   const handleDelete = async (id: string) => {
@@ -153,12 +180,12 @@ const CondosView = () => {
     <div className={PAGE_CONTAINER}>
       <div className="flex justify-between items-end mb-6">
         <h1 className={HEADER_TITLE}>Condos</h1>
-        <button onClick={() => setShowNew(true)} className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-900/20 active:scale-90 transition-all"><Plus size={24} /></button>
+        <button onClick={() => { setShowNew(true); setEditingId(null); setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '' }); }} className="w-12 h-12 bg-slate-900 rounded-2xl flex items-center justify-center text-white shadow-xl shadow-slate-900/20 active:scale-90 transition-all"><Plus size={24} /></button>
       </div>
 
       {showNew && (
         <div className="bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 space-y-4 animate-in zoom-in-95 mb-8 ring-4 ring-slate-50">
-          <h3 className="font-black italic text-slate-900 text-lg">Novo Condomínio</h3>
+          <h3 className="font-black italic text-slate-900 text-lg">{editingId ? 'Editar Condomínio' : 'Novo Condomínio'}</h3>
 
           {/* Logo Upload */}
           <div className="flex items-center gap-4">
@@ -218,10 +245,10 @@ const CondosView = () => {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleCreate(); }} disabled={uploading} className="bg-violet-600 text-white shadow-lg shadow-violet-200">
-              {uploading ? 'Enviando...' : 'Criar'}
+            <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleSave(); }} disabled={uploading} className="bg-violet-600 text-white shadow-lg shadow-violet-200">
+              {uploading ? 'Salvando...' : (editingId ? 'Atualizar' : 'Criar')}
             </Button>
-            <Button fullWidth onClick={() => setShowNew(false)} variant="secondary">Cancelar</Button>
+            <Button fullWidth onClick={() => { setShowNew(false); setEditingId(null); }} variant="secondary">Cancelar</Button>
           </div>
         </div>
       )}
@@ -244,12 +271,18 @@ const CondosView = () => {
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={() => handleEdit(c)}
+                className="w-10 h-10 rounded-xl flex items-center justify-center bg-slate-50 text-slate-400 hover:bg-slate-100 transition-colors"
+                title="Editar"
+              >
+                <Edit size={18} />
+              </button>
+              <button
                 onClick={() => handleToggleStatus(c.id, c.status || 'active')}
                 className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${c.status === 'blocked' ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-50 text-slate-400'}`}
+                title={c.status === 'blocked' ? 'Desbloquear' : 'Bloquear'}
               >
-                {c.status === 'blocked' ? <CheckCircle2 size={18} /> : <UserCheck size={18} />}
-                {/* Simplified Icon logic for space */}
-                {c.status === 'active' ? <X size={18} /> : <Plus size={18} />}
+                {c.status === 'blocked' ? <CheckCircle2 size={18} /> : <X size={18} />}
               </button>
             </div>
           </div>
