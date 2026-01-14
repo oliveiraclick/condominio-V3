@@ -617,7 +617,24 @@ const AccessDevicesView = () => {
     status: 'active'
   });
 
-  useEffect(() => { loadDevices(); loadCondos(); }, []);
+  const [logs, setLogs] = useState<any[]>([]);
+
+  useEffect(() => {
+    loadDevices();
+    loadCondos();
+    loadLogs();
+    const interval = setInterval(loadLogs, 30000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const loadLogs = async () => {
+    const { data } = await supabase
+      .from('access_logs')
+      .select('*, profiles(name, condominiums(name)), access_devices(name)')
+      .order('created_at', { ascending: false })
+      .limit(10);
+    if (data) setLogs(data);
+  };
 
   const loadCondos = async () => {
     const { data } = await supabase.from('condominiums').select('id, name');
@@ -813,22 +830,24 @@ const AccessDevicesView = () => {
 
           <div className="space-y-4">
             {/* Mock Logs for now, effectively waiting for real data */}
-            {[
-              { id: 1, user: 'Visitante Desconhecido', type: 'entry_denied', time: 'Agora', condo: 'Vila Flora' },
-              { id: 2, user: 'Ricardo Oliveira', type: 'entry_granted', time: '2 min atrás', condo: 'Vila Flora' },
-              { id: 3, user: 'Ana Paula', type: 'entry_granted', time: '15 min atrás', condo: 'Reserva do Bosque' }
-            ].map(log => (
+            {logs.length === 0 ? (
+              <div className="text-center py-8 text-slate-500 text-xs font-bold uppercase tracking-widest border border-dashed border-slate-700/50 rounded-2xl">
+                Aguardando registros...
+              </div>
+            ) : logs.map(log => (
               <div key={log.id} className="flex items-center justify-between p-4 bg-slate-800/50 rounded-2xl border border-slate-700/50 hover:bg-slate-800 transition-colors">
                 <div className="flex items-center gap-4">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${log.type === 'entry_granted' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>
-                    {log.type === 'entry_granted' ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${log.event_type === 'entry_granted' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-rose-500/20 text-rose-500'}`}>
+                    {log.event_type === 'entry_granted' ? <CheckCircle2 size={18} /> : <CircleAlert size={18} />}
                   </div>
                   <div>
-                    <h4 className="font-bold text-sm">{log.user}</h4>
-                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">{log.condo}</p>
+                    <h4 className="font-bold text-sm">{log.profiles?.name || 'Visitante / Desconhecido'}</h4>
+                    <p className="text-[10px] text-slate-400 uppercase tracking-widest">{log.profiles?.condominiums?.name || '---'}</p>
                   </div>
                 </div>
-                <span className="text-xs font-mono text-slate-500">{log.time}</span>
+                <span className="text-xs font-mono text-slate-500">
+                  {new Date(log.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                </span>
               </div>
             ))}
           </div>

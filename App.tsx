@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from './types';
 import { supabase } from './supabase';
 import { ToastProvider } from './components/ui';
@@ -107,7 +107,7 @@ const App: React.FC = () => {
         let role = profile.role as UserRole;
         if (profile.email === 'denys@morador.com.br') role = UserRole.SUPER_ADMIN;
 
-        console.log('[App] Perfil carregado:', { role, name: profile.name });
+
         setUserRole(role);
 
         // CACHE ROBUSTO: Salva tudo, não só a role
@@ -164,7 +164,7 @@ const App: React.FC = () => {
           const metaRole = user.raw_user_meta_data.role as UserRole;
           const metaName = user.raw_user_meta_data.full_name || user.email?.split('@')[0] || 'Usuário';
 
-          console.log('[App] Perfil não encontrado no DB, recuperando do Metadata:', { metaRole, metaName });
+
 
           // Auto-repara o perfil no DB (Upsert)
           await supabase.from('profiles').upsert({
@@ -189,7 +189,7 @@ const App: React.FC = () => {
           const forcedRole = isDenys ? UserRole.PROFESSIONAL : UserRole.RESIDENT; // Default to Resident for others
           const forcedName = user?.user_metadata?.full_name || email.split('@')[0];
 
-          console.log('[App] RECOVERY: Creating default profile for', email);
+
 
           await supabase.from('profiles').upsert({
             id: userId,
@@ -220,7 +220,7 @@ const App: React.FC = () => {
 
       if (cachedProfileStr && cachedRole) {
         const cachedProfile = JSON.parse(cachedProfileStr);
-        console.log('Recuperando perfil do cache:', cachedProfile);
+
 
         setUserRole(cachedRole);
         setCurrentUser(cachedProfile);
@@ -301,7 +301,7 @@ const App: React.FC = () => {
   const refreshAppData = useCallback(async () => {
     if (appState !== 'main' || !session) return;
     try {
-      console.log('[App] Iniciando refreshAppData...');
+
 
       const fetchTable = async (table: string, query: any) => {
         const { data, error } = await query;
@@ -359,7 +359,7 @@ const App: React.FC = () => {
         setActiveServices(mapped.filter((r: any) => r.status === 'accepted'));
       }
       if (pros) {
-        console.log('[App] Prestadores carregados:', pros.length);
+
         setProfessionalServices(pros.map((p: any) => {
           const profile = profileMap[p.provider_id];
           return {
@@ -374,7 +374,7 @@ const App: React.FC = () => {
       if (onSite) setOnSitePros(onSite);
       if (cats) setCategories(cats);
       if (prods) {
-        console.log('[App] Produtos carregados:', prods.length);
+
         setProducts(prods.map((p: any) => {
           const vendor = profileMap[p.vendor_id];
           return {
@@ -384,7 +384,7 @@ const App: React.FC = () => {
         }));
       }
       if (desap) {
-        console.log('[App] Desapegos carregados:', desap.length);
+
         setDesapegos(desap.map((i: any) => {
           const seller = profileMap[i.seller_id];
           return {
@@ -565,7 +565,7 @@ const App: React.FC = () => {
 
       // LÓGICA PROFISSIONAL (CORRIGIDA)
       if (userRole === UserRole.PROFESSIONAL) {
-        console.log('[App] Rendering Professional, activeTab:', activeTab);
+
         const pending = serviceRequests.filter(r => r.status === 'pending');
         const accepted = serviceRequests.filter(r => r.status === 'accepted');
         const completed = serviceRequests.filter(r => r.status === 'completed');
