@@ -792,24 +792,41 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
       const allRelevantIds = [resident.id, ...authorizedGrantorIds];
 
-      // Force Fetch fresh packages to ensure we have the latest data
-      const { data: freshPackages } = await supabase.from('packages').select('*, profiles:resident_id(name, unit, tower)').eq('status', 'pending');
+      // 1. Force Fetch fresh packages (Attempt 1: Strict Pending)
+      const { data: freshPackages, error: fetchError } = await supabase
+        .from('packages')
+        .select('*, profiles:resident_id(name, unit, tower)')
+        .eq('status', 'pending');
+
+      if (fetchError) {
+        alert(`ERRO DE REDE/BANCO: ${fetchError.message}`);
+        return;
+      }
+
       const latestPkgList = freshPackages || [];
 
-      // Update local state too
-      if (freshPackages) setPkgList(prev => {
-        // Merge logic or just replace
-        return freshPackages;
-      });
+      // Update local state to reflect reality
+      if (freshPackages) setPkgList(prev => freshPackages);
 
-      // Find pending packages for OWN ID OR AUTHORIZED IDs (Robust matching)
+      // 2. Find pending packages for OWN ID OR AUTHORIZED IDs
       const pending = latestPkgList.filter(p => allRelevantIds.includes(p.resident_id));
 
       if (pending.length > 0) {
-        setScannedResident({ ...resident, authorizedUnits }); // Store auth info for display
+        setScannedResident({ ...resident, authorizedUnits });
         setPendingDeliveryList(pending);
       } else {
-        alert(`Nenhuma encomenda encontrada para ${resident.name} (nem autorizações).\nID Buscado: ${resident.id}\nIDs Encontrados: ${latestPkgList.map(p => p.resident_id).join(', ')}`);
+        // DEBUG: Fetch ANY package for this user to see what's wrong (Wrong status? RLS?)
+        const { data: anyUserPkgs } = await supabase.from('packages').select('status, resident_id').eq('resident_id', resident.id);
+
+        alert(`DEBUG ERRO (Tire Print):\n
+        Morador: ${resident.name}
+        ID Buscado: ${resident.id}
+        
+        No Banco (Geral): ${latestPkgList.length} encomendas pendentes totais.
+        No Banco (Deste Morador): ${JSON.stringify(anyUserPkgs)}
+        
+        Se "userPackagesInDb" tiver itens mas não "pending", o status está errado.
+        Se estiver vazio, a encomenda não salvou ou sumiu.`);
       }
     }
   };
