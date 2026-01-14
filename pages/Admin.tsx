@@ -816,18 +816,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         setScannedResident({ ...resident, authorizedUnits });
         setPendingDeliveryList(pending);
       } else {
-        // DEBUG: Fetch ANY package for this user to see what's wrong (Wrong status? RLS?)
-        const { data: anyUserPkgs } = await supabase.from('packages').select('status, resident_id').eq('resident_id', resident.id);
-
-        alert(`DEBUG ERRO (Tire Print):\n
-        Morador: ${resident.name}
-        ID Buscado: ${resident.id}
-        
-        No Banco (Geral): ${latestPkgList.length} encomendas pendentes totais.
-        No Banco (Deste Morador): ${JSON.stringify(anyUserPkgs)}
-        
-        Se "userPackagesInDb" tiver itens mas não "pending", o status está errado.
-        Se estiver vazio, a encomenda não salvou ou sumiu.`);
+        alert(`Nenhuma encomenda encontrada para ${resident.name} (nem autorizações).`);
       }
     }
   };
