@@ -718,10 +718,10 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   }, []);
 
   const fetchPackages = async () => {
-    // Explicit FK to profiles (v2)
+    // Explicit FK to profiles (V1 Standard Final)
     const { data, error } = await supabase
       .from('packages')
-      .select('*, profiles:profiles!packages_resident_profile_fkey(name, unit, tower)')
+      .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -806,8 +806,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       // Corrected Join Syntax: profiles(...) relies on the FK constraint.
       const { data: freshPackages, error: fetchError } = await supabase
         .from('packages')
-        // Explicitly specify the FK constraint (v2)
-        .select('*, profiles:profiles!packages_resident_profile_fkey(name, unit, tower)')
+        // Explicitly specify the FK constraint (V1 Standard Final)
+        .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
         .eq('status', 'pending');
 
       if (fetchError) {
