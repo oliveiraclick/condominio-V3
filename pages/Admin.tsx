@@ -947,7 +947,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           </Card>
         )}
 
-        <div className="space-y-4">
+        {/* PENDENTES DE RETIRADA (Hidden per User Request) */}
+        {false && <div className="space-y-4">
           <SectionHeader title="Pendentes de Retirada" />
           {pkgList.filter(p => p.status === 'pending').map(p => (
             <div key={p.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 shadow-sm relative overflow-hidden">
@@ -956,7 +957,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 <Package size={24} />
               </div>
               <div className="flex-1">
-                <h5 className="font-bold text-slate-900 italic">Rua {p.profiles?.tower} - {p.unit}</h5>
+                <h5 className="font-bold text-slate-900 italic">RUA {p.profiles?.tower}, {p.unit}</h5>
                 <p className="text-[10px] font-black text-slate-400 uppercase">{p.resident_name}</p>
                 <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
               </div>
@@ -969,23 +970,22 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           {pkgList.filter(p => p.status === 'pending').length === 0 && (
             <p className="text-center text-slate-300 font-bold italic py-8">Nenhuma encomenda pendente.</p>
           )}
-        </div>
+        </div>}
 
         <div className="space-y-4 pt-8 border-t border-slate-100">
           <SectionHeader title="Histórico de Entregas" />
           {pkgList.filter(p => p.status === 'delivered').map(p => (
-            <div key={p.id} className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 opacity-60 hover:opacity-100 transition-opacity">
+            <div key={p.id} className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 opacity-100 transition-opacity">
               <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
                 <CheckCircle2 size={24} />
               </div>
-              <div>
-                <h5 className="font-bold text-slate-900 italic line-through decoration-slate-400">Casa {p.unit}</h5>
-                <p className="text-[10px] font-black text-slate-400 uppercase">Retirado em {new Date(p.picked_up_at).toLocaleDateString()}</p>
+              <div className="flex-1">
+                <h5 className="font-bold text-slate-900 italic">RUA {p.profiles?.tower}, {p.unit}</h5>
+                <p className="text-[10px] font-black text-slate-400 uppercase">Retirado em {new Date(p.picked_up_at).toLocaleDateString()} por {p.profiles?.name || 'Morador'}</p>
               </div>
             </div>
           ))}
         </div>
-
       </div>
     </div>
   );
