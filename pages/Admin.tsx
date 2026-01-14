@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useRef, useEffect } from 'react';
+﻿import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '../components/ui';
 import { supabase } from '../supabase';
 import {
@@ -30,7 +30,7 @@ export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: stri
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-violet-600 scale-110' : 'text-slate-300'}`}
+        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-brand-600 scale-110' : 'text-slate-300'}`}
       >
         {item.icon}
         <span className="text-[10px] font-bold uppercase">{item.label}</span>
@@ -57,7 +57,7 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   <div className="flex justify-between items-end mb-6 px-1">
     <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">{title}</h3>
     {action && (
-      <button onClick={onAction} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all">
+      <button onClick={onAction} className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all">
         {action}
       </button>
     )}
@@ -119,7 +119,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
     {
       title: 'Operações Diárias',
       items: [
-        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-violet-600', bg: 'bg-violet-50' },
+        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-brand-600', bg: 'bg-brand-50' },
         { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-600', bg: 'bg-blue-50' },
         { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-600', bg: 'bg-emerald-50' },
       ]
@@ -130,7 +130,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
         { id: 'residents', icon: <Users size={24} />, label: 'Moradores', desc: 'Base de condôminos', target: 'admin-residents', color: 'text-indigo-600', bg: 'bg-indigo-50' },
         { id: 'finance', icon: <Wallet size={24} />, label: 'Financeiro', desc: 'Cobranças e taxas', target: 'admin-finance', color: 'text-slate-600', bg: 'bg-slate-50' },
         { id: 'notices', icon: <Megaphone size={24} />, label: 'Mural de Avisos', desc: 'Comunicados gerais', target: 'admin-notices', color: 'text-amber-600', bg: 'bg-amber-50' },
-        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-violet-600', bg: 'bg-violet-50' },
+        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-brand-600', bg: 'bg-brand-50' },
         { id: 'categories', icon: <Layers size={24} />, label: 'Categorias', desc: 'Serviços e áreas', target: 'admin-categories', color: 'text-pink-600', bg: 'bg-pink-50' },
       ]
     }
@@ -173,7 +173,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
                 <button
                   key={item.id}
                   onClick={() => onNavigate(item.target)}
-                  className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-50 flex flex-col gap-3 group active:scale-95 transition-all hover:border-violet-100 hover:shadow-md text-left relative overflow-hidden"
+                  className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-50 flex flex-col gap-3 group active:scale-95 transition-all hover:border-brand-100 hover:shadow-md text-left relative overflow-hidden"
                 >
                   <div className={`w-12 h-12 ${item.bg} ${item.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                     {item.icon}
@@ -328,7 +328,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
   const sportsAreas = commonAreas.filter(a => a.category === 'Esportes');
 
   const renderAreaCard = (area: any) => (
-    <div key={area.id} onClick={() => startEdit(area)} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm group cursor-pointer hover:border-violet-200 transition-all">
+    <div key={area.id} onClick={() => startEdit(area)} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm group cursor-pointer hover:border-brand-200 transition-all">
       <div className="flex items-center gap-4">
         <div className="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden relative">
           {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>}
@@ -349,18 +349,18 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center px-2">
         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configuração de Espaços</h4>
-        <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' }); }} className="text-[10px] font-black text-violet-600 uppercase bg-violet-50 px-4 py-2 rounded-xl active:scale-95 transition-all flex items-center gap-1">
+        <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' }); }} className="text-[10px] font-black text-brand-600 uppercase bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all flex items-center gap-1">
           <Plus size={14} /> Novo Espaço
         </button>
       </div>
 
       {isAdding && (
-        <Card className="p-8 space-y-4 border-2 border-dashed border-violet-200 bg-violet-50/30 rounded-[40px] animate-in slide-in-from-top-4">
+        <Card className="p-8 space-y-4 border-2 border-dashed border-brand-200 bg-brand-50/30 rounded-[40px] animate-in slide-in-from-top-4">
           <h3 className="text-lg font-black italic text-slate-900">{editingId ? 'Editar Espaço' : 'Novo Espaço'}</h3>
 
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="h-40 bg-white/50 rounded-3xl border-2 border-dashed border-violet-300 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white hover:border-violet-500 transition-all overflow-hidden relative"
+            className="h-40 bg-white/50 rounded-3xl border-2 border-dashed border-brand-300 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white hover:border-brand-500 transition-all overflow-hidden relative"
           >
             {imageFile ? (
               <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
@@ -368,8 +368,8 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
               <img src={form.photo} className="w-full h-full object-cover opacity-50" />
             ) : (
               <>
-                <Camera className="text-violet-400" size={32} />
-                <span className="text-[10px] font-bold text-violet-400 uppercase">Toque para adicionar foto</span>
+                <Camera className="text-brand-400" size={32} />
+                <span className="text-[10px] font-bold text-brand-400 uppercase">Toque para adicionar foto</span>
               </>
             )}
             <input
@@ -389,7 +389,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-900 uppercase">Categoria</label>
             <select
-              className="w-full h-14 bg-white rounded-2xl px-4 font-bold text-slate-700 outline-none border border-violet-100"
+              className="w-full h-14 bg-white rounded-2xl px-4 font-bold text-slate-700 outline-none border border-brand-100"
               value={form.category}
               onChange={e => setForm({ ...form, category: e.target.value })}
             >
@@ -419,7 +419,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
       <div className="space-y-8">
         {gourmetAreas.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-black text-slate-900 italic text-lg flex items-center gap-2"><PartyPopper size={20} className="text-violet-500" /> Gourmet & Festas</h3>
+            <h3 className="font-black text-slate-900 italic text-lg flex items-center gap-2"><PartyPopper size={20} className="text-brand-500" /> Gourmet & Festas</h3>
             {gourmetAreas.map(renderAreaCard)}
           </div>
         )}
@@ -481,7 +481,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
         rightElement={
           view === 'list' ? (
             <div className="flex gap-2">
-              <button onClick={() => setView('check')} className="text-[10px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-3 py-2 rounded-xl active:scale-95 transition-all border border-violet-100">
+              <button onClick={() => setView('check')} className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-3 py-2 rounded-xl active:scale-95 transition-all border border-brand-100">
                 Nova Consulta
               </button>
               <button onClick={() => setView('config')} className="text-[10px] font-black text-slate-500 uppercase tracking-widest bg-white px-3 py-2 rounded-xl active:scale-95 transition-all border border-slate-200">
@@ -502,8 +502,8 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
             {/* Category Selection */}
             {!selectedCategory ? (
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setSelectedCategory('Gourmet')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:border-violet-500 hover:bg-violet-50 transition-all active:scale-95">
-                  <div className="w-16 h-16 bg-violet-100 text-violet-600 rounded-full flex items-center justify-center">
+                <button onClick={() => setSelectedCategory('Gourmet')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:border-brand-500 hover:bg-brand-50 transition-all active:scale-95">
+                  <div className="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center">
                     <PartyPopper size={32} />
                   </div>
                   <span className="font-black text-slate-700 uppercase tracking-widest text-xs">Gourmet & Festas</span>
@@ -574,7 +574,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
                   <p className="text-4xl font-black italic tracking-tighter">{reservations.length}</p>
                   <p className="text-[10px] font-black uppercase tracking-widest mt-1">Reservas Ativas</p>
                 </div>
-                <CalendarDays className="text-violet-500 opacity-20" size={64} />
+                <CalendarDays className="text-brand-500 opacity-20" size={64} />
               </div>
             </div>
 
@@ -592,7 +592,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                           Morador: <span className="text-slate-900">{r.resident}</span>
                         </p>
-                        <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest leading-none mt-1">Casa {r.unit}</p>
+                        <p className="text-[9px] font-black text-brand-500 uppercase tracking-widest leading-none mt-1">Casa {r.unit}</p>
                       </div>
                     </div>
                     <Badge color="bg-emerald-50 text-emerald-600">ATIVO</Badge>
@@ -658,17 +658,17 @@ export const AdminResidents: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           {filtered.length === 0 && <p className="text-center text-slate-300 font-bold italic py-8">Nenhum morador encontrado.</p>}
 
           {filtered.map(res => (
-            <div key={res.id} className="bg-white p-6 rounded-[32px] border flex items-center justify-between shadow-sm hover:border-violet-200 transition-colors cursor-pointer group">
+            <div key={res.id} className="bg-white p-6 rounded-[32px] border flex items-center justify-between shadow-sm hover:border-brand-200 transition-colors cursor-pointer group">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center overflow-hidden border border-slate-100">
                   {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : <span className="font-black text-slate-300">{res.name?.[0]}</span>}
                 </div>
                 <div>
                   <h4 className="font-black text-slate-900 italic">{res.name}</h4>
-                  <p className="text-[10px] font-bold text-violet-500 uppercase">Casa {res.unit || '---'} • Rua {res.tower || ''}</p>
+                  <p className="text-[10px] font-bold text-brand-500 uppercase">Casa {res.unit || '---'} • Rua {res.tower || ''}</p>
                 </div>
               </div>
-              <ChevronRight size={20} className="text-slate-200 group-hover:text-violet-400 transition-colors" />
+              <ChevronRight size={20} className="text-slate-200 group-hover:text-brand-400 transition-colors" />
             </div>
           ))}
         </div>
@@ -708,7 +708,7 @@ export const AdminAccess: React.FC<{ onBack: () => void; accessList?: any[]; onC
             <div key={res.id} className="space-y-4 animate-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center gap-4 px-2">
                 <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100"><img src={res.avatar} className="w-full h-full object-cover" /></div>
-                <div><h4 className="text-sm font-black text-slate-900 italic">{res.name}</h4><p className="text-[9px] font-black text-violet-500 uppercase tracking-widest">Unidade {res.unit}</p></div>
+                <div><h4 className="text-sm font-black text-slate-900 italic">{res.name}</h4><p className="text-[9px] font-black text-brand-500 uppercase tracking-widest">Unidade {res.unit}</p></div>
               </div>
               <div className="space-y-3 pl-2">
                 {res.clearances.map((clearance) => (
@@ -942,7 +942,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                   {/* OWN UNIT */}
                   {pendingDeliveryList.some(p => p.unit === scannedResident.unit) && (
                     <div className="mb-2">
-                      <strong className="text-violet-600 block">Rua {scannedResident.tower} - {scannedResident.unit} (Própria)</strong>
+                      <strong className="text-brand-600 block">Rua {scannedResident.tower} - {scannedResident.unit} (Própria)</strong>
                       <span className="text-xs text-slate-400">{pendingDeliveryList.filter(p => p.unit === scannedResident.unit).length} volume(s)</span>
                     </div>
                   )}
@@ -989,7 +989,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
               {searchTerm && !selectedResident && (
                 <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
                   {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || (r.unit || '').includes(searchTerm)).map(r => (
-                    <button key={r.id} onClick={() => { setSelectedResident(r); setSearchTerm(`${r.name} - ${r.unit}`); }} className="w-full px-6 py-4 hover:bg-violet-50 text-left border-b border-slate-50 last:border-none">
+                    <button key={r.id} onClick={() => { setSelectedResident(r); setSearchTerm(`${r.name} - ${r.unit}`); }} className="w-full px-6 py-4 hover:bg-brand-50 text-left border-b border-slate-50 last:border-none">
                       <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
                     </button>
                   ))}
@@ -999,7 +999,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
             <Input placeholder="Descrição (Ex: Caixa Amazon Grande)" value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="h-14" />
 
-            <Button fullWidth onClick={handleRegister} disabled={!selectedResident} className="bg-violet-600 h-14 font-black uppercase tracking-widest text-xs">
+            <Button fullWidth onClick={handleRegister} disabled={!selectedResident} className="bg-brand-600 h-14 font-black uppercase tracking-widest text-xs">
               Confirmar Recebimento
             </Button>
           </Card>
@@ -1063,7 +1063,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                 <input
                   placeholder="Buscar morador, unidade..."
-                  className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold focus:ring-2 focus:ring-violet-500/20 outline-none transition-all"
+                  className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
@@ -1178,11 +1178,11 @@ export const AdminNotices: React.FC<{ onBack: () => void; onAddNotification?: (n
           <Input placeholder="Título (ex: Encomenda na Portaria)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
           <textarea
             placeholder="Mensagem..."
-            className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-violet-500/20 transition-all"
+            className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
             value={form.desc}
             onChange={e => setForm({ ...form, desc: e.target.value })}
           />
-          <Button fullWidth onClick={handleSend} className="bg-violet-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar Notificação</Button>
+          <Button fullWidth onClick={handleSend} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar Notificação</Button>
         </Card>
       </div>
     </div>
@@ -1223,7 +1223,7 @@ export const AdminFinance: React.FC<{ onBack: () => void; invoices?: any[]; onAd
             <option>Alex Ferreira (Apt 402-B)</option>
             <option>Clara Mendes (Apt 105-B)</option>
           </select>
-          <Button fullWidth onClick={handleIssue} className="bg-violet-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Emitir Boleto</Button>
+          <Button fullWidth onClick={handleIssue} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Emitir Boleto</Button>
         </Card>
 
         <div className="space-y-4">
@@ -1421,7 +1421,7 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
             {/* PREVIEW/UPLOAD */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="h-32 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-violet-400 overflow-hidden relative"
+              className="h-32 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-400 overflow-hidden relative"
             >
               {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> :
                 form.image ? <img src={form.image} className="w-full h-full object-cover opacity-50" /> : <ImageIcon className="text-slate-300" size={32} />}
@@ -1477,12 +1477,12 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
               <div className="flex flex-wrap gap-2">
                 {getChildren(parent.id).map(child => (
                   <div key={child.id} className="pl-3 pr-2 py-1.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2 group/child">
-                    <span className="text-xs font-bold text-slate-600 cursor-pointer hover:text-violet-600" onClick={() => handleEdit(child)}>{child.name}</span>
+                    <span className="text-xs font-bold text-slate-600 cursor-pointer hover:text-brand-600" onClick={() => handleEdit(child)}>{child.name}</span>
                     <button onClick={() => handleEdit(child)} className="w-5 h-5 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center opacity-0 group-hover/child:opacity-100 transition-opacity"><Settings size={10} /></button>
                     <button onClick={() => handleDelete(child.id)} className="w-5 h-5 bg-rose-200 text-rose-600 rounded-full flex items-center justify-center opacity-50 group-hover/child:opacity-100"><X size={12} strokeWidth={3} /></button>
                   </div>
                 ))}
-                <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: parent.type, parent_id: parent.id }); }} className="px-4 py-1.5 bg-violet-50 text-violet-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 border border-violet-100 hover:bg-violet-100 transition-colors">
+                <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: parent.type, parent_id: parent.id }); }} className="px-4 py-1.5 bg-brand-50 text-brand-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 border border-brand-100 hover:bg-brand-100 transition-colors">
                   <Plus size={12} /> Add Sub
                 </button>
               </div>
@@ -1564,7 +1564,7 @@ export const AdminProfile: React.FC<{
             <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
             {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
           </div>
-          <button onClick={() => fileInputRef.current?.click()} className="text-violet-600 font-bold text-xs uppercase bg-violet-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-brand-600 font-bold text-xs uppercase bg-brand-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
             {uploading ? 'Enviando...' : 'Alterar Foto'}
           </button>
           <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
@@ -1693,7 +1693,7 @@ export const AdminBanners: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-violet-400 overflow-hidden relative"
+              className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-400 overflow-hidden relative"
             >
               {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> : <div className="text-center"><ImageIcon className="mx-auto text-slate-300 mb-2" size={32} /><p className="text-[10px] font-bold text-slate-400 uppercase">Clique para upload</p></div>}
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => { if (e.target.files?.[0]) setImageFile(e.target.files[0]); }} />

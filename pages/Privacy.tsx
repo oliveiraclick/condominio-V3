@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { ArrowLeft, Shield, Lock, Eye, Mail } from 'lucide-react';
 
 interface PrivacyPageProps {
@@ -27,8 +27,8 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({ onBack }) => {
 
                 <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-100">
                     <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-violet-100 rounded-full flex items-center justify-center">
-                            <Shield className="w-5 h-5 text-violet-600" />
+                        <div className="w-10 h-10 bg-brand-100 rounded-full flex items-center justify-center">
+                            <Shield className="w-5 h-5 text-brand-600" />
                         </div>
                         <h2 className="text-xl font-bold text-slate-900">Proteção de Dados</h2>
                     </div>
@@ -85,7 +85,7 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({ onBack }) => {
 
                     <h3 className="font-bold text-slate-900 mb-2">Exclusão de Conta</h3>
                     <p className="text-slate-600">
-                        Para excluir sua conta e dados associados, acesse a seção "Perfil" no aplicativo e selecione a opção "Excluir Conta", ou <a href="mailto:suporte@oliveiraclick.com.br?subject=Solicitação de Exclusão de Dados - App Morador" className="text-violet-600 hover:underline">entre em contato conosco para solicitar a remoção manual</a>.
+                        Para excluir sua conta e dados associados, acesse a seção "Perfil" no aplicativo e selecione a opção "Excluir Conta", ou <a href="mailto:suporte@oliveiraclick.com.br?subject=Solicitação de Exclusão de Dados - App Morador" className="text-brand-600 hover:underline">entre em contato conosco para solicitar a remoção manual</a>.
                     </p>
                 </div>
 
@@ -98,7 +98,7 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({ onBack }) => {
                         <p className="text-slate-600">
                             Se tiver dúvidas sobre esta política, entre em contato através do e-mail:
                             <br />
-                            <a href="mailto:suporte@oliveiraclick.com.br" className="text-violet-600 hover:underline">
+                            <a href="mailto:suporte@oliveiraclick.com.br" className="text-brand-600 hover:underline">
                                 suporte@oliveiraclick.com.br
                             </a>
                         </p>

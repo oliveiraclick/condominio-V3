@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import {
     Building, LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
     Bell, Search, MapPin, ChevronRight, Star, Key, Zap, CreditCard,
@@ -79,7 +79,7 @@ export const ResidentModern: React.FC<{
                 {/* QUICK ACTIONS GRID (Igual ao ResidentHome original) */}
                 <div className="grid grid-cols-2 gap-4 mb-8">
                     <button onClick={() => onChangeTab('acesso')} className="bg-[#161b22] p-5 rounded-[24px] border border-white/5 flex flex-col items-center justify-center gap-3 hover:bg-white/5 transition-all group">
-                        <div className="w-12 h-12 rounded-2xl bg-violet-500/10 text-violet-400 flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div className="w-12 h-12 rounded-2xl bg-brand-500/10 text-brand-400 flex items-center justify-center group-hover:scale-110 transition-transform">
                             <Key size={24} />
                         </div>
                         <span className="text-sm font-bold text-slate-300">Acesso</span>

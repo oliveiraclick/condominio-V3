@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Package, MessageSquare, Send, Check, Search, Shield, User, Clock, ChevronRight, Bell } from 'lucide-react';
 import { Card, Badge, Button, Input } from '../components/ui';
 import { supabase } from '../supabase';
@@ -257,8 +257,8 @@ export const CommunicationHub: React.FC<{ onBack: () => void; currentUser: any }
                         onClick={() => openChat(channels.find(c => c.id === 'adm'))}
                         className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm text-left relative overflow-hidden group active:scale-95 transition-all"
                     >
-                        <div className="absolute top-0 right-0 w-20 h-20 bg-violet-500/5 rounded-bl-[100px] transition-transform group-hover:scale-150 duration-500"></div>
-                        <div className="w-12 h-12 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center mb-4 relative z-10">
+                        <div className="absolute top-0 right-0 w-20 h-20 bg-brand-500/5 rounded-bl-[100px] transition-transform group-hover:scale-150 duration-500"></div>
+                        <div className="w-12 h-12 bg-brand-100 text-brand-600 rounded-2xl flex items-center justify-center mb-4 relative z-10">
                             <Shield size={24} />
                         </div>
                         <h3 className="font-black text-slate-800 text-sm uppercase tracking-wide mb-1 relative z-10">Administração</h3>
@@ -299,7 +299,7 @@ export const CommunicationHub: React.FC<{ onBack: () => void; currentUser: any }
 
                 {/* Notices Section (could be repurposed from existing functionality) */}
                 <div className="bg-slate-900 rounded-[32px] p-8 text-white relative overflow-hidden">
-                    <div className="absolute top-0 right-0 w-32 h-32 bg-violet-500/20 rounded-full -mr-16 -mt-16 blur-xl"></div>
+                    <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/20 rounded-full -mr-16 -mt-16 blur-xl"></div>
                     <MessageSquare className="text-white/20 mb-4" size={32} />
                     <h3 className="font-black italic text-xl mb-2">Mural de Avisos</h3>
                     <p className="text-sm text-slate-400 mb-6">Fique por dentro das últimas novidades do condomínio.</p>

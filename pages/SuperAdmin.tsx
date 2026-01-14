@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
@@ -7,7 +7,7 @@ import { supabase } from '../supabase';
 const PAGE_CONTAINER = "p-6 space-y-6 pt-12 animate-in slide-in-from-right-8 pb-32";
 const HEADER_TITLE = "text-3xl font-black italic text-slate-900 uppercase tracking-tighter";
 const CARD_BASE = "bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all";
-const GRADIENT_TEXT = "bg-gradient-to-r from-violet-600 to-fuchsia-600 bg-clip-text text-transparent";
+const GRADIENT_TEXT = "bg-gradient-to-r from-brand-600 to-fuchsia-600 bg-clip-text text-transparent";
 
 // --- DASHBOARD VIEW ---
 const DashboardView = () => {
@@ -51,7 +51,7 @@ const DashboardView = () => {
       <div className="grid grid-cols-2 gap-4">
         <div className="bg-slate-900 rounded-[40px] p-8 text-white shadow-2xl shadow-slate-900/20 col-span-2 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700"><DollarSign size={120} /></div>
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-violet-500/30 rounded-full blur-3xl"></div>
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-brand-500/30 rounded-full blur-3xl"></div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-2 relative z-10">MRR Mensal</p>
           <h3 className="text-5xl font-black italic tracking-tighter relative z-10">R$ {stats.mrr.toLocaleString('pt-BR')}</h3>
         </div>
@@ -191,7 +191,7 @@ const CondosView = () => {
           {/* Logo Upload */}
           <div className="flex items-center gap-4">
             <div
-              className="w-20 h-20 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer relative hover:border-violet-500 transition-colors"
+              className="w-20 h-20 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer relative hover:border-brand-500 transition-colors"
               onClick={() => document.getElementById('logo-upload')?.click()}
             >
               {logoFile ? (
@@ -222,7 +222,7 @@ const CondosView = () => {
             <div className="space-y-1">
               <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Tipo</label>
               <select
-                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-slate-900 font-bold text-xs outline-none focus:border-violet-500"
+                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-slate-900 font-bold text-xs outline-none focus:border-brand-500"
                 value={newCondo.type}
                 onChange={e => setNewCondo({ ...newCondo, type: e.target.value })}
               >
@@ -246,7 +246,7 @@ const CondosView = () => {
           </div>
 
           <div className="flex gap-2 pt-2">
-            <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleSave(); }} disabled={uploading} className="bg-violet-600 text-white shadow-lg shadow-violet-200">
+            <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleSave(); }} disabled={uploading} className="bg-brand-600 text-white shadow-lg shadow-brand-200">
               {uploading ? 'Salvando...' : (editingId ? 'Atualizar' : 'Criar')}
             </Button>
             <Button fullWidth onClick={() => { setShowNew(false); setEditingId(null); }} variant="secondary">Cancelar</Button>
@@ -339,16 +339,16 @@ const ProfessionalsView = () => {
 
   return (
     <div className={PAGE_CONTAINER}>
-      <h1 className={HEADER_TITLE}>Gestão de <span className="text-violet-600">Pros</span></h1>
+      <h1 className={HEADER_TITLE}>Gestão de <span className="text-brand-600">Pros</span></h1>
 
-      <div className="bg-gradient-to-br from-violet-600 to-indigo-600 rounded-[32px] p-8 text-white shadow-xl shadow-violet-500/30 relative overflow-hidden mb-8">
+      <div className="bg-gradient-to-br from-brand-600 to-indigo-600 rounded-[32px] p-8 text-white shadow-xl shadow-brand-500/30 relative overflow-hidden mb-8">
         <div className="flex justify-between items-end relative z-10">
           <div>
-            <p className="text-violet-200 font-bold uppercase tracking-widest text-xs mb-1">Profissionais Ativos</p>
+            <p className="text-brand-200 font-bold uppercase tracking-widest text-xs mb-1">Profissionais Ativos</p>
             <h2 className="text-6xl font-black italic tracking-tighter">{pros.length}</h2>
           </div>
           <div className="text-right">
-            <p className="text-violet-200 font-bold uppercase tracking-widest text-xs mb-1">Receita Estimada</p>
+            <p className="text-brand-200 font-bold uppercase tracking-widest text-xs mb-1">Receita Estimada</p>
             <h3 className="text-2xl font-black">R$ {(pros.length * 29.90).toFixed(0)}</h3>
           </div>
         </div>
@@ -372,7 +372,7 @@ const ProfessionalsView = () => {
               <div className="space-y-2">
                 <label className="text-xs font-black text-slate-900 uppercase tracking-wide">Categoria Principal</label>
                 <select
-                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 outline-none font-bold text-slate-700 focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all"
+                  className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 outline-none font-bold text-slate-700 focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all"
                   value={editingPro.category || ''}
                   onChange={e => setEditingPro({ ...editingPro, category: e.target.value })}
                 >
@@ -401,7 +401,7 @@ const ProfessionalsView = () => {
                     onKeyDown={e => { if (e.key === 'Enter') addTag(); }}
                     className="flex-1 h-14"
                   />
-                  <Button onClick={addTag} className="w-14 h-14 rounded-2xl shadow-xl shadow-violet-200" displayIconOnly><Plus size={24} /></Button>
+                  <Button onClick={addTag} className="w-14 h-14 rounded-2xl shadow-xl shadow-brand-200" displayIconOnly><Plus size={24} /></Button>
                 </div>
 
                 <div className="flex flex-wrap gap-2 p-4 bg-slate-50 rounded-3xl min-h-[100px] content-start">
@@ -436,7 +436,7 @@ const ProfessionalsView = () => {
                 <div>
                   <h4 className="font-bold text-slate-900 text-base">{p.name}</h4>
                   <div className="flex items-center gap-2 mt-1">
-                    <Badge className="bg-violet-50 text-violet-600 text-[10px] px-2 py-0.5">{p.category || 'Sem Categoria'}</Badge>
+                    <Badge className="bg-brand-50 text-brand-600 text-[10px] px-2 py-0.5">{p.category || 'Sem Categoria'}</Badge>
                     {p.is_verified && <ShieldCheck size={14} className="text-blue-500" />}
                   </div>
                 </div>
@@ -489,7 +489,7 @@ const UsersView = () => {
 
   return (
     <div className={PAGE_CONTAINER}>
-      <h1 className={HEADER_TITLE}>Clientes <span className="text-violet-600">Moradores</span></h1>
+      <h1 className={HEADER_TITLE}>Clientes <span className="text-brand-600">Moradores</span></h1>
 
       <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 flex items-center gap-3 mb-6">
         <Search className="text-slate-400" size={20} />
@@ -502,7 +502,7 @@ const UsersView = () => {
       </div>
 
       {loading ? (
-        <div className="flex justify-center p-10"><div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div></div>
+        <div className="flex justify-center p-10"><div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div></div>
       ) : (
         <div className="space-y-4">
           <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Total: {filteredUsers.length}</h3>
@@ -577,7 +577,7 @@ const PushView = () => {
 
   return (
     <div className={PAGE_CONTAINER}>
-      <h1 className={HEADER_TITLE}>Notificações <span className="text-violet-600">Push</span></h1>
+      <h1 className={HEADER_TITLE}>Notificações <span className="text-brand-600">Push</span></h1>
 
       <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-4 mb-8">
         <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest">Nova Mensagem</h3>
@@ -591,7 +591,7 @@ const PushView = () => {
 
         <textarea
           placeholder="Digite sua mensagem aqui..."
-          className="w-full h-24 bg-slate-50 border-none rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-violet-500/20 transition-all font-medium text-slate-700"
+          className="w-full h-24 bg-slate-50 border-none rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-slate-700"
           value={form.body}
           onChange={e => setForm({ ...form, body: e.target.value })}
         />
@@ -642,7 +642,7 @@ export const SuperAdmin = () => {
   const [activeTab, setActiveTab] = useState('professionals'); // Default to professionals for User flow
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex justify-center pb-24 font-sans selection:bg-violet-200 text-slate-900">
+    <div className="min-h-screen bg-[#f8fafc] flex justify-center pb-24 font-sans selection:bg-brand-200 text-slate-900">
       <div className="w-full max-w-md bg-[#f8fafc] min-h-screen shadow-2xl relative overflow-hidden">
 
         <div className="h-full overflow-y-auto hide-scrollbar">

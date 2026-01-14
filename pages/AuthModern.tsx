@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, User, Mail, Lock, Building, Smartphone, CheckCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -16,14 +16,14 @@ export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinis
         <div className="fixed inset-0 z-50 flex flex-col items-center justify-center overflow-hidden bg-slate-950">
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-                <div className={`absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-violet-600/30 rounded-full blur-[120px] mix-blend-screen transition-all duration-[2000ms] ${mounted ? 'translate-x-10 translate-y-10 opacity-70' : 'opacity-0'}`} />
+                <div className={`absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-brand-600/30 rounded-full blur-[120px] mix-blend-screen transition-all duration-[2000ms] ${mounted ? 'translate-x-10 translate-y-10 opacity-70' : 'opacity-0'}`} />
                 <div className={`absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-fuchsia-600/30 rounded-full blur-[120px] mix-blend-screen transition-all duration-[2000ms] delay-300 ${mounted ? '-translate-x-10 -translate-y-10 opacity-70' : 'opacity-0'}`} />
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
                 <div className={`relative mb-8 transition-all duration-1000 ${mounted ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
                     <div className="absolute inset-0 bg-white/20 blur-xl rounded-full" />
-                    <div className="relative w-32 h-32 bg-gradient-to-tr from-white/10 to-white/5 backdrop-blur-md rounded-[32px] border border-white/20 flex items-center justify-center shadow-2xl shadow-violet-500/20">
+                    <div className="relative w-32 h-32 bg-gradient-to-tr from-white/10 to-white/5 backdrop-blur-md rounded-[32px] border border-white/20 flex items-center justify-center shadow-2xl shadow-brand-500/20">
                         <Building size={48} className="text-white drop-shadow-glow" />
                     </div>
                     <div className="absolute -top-2 -right-2">
@@ -41,7 +41,7 @@ export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinis
 
             <div className="absolute bottom-12 flex flex-col items-center gap-2">
                 <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-violet-500 to-fuchsia-500 animate-progress origin-left" style={{ animationDuration: '4s' }} />
+                    <div className="h-full bg-gradient-to-r from-brand-500 to-fuchsia-500 animate-progress origin-left" style={{ animationDuration: '4s' }} />
                 </div>
                 <span className="text-[10px] text-white/30 uppercase tracking-widest">Carregando Experiência</span>
             </div>
@@ -67,7 +67,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
         <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 relative overflow-hidden text-white">
             {/* Background Ambience */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
-                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-violet-900/20 rounded-full blur-[100px]" />
+                <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-900/20 rounded-full blur-[100px]" />
                 <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-indigo-900/20 rounded-full blur-[100px]" />
             </div>
 
@@ -93,9 +93,9 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                 </div>
 
                 <div className="space-y-4 mb-8">
-                    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-violet-500 transition-all">
+                    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-brand-500 transition-all">
                         <div className="flex items-center gap-3">
-                            <Mail size={18} className="text-slate-400 group-focus-within:text-violet-400 transition-colors" />
+                            <Mail size={18} className="text-slate-400 group-focus-within:text-brand-400 transition-colors" />
                             <input
                                 type="email"
                                 value={email}
@@ -106,9 +106,9 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                         </div>
                     </div>
 
-                    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-violet-500 transition-all">
+                    <div className="group bg-transparent border-b border-white/20 p-4 focus-within:border-brand-500 transition-all">
                         <div className="flex items-center gap-3">
-                            <Lock size={18} className="text-slate-400 group-focus-within:text-violet-400 transition-colors" />
+                            <Lock size={18} className="text-slate-400 group-focus-within:text-brand-400 transition-colors" />
                             <input
                                 type="password"
                                 value={password}
@@ -181,7 +181,7 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
     return (
         <div className="min-h-screen bg-slate-950 flex flex-col relative overflow-hidden text-white">
             {/* Background */}
-            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-violet-600/20 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/4" />
+            <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-600/20 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/4" />
             <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-600/20 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/4" />
 
             {/* Header */}
@@ -191,7 +191,7 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
                 </button>
                 <div className="flex gap-2">
                     {[1, 2, 3].map(s => (
-                        <div key={s} className={`h-1 rounded-full transition-all duration-500 ${s <= step ? 'w-8 bg-violet-500' : 'w-2 bg-white/10'}`} />
+                        <div key={s} className={`h-1 rounded-full transition-all duration-500 ${s <= step ? 'w-8 bg-brand-500' : 'w-2 bg-white/10'}`} />
                     ))}
                 </div>
             </div>

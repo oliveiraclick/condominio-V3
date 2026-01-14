@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Button, Input } from '../components/ui';
 import {
   Mail, Lock, ArrowLeft, Building2,
@@ -52,13 +52,13 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
 
   return (
     <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-8 z-50">
-      <div className="w-40 h-40 bg-white rounded-[40px] flex items-center justify-center mb-8 animate-pulse shadow-2xl shadow-violet-100">
+      <div className="w-40 h-40 bg-white rounded-[40px] flex items-center justify-center mb-8 animate-pulse shadow-2xl shadow-brand-100">
         <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-6" />
       </div>
       <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">APP MORADOR</h1>
-      <p className="text-violet-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Conecte-se. Clicou, Achou.</p>
+      <p className="text-brand-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Conecte-se. Clicou, Achou.</p>
       <div className="w-full max-w-xs bg-slate-100 h-1.5 rounded-full overflow-hidden">
-        <div className="bg-violet-600 h-full transition-all duration-300" style={{ width: `${progress}%` }} />
+        <div className="bg-brand-600 h-full transition-all duration-300" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
@@ -112,12 +112,12 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
       <div className="bg-white p-6 rounded-[32px] shadow-sm space-y-4 mb-6">
         <div className="relative group">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
           <Input placeholder="Seu e-mail cadastrado" className="pl-12 h-14 bg-slate-50 border-none" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
       </div>
 
-      <Button fullWidth onClick={handleReset} disabled={loading} className="h-16 bg-violet-600 text-white font-black uppercase tracking-widest shadow-xl shadow-violet-200">
+      <Button fullWidth onClick={handleReset} disabled={loading} className="h-16 bg-brand-600 text-white font-black uppercase tracking-widest shadow-xl shadow-brand-200">
         {loading ? 'Enviando...' : 'Enviar Link'}
       </Button>
     </div>
@@ -178,14 +178,14 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
       <div className="space-y-4 mb-8">
         {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic animate-shake">{error}</div>}
         <div className="relative group">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
           <Input placeholder="Seu e-mail" className="pl-12 h-14 bg-white border-none shadow-sm" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
         <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-violet-500 transition-colors" size={20} />
+          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
           <Input type="password" placeholder="Sua senha" className="pl-12 h-14 bg-white border-none shadow-sm" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
-        <button onClick={() => setView('forgot')} className="w-full text-right text-violet-600 text-xs font-black uppercase tracking-widest mt-2 hover:underline">Esqueceu a senha?</button>
+        <button onClick={() => setView('forgot')} className="w-full text-right text-brand-600 text-xs font-black uppercase tracking-widest mt-2 hover:underline">Esqueceu a senha?</button>
       </div>
 
       <Button fullWidth onClick={handleSignIn} disabled={loading} className="h-16 bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 mb-6">
@@ -197,7 +197,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         <span className="relative px-4 bg-slate-50 mx-auto block w-fit text-[10px] text-slate-400 uppercase font-black italic">Novo por aqui?</span>
       </div>
 
-      <Button fullWidth variant="secondary" onClick={onRegister} className="h-16 bg-white border-2 border-slate-200 text-slate-900 font-black uppercase tracking-widest italic hover:border-violet-600 transition-all">
+      <Button fullWidth variant="secondary" onClick={onRegister} className="h-16 bg-white border-2 border-slate-200 text-slate-900 font-black uppercase tracking-widest italic hover:border-brand-600 transition-all">
         Criar Nova Conta
       </Button>
 
@@ -419,7 +419,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         <div>
           <h2 className="text-2xl font-black text-slate-950 italic uppercase tracking-tighter leading-none">Cadastro</h2>
           <div className="flex gap-1 mt-2">
-            {[1, 2, 3, 4].map(i => <div key={i} className={`h-1 rounded-full transition-all ${step >= i ? 'w-6 bg-violet-600' : 'w-2 bg-slate-100'}`} />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className={`h-1 rounded-full transition-all ${step >= i ? 'w-6 bg-brand-600' : 'w-2 bg-slate-100'}`} />)}
           </div>
         </div>
       </header>
@@ -445,7 +445,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             <h3 className="text-xl font-black italic text-slate-900 uppercase">2. Localização</h3>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Escolha seu Condomínio</label>
-              <select value={formData.condo} onChange={e => setFormData({ ...formData, condo: e.target.value })} className="w-full h-16 bg-white rounded-3xl px-6 font-bold shadow-sm border-none outline-none focus:ring-2 focus:ring-violet-100">
+              <select value={formData.condo} onChange={e => setFormData({ ...formData, condo: e.target.value })} className="w-full h-16 bg-white rounded-3xl px-6 font-bold shadow-sm border-none outline-none focus:ring-2 focus:ring-brand-100">
                 <option value="">Selecione na lista...</option>
                 {condos.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
               </select>
@@ -466,7 +466,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         {step === 3 && (
           <div className="space-y-8 animate-in slide-in-from-right-4">
             <h3 className="text-xl font-black italic text-slate-900 uppercase">3. Dependentes</h3>
-            <Button onClick={() => setFormData({ ...formData, dependents: [...formData.dependents, { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' }] })} className="bg-violet-50 text-violet-600 text-[10px] font-black uppercase tracking-widest h-12 rounded-2xl w-full border-none">
+            <Button onClick={() => setFormData({ ...formData, dependents: [...formData.dependents, { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' }] })} className="bg-brand-50 text-brand-600 text-[10px] font-black uppercase tracking-widest h-12 rounded-2xl w-full border-none">
               <Plus size={16} className="mr-2" /> Adicionar Dependente
             </Button>
             <div className="space-y-4">
@@ -492,7 +492,7 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             <p className="text-sm text-slate-400 font-medium italic">Opcional: Anexe documentos para acelerar sua aprovação.</p>
             <div className="grid grid-cols-1 gap-4">
               {[{ k: 'rg', l: 'RG / CNH' }, { k: 'res', l: 'Comprovante' }].map(d => (
-                <button key={d.k} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [d.k === 'rg' ? 'rg' : 'residence']: true } })} className={`h-24 rounded-[32px] border-2 border-dashed flex items-center justify-center gap-4 transition-all ${formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-white border-slate-200 text-slate-300 hover:border-violet-300'}`}>
+                <button key={d.k} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [d.k === 'rg' ? 'rg' : 'residence']: true } })} className={`h-24 rounded-[32px] border-2 border-dashed flex items-center justify-center gap-4 transition-all ${formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-white border-slate-200 text-slate-300 hover:border-brand-300'}`}>
                   {formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? <Check size={28} /> : <Camera size={28} />}
                   <span className="font-black uppercase text-[10px] tracking-widest">{d.l}</span>
                 </button>
@@ -646,7 +646,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
                       {filteredCategories.length > 0 ? filteredCategories.map(c => (
                         <button
                           key={c.id}
-                          className="w-full text-left px-4 py-3 hover:bg-violet-50 text-slate-700 font-medium text-sm transition-colors border-b border-slate-50 last:border-none"
+                          className="w-full text-left px-4 py-3 hover:bg-brand-50 text-slate-700 font-medium text-sm transition-colors border-b border-slate-50 last:border-none"
                           onClick={() => {
                             setFormData({ ...formData, category: c.name });
                             setShowSuggestions(false);
@@ -695,9 +695,9 @@ export const RoleSelection: React.FC<{ onSelect: (role: UserRole) => void; onBac
       </button>
       <h2 className="text-2xl font-bold text-center mb-8 italic text-slate-900 tracking-tighter">Como você quer entrar?</h2>
       <div className="space-y-4">
-        <button onClick={() => onSelect(UserRole.RESIDENT)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-violet-600 hover:ring-2 hover:ring-violet-100 transition-all group">
-          <div className="w-14 h-14 bg-violet-50 rounded-2xl flex items-center justify-center group-hover:bg-violet-600 transition-colors">
-            <UserCircle size={32} className="text-violet-600 group-hover:text-white" />
+        <button onClick={() => onSelect(UserRole.RESIDENT)} className="w-full p-6 bg-white rounded-3xl flex items-center gap-4 text-left border border-slate-100 shadow-sm hover:border-brand-600 hover:ring-2 hover:ring-brand-100 transition-all group">
+          <div className="w-14 h-14 bg-brand-50 rounded-2xl flex items-center justify-center group-hover:bg-brand-600 transition-colors">
+            <UserCircle size={32} className="text-brand-600 group-hover:text-white" />
           </div>
           <div>
             <h3 className="font-bold text-lg text-slate-900 tracking-tight mb-1">Sou Morador</h3>

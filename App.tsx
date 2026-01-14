@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+﻿import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from './types';
 import { supabase } from './supabase';
 import { ToastProvider } from './components/ui';
@@ -607,7 +607,7 @@ const App: React.FC = () => {
             <p className="text-sm text-slate-500">Ocorreu um erro ao carregar a página.</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-3 bg-violet-600 text-white rounded-xl font-bold"
+              className="px-6 py-3 bg-brand-600 text-white rounded-xl font-bold"
             >
               Recarregar App
             </button>
@@ -622,7 +622,7 @@ const App: React.FC = () => {
     return <SplashScreen onFinish={() => { if (session && userRole) setAppState('main'); else setAppState('login'); }} />;
   }
 
-  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="w-12 h-12 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div></div>;
+  if (loading) return <div className="min-h-screen bg-white flex items-center justify-center"><div className="w-12 h-12 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div></div>;
 
   if (appState === 'login') return (
     <>

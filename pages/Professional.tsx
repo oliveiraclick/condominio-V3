@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Card, Button, Badge, Input, useToast } from '../components/ui';
 import { MuralSkeleton, LeadsSkeleton } from '../components/skeletons';
 import {
@@ -76,7 +76,7 @@ const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userR
           `}</style>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
@@ -91,7 +91,7 @@ const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userR
               <div key={notif.id} className="bg-slate-50 p-5 rounded-[28px] border border-slate-100 space-y-3 animate-in slide-in-from-bottom-2 relative group">
                 <div className="flex justify-between items-start gap-3">
                   <h4 className="font-black text-slate-900 text-base italic tracking-tight flex-1">{notif.title}</h4>
-                  <Badge className={`text-[8px] uppercase px-2 py-1 ${notif.target_role === 'all' ? 'bg-violet-100 text-violet-600' :
+                  <Badge className={`text-[8px] uppercase px-2 py-1 ${notif.target_role === 'all' ? 'bg-brand-100 text-brand-600' :
                     notif.target_role === 'resident' ? 'bg-blue-100 text-blue-600' :
                       'bg-emerald-100 text-emerald-600'
                     }`}>
@@ -162,7 +162,7 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-sm bg-white rounded-[40px] shadow-2xl p-8 animate-in zoom-in-95 duration-300">
         <div className="text-center mb-6">
-          <div className="w-16 h-16 bg-violet-100 text-violet-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <div className="w-16 h-16 bg-brand-100 text-brand-600 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <UserPlus size={32} />
           </div>
           <h2 className="text-xl font-black italic uppercase text-slate-900 leading-none">Complete seu Perfil</h2>
@@ -225,7 +225,7 @@ const ProposalModal: React.FC<{
       <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
       <div className="relative w-full max-w-sm bg-white rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-violet-100 text-violet-600 rounded-[24px] flex items-center justify-center mx-auto mb-2 shadow-lg shadow-violet-600/10">
+          <div className="w-16 h-16 bg-brand-100 text-brand-600 rounded-[24px] flex items-center justify-center mx-auto mb-2 shadow-lg shadow-brand-600/10">
             <Megaphone size={32} />
           </div>
           <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Enviar Proposta</h3>
@@ -248,7 +248,7 @@ const ProposalModal: React.FC<{
                 placeholder="Explique como você pode ajudar..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full h-32 bg-slate-50 border-none rounded-2xl p-6 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-violet-500/20 transition-all text-slate-600"
+                className="w-full h-32 bg-slate-50 border-none rounded-2xl p-6 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-slate-600"
               />
             </div>
           </div>
@@ -257,7 +257,7 @@ const ProposalModal: React.FC<{
             onClick={handleSubmit}
             disabled={loading}
             fullWidth
-            className="h-14 bg-violet-600 text-white font-black uppercase tracking-widest shadow-xl shadow-violet-600/30 active:scale-95 transition-all"
+            className="h-14 bg-brand-600 text-white font-black uppercase tracking-widest shadow-xl shadow-brand-600/30 active:scale-95 transition-all"
           >
             {loading ? 'Enviando...' : 'Confirmar Proposta'}
           </Button>
@@ -332,7 +332,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-1">Mural de Oportunidades</h3>
         {currentUser?.category && (
-          <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-violet-600 text-white shadow-md shadow-violet-600/20">
+          <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-brand-600 text-white shadow-md shadow-brand-600/20">
             {currentUser.category}
           </span>
         )}
@@ -357,7 +357,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
           {demands.map((demand, index) => {
             const hasProposal = myProposals.has(demand.id);
             return (
-              <div key={demand.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className={`bg-white p-5 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-right-4 fade-in ${hasProposal ? 'bg-violet-50/50 shadow-violet-100 ring-1 ring-violet-100' : 'bg-white'}`}>
+              <div key={demand.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className={`bg-white p-5 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 animate-in slide-in-from-right-4 fade-in ${hasProposal ? 'bg-brand-50/50 shadow-brand-100 ring-1 ring-brand-100' : 'bg-white'}`}>
                 <div className="flex items-start gap-4 mb-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-100 shrink-0">
                     <img src={demand.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${demand.profiles?.name}`} className="w-full h-full object-cover" />
@@ -367,7 +367,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
                       <div>
                         <h4 className="font-black text-slate-900 text-sm italic leading-none">{demand.profiles?.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
-                          <p className="text-[9px] font-black text-violet-600 uppercase tracking-widest bg-violet-50 px-2 py-0.5 rounded-full inline-block">{demand.category}</p>
+                          <p className="text-[9px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-2 py-0.5 rounded-full inline-block">{demand.category}</p>
                           {hasProposal && (
                             <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
                               <Check size={8} /> Enviada
@@ -395,7 +395,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
                       setSelectedDemand(demand);
                       setProposalModalOpen(true);
                     }}
-                    className="w-full h-12 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-violet-600 hover:text-white transition-all active:scale-95"
+                    className="w-full h-12 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-brand-600 hover:text-white transition-all active:scale-95"
                   >
                     <Zap size={16} />
                     Enviar Proposta
@@ -452,7 +452,7 @@ const LeadsCRM: React.FC<{ currentUser: any }> = ({ currentUser }) => {
     <div className="space-y-6">
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-1">Meus Leads (CRM)</h3>
-        <button onClick={loadLeads} className="p-2 text-violet-600 hover:bg-violet-50 rounded-lg transition-colors">
+        <button onClick={loadLeads} className="p-2 text-brand-600 hover:bg-brand-50 rounded-lg transition-colors">
           <Zap size={16} />
         </button>
       </div>
@@ -472,10 +472,10 @@ const LeadsCRM: React.FC<{ currentUser: any }> = ({ currentUser }) => {
           {leads.map((lead, index) => {
             const isAuction = lead.source === 'proposal_accepted';
             return (
-              <div key={lead.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className="bg-white p-5 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4 animate-in slide-in-from-right-4 fade-in group bg-white ring-1 ring-slate-50 hover:ring-violet-100">
+              <div key={lead.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className="bg-white p-5 rounded-[24px] shadow-sm hover:shadow-md transition-all duration-300 flex items-center gap-4 animate-in slide-in-from-right-4 fade-in group bg-white ring-1 ring-slate-50 hover:ring-brand-100">
                 <div className="w-12 h-12 rounded-2xl overflow-hidden bg-slate-100 shrink-0 relative">
                   <img src={lead.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${lead.profiles?.name}`} className="w-full h-full object-cover" />
-                  <div className={`absolute bottom-0 inset-x-0 h-1 ${isAuction ? 'bg-violet-500' : 'bg-emerald-500'}`}></div>
+                  <div className={`absolute bottom-0 inset-x-0 h-1 ${isAuction ? 'bg-brand-500' : 'bg-emerald-500'}`}></div>
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex justify-between items-start">
@@ -486,7 +486,7 @@ const LeadsCRM: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     <span className="text-[8px] font-bold text-slate-300 uppercase shrink-0">{new Date(lead.created_at).toLocaleDateString()}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isAuction ? 'bg-violet-50 text-violet-600' : 'bg-emerald-50 text-emerald-600'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isAuction ? 'bg-brand-50 text-brand-600' : 'bg-emerald-50 text-emerald-600'}`}>
                       {isAuction ? 'Leilão Vencido' : 'WhatsApp Direto'}
                     </span>
                     <button
@@ -749,7 +749,7 @@ export const ProfessionalDashboard: React.FC<{
           >
             {loadingGuide ? (
               <div className="flex-1 flex items-center justify-center py-8">
-                <div className="w-6 h-6 border-2 border-slate-200 border-t-violet-600 rounded-full animate-spin"></div>
+                <div className="w-6 h-6 border-2 border-slate-200 border-t-brand-600 rounded-full animate-spin"></div>
               </div>
             ) : guideCards.length > 0 ? (
               guideCards.map((card) => {
@@ -780,7 +780,7 @@ export const ProfessionalDashboard: React.FC<{
               onClick={() => onNavigate?.('services')}
               className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center gap-4 active:scale-95 transition-all group"
             >
-              <div className="w-14 h-14 bg-violet-50 text-violet-600 rounded-[22px] flex items-center justify-center group-hover:bg-violet-600 group-hover:text-white transition-colors">
+              <div className="w-14 h-14 bg-brand-50 text-brand-600 rounded-[22px] flex items-center justify-center group-hover:bg-brand-600 group-hover:text-white transition-colors">
                 <Briefcase size={26} />
               </div>
               <div className="text-center">
@@ -900,19 +900,19 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
             key={tab.id}
             onClick={() => setFilter(tab.id)}
             className={`py-4 px-4 font-black text-xs uppercase tracking-wider transition-all relative ${filter === tab.id
-              ? 'text-violet-600'
+              ? 'text-brand-600'
               : 'text-slate-400 hover:text-slate-600'
               }`}
           >
             {tab.label}
             {tab.count > 0 && (
-              <span className={`ml-2 px-2 py-0.5 rounded-full text-[9px] font-black ${filter === tab.id ? 'bg-violet-100 text-violet-600' : 'bg-slate-100 text-slate-400'
+              <span className={`ml-2 px-2 py-0.5 rounded-full text-[9px] font-black ${filter === tab.id ? 'bg-brand-100 text-brand-600' : 'bg-slate-100 text-slate-400'
                 }`}>
                 {tab.count}
               </span>
             )}
             {filter === tab.id && (
-              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-violet-600"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-brand-600"></div>
             )}
           </button>
         ))}
@@ -937,7 +937,7 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
               <div className="flex items-start justify-between gap-2">
                 <div className="flex-1">
                   <h4 className="font-black text-slate-900 text-base italic tracking-tight">{request.title}</h4>
-                  <p className="text-[10px] font-bold text-violet-600 uppercase bg-violet-50 px-2 py-1 rounded-full inline-block mt-1">
+                  <p className="text-[10px] font-bold text-brand-600 uppercase bg-brand-50 px-2 py-1 rounded-full inline-block mt-1">
                     {request.category}
                   </p>
                 </div>
@@ -999,7 +999,7 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
               {request.status === 'accepted' && (
                 <button
                   onClick={() => handleComplete(request.id)}
-                  className="w-full h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="w-full h-10 bg-brand-50 text-brand-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 size={16} />
                   Marcar como Concluído
@@ -1357,7 +1357,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
                 </button>
                 <button
                   onClick={() => handleManagePeriods(service)}
-                  className="flex-1 h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all flex items-center justify-center gap-1"
+                  className="flex-1 h-10 bg-brand-50 text-brand-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all flex items-center justify-center gap-1"
                 >
                   <Clock size={14} />
                   Períodos
@@ -1388,7 +1388,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
               <div className="flex items-center justify-between">
                 <div>
                   <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tight">{managingPeriodsFor.title}</h3>
-                  <p className="text-[10px] font-bold text-violet-600 uppercase tracking-widest mt-1">Períodos de Atendimento</p>
+                  <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest mt-1">Períodos de Atendimento</p>
                 </div>
                 <button onClick={closePeriodManagement} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">
                   <X size={20} />
@@ -1401,7 +1401,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
               {!showPeriodForm && (
                 <button
                   onClick={() => setShowPeriodForm(true)}
-                  className="w-full h-14 bg-violet-50 text-violet-600 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                  className="w-full h-14 bg-brand-50 text-brand-600 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all flex items-center justify-center gap-2"
                 >
                   <Plus size={18} />
                   Adicionar Período
@@ -1410,10 +1410,10 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
 
               {/* Period Form */}
               {showPeriodForm && (
-                <div className="bg-violet-50 p-5 rounded-[24px] space-y-3 animate-in slide-in-from-top-2">
+                <div className="bg-brand-50 p-5 rounded-[24px] space-y-3 animate-in slide-in-from-top-2">
                   <div className="flex items-center justify-between">
-                    <h4 className="font-black text-violet-900 text-sm uppercase">Novo Período</h4>
-                    <button onClick={() => setShowPeriodForm(false)} className="text-violet-400 hover:text-violet-600">
+                    <h4 className="font-black text-brand-900 text-sm uppercase">Novo Período</h4>
+                    <button onClick={() => setShowPeriodForm(false)} className="text-brand-400 hover:text-brand-600">
                       <X size={18} />
                     </button>
                   </div>
@@ -1427,21 +1427,21 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-violet-600 uppercase tracking-widest ml-2">Início</label>
+                      <label className="text-[9px] font-black text-brand-600 uppercase tracking-widest ml-2">Início</label>
                       <input
                         type="time"
                         value={periodFormData.start_time}
                         onChange={(e) => setPeriodFormData({ ...periodFormData, start_time: e.target.value })}
-                        className="w-full h-12 bg-white border border-violet-200 rounded-xl px-3 font-bold text-sm outline-none focus:border-violet-500"
+                        className="w-full h-12 bg-white border border-brand-200 rounded-xl px-3 font-bold text-sm outline-none focus:border-brand-500"
                       />
                     </div>
                     <div className="space-y-1">
-                      <label className="text-[9px] font-black text-violet-600 uppercase tracking-widest ml-2">Fim</label>
+                      <label className="text-[9px] font-black text-brand-600 uppercase tracking-widest ml-2">Fim</label>
                       <input
                         type="time"
                         value={periodFormData.end_time}
                         onChange={(e) => setPeriodFormData({ ...periodFormData, end_time: e.target.value })}
-                        className="w-full h-12 bg-white border border-violet-200 rounded-xl px-3 font-bold text-sm outline-none focus:border-violet-500"
+                        className="w-full h-12 bg-white border border-brand-200 rounded-xl px-3 font-bold text-sm outline-none focus:border-brand-500"
                       />
                     </div>
                   </div>
@@ -1449,7 +1449,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
                   <Button
                     fullWidth
                     onClick={handleAddPeriod}
-                    className="h-12 bg-violet-600 text-white rounded-xl uppercase font-black text-xs tracking-widest shadow-lg shadow-violet-600/30"
+                    className="h-12 bg-brand-600 text-white rounded-xl uppercase font-black text-xs tracking-widest shadow-lg shadow-brand-600/30"
                   >
                     Adicionar
                   </Button>
@@ -1572,7 +1572,7 @@ export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout
           <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
           {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
         </div>
-        <button onClick={() => fileInputRef.current?.click()} className="text-violet-600 font-bold text-xs uppercase bg-violet-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
+        <button onClick={() => fileInputRef.current?.click()} className="text-brand-600 font-bold text-xs uppercase bg-brand-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
           {uploading ? 'Enviando...' : 'Alterar Foto'}
         </button>
         <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
@@ -1803,7 +1803,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
           </div>
           <button
             onClick={handleAddClick}
-            className="w-12 h-12 bg-violet-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/30 active:scale-95 transition-all"
+            className="w-12 h-12 bg-brand-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-brand-600/30 active:scale-95 transition-all"
           >
             <Plus size={24} />
           </button>
@@ -1839,7 +1839,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
               placeholder="Descrição (opcional)"
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-violet-500 resize-none"
+              className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-brand-500 resize-none"
             />
 
             <div className="grid grid-cols-2 gap-4">
@@ -1854,7 +1854,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-violet-500"
+                className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-brand-500"
               >
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -1877,7 +1877,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
                     </button>
                   </div>
                 ) : (
-                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-violet-400 transition-all bg-slate-50">
+                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-brand-400 transition-all bg-slate-50">
                     <input
                       type="file"
                       accept="image/*"
@@ -1887,7 +1887,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
                     />
                     {uploading ? (
                       <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+                        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
                         <span className="text-xs font-bold text-slate-400">Enviando...</span>
                       </div>
                     ) : (
@@ -1904,7 +1904,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
             <Button
               fullWidth
               onClick={handleSubmit}
-              className="h-14 bg-violet-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-violet-600/30"
+              className="h-14 bg-brand-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-brand-600/30"
             >
               {editingProduct ? 'Atualizar' : 'Cadastrar'} Produto
             </Button>
@@ -1914,7 +1914,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
         {/* Lista de Produtos */}
         {loading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-violet-600 border-t-transparent rounded-full animate-spin"></div>
+            <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
           </div>
         ) : products.length === 0 ? (
           <div className="text-center py-12">
@@ -1942,7 +1942,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
                     <p className="text-xs text-slate-500 mt-1 line-clamp-2">{product.description}</p>
                   )}
                   <div className="flex items-center gap-2 mt-2">
-                    <span className="text-lg font-black text-violet-600">R$ {product.price.toFixed(2)}</span>
+                    <span className="text-lg font-black text-brand-600">R$ {product.price.toFixed(2)}</span>
                     <span className="text-[9px] font-bold text-slate-400 uppercase bg-slate-100 px-2 py-1 rounded-full">{product.category}</span>
                   </div>
                 </div>
@@ -1957,7 +1957,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
                 </button>
                 <button
                   onClick={() => handleEdit(product)}
-                  className="flex-1 h-10 bg-violet-50 text-violet-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-violet-100 active:scale-95 transition-all"
+                  className="flex-1 h-10 bg-brand-50 text-brand-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all"
                 >
                   Editar
                 </button>
@@ -1986,7 +1986,7 @@ export const ProfessionalNavigation = ({ activeTab, onChange }: any) => {
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-violet-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-brand-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
       {navItems.map((item) => {
         const isActive = activeTab === item.id;
         return (

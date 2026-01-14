@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+﻿import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { X, CheckCircle2, AlertCircle, Info, Loader2 } from 'lucide-react';
 
 // --- TOAST SYSTEM ---
@@ -109,7 +109,7 @@ export const Button: React.FC<ButtonProps> = ({
   const baseStyles = "inline-flex items-center justify-center rounded-2xl font-bold transition-all active:scale-95 disabled:opacity-50 disabled:pointer-events-none";
 
   const variants = {
-    primary: "bg-violet-600 text-white hover:bg-violet-700 shadow-lg shadow-violet-600/20",
+    primary: "bg-brand-600 text-white hover:bg-brand-700 shadow-lg shadow-brand-600/20",
     secondary: "bg-slate-100 text-slate-900 hover:bg-slate-200",
     outline: "border-2 border-slate-200 text-slate-600 hover:border-slate-300",
     ghost: "text-slate-600 hover:bg-slate-50",
@@ -139,7 +139,7 @@ export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ c
       className={`
         w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 
         text-sm font-medium text-slate-900 placeholder:text-slate-400
-        outline-none focus:border-violet-500 focus:ring-4 focus:ring-violet-500/10 transition-all
+        outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all
         ${className}
       `}
       {...props}
