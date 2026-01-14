@@ -779,6 +779,105 @@ const AccessDevicesView = () => {
   );
 };
 
+
+
+// --- API DOCS VIEW ---
+const ApiDocsView = () => {
+  return (
+    <div className={PAGE_CONTAINER}>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className={HEADER_TITLE}>Área do <span className="text-brand-600">Dev</span></h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Integração & API</p>
+        </div>
+      </div>
+
+      <div className="bg-slate-900 text-white p-8 rounded-[40px] shadow-2xl relative overflow-hidden mb-8 group">
+        <div className="relative z-10">
+          <h3 className="text-2xl font-black italic tracking-tighter mb-4">Documentação Técnica</h3>
+          <p className="text-slate-400 text-sm mb-6 leading-relaxed max-w-[90%]">
+            Guia completo para desenvolvedores integrarem sistemas externos (Câmeras, ERPs, Portais) com o Condo V3.
+          </p>
+          <a href="/manual_integracao_hikvision.md" download="Manual_Integracao.md" className="mr-3 inline-block">
+            <Button className="h-12 px-6 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl font-bold uppercase tracking-widest flex items-center gap-2 shadow-lg active:scale-95 transition-all text-[10px]">
+              <BookOpen size={16} /> Manual Hardware
+            </Button>
+          </a>
+          <a href="/api_reference.md" download="Manual_API_CondoV3.md" className="inline-block">
+            <Button className="h-12 px-6 bg-brand-500 hover:bg-brand-400 text-white rounded-xl font-black uppercase tracking-widest flex items-center gap-2 shadow-lg shadow-brand-500/20 active:scale-95 transition-all text-[10px]">
+              <Layers size={16} /> Referência API
+            </Button>
+          </a>
+        </div>
+        <div className="absolute -bottom-10 -right-10 w-48 h-48 bg-brand-500/20 rounded-full blur-3xl group-hover:bg-brand-500/30 transition-all duration-700"></div>
+        <div className="absolute top-1/2 -right-6 text-slate-800 rotate-12 -translate-y-1/2">
+          <LayoutGrid size={140} strokeWidth={1} opacity={0.2} />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <h4 className="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2"><CheckCircle2 className="text-emerald-500" size={20} /> Autenticação</h4>
+          <p className="text-xs text-slate-500 mb-4 font-medium">Todas as requisições devem incluir o token no cabeçalho.</p>
+          <div className="bg-slate-900 rounded-xl p-4 overflow-x-auto shadow-inner">
+            <code className="text-[10px] font-mono text-emerald-400">
+              Authorization: Bearer &lt;seu_token&gt;<br />
+              apikey: &lt;public_key&gt;
+            </code>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <h4 className="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2"><Activity className="text-blue-500" size={20} /> Endpoints Principais</h4>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="font-mono text-slate-600 font-bold">GET /profiles</span>
+              <Badge className="bg-blue-100 text-blue-600 border-none">Moradores</Badge>
+            </div>
+            <div className="flex items-center justify-between text-xs p-3 bg-slate-50 rounded-xl border border-slate-100">
+              <span className="font-mono text-slate-600 font-bold">POST /access_logs</span>
+              <Badge className="bg-purple-100 text-purple-600 border-none">Acessos</Badge>
+            </div>
+          </div>
+        </div>
+
+        {/* --- ERROS COMUNS (Inspired by Bling) --- */}
+        <div className="col-span-1 md:col-span-2 bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+          <h4 className="font-bold text-slate-900 text-lg mb-4 flex items-center gap-2">
+            <ShieldCheck className="text-rose-500" size={20} /> Erros Comuns
+          </h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="p-4 bg-rose-50 rounded-2xl border border-rose-100 hover:shadow-md transition-all">
+              <span className="text-xs font-black text-rose-600 bg-white px-2 py-1 rounded-md shadow-sm mb-2 inline-block">401 Unauthorized</span>
+              <p className="text-[11px] text-rose-800 font-medium leading-relaxed">
+                Token inválido ou expirado. Verifique se o header <code>Authorization</code> está correto.
+              </p>
+            </div>
+            <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100 hover:shadow-md transition-all">
+              <span className="text-xs font-black text-amber-600 bg-white px-2 py-1 rounded-md shadow-sm mb-2 inline-block">403 Forbidden</span>
+              <p className="text-[11px] text-amber-800 font-medium leading-relaxed">
+                Você não tem permissão para acessar este recurso (RLS Policy). Verifique seu nível de acesso.
+              </p>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:shadow-md transition-all">
+              <span className="text-xs font-black text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm mb-2 inline-block">400 Bad Request</span>
+              <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                Sintaxe inválida. Verifique o formato do JSON enviado no corpo da requisição.
+              </p>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 hover:shadow-md transition-all">
+              <span className="text-xs font-black text-slate-600 bg-white px-2 py-1 rounded-md shadow-sm mb-2 inline-block">409 Conflict</span>
+              <p className="text-[11px] text-slate-700 font-medium leading-relaxed">
+                Violação de unicidade. Ex: Tentar cadastrar um email que já existe.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- PUSH VIEW ---
 const PushView = () => {
   const [form, setForm] = useState({ title: '', body: '', target_role: 'all' });
@@ -889,6 +988,7 @@ export const SuperAdmin = () => {
           {activeTab === 'users' && <UsersView />}
           {activeTab === 'professionals' && <ProfessionalsView />}
           {activeTab === 'access' && <AccessDevicesView />}
+          {activeTab === 'api' && <ApiDocsView />}
           {activeTab === 'notifications' && <PushView />}
         </div>
 
@@ -899,7 +999,9 @@ export const SuperAdmin = () => {
             { id: 'condos', icon: Building, label: 'Condos' },
             { id: 'professionals', icon: Briefcase, label: 'Pros' },
             { id: 'users', icon: Users, label: 'Users' },
-            { id: 'access', icon: ShieldCheck, label: 'Acesso' }, // NEW
+            { id: 'access', icon: ShieldCheck, label: 'Acesso' },
+            { id: 'api', icon: Layers, label: 'API' },
+            { id: 'notifications', icon: Bell, label: 'Push' },
           ].map(item => (
             <button
               key={item.id}
