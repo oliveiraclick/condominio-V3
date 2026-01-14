@@ -704,10 +704,16 @@ export const ResidentHome: React.FC<{
         {/* WATERMARK SYMBOL (Novo) */}
         {(currentUser?.symbol || currentUser?.logo) && (
           <div
-            className="absolute top-0 right-0 w-64 h-64 pointer-events-none rotate-12 z-0 mix-blend-overlay"
-            style={{ opacity: (currentUser.symbolOpacity || 15) / 100 }}
+            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden"
+            style={{ opacity: (currentUser.symbolOpacity || 100) / 100 }}
           >
-            <img src={currentUser.symbol || currentUser.logo} className="w-full h-full object-contain" />
+            <img
+              src={currentUser.symbol || currentUser.logo}
+              className="w-full h-full object-cover"
+              alt="Background Branding"
+            />
+            {/* Optional overlay to ensure text contrast if image is too bright, though user controls opacity */}
+            <div className="absolute inset-0 bg-black/10 mix-blend-multiply"></div>
           </div>
         )}
 
