@@ -731,11 +731,11 @@ export const ResidentHome: React.FC<{
             onClick={() => onSelectCategory('Todos', homeSearch.trim())}
             className="absolute left-4 top-1/2 -translate-y-1/2 p-2 active:scale-90 transition-transform"
           >
-            <Search className="text-brand-300" size={18} />
+            <Search className="text-white/70" size={18} />
           </button>
           <Input
             placeholder="Procurar produto ou serviço..."
-            className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder-brand-200/70 focus:bg-white/20 transition-all"
+            className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder:text-white/60 focus:bg-white/20 transition-all"
             value={homeSearch}
             onChange={(e) => setHomeSearch(e.target.value)}
             onKeyDown={handleHomeSearch}
