@@ -3,7 +3,7 @@ import { Card, Badge, Button, Input } from '../components/UI';
 import {
   Bell, Search, MapPin, Grid, Calendar, ShoppingBag,
   User, Plus, Package, Key, Zap, CreditCard,
-  Sparkles, Star, ChevronRight, ChevronLeft, Tag,
+  Sparkles, Star, ChevronRight, ChevronLeft, Tag, XCircle,
   Users, ArrowLeft, Filter, Droplets, Paintbrush,
   Leaf, Car, Wrench, Phone, Monitor, LayoutGrid, Scissors, Utensils,
   Coffee, ShoppingCart, HeartPulse, PawPrint, Megaphone,
@@ -13,8 +13,10 @@ import {
   Trophy, Target, Dumbbell, GlassWater, Waves, Store, Heart, Navigation,
   MessageSquare, Send, Paperclip, Mic, MoreVertical, CheckCheck, Award, Quote, Camera, MessageCircle,
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
-  Building2, Camera as CameraIcon, Download
+  Building2, Camera as CameraIcon, Download, Scan
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { PackageScanner } from '../components/PackageScanner';
 import { CommunicationHub } from './CommunicationHub';
 import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
@@ -168,6 +170,202 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
   );
 };
 
+// --- AUTHORIZATION MODAL ---
+export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any }> = ({ isOpen, onClose, currentUser }) => {
+  const [authorizations, setAuthorizations] = useState<any[]>([]);
+  const [manualEntry, setManualEntry] = useState({ tower: '', unit: '' }); // Changed to manual entry
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) {
+      loadAuthorizations();
+    }
+  }, [isOpen]);
+
+  const loadAuthorizations = async () => {
+    const { data } = await supabase
+      .from('package_authorizations')
+      .select('*, grantee:grantee_id(id, name, unit, tower)')
+      .eq('grantor_id', currentUser.id)
+      .eq('status', 'active');
+
+    if (data) setAuthorizations(data);
+  };
+
+  const authorizeByAddress = async () => {
+    if (!manualEntry.tower || !manualEntry.unit) {
+      alert('Preencha Rua e Casa!');
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 1. Find the neighbor by address
+      const { data: neighbors } = await supabase
+        .from('profiles')
+        .select('id, name, unit, tower')
+        .eq('role', 'resident')
+        .eq('tower', manualEntry.tower)
+        .eq('unit', manualEntry.unit)
+        .neq('id', currentUser.id); // Cannot authorize self
+
+      if (!neighbors || neighbors.length === 0) {
+        alert('Morador não encontrado neste endereço.');
+        setLoading(false);
+        return;
+      }
+
+      // If multiple people live there (e.g. husband/wife), we authorize ALL of them or just ask user?
+      // For simplicity/security, let's authorize the first one found or handled better.
+      // Actually, typically we authorize a specific person, but here we can authorize the first valid profile found at that address.
+      // Let's list found residents if > 1, or just pick the first.
+
+      const neighbor = neighbors[0]; // Picking the first verified resident at that address
+
+      // 2. Check overlap
+      const exists = authorizations.find(a => a.grantee_id === neighbor.id);
+      if (exists) {
+        alert(`O morador ${neighbor.name} (Rua ${neighbor.tower} - ${neighbor.unit}) já está autorizado.`);
+        setLoading(false);
+        return;
+      }
+
+      // 3. Insert Authorization
+      const { error } = await supabase.from('package_authorizations').insert([{
+        grantor_id: currentUser.id,
+        grantee_id: neighbor.id,
+        status: 'active'
+      }]);
+
+      if (error) throw error;
+
+      alert(`Autorizado com sucesso: ${neighbor.name}`);
+      setManualEntry({ tower: '', unit: '' });
+      loadAuthorizations();
+
+    } catch (err: any) {
+      alert('Erro ao autorizar: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const revokeAuthorization = async (id: string) => {
+    await supabase.from('package_authorizations').update({ status: 'revoked' }).eq('id', id);
+    loadAuthorizations();
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-md bg-white rounded-t-[40px] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom-8">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="text-xl font-black italic text-slate-900">Vizinhos Autorizados</h3>
+          <button onClick={onClose}><XCircle size={32} className="text-slate-300" /></button>
+        </div>
+
+        <div className="bg-slate-50 p-6 rounded-[32px] mb-8 space-y-4">
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Adicionar Novo</h4>
+
+          <div className="flex gap-2 items-end">
+            <div className="space-y-2 flex-1">
+              <Input
+                placeholder="Rua (Ex: 1)"
+                value={manualEntry.tower}
+                onChange={e => setManualEntry({ ...manualEntry, tower: e.target.value })}
+                className="h-12 bg-white border-slate-200"
+              />
+            </div>
+            <div className="space-y-2 flex-1">
+              <Input
+                placeholder="Casa (Ex: 460)"
+                value={manualEntry.unit}
+                onChange={e => setManualEntry({ ...manualEntry, unit: e.target.value })}
+                className="h-12 bg-white border-slate-200"
+              />
+            </div>
+            <Button onClick={authorizeByAddress} disabled={loading} className="h-12 w-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-emerald-200 shadow-lg active:scale-95 transition-all">
+              {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={24} strokeWidth={3} />}
+            </Button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
+          {authorizations.length === 0 ? (
+            <div className="text-center py-8 text-slate-300">
+              <p className="text-xs italic">Ninguém autorizado.</p>
+            </div>
+          ) : (
+            authorizations.map(auth => (
+              <div key={auth.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                <div>
+                  <h5 className="font-bold text-slate-900 text-sm">{auth.grantee?.name}</h5>
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">RUA {auth.grantee?.tower}, {auth.grantee?.unit}</p>
+                </div>
+                <button onClick={() => revokeAuthorization(auth.id)} className="text-rose-500 bg-rose-50 p-2 rounded-xl active:scale-95">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any; onOpenAuth: () => void }> = ({ isOpen, onClose, currentUser, onOpenAuth }) => {
+  if (!isOpen) return null;
+
+  const qrValue = `RESIDENT:${currentUser?.id}`;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative w-full max-w-sm bg-white rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 mx-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-32 bg-violet-600"></div>
+        <div className="relative flex flex-col items-center">
+          <button onClick={onClose} className="absolute top-4 right-4 z-50 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform">
+            <X size={16} strokeWidth={3} />
+          </button>
+
+          <div className="w-24 h-24 rounded-[32px] p-1 bg-white shadow-xl mb-4 mt-8">
+            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[28px] object-cover bg-slate-100" />
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter text-center">{currentUser?.name}</h2>
+          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
+            {currentUser?.unit?.toString().toUpperCase().includes('RUA')
+              ? `${currentUser.unit}, ${currentUser.tower}`
+              : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
+            }
+          </p>
+
+          <div className="p-6 bg-white border-4 border-slate-900 rounded-[32px] shadow-sm mb-6">
+            <QRCodeSVG value={qrValue} size={200} />
+          </div>
+
+          <p className="text-center text-slate-400 text-xs max-w-[200px] leading-relaxed mb-6">
+            Apresente este código na portaria para retirar suas encomendas com segurança.
+          </p>
+
+          <Button onClick={onOpenAuth} className="bg-slate-100 text-slate-900 hover:bg-slate-200 h-12 rounded-xl text-xs font-black uppercase tracking-widest w-full mb-4">
+            <Users size={16} className="mr-2" />
+            Autorizar Vizinho
+          </Button>
+
+          <button onClick={onClose} className="hover:bg-slate-50 p-2 rounded-full transition-colors">
+            <XCircle size={32} className="text-slate-300" />
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; onPost: (category: string, description: string) => void; categories: string[] }> = ({ isOpen, onClose, onPost, categories }) => {
   const [category, setCategory] = useState('');
   const [description, setDescription] = useState('');
@@ -257,8 +455,7 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
             <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt="User" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-violet-500">({item.tower})</span></p>
-            <p className="text-[8px] font-bold text-slate-300 uppercase mt-0.5 tracking-widest leading-none">{item.tower.split(' - ')[0]}</p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-violet-500">(Casa {item.tower})</span></p>
           </div>
         </div>
 
@@ -343,10 +540,42 @@ export const ResidentHome: React.FC<{
   const [selectedRequestToReview, setSelectedRequestToReview] = useState<any>(null);
   const [homeSearch, setHomeSearch] = useState('');
   const [muralOpen, setMuralOpen] = useState(false);
+  const [digitalIdOpen, setDigitalIdOpen] = useState(false);
+  const [showPackageAlert, setShowPackageAlert] = useState(false); // Controls Banner
+  const [showPackageModal, setShowPackageModal] = useState(false); // Controls Modal
+  const [authModalOpen, setAuthModalOpen] = useState(false);
+
+  useEffect(() => {
+    // Check for pending packages on load
+    const checkPackages = async () => {
+      const { data } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('resident_id', currentUser.id)
+        .eq('status', 'pending');
+
+      if (data && data.length > 0) {
+        setShowPackageAlert(true); // Always show banner if packages exist
+
+        // Show modal only once per session
+        const hasSeenModal = sessionStorage.getItem('hasSeenPackageModal');
+        if (!hasSeenModal) {
+          setShowPackageModal(true);
+          sessionStorage.setItem('hasSeenPackageModal', 'true');
+        }
+      } else {
+        setShowPackageAlert(false);
+        // Optional: clear session key if no packages? Maybe not needed.
+      }
+    };
+
+    checkPackages();
+  }, [currentUser]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
 
   const handleHomeSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && homeSearch.trim()) {
@@ -384,8 +613,23 @@ export const ResidentHome: React.FC<{
   const featuredProduct = products.length > 0 ? products[products.length - 1] : null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32 relative">
+    <div className="min-h-screen bg-[#f8fafc] pb-32 relative w-full overflow-x-hidden">
       {/* HEADER: ON-SITE BANNER REMOVED AS REQUESTED */}
+
+      {/* PACKAGE ALERT BANNER (Persistent Strip) */}
+      {showPackageAlert && (
+        <div className="bg-amber-400 p-4 px-6 flex items-center justify-center text-center shadow-sm relative z-30 animate-in slide-in-from-top-2">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center">
+              <Package size={16} className="text-amber-950" />
+            </div>
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 leading-none mb-0.5">Encomenda Chegou</p>
+              <p className="text-xs font-bold text-amber-950">Aguardando retirada na portaria</p>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* REVIEWS MODAL */}
       <ReviewModal
@@ -401,6 +645,41 @@ export const ResidentHome: React.FC<{
       {/* MURAL MODAL */}
       <MuralDemandModal isOpen={muralOpen} onClose={() => setMuralOpen(false)} onPost={onPostMuralDemand} categories={muralCategories} />
 
+      {/* PACKAGE ALERT MODAL */}
+      {showPackageModal && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center animate-in fade-in bg-black/60 backdrop-blur-sm">
+          <div className="bg-white rounded-[32px] p-8 max-w-sm w-full mx-4 shadow-2xl space-y-6 relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-2 bg-amber-400"></div>
+            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-2">
+              <Package size={40} />
+            </div>
+            <div className="text-center">
+              <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Encomenda Chegou!</h3>
+              <p className="text-slate-500 mt-2 font-medium leading-relaxed">Você tem volumes aguardando retirada na portaria.</p>
+            </div>
+            <Button fullWidth onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }} className="h-14 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl">
+              Ver meu QR Code
+            </Button>
+            <button onClick={() => setShowPackageModal(false)} className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest">
+              Fechar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* DIGITAL ID MODAL */}
+      <DigitalIDModal isOpen={digitalIdOpen} onClose={() => setDigitalIdOpen(false)} currentUser={currentUser} onOpenAuth={() => setAuthModalOpen(true)} />
+
+      {/* AUTHORIZATION MODAL */}
+      <AuthorizationModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} currentUser={currentUser} />
+
+      {/* PACKAGE SCANNER MODAL */}
+      <PackageScanner
+        isOpen={onNavigate?.name === 'scanner-encomenda' || (window.location.hash === '#scanner')}
+        onClose={() => { window.location.hash = ''; onNavigate('home'); }}
+        currentUser={currentUser}
+      />
+
       {/* HEADER DINÂMICO */}
       <div className="bg-violet-600 p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-violet-500">
         <div className="flex items-center justify-between mb-8">
@@ -409,16 +688,25 @@ export const ResidentHome: React.FC<{
               <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
-              <h2 className="font-black text-white text-2xl tracking-tighter leading-none italic">Olá, {currentUser?.name || 'Morador'}!</h2>
-              <p className="text-[10px] text-violet-200 font-black uppercase tracking-widest mt-2 flex items-center gap-1">
-                <MapPin size={10} className="text-violet-200" /> {currentUser?.condo || 'Meu Condomínio'} • {currentUser?.unit || '---'}
+              <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
+              <p className="text-xs font-bold text-violet-200 uppercase tracking-widest flex items-center gap-1">
+                <MapPin size={12} className="text-violet-200" />
+                {currentUser?.unit?.toString().toUpperCase().includes('RUA')
+                  ? `${currentUser.unit}, ${currentUser.tower}`
+                  : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
+                }
               </p>
             </div>
           </div>
-          <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
-            <Bell size={24} className="text-white" />
-            <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setDigitalIdOpen(true)} className="bg-white p-2 rounded-full shadow-sm active:scale-95 transition-all">
+              <QrCode size={24} className="text-slate-900" />
+            </button>
+            <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
+              <Bell size={24} className="text-white" />
+              <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
+            </button>
+          </div>
         </div>
 
         <div className="relative">
@@ -429,7 +717,7 @@ export const ResidentHome: React.FC<{
             <Search className="text-violet-300" size={18} />
           </button>
           <Input
-            placeholder="O que você precisa hoje?"
+            placeholder="Procurar produto ou serviço..."
             className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder-violet-200/70 focus:bg-white/20 transition-all"
             value={homeSearch}
             onChange={(e) => setHomeSearch(e.target.value)}
@@ -439,37 +727,8 @@ export const ResidentHome: React.FC<{
       </div>
 
       <div className="p-6 space-y-12">
-        {/* MURAL DE DEMANDAS INTRO */}
-        <div className="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[32px] md:rounded-[44px] p-6 md:p-8 text-white shadow-2xl relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-violet-600/20 blur-3xl group-hover:bg-violet-600/30 transition-all"></div>
-          <div className="relative z-10 flex items-center justify-between gap-4 md:gap-6">
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-3">
-                <Megaphone size={16} className="text-violet-400" />
-                <span className="text-[10px] font-black uppercase tracking-widest text-violet-400">Mural de Oportunidades</span>
-              </div>
-              <h3 className="font-black text-xl md:text-2xl tracking-tighter leading-none italic mb-2">Não encontrou o que procurava?</h3>
-              <p className="text-slate-400 text-xs leading-relaxed max-w-[200px]">Publique no Mural e deixe os profissionais virem até você!</p>
-            </div>
-            <div className="flex flex-col gap-3 shrink-0">
-              <button
-                onClick={() => onNavigate('minhas-demandas')}
-                className="w-14 h-14 md:w-16 md:h-16 bg-slate-800 border border-slate-700 rounded-[24px] md:rounded-[28px] flex flex-col items-center justify-center shadow-xl active:scale-90 transition-all relative overflow-hidden group/btn"
-              >
-                <Megaphone size={20} className="text-violet-400 mb-1 group-hover/btn:scale-110 transition-transform" />
-                <span className="text-[7px] font-black uppercase text-slate-400 leading-none text-center px-1">Ver Minhas</span>
-                {/* Badge Dinâmico (Sinalização de Propostas) */}
-                <div className="absolute top-2 right-2 w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-              </button>
-              <button
-                onClick={() => setMuralOpen(true)}
-                className="w-14 h-14 md:w-16 md:h-16 bg-violet-600 rounded-[24px] md:rounded-[28px] flex items-center justify-center shadow-xl shadow-violet-600/40 active:scale-90 transition-all"
-              >
-                <Plus size={28} className="text-white md:w-8 md:h-8" />
-              </button>
-            </div>
-          </div>
-        </div>
+        {/* CARROSSEL DE MURAL (ADVERTISING) */}
+        <BannerCarousel />
 
         {/* PRESTADORES NO LOCAL (NEW) */}
         {onSitePros.length > 0 && (
@@ -576,7 +835,7 @@ export const ResidentHome: React.FC<{
                   {[
                     { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-violet-600', bg: 'bg-violet-50' },
                     { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { icon: <Wallet size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { icon: <Scan size={20} />, label: 'Retirar Encomenda', target: 'scanner-encomenda', color: 'text-rose-500', bg: 'bg-slate-900 text-white' }, // New Scanner Action
                     { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
                   ].map((act, i) => (
                     <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
@@ -1106,6 +1365,26 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
         )}
       </div>
 
+      {/* MURAL DE DEMANDAS - MOVED HERE */}
+      <div className="mt-8 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-[32px] p-6 text-white shadow-xl relative overflow-hidden">
+        <div className="relative z-10 flex items-center justify-between gap-4">
+          <div className="flex-1">
+            <div className="flex items-center gap-2 mb-2">
+              <Megaphone size={14} className="text-violet-400" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-violet-400">Não achou?</span>
+            </div>
+            <h3 className="font-black text-lg italic leading-tight mb-1">Mural de Oportunidades</h3>
+            <p className="text-slate-400 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
+          </div>
+          <button
+            onClick={() => setMuralOpen(true)}
+            className="w-12 h-12 bg-violet-600 rounded-2xl flex items-center justify-center shadow-lg shadow-violet-600/40 active:scale-90 transition-all shrink-0"
+          >
+            <Plus size={24} className="text-white" />
+          </button>
+        </div>
+      </div>
+
       {/* PROFESSIONAL DETAIL MODAL */}
       {selectedPro && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200">
@@ -1454,19 +1733,24 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
         </Card>
 
         <div className="space-y-4">
-          <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Meus Autorizados</h4>
-          {myAccess.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-8">Nenhum acesso ativo.</p> : myAccess.map((access) => (
-            <div key={access.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center"><User size={20} className="text-slate-400" /></div>
-                <div>
-                  <h5 className="font-bold text-slate-900 italic">{access.name}</h5>
-                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{access.type} • {access.date}</p>
-                </div>
-              </div>
-              <Badge color={access.status === 'Entrou' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-50 text-amber-600'}>{access.status}</Badge>
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
+          {authorizations.length === 0 ? (
+            <div className="text-center py-8 text-slate-300">
+              <p className="text-xs italic">Ninguém autorizado.</p>
             </div>
-          ))}
+          ) : (
+            authorizations.map(auth => (
+              <div key={auth.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+                <div>
+                  <h5 className="font-bold text-slate-900 text-sm">{auth.grantee?.name}</h5>
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">RUA {auth.grantee?.tower}, {auth.grantee?.unit}</p>
+                </div>
+                <button onClick={() => revokeAuthorization(auth.id)} className="text-rose-500 bg-rose-50 p-2 rounded-xl active:scale-95">
+                  <Trash2 size={16} />
+                </button>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
@@ -2561,3 +2845,59 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
     </div>
   </div>
 );
+
+export const BannerCarousel: React.FC = () => {
+  const [banners, setBanners] = useState<any[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
+
+  useEffect(() => {
+    const loadBanners = async () => {
+      const { data } = await supabase.from('banners').select('*').eq('active', true).order('display_order', { ascending: true });
+      if (data && data.length > 0) setBanners(data);
+    };
+    loadBanners();
+  }, []);
+
+  useEffect(() => {
+    if (banners.length <= 1) return;
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % banners.length);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [banners]);
+
+  if (banners.length === 0) return (
+    <div className="w-full h-40 bg-slate-100 rounded-[32px] animate-pulse flex items-center justify-center">
+      <span className="text-slate-300 font-bold uppercase text-xs tracking-widest">Carregando Novidades...</span>
+    </div>
+  );
+
+  return (
+    <div className="relative w-full h-48 md:h-56 rounded-[32px] overflow-hidden shadow-lg group">
+      {banners.map((banner, index) => (
+        <div
+          key={banner.id}
+          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+        >
+          <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
+            <div>
+              {banner.title && <h3 className="text-white font-black italic text-xl md:text-2xl drop-shadow-lg">{banner.title}</h3>}
+              {banner.link_url && (
+                <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest mt-1 block">Saiba Mais &rarr;</span>
+              )}
+            </div>
+          </div>
+        </div>
+      ))}
+
+      {banners.length > 1 && (
+        <div className="absolute bottom-4 right-6 z-20 flex gap-2">
+          {banners.map((_, idx) => (
+            <div key={idx} className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-white w-4' : 'bg-white/40'}`} />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};

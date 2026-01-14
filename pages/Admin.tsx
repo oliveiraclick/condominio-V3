@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, Badge, Button, Input } from '../components/UI';
+import { Card, Badge, Button, Input } from '../components/ui';
 import { supabase } from '../supabase';
 import {
   LayoutDashboard, Users, Megaphone, Key, CalendarDays,
@@ -16,6 +16,8 @@ import {
   Lock, Settings, Eye, EyeOff, User, Paperclip, Mic, CheckCheck,
   Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell, LogOut
 } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
   <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
@@ -62,39 +64,119 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   </div>
 );
 
-// --- DASHBOARD ADMIN ---
-export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void }> = ({ onNavigate }) => {
-  const operations = [
-    { id: 'packages', icon: <Package size={28} />, label: 'Encomendas', target: 'admin-packages' },
-    { id: 'residents', icon: <Users size={28} />, label: 'Moradores', target: 'admin-residents' },
-    { id: 'reserves', icon: <CalendarDays size={28} />, label: 'Reservas', target: 'admin-reservations' },
-    { id: 'access', icon: <Key size={28} />, label: 'Portaria Fast', target: 'admin-access' },
-    { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
-    { id: 'notices', icon: <Megaphone size={28} />, label: 'Avisos Mural', target: 'admin-notices' },
-    { id: 'finance', icon: <Wallet size={28} />, label: 'Financeiro', target: 'admin-finance' },
-    { id: 'categories', icon: <Layers size={28} />, label: 'Categorias', target: 'admin-categories' },
-    { id: 'profile', icon: <UserCircle2 size={28} />, label: 'Meu Perfil', target: 'profile' },
+// --- DASHBOARD ADMIN REDESIGNED ---
+export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogout: () => void }> = ({ onNavigate, onLogout }) => {
+  const stats = [
+    { label: 'Moradores', value: '142', icon: <Users size={16} />, color: 'bg-blue-500' },
+    { label: 'Reservas Hoje', value: '3', icon: <CalendarDays size={16} />, color: 'bg-emerald-500' },
+    { label: 'Pendências', value: '8', icon: <AlertCircle size={16} />, color: 'bg-amber-500' },
+  ];
+
+  const operationalGroups = [
+    {
+      title: 'Operações Diárias',
+      items: [
+        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-violet-600', bg: 'bg-violet-50' },
+        { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-600', bg: 'bg-blue-50' },
+        { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+      ]
+    },
+    {
+      title: 'Gestão & Comunidade',
+      items: [
+        { id: 'residents', icon: <Users size={24} />, label: 'Moradores', desc: 'Base de condôminos', target: 'admin-residents', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+        { id: 'finance', icon: <Wallet size={24} />, label: 'Financeiro', desc: 'Cobranças e taxas', target: 'admin-finance', color: 'text-slate-600', bg: 'bg-slate-50' },
+        { id: 'notices', icon: <Megaphone size={24} />, label: 'Mural de Avisos', desc: 'Comunicados gerais', target: 'admin-notices', color: 'text-amber-600', bg: 'bg-amber-50' },
+        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-violet-600', bg: 'bg-violet-50' },
+        { id: 'categories', icon: <Layers size={24} />, label: 'Categorias', desc: 'Serviços e áreas', target: 'admin-categories', color: 'text-pink-600', bg: 'bg-pink-50' },
+      ]
+    }
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32">
-      <div className="p-8 pt-16">
-        <h3 className="text-slate-400 font-bold text-sm uppercase tracking-[0.2em] mb-10">Painel de Operações</h3>
-        <div className="grid grid-cols-3 gap-x-4 gap-y-10">
-          {operations.map((op) => (
-            <button key={op.id} onClick={() => onNavigate(op.target)} className="flex flex-col items-center group">
-              <div className="w-[80px] h-[80px] bg-white rounded-[28px] shadow-lg flex items-center justify-center text-slate-800 border hover:bg-violet-600 hover:text-white transition-all">
-                {op.icon}
+    <div className="min-h-screen bg-[#f8fafc] pb-32 font-sans">
+      {/* Hero Section */}
+      <div className="bg-white pt-12 pb-8 px-8 rounded-b-[40px] shadow-sm mb-8 relative overflow-hidden">
+        <div className="relative z-10 flex justify-between items-start">
+          <div>
+            <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter">Painel Admin</h2>
+            <p className="text-slate-500 font-medium text-sm mt-1">Gestão Completa do Condomínio</p>
+          </div>
+          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center">
+            <Building2 className="text-slate-400" size={24} />
+          </div>
+        </div>
+
+        {/* Quick Stats */}
+        <div className="grid grid-cols-3 gap-3 mt-8">
+          {stats.map((stat, i) => (
+            <div key={i} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+              <div className="flex items-center gap-2 mb-2">
+                <div className={`w-2 h-2 rounded-full ${stat.color}`}></div>
+                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{stat.label}</span>
               </div>
-              <span className="mt-4 text-[10px] font-black text-slate-700 text-center uppercase">{op.label}</span>
-            </button>
-          ))}
-          <button onClick={async () => { if (window.confirm('Sair do sistema?')) { await supabase.auth.signOut(); window.location.reload(); } }} className="flex flex-col items-center group">
-            <div className="w-[80px] h-[80px] bg-rose-50 rounded-[28px] shadow-lg flex items-center justify-center text-rose-500 border border-rose-100 hover:bg-rose-500 hover:text-white transition-all">
-              <LogOut size={28} />
+              <p className="text-xl font-black text-slate-900">{stat.value}</p>
             </div>
-            <span className="mt-4 text-[10px] font-black text-rose-500 text-center uppercase">Sair</span>
-          </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="px-6 space-y-8">
+        {operationalGroups.map((group, idx) => (
+          <div key={idx} className="space-y-4">
+            <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">{group.title}</h3>
+            <div className="grid grid-cols-2 gap-3">
+              {group.items.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => onNavigate(item.target)}
+                  className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-50 flex flex-col gap-3 group active:scale-95 transition-all hover:border-violet-100 hover:shadow-md text-left relative overflow-hidden"
+                >
+                  <div className={`w-12 h-12 ${item.bg} ${item.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    {item.icon}
+                  </div>
+                  <div>
+                    <h4 className="font-black text-slate-900 text-sm">{item.label}</h4>
+                    <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">{item.desc}</p>
+                  </div>
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <ChevronRight size={16} className="text-slate-300" />
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        ))}
+
+        {/* System & Logout */}
+        <div className="space-y-4 pt-4 border-t border-slate-200/50">
+          <div className="grid grid-cols-2 gap-3">
+            <button
+              onClick={() => onNavigate('profile')}
+              className="bg-slate-900 p-5 rounded-[24px] shadow-lg flex items-center gap-4 group active:scale-95 transition-all"
+            >
+              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white">
+                <UserCircle2 size={20} />
+              </div>
+              <div className="text-left">
+                <h4 className="font-black text-white text-sm">Meu Perfil</h4>
+                <p className="text-[9px] text-slate-400 uppercase tracking-widest">Configurações</p>
+              </div>
+            </button>
+
+            <button
+              onClick={onLogout}
+              className="bg-rose-50 p-5 rounded-[24px] border border-rose-100 flex items-center gap-4 group active:scale-95 transition-all hover:bg-rose-500"
+            >
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm">
+                <LogOut size={20} />
+              </div>
+              <div className="text-left group-hover:text-white">
+                <h4 className="font-black text-rose-950 text-sm group-hover:text-white">Sair</h4>
+                <p className="text-[9px] text-rose-400 uppercase tracking-widest group-hover:text-rose-100">Encerrar</p>
+              </div>
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -424,7 +506,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
                             </div>
                             <div>
                               <p className="font-bold text-slate-900 text-sm">{area.name}</p>
-                              {reservation && <p className="text-[10px] font-bold text-rose-500 uppercase">Reservado: {reservation.resident} (Apto {reservation.unit})</p>}
+                              {reservation && <p className="text-[10px] font-bold text-rose-500 uppercase">Reservado: {reservation.resident} (Casa {reservation.unit})</p>}
                               {!reservation && <p className="text-[10px] font-bold text-emerald-600 uppercase">Disponível</p>}
                             </div>
                           </div>
@@ -467,7 +549,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                           Morador: <span className="text-slate-900">{r.resident}</span>
                         </p>
-                        <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest leading-none mt-1">Unidade {r.unit}</p>
+                        <p className="text-[9px] font-black text-violet-500 uppercase tracking-widest leading-none mt-1">Casa {r.unit}</p>
                       </div>
                     </div>
                     <Badge color="bg-emerald-50 text-emerald-600">ATIVO</Badge>
@@ -540,7 +622,7 @@ export const AdminResidents: React.FC<{ onBack: () => void }> = ({ onBack }) => 
                 </div>
                 <div>
                   <h4 className="font-black text-slate-900 italic">{res.name}</h4>
-                  <p className="text-[10px] font-bold text-violet-500 uppercase">Apto {res.unit || '---'} • Torre {res.tower || ''}</p>
+                  <p className="text-[10px] font-bold text-violet-500 uppercase">Casa {res.unit || '---'} • Rua {res.tower || ''}</p>
                 </div>
               </div>
               <ChevronRight size={20} className="text-slate-200 group-hover:text-violet-400 transition-colors" />
@@ -613,48 +695,279 @@ export const AdminAccess: React.FC<{ onBack: () => void; accessList?: any[]; onC
   );
 };
 
-// --- ENCOMENDAS ---
-export const AdminPackages: React.FC<{ onBack: () => void; packages: any[]; setPackages: any }> = ({ onBack, packages, setPackages }) => {
+// --- ENCOMENDAS (COM APERTO DE MÃO DIGITAL) ---
+
+export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; setPackages?: any }> = ({ onBack }) => {
   const [isRegistering, setIsRegistering] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [isScanning, setIsScanning] = useState(false);
+  const [scannedResident, setScannedResident] = useState<any>(null);
+  const [pendingDeliveryList, setPendingDeliveryList] = useState<any[]>([]);
+
+  const [formData, setFormData] = useState({ photo: '', desc: '' });
+  const [pkgList, setPkgList] = useState<any[]>([]);
   const [selectedResident, setSelectedResident] = useState<any>(null);
-  const [formData, setFormData] = useState({ locker: '' });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [residentsList, setResidentsList] = useState<any[]>([]);
+  const [generatedQR, setGeneratedQR] = useState<string | null>(null);
 
-  const residentsList = [
-    { id: 1, name: 'Alex Ferreira', unit: '402-A' },
-    { id: 2, name: 'Clara Mendes', unit: '105-B' }
-  ];
+  // Fetch initial packages and residents
+  useEffect(() => {
+    fetchPackages();
+    fetchResidents();
+  }, []);
 
-  const handleSave = () => {
-    if (!selectedResident || !formData.locker) return;
-    const newPkg = { id: Date.now(), unit: selectedResident.unit, resident: selectedResident.name, locker: formData.locker, date: new Date().toLocaleTimeString() };
-    setPackages([...packages, newPkg]);
+  const fetchPackages = async () => {
+    const { data } = await supabase.from('packages').select('*, profiles:resident_id(name, unit, tower)').order('created_at', { ascending: false });
+    if (data) setPkgList(data);
+  };
+
+  const fetchResidents = async () => {
+    const { data } = await supabase.from('profiles').select('id, name, unit, tower').eq('role', 'resident');
+    if (data) setResidentsList(data);
+  };
+
+  const handleRegister = async () => {
+    if (!selectedResident) return;
+
+    // Simplified Registration for Reverse Flow
+    const payload = {
+      resident_id: selectedResident.id,
+      unit: selectedResident.unit,
+      resident_name: selectedResident.name,
+      description: formData.desc || 'Encomenda Recebida',
+      photo_url: formData.photo || 'https://placehold.co/600x400/png?text=Pacote',
+      qr_code: `PKG-${Date.now()}`, // Internal ID only
+      status: 'pending'
+    };
+
+    const { error } = await supabase.from('packages').insert([payload]);
+
+    if (!error) {
+      await supabase.from('sent_notifications').insert([{
+        title: 'Nova Encomenda!',
+        body: `Uma nova encomenda chegou! Apresente seu QR Code na portaria para retirar.`,
+        target_role: 'resident',
+        condominium_id: selectedResident.condominium_id || null
+      }]);
+
+      alert('Encomenda registrada com sucesso!');
+      fetchPackages();
+      closeRegistration();
+    } else {
+      alert('Erro ao registrar: ' + error.message);
+    }
+  };
+
+  const closeRegistration = () => {
     setIsRegistering(false);
-    setSearchTerm(''); setSelectedResident(null); setFormData({ locker: '' });
+    setGeneratedQR(null);
+    setFormData({ photo: '', desc: '' });
+    setSelectedResident(null);
+    setSearchTerm('');
+  };
+
+  const handleScan = async (text: string) => {
+    if (text && text.startsWith('RESIDENT:')) {
+      const residentId = text.split(':')[1];
+      setIsScanning(false);
+
+      // Find resident
+      const resident = residentsList.find(r => r.id === residentId);
+
+      if (!resident) {
+        alert('Morador não encontrado!');
+        return;
+      }
+
+      // Check for authorizations (Neighbor Pickup)
+      const { data: auths } = await supabase
+        .from('package_authorizations')
+        .select('grantor:grantor_id(unit, tower, name)')
+        .eq('grantee_id', resident.id)
+        .eq('status', 'active');
+
+      // Map authorized units specifically for display and filtering
+      const authorizedUnits = auths?.map((a: any) => ({ unit: a.grantor.unit, tower: a.grantor.tower })) || [];
+      const authorizedUnitNumbers = authorizedUnits.map(a => a.unit);
+
+      const allRelevantUnits = [resident.unit, ...authorizedUnitNumbers];
+
+      // Find pending packages for OWN unit OR AUTHORIZED units
+      const pending = pkgList.filter(p => allRelevantUnits.includes(p.unit) && p.status === 'pending');
+
+      if (pending.length > 0) {
+        setScannedResident({ ...resident, authorizedUnits }); // Store auth info for display
+        setPendingDeliveryList(pending);
+      } else {
+        alert(`Nenhuma encomenda encontrada para ${resident.name} (nem autorizações).`);
+      }
+    }
+  };
+
+  const confirmDelivery = async () => {
+    if (!scannedResident || pendingDeliveryList.length === 0) return;
+
+    const { error } = await supabase
+      .from('packages')
+      .update({
+        status: 'delivered',
+        picked_up_at: new Date().toISOString(),
+        picked_up_by: scannedResident.id
+      })
+      .in('id', pendingDeliveryList.map(p => p.id));
+
+    if (!error) {
+      alert(`${pendingDeliveryList.length} encomendas entregues com sucesso!`);
+      setScannedResident(null);
+      setPendingDeliveryList([]);
+      fetchPackages();
+    } else {
+      alert('Erro ao confirmar entrega: ' + error.message);
+    }
   };
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
       <AdminHeader title="ENCOMENDAS" onBack={onBack} />
       <div className="p-6 space-y-6">
-        <Button fullWidth onClick={() => setIsRegistering(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2"><Plus size={20} /> Cadastrar Recebimento</Button>
+
+        <div className="flex gap-3">
+          <Button fullWidth onClick={() => setIsRegistering(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2 shadow-xl shadow-slate-900/20">
+            <Plus size={20} /> Nova Encomenda
+          </Button>
+          <Button fullWidth onClick={() => setIsScanning(true)} className="h-16 rounded-[24px] bg-emerald-500 text-white flex items-center gap-2 shadow-xl shadow-emerald-500/20">
+            <Scan size={20} /> Entregar
+          </Button>
+        </div>
+
+        {/* SCANNER MODAL */}
+        {isScanning && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
+            <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden relative">
+              <Scanner onScan={(r) => r[0] && handleScan(r[0].rawValue)} />
+              <button onClick={() => setIsScanning(false)} className="absolute top-4 right-4 bg-white/20 p-2 rounded-full text-white"><X size={24} /></button>
+              <p className="text-center p-4 font-bold text-slate-500">Aponte para o QR Code do Morador</p>
+            </div>
+          </div>
+        )}
+
+        {/* CONFIRMATION MODAL */}
+        {scannedResident && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in bg-black/50">
+            <Card className="w-full max-w-sm p-6 rounded-[32px] m-4 space-y-4">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 size={32} />
+                </div>
+                <h3 className="text-xl font-black text-slate-900">Confirmar Entrega?</h3>
+                <div className="text-sm text-slate-500 mt-2 text-left bg-slate-50 p-4 rounded-2xl">
+                  <p className="mb-2 text-center">Entregar <strong className="text-slate-900">{pendingDeliveryList.length} volumes</strong> para:</p>
+
+                  {/* OWN UNIT */}
+                  {pendingDeliveryList.some(p => p.unit === scannedResident.unit) && (
+                    <div className="mb-2">
+                      <strong className="text-violet-600 block">Rua {scannedResident.tower} - {scannedResident.unit} (Própria)</strong>
+                      <span className="text-xs text-slate-400">{pendingDeliveryList.filter(p => p.unit === scannedResident.unit).length} volume(s)</span>
+                    </div>
+                  )}
+
+                  {/* AUTHORIZED UNITS */}
+                  {scannedResident.authorizedUnits?.map((auth: any) => {
+                    const count = pendingDeliveryList.filter(p => p.unit === auth.unit).length;
+                    if (count === 0) return null;
+                    return (
+                      <div key={auth.unit} className="mb-2">
+                        <strong className="text-amber-600 block">Rua {auth.tower} - {auth.unit} (Autorizado)</strong>
+                        <span className="text-xs text-slate-400">{count} volume(s)</span>
+                      </div>
+                    );
+                  })}
+
+                  <div className="mt-4 pt-2 border-t border-slate-200 text-center">
+                    <span className="text-xs text-slate-400">Retirado por: <strong>{scannedResident.name}</strong></span>
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3 pt-2">
+                <Button fullWidth onClick={() => setScannedResident(null)} className="bg-slate-100 text-slate-500">Cancelar</Button>
+                <Button fullWidth onClick={confirmDelivery} className="bg-emerald-500 text-white">Confirmar</Button>
+              </div>
+            </Card>
+          </div>
+        )}
+
         {isRegistering && (
-          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
-            <Input placeholder="Buscar Morador..." value={searchTerm} onChange={e => { setSearchTerm(e.target.value); setSelectedResident(null); }} className="h-14" />
-            {searchTerm && !selectedResident && residentsList.filter(r => r.name.toLowerCase().includes(searchTerm.toLowerCase())).map(r => (
-              <button key={r.id} onClick={() => { setSelectedResident(r); setSearchTerm(r.name); }} className="w-full px-6 py-4 hover:bg-violet-50 text-left">{r.name}</button>
-            ))}
-            <Input placeholder="ID do Pacote / Locker" value={formData.locker} onChange={e => setFormData({ ...formData, locker: e.target.value })} className="h-14" />
-            <Button fullWidth onClick={handleSave}>Finalizar</Button>
+          <Card className="p-8 space-y-6 border-none shadow-2xl rounded-[40px] bg-white animate-in slide-in-from-top-4">
+            <div className="flex justify-between items-center">
+              <h3 className="text-lg font-black italic text-slate-900">Registrar Encomenda</h3>
+              <button onClick={closeRegistration} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X size={16} /></button>
+            </div>
+
+            <div className="relative">
+              <Input
+                placeholder="Buscar Morador (Nome ou Casa)..."
+                value={searchTerm}
+                onChange={e => { setSearchTerm(e.target.value); setSelectedResident(null); }}
+                className="h-14"
+              />
+              {searchTerm && !selectedResident && (
+                <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
+                  {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || (r.unit || '').includes(searchTerm)).map(r => (
+                    <button key={r.id} onClick={() => { setSelectedResident(r); setSearchTerm(`${r.name} - ${r.unit}`); }} className="w-full px-6 py-4 hover:bg-violet-50 text-left border-b border-slate-50 last:border-none">
+                      <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Input placeholder="Descrição (Ex: Caixa Amazon Grande)" value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="h-14" />
+
+            <Button fullWidth onClick={handleRegister} disabled={!selectedResident} className="bg-violet-600 h-14 font-black uppercase tracking-widest text-xs">
+              Confirmar Recebimento
+            </Button>
           </Card>
         )}
-        {packages.map(p => (
-          <div key={p.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 shadow-sm">
-            <Package size={28} className="text-slate-400" />
-            <div className="flex-1"><h5 className="font-bold text-slate-900 italic">Unidade {p.unit}</h5><p className="text-[10px] font-black text-slate-400 uppercase">{p.resident}</p></div>
-            <div className="text-right"><p className="text-[10px] font-black text-violet-600 uppercase tracking-widest">Locker {p.locker}</p></div>
-          </div>
-        ))}
+
+        <div className="space-y-4">
+          <SectionHeader title="Pendentes de Retirada" />
+          {pkgList.filter(p => p.status === 'pending').map(p => (
+            <div key={p.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 shadow-sm relative overflow-hidden">
+              <div className="w-1.5 absolute left-0 top-0 bottom-0 bg-amber-400"></div>
+              <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shrink-0">
+                <Package size={24} />
+              </div>
+              <div className="flex-1">
+                <h5 className="font-bold text-slate-900 italic">Rua {p.profiles?.tower} - {p.unit}</h5>
+                <p className="text-[10px] font-black text-slate-400 uppercase">{p.resident_name}</p>
+                <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
+              </div>
+              <div onClick={() => setGeneratedQR(p.qr_code)} className="cursor-pointer">
+                <QrCode size={24} className="text-slate-300 hover:text-slate-900 transition-colors" />
+              </div>
+            </div>
+          ))}
+
+          {pkgList.filter(p => p.status === 'pending').length === 0 && (
+            <p className="text-center text-slate-300 font-bold italic py-8">Nenhuma encomenda pendente.</p>
+          )}
+        </div>
+
+        <div className="space-y-4 pt-8 border-t border-slate-100">
+          <SectionHeader title="Histórico de Entregas" />
+          {pkgList.filter(p => p.status === 'delivered').map(p => (
+            <div key={p.id} className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 opacity-60 hover:opacity-100 transition-opacity">
+              <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
+                <CheckCircle2 size={24} />
+              </div>
+              <div>
+                <h5 className="font-bold text-slate-900 italic line-through decoration-slate-400">Casa {p.unit}</h5>
+                <p className="text-[10px] font-black text-slate-400 uppercase">Retirado em {new Date(p.picked_up_at).toLocaleDateString()}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+
       </div>
     </div>
   );
@@ -1027,7 +1340,10 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
 };
 
 // --- PERFIL DO ADMIN ---
-export const AdminProfile: React.FC<{ currentUser: any; onLogout: () => void }> = ({ currentUser, onLogout }) => {
+export const AdminProfile: React.FC<{
+  currentUser: any;
+  onLogout: () => void;
+}> = ({ currentUser, onLogout }) => {
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1131,6 +1447,132 @@ export const AdminProfile: React.FC<{ currentUser: any; onLogout: () => void }> 
           >
             Sair da Conta
           </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- GESTÃO DE BANNERS (CARROSSEL) ---
+export const AdminBanners: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [banners, setBanners] = useState<any[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [form, setForm] = useState({ title: '', link: '' });
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { loadBanners(); }, []);
+
+  const loadBanners = async () => {
+    const { data } = await supabase.from('banners').select('*').order('display_order', { ascending: true });
+    if (data) setBanners(data);
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Excluir este banner?')) return;
+    const { error } = await supabase.from('banners').delete().eq('id', id);
+    if (!error) loadBanners();
+    else alert('Erro: ' + error.message);
+  };
+
+  const handleSave = async () => {
+    if (!imageFile) return alert('Selecione uma imagem');
+    setUploading(true);
+    try {
+      const fileExt = imageFile.name.split('.').pop();
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${fileName}`;
+
+      // Upload to 'banners' bucket or 'public/banners' as fallback
+      const { error: uploadError } = await supabase.storage.from('banners').upload(filePath, imageFile);
+      let publicUrl = '';
+
+      if (uploadError) {
+        // Fallback to public bucket if banners bucket doesn't exist
+        const { error: retryError } = await supabase.storage.from('public').upload(`banners/${filePath}`, imageFile);
+        if (retryError) throw retryError;
+        const { data } = supabase.storage.from('public').getPublicUrl(`banners/${filePath}`);
+        publicUrl = data.publicUrl;
+      } else {
+        const { data } = supabase.storage.from('banners').getPublicUrl(filePath);
+        publicUrl = data.publicUrl;
+      }
+
+      const { error: dbError } = await supabase.from('banners').insert([{
+        image_url: publicUrl,
+        title: form.title,
+        link_url: form.link,
+        active: true
+      }]);
+
+      if (dbError) throw dbError;
+
+      alert('Banner adicionado com sucesso!');
+      setIsAdding(false);
+      setForm({ title: '', link: '' });
+      setImageFile(null);
+      loadBanners();
+
+    } catch (error: any) {
+      alert('Erro ao salvar: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <AdminHeader title="BANNERS APP" onBack={onBack} />
+      <div className="p-6 space-y-6">
+
+        {!isAdding && (
+          <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2">
+            <Plus size={20} /> Novo Banner
+          </Button>
+        )}
+
+        {isAdding && (
+          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
+            <h3 className="text-lg font-black italic text-slate-900">Novo Banner</h3>
+
+            <div
+              onClick={() => fileInputRef.current?.click()}
+              className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-violet-400 overflow-hidden relative"
+            >
+              {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> : <div className="text-center"><ImageIcon className="mx-auto text-slate-300 mb-2" size={32} /><p className="text-[10px] font-bold text-slate-400 uppercase">Clique para upload</p></div>}
+              <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => { if (e.target.files?.[0]) setImageFile(e.target.files[0]); }} />
+            </div>
+
+            <Input placeholder="Título (Opcional)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
+            <Input placeholder="Link (Opcional)" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} className="h-14" />
+
+            <div className="flex gap-3">
+              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
+              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950 text-[10px] uppercase font-black">{uploading ? 'Enviando...' : 'Salvar'}</Button>
+            </div>
+          </Card>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Banners Ativos</h3>
+          {banners.length === 0 && <p className="text-slate-400 text-xs font-bold italic text-center py-8">Nenhum banner cadastrado.</p>}
+          {banners.map(banner => (
+            <div key={banner.id} className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm relative group overflow-hidden">
+              <div className="h-32 rounded-2xl overflow-hidden mb-3 relative">
+                <img src={banner.image_url} className="w-full h-full object-cover" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                  <h4 className="text-white font-bold italic">{banner.title}</h4>
+                </div>
+              </div>
+              <div className="flex items-center justify-between px-2">
+                <span className="text-[10px] uppercase font-black text-slate-400">{banner.active ? 'Ativo' : 'Inativo'}</span>
+                <button onClick={() => handleDelete(banner.id)} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center active:scale-95 hover:bg-rose-100 transition-colors">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>

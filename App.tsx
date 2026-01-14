@@ -22,7 +22,7 @@ import {
 import {
   AdminDashboard, AdminResidents, AdminNotices, AdminAccess,
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
-  AdminNavigation, AdminIncidents, AdminGarage, AdminCategories, AdminProfile
+  AdminNavigation, AdminIncidents, AdminGarage, AdminCategories, AdminProfile, AdminBanners
 } from './pages/Admin';
 import { SuperAdmin } from './pages/SuperAdmin';
 
@@ -577,6 +577,8 @@ const App: React.FC = () => {
           case 'dashboard': return <AdminDashboard onNavigate={pushScreen} />;
           case 'admin-residents': return <AdminResidents onBack={goBack} />;
           case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={refreshAppData} />;
+          case 'admin-packages': return <AdminPackages onBack={goBack} />;
+          case 'admin-banners': return <AdminBanners onBack={goBack} />;
           case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
           case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
           case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={refreshAppData} />;
