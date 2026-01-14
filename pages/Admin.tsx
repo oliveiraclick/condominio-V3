@@ -140,6 +140,19 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
     <div className="min-h-screen bg-[#f8fafc] pb-32 font-sans">
       {/* Hero Section */}
       <div className="bg-white pt-12 pb-8 px-8 rounded-b-[40px] shadow-sm mb-8 relative overflow-hidden">
+        {/* WATERMARK SYMBOL */}
+        {(onNavigate as any).currentUser?.symbol_url && (
+          <div
+            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden flex items-center justify-center p-12"
+            style={{ opacity: ((onNavigate as any).currentUser.symbol_opacity || 15) / 100 }}
+          >
+            <img
+              src={(onNavigate as any).currentUser.symbol_url}
+              className="w-full h-full object-contain grayscale opacity-20"
+              alt="Background Branding"
+            />
+          </div>
+        )}
         <div className="relative z-10 flex justify-between items-start">
           <div>
             <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter">Painel Admin</h2>

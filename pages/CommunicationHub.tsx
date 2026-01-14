@@ -170,54 +170,91 @@ export const CommunicationHub: React.FC<{ onBack: () => void; currentUser: any }
     }
 
     if (view === 'deliveries') {
+        const availablePackages = packages.filter(p => p.status === 'available');
+        const deliveredPackages = packages.filter(p => p.status === 'delivered');
+
         return (
-            <div className="min-h-screen bg-[#f0f2f5]">
+            <div className="min-h-screen bg-[#f8f9fa] safe-area-bottom pb-10">
                 <header className="p-6 pt-12 flex items-center gap-4 bg-white sticky top-0 z-40 shadow-sm">
                     <button onClick={() => setView('hub')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
-                    <div className="flex-1">
-                        <h2 className="text-xl font-black italic uppercase text-slate-800">Encomendas</h2>
-                        <p className="text-xs text-slate-400 font-medium">Unidade {currentUser?.unit || '---'}</p>
+                    <div className="flex-1 text-center">
+                        <h2 className="text-xl font-black italic uppercase text-slate-800 tracking-tight">Encomendas</h2>
                     </div>
-                    {unreadPackages > 0 && (
-                        <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-none px-3 py-1 h-8 rounded-full">
-                            {unreadPackages} Novas
-                        </Badge>
-                    )}
+                    <div className="w-10" /> {/* Spacer */}
                 </header>
 
-                <div className="p-6 space-y-4">
-                    {packages.length === 0 ? (
-                        <div className="text-center py-20 opacity-50">
-                            <Package size={64} className="mx-auto text-slate-300 mb-4" />
-                            <p className="font-bold text-slate-400">Nenhuma encomenda registrada.</p>
-                        </div>
-                    ) : (
-                        packages.map(pkg => (
-                            <div key={pkg.id} className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 flex items-start gap-4">
-                                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 ${pkg.status === 'available' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-400'
-                                    }`}>
-                                    <Package size={24} />
-                                </div>
-                                <div className="flex-1">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <h4 className="font-bold text-slate-800 text-sm">{pkg.description}</h4>
-                                        <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-lg ${pkg.status === 'available' ? 'bg-orange-100 text-orange-600' : 'bg-slate-100 text-slate-500'
-                                            }`}>
-                                            {pkg.status === 'available' ? 'Disponível' : 'Entregue'}
-                                        </span>
-                                    </div>
-                                    <p className="text-xs text-slate-500 mb-2">Recebido: {formatDate(pkg.received_at)} às {formatTime(pkg.received_at)}</p>
-
-                                    {pkg.status === 'available' && (
-                                        <div className="bg-orange-50 border border-orange-100 rounded-xl p-3 flex items-center gap-3">
-                                            <Bell size={14} className="text-orange-500 animate-pulse" />
-                                            <p className="text-[10px] font-bold text-orange-700">Aguardando retirada na portaria</p>
-                                        </div>
-                                    )}
-                                </div>
+                <div className="p-6 space-y-8">
+                    {/* Main Actions */}
+                    <div className="grid grid-cols-2 gap-4">
+                        <button className="bg-[#0a0a0b] text-white p-5 rounded-[24px] flex flex-col items-center justify-center gap-2 shadow-lg shadow-black/10 active:scale-95 transition-all">
+                            <span className="text-xl font-bold">+ Nova Encomenda</span>
+                        </button>
+                        <button className="bg-[#10b981] text-white p-5 rounded-[24px] flex flex-col items-center justify-center gap-2 shadow-lg shadow-emerald-500/20 active:scale-95 transition-all">
+                            <div className="flex items-center gap-2">
+                                <Search size={20} className="stroke-[3]" />
+                                <span className="text-xl font-bold uppercase italic">Entregar</span>
                             </div>
-                        ))
-                    )}
+                        </button>
+                    </div>
+
+                    {/* Manage Link */}
+                    <button className="w-full py-4 bg-white border border-slate-200 rounded-full text-slate-500 font-bold uppercase text-xs tracking-widest shadow-sm active:scale-[0.98] transition-all">
+                        Ver todas / Gerenciar
+                    </button>
+
+                    {/* Aguardando Retirada (Receival History) */}
+                    <section>
+                        <h3 className="text-lg font-black text-slate-800 mb-4 px-1">Aguardando Retirada</h3>
+                        {availablePackages.length === 0 ? (
+                            <div className="bg-white p-8 rounded-[32px] border border-dashed border-slate-200 text-center">
+                                <Package className="mx-auto text-slate-200 mb-2" size={32} />
+                                <p className="text-xs text-slate-400 font-bold">Tudo entregue!</p>
+                            </div>
+                        ) : (
+                            <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
+                                {availablePackages.map(pkg => (
+                                    <div key={pkg.id} className="min-w-[85%] snap-center bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-12 h-12 bg-orange-500/5 rounded-bl-full" />
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500">
+                                                <Package size={24} />
+                                            </div>
+                                            <div className="flex-1">
+                                                <h4 className="font-bold text-slate-800 text-sm">{pkg.description}</h4>
+                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Recebido em {formatDate(pkg.received_at)} às {formatTime(pkg.received_at)}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
+
+                    {/* Histórico de Entregas */}
+                    <section>
+                        <h3 className="text-lg font-black text-slate-800 mb-4 px-1">Histórico de Entregas</h3>
+                        {deliveredPackages.length === 0 ? (
+                            <div className="bg-white p-8 rounded-[32px] border border-dashed border-slate-200 text-center">
+                                <p className="text-xs text-slate-400 font-bold">Nenhuma entrega recente.</p>
+                            </div>
+                        ) : (
+                            <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
+                                {deliveredPackages.map(pkg => (
+                                    <div key={pkg.id} className="min-w-[85%] snap-center bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
+                                            <Check size={24} className="stroke-[3]" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h4 className="font-bold text-slate-800 text-sm uppercase">Unidade {pkg.unit || '---'}</h4>
+                                            <p className="text-[10px] text-slate-400 font-black uppercase">
+                                                RETIRADO EM {formatDate(pkg.delivered_at || pkg.received_at)} ÀS {formatTime(pkg.delivered_at || pkg.received_at)} POR {pkg.delivered_to || 'MORADOR'}
+                                            </p>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </section>
                 </div>
             </div>
         );

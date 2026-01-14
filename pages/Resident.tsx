@@ -702,14 +702,14 @@ export const ResidentHome: React.FC<{
       {/* HEADER DINÂMICO */}
       <div className="bg-primary pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
         {/* WATERMARK SYMBOL (Novo) */}
-        {(currentUser?.symbol || currentUser?.logo) && (
+        {(currentUser?.symbol_url || currentUser?.logo) && (
           <div
-            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden"
-            style={{ opacity: (currentUser.symbolOpacity || 100) / 100 }}
+            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden flex items-center justify-center p-20"
+            style={{ opacity: (currentUser.symbol_opacity || 15) / 100 }}
           >
             <img
-              src={currentUser.symbol || currentUser.logo}
-              className="w-full h-full object-cover object-center"
+              src={currentUser.symbol_url || currentUser.logo}
+              className="w-full h-full object-contain opacity-40 grayscale brightness-200"
               alt="Background Branding"
             />
           </div>
