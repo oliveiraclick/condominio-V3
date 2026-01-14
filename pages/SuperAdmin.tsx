@@ -657,9 +657,16 @@ const AccessDevicesView = () => {
           <h1 className={HEADER_TITLE}>Controle de <span className="text-brand-600">Acesso</span></h1>
           <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Câmeras e Terminais</p>
         </div>
-        <Button onClick={() => setShowNew(true)} className="rounded-full w-12 h-12 p-0 flex items-center justify-center bg-brand-600 text-white shadow-xl shadow-brand-500/30 hover:scale-110">
-          <Plus size={24} />
-        </Button>
+        <div className="flex gap-2">
+          <a href="/manual_integracao_hikvision.md" download="Manual_Integracao_Hikvision.md">
+            <Button className="rounded-full w-12 h-12 p-0 flex items-center justify-center bg-white border border-slate-200 text-slate-400 shadow-sm hover:scale-110 hover:text-brand-600" title="Baixar Manual Técnico">
+              <BookOpen size={20} />
+            </Button>
+          </a>
+          <Button onClick={() => setShowNew(true)} className="rounded-full w-12 h-12 p-0 flex items-center justify-center bg-brand-600 text-white shadow-xl shadow-brand-500/30 hover:scale-110">
+            <Plus size={24} />
+          </Button>
+        </div>
       </div>
 
       {showNew && (
