@@ -121,3 +121,17 @@ export interface Plan {
   price: number;
   features: string[];
 }
+
+export interface AccessDevice {
+  id: string;
+  condominium_id: string;
+  name: string;
+  ip_address: string;
+  device_type: 'hikvision_facial' | 'control_id' | 'other';
+  location: string;
+  api_key?: string;
+  status: 'active' | 'offline' | 'maintenance';
+  last_ping?: string;
+  created_at: string;
+}
+

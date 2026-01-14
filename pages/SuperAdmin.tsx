@@ -602,6 +602,176 @@ const UsersView = () => {
   );
 };
 
+// --- ACCESS DEVICES VIEW (NEW) ---
+const AccessDevicesView = () => {
+  const [devices, setDevices] = useState<any[]>([]);
+  const [condos, setCondos] = useState<any[]>([]);
+  const [showNew, setShowNew] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [newDevice, setNewDevice] = useState({
+    name: '',
+    ip_address: '',
+    device_type: 'hikvision_facial',
+    location: '',
+    condominium_id: '',
+    status: 'active'
+  });
+
+  useEffect(() => { loadDevices(); loadCondos(); }, []);
+
+  const loadCondos = async () => {
+    const { data } = await supabase.from('condominiums').select('id, name');
+    if (data) setCondos(data);
+  };
+
+  const loadDevices = async () => {
+    setLoading(true);
+    const { data } = await supabase.from('access_devices').select('*, condominiums(name)').order('created_at', { ascending: false });
+    if (data) setDevices(data);
+    setLoading(false);
+  };
+
+  const handleSave = async () => {
+    if (!newDevice.name || !newDevice.condominium_id) return alert('Nome e Condomínio obrigatórios');
+
+    const { error } = await supabase.from('access_devices').insert(newDevice);
+    if (error) {
+      alert('Erro ao salvar: ' + error.message);
+    } else {
+      setShowNew(false);
+      setNewDevice({ ...newDevice, name: '', ip_address: '', location: '' });
+      loadDevices();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (!confirm('Remover este dispositivo?')) return;
+    const { error } = await supabase.from('access_devices').delete().eq('id', id);
+    if (!error) loadDevices();
+  };
+
+  return (
+    <div className={PAGE_CONTAINER}>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className={HEADER_TITLE}>Controle de <span className="text-brand-600">Acesso</span></h1>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Câmeras e Terminais</p>
+        </div>
+        <Button onClick={() => setShowNew(true)} className="rounded-full w-12 h-12 p-0 flex items-center justify-center bg-brand-600 text-white shadow-xl shadow-brand-500/30 hover:scale-110">
+          <Plus size={24} />
+        </Button>
+      </div>
+
+      {showNew && (
+        <div className="bg-slate-50 border border-brand-200 p-6 rounded-[32px] mb-8 animate-in slide-in-from-top-4 shadow-lg shadow-brand-500/10">
+          <h3 className="font-black text-slate-900 text-lg mb-6 flex items-center gap-2">
+            <ShieldCheck className="text-brand-600" /> Novo Dispositivo
+          </h3>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            {/* Name */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Nome do Equipamento</label>
+              <Input
+                placeholder="Ex: Portaria Social"
+                value={newDevice.name}
+                onChange={e => setNewDevice({ ...newDevice, name: e.target.value })}
+              />
+            </div>
+
+            {/* IP Address */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">IP Local</label>
+              <Input
+                placeholder="Ex: 192.168.1.200"
+                value={newDevice.ip_address}
+                onChange={e => setNewDevice({ ...newDevice, ip_address: e.target.value })}
+              />
+            </div>
+
+            {/* Type */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Tipo</label>
+              <select
+                className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-700 outline-none focus:border-brand-500 transition-all text-sm"
+                value={newDevice.device_type}
+                onChange={e => setNewDevice({ ...newDevice, device_type: e.target.value })}
+              >
+                <option value="hikvision_facial">Hikvision Facial (MinMoe)</option>
+                <option value="control_id">Control iD</option>
+                <option value="intelbras">Intelbras</option>
+              </select>
+            </div>
+
+            {/* Condominium */}
+            <div className="space-y-2">
+              <label className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Condomínio</label>
+              <select
+                className="w-full h-12 rounded-xl border border-slate-200 bg-white px-4 font-bold text-slate-700 outline-none focus:border-brand-500 transition-all text-sm"
+                value={newDevice.condominium_id}
+                onChange={e => setNewDevice({ ...newDevice, condominium_id: e.target.value })}
+              >
+                <option value="">Selecione...</option>
+                {condos.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button onClick={handleSave} className="flex-1 bg-brand-600 text-white h-12 rounded-xl font-black uppercase tracking-widest hover:scale-[1.02]">
+              Salvar Dispositivo
+            </Button>
+            <button onClick={() => setShowNew(false)} className="w-12 h-12 rounded-xl border border-slate-200 flex items-center justify-center hover:bg-slate-100 text-slate-400">
+              <X size={20} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {devices.map(d => (
+          <div key={d.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group hover:shadow-lg transition-all">
+            <div className="absolute top-6 right-6 flex items-center gap-2">
+              <Badge className={d.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-500'}>
+                {d.status === 'active' ? 'Online' : 'Offline'}
+              </Badge>
+              <button onClick={() => handleDelete(d.id)} className="w-8 h-8 rounded-full bg-slate-50 text-slate-300 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-colors">
+                <Trash2 size={14} />
+              </button>
+            </div>
+
+            <div className="mb-4">
+              <div className="w-12 h-12 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-4">
+                <UserCheck size={24} />
+              </div>
+              <h3 className="font-black text-slate-900 text-lg">{d.name}</h3>
+              <p className="text-xs font-bold text-slate-400 uppercase tracking-widest">{d.condominiums?.name || 'Desconhecido'}</p>
+            </div>
+
+            <div className="space-y-2 border-t border-slate-50 pt-4">
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold">IP:</span>
+                <span className="font-mono text-slate-600 bg-slate-100 px-2 py-0.5 rounded-md">{d.ip_address || '---'}</span>
+              </div>
+              <div className="flex justify-between items-center text-xs">
+                <span className="text-slate-400 font-bold">Tipo:</span>
+                <span className="font-bold text-slate-700">{d.device_type}</span>
+              </div>
+            </div>
+          </div>
+        ))}
+
+        {devices.length === 0 && !showNew && (
+          <div className="col-span-2 text-center py-20 opacity-50 border-2 border-dashed border-slate-200 rounded-[40px]">
+            <ShieldCheck size={48} className="mx-auto mb-4 text-slate-300" />
+            <p className="text-sm font-bold text-slate-400 uppercase tracking-widest">Nenhum dispositivo encontrado</p>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // --- PUSH VIEW ---
 const PushView = () => {
   const [form, setForm] = useState({ title: '', body: '', target_role: 'all' });
@@ -711,22 +881,23 @@ export const SuperAdmin = () => {
           {activeTab === 'condos' && <CondosView />}
           {activeTab === 'users' && <UsersView />}
           {activeTab === 'professionals' && <ProfessionalsView />}
+          {activeTab === 'access' && <AccessDevicesView />}
           {activeTab === 'notifications' && <PushView />}
         </div>
 
         {/* BOTTOM NAV */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-slate-900/90 backdrop-blur-xl text-white shadow-2xl shadow-slate-900/40 rounded-[32px] p-2 flex justify-between items-center z-50 border border-white/10">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-slate-900/90 backdrop-blur-xl text-white shadow-2xl shadow-slate-900/40 rounded-[32px] p-2 flex justify-between items-center z-50 border border-white/10 overflow-x-auto hide-scrollbar">
           {[
             { id: 'dashboard', icon: LayoutGrid, label: 'Dash' },
             { id: 'condos', icon: Building, label: 'Condos' },
-            { id: 'professionals', icon: Briefcase, label: 'Pros' }, // Changed Icon
+            { id: 'professionals', icon: Briefcase, label: 'Pros' },
             { id: 'users', icon: Users, label: 'Users' },
-            { id: 'notifications', icon: Bell, label: 'Push' },
+            { id: 'access', icon: ShieldCheck, label: 'Acesso' }, // NEW
           ].map(item => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`relative w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${activeTab === item.id ? 'bg-white text-slate-900 shadow-lg scale-110' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+              className={`relative min-w-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${activeTab === item.id ? 'bg-white text-slate-900 shadow-lg scale-110' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
             >
               <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
             </button>
