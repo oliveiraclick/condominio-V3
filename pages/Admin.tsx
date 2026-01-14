@@ -718,8 +718,11 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   }, []);
 
   const fetchPackages = async () => {
-    // Fixed Join Syntax: profiles(...)
-    const { data } = await supabase.from('packages').select('*, profiles(name, unit, tower)').order('created_at', { ascending: false });
+    // Fixed Join Syntax: Explicitly use resident FK to avoid ambiguity with picked_up_by
+    const { data } = await supabase
+      .from('packages')
+      .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
+      .order('created_at', { ascending: false });
     if (data) setPkgList(data);
   };
 
