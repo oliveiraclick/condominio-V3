@@ -682,6 +682,13 @@ export const ResidentHome: React.FC<{
 
       {/* HEADER DINÂMICO */}
       <div className="bg-primary p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-hidden">
+        {/* WATERMARK LOGO (Novo) */}
+        {currentUser?.logo && (
+          <div className="absolute -top-10 -right-10 w-64 h-64 opacity-[0.15] pointer-events-none rotate-12 z-0 mix-blend-overlay">
+            <img src={currentUser.logo} className="w-full h-full object-contain" />
+          </div>
+        )}
+
         <div className="flex items-center justify-between mb-8 relative z-10">
           {/* Left Side: Avatar & Name */}
           <div className="flex items-center gap-4">
