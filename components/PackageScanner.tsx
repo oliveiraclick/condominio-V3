@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
 import { X, CheckCircle2 } from 'lucide-react';
-import { Button } from './UI';
+import { Button } from './ui';
 import { Scanner } from '@yudiel/react-qr-scanner';
 
 export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any }> = ({ isOpen, onClose, currentUser }) => {

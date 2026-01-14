@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck } from 'lucide-react';
-import { Card, Button, Input, Badge } from '../components/UI';
+import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 
 // --- SHARED STYLES ---

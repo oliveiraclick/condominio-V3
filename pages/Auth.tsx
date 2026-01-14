@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Input } from '../components/UI';
+import { Button, Input } from '../components/ui';
 import {
   Mail, Lock, ArrowLeft, Building2,
   UserCircle, ShieldCheck, User, IdCard, Phone as PhoneIcon,

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowLeft, Package, MessageSquare, Send, Check, Search, Shield, User, Clock, ChevronRight, Bell } from 'lucide-react';
-import { Card, Badge, Button, Input } from '../components/UI';
+import { Card, Badge, Button, Input } from '../components/ui';
 import { supabase } from '../supabase';
 
 // Helper for formatting time

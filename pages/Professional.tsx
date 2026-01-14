@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Card, Button, Badge, Input, useToast } from '../components/UI';
+import { Card, Button, Badge, Input, useToast } from '../components/ui';
 import { MuralSkeleton, LeadsSkeleton } from '../components/skeletons';
 import {
   BarChart3, Calendar, MessageSquare, Bell,

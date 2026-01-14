@@ -1,5 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, Badge, Button, Input } from '../components/UI';
+import { Card, Badge, Button, Input } from '../components/ui';
 import {
   Bell, Search, MapPin, Grid, Calendar, ShoppingBag,
   User, Plus, Package, Key, Zap, CreditCard,
@@ -1689,6 +1689,28 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
 
 export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAddAccess?: (a: any) => void; currentUser?: any }> = ({ onBack, accessList = [], onAddAccess, currentUser }) => {
   const [form, setForm] = useState({ name: '', type: 'Visita', date: new Date().toISOString().split('T')[0] });
+  const [authorizations, setAuthorizations] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (currentUser?.id) {
+      loadAuthorizations();
+    }
+  }, [currentUser]);
+
+  const loadAuthorizations = async () => {
+    const { data } = await supabase
+      .from('package_authorizations')
+      .select('*, grantee:grantee_id(id, name, unit, tower)')
+      .eq('grantor_id', currentUser.id)
+      .eq('status', 'active');
+
+    if (data) setAuthorizations(data);
+  };
+
+  const revokeAuthorization = async (id: string) => {
+    await supabase.from('package_authorizations').update({ status: 'revoked' }).eq('id', id);
+    loadAuthorizations();
+  };
 
   const handleAuthorize = () => {
     if (!form.name || !form.date) return;
