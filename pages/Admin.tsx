@@ -782,18 +782,18 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       // Check for authorizations (Neighbor Pickup)
       const { data: auths } = await supabase
         .from('package_authorizations')
-        .select('grantor:grantor_id(unit, tower, name)')
+        .select('grantor_id, grantor:grantor_id(unit, tower, name)')
         .eq('grantee_id', resident.id)
         .eq('status', 'active');
 
-      // Map authorized units specifically for display and filtering
+      // Map authorized IDs and Units
+      const authorizedGrantorIds = auths?.map((a: any) => a.grantor_id) || [];
       const authorizedUnits = auths?.map((a: any) => ({ unit: a.grantor.unit, tower: a.grantor.tower })) || [];
-      const authorizedUnitNumbers = authorizedUnits.map(a => a.unit);
 
-      const allRelevantUnits = [resident.unit, ...authorizedUnitNumbers];
+      const allRelevantIds = [resident.id, ...authorizedGrantorIds];
 
-      // Find pending packages for OWN unit OR AUTHORIZED units
-      const pending = pkgList.filter(p => allRelevantUnits.includes(p.unit) && p.status === 'pending');
+      // Find pending packages for OWN ID OR AUTHORIZED IDs (Robust matching)
+      const pending = pkgList.filter(p => allRelevantIds.includes(p.resident_id) && p.status === 'pending');
 
       if (pending.length > 0) {
         setScannedResident({ ...resident, authorizedUnits }); // Store auth info for display
