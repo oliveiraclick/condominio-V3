@@ -545,6 +545,22 @@ export const ResidentHome: React.FC<{
   const [showPackageModal, setShowPackageModal] = useState(false); // Controls Modal
   const [authModalOpen, setAuthModalOpen] = useState(false);
 
+  // Random Initial Index & Auto-Rotation for Desapego
+  useEffect(() => {
+    if (desapegos.length > 0) {
+      // 1. Random Start (Only if not already set/interacted - simple approach: just randomize on mount/change)
+      // Actually, standard practice is to just start random
+      setCurrentDesapegoIndex(Math.floor(Math.random() * desapegos.length));
+
+      // 2. Auto Rotation
+      const interval = setInterval(() => {
+        setCurrentDesapegoIndex(prev => (prev === desapegos.length - 1 ? 0 : prev + 1));
+      }, 5000); // 5 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [desapegos.length]); // Depend only on length to avoid reset on index change
+
   useEffect(() => {
     // Check for pending packages on load
     const checkPackages = async () => {
@@ -565,7 +581,6 @@ export const ResidentHome: React.FC<{
         }
       } else {
         setShowPackageAlert(false);
-        // Optional: clear session key if no packages? Maybe not needed.
       }
     };
 
@@ -575,7 +590,6 @@ export const ResidentHome: React.FC<{
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
-
 
   const handleHomeSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && homeSearch.trim()) {
