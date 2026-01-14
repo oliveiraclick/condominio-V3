@@ -455,7 +455,11 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
             <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt="User" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-brand-500">(Casa {item.tower})</span></p>
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-brand-500">
+              {item.unit && item.unit.toUpperCase().includes('CASA')
+                ? `(Rua ${item.tower}, ${item.unit})`
+                : item.tower ? `(${item.tower}, ${item.unit})` : ''}
+            </span></p>
           </div>
         </div>
 
@@ -1572,7 +1576,11 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
           </div>
           <div>
             <p className="text-xs text-slate-900 font-bold">Vendido por {item.user}</p>
-            <p className="text-[10px] text-slate-400 font-medium">{item.tower || 'Morador Verificado'}</p>
+            <p className="text-[10px] text-slate-400 font-medium">
+              {item.unit && item.unit.toUpperCase().includes('CASA')
+                ? `Rua ${item.tower}, ${item.unit}`
+                : `${item.tower || ''} - ${item.unit || 'Morador Verificado'}`}
+            </p>
           </div>
           {!isOwner && (
             <button onClick={handleInterest} className="ml-auto w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center active:scale-90 transition-all border border-emerald-100">

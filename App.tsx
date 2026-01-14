@@ -395,7 +395,8 @@ const App: React.FC = () => {
             user: seller?.name || 'Vizinho',
             status: i.status ? i.status.toUpperCase() : 'DISPONÍVEL',
             desc: i.description,
-            tower: seller ? `${seller.tower} - ${seller.unit}` : 'Residencial',
+            tower: seller?.tower || '',
+            unit: seller?.unit || '',
             phone: seller?.phone || ''
           };
         }));
