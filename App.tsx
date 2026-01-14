@@ -574,7 +574,7 @@ const App: React.FC = () => {
         }
 
         switch (activeTab) {
-          case 'dashboard': return <AdminDashboard onNavigate={pushScreen} />;
+          case 'dashboard': return <AdminDashboard onNavigate={pushScreen} onLogout={() => supabase.auth.signOut()} />;
           case 'admin-residents': return <AdminResidents onBack={goBack} />;
           case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={refreshAppData} />;
           case 'admin-packages': return <AdminPackages onBack={goBack} />;
@@ -583,7 +583,7 @@ const App: React.FC = () => {
           case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
           case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={refreshAppData} />;
           case 'profile': return <AdminProfile currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
-          default: return <AdminDashboard onNavigate={pushScreen} />;
+          default: return <AdminDashboard onNavigate={pushScreen} onLogout={() => supabase.auth.signOut()} />;
         }
       }
 
