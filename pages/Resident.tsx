@@ -709,11 +709,9 @@ export const ResidentHome: React.FC<{
           >
             <img
               src={currentUser.symbol || currentUser.logo}
-              className="w-full h-full object-cover"
+              className="w-full h-full object-cover object-center"
               alt="Background Branding"
             />
-            {/* Optional overlay to ensure text contrast if image is too bright, though user controls opacity */}
-            <div className="absolute inset-0 bg-black/10 mix-blend-multiply"></div>
           </div>
         )}
 
