@@ -792,14 +792,24 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
       const allRelevantIds = [resident.id, ...authorizedGrantorIds];
 
+      // Force Fetch fresh packages to ensure we have the latest data
+      const { data: freshPackages } = await supabase.from('packages').select('*, profiles:resident_id(name, unit, tower)').eq('status', 'pending');
+      const latestPkgList = freshPackages || [];
+
+      // Update local state too
+      if (freshPackages) setPkgList(prev => {
+        // Merge logic or just replace
+        return freshPackages;
+      });
+
       // Find pending packages for OWN ID OR AUTHORIZED IDs (Robust matching)
-      const pending = pkgList.filter(p => allRelevantIds.includes(p.resident_id) && p.status === 'pending');
+      const pending = latestPkgList.filter(p => allRelevantIds.includes(p.resident_id));
 
       if (pending.length > 0) {
         setScannedResident({ ...resident, authorizedUnits }); // Store auth info for display
         setPendingDeliveryList(pending);
       } else {
-        alert(`Nenhuma encomenda encontrada para ${resident.name} (nem autorizações).`);
+        alert(`Nenhuma encomenda encontrada para ${resident.name} (nem autorizações).\nID Buscado: ${resident.id}\nIDs Encontrados: ${latestPkgList.map(p => p.resident_id).join(', ')}`);
       }
     }
   };
