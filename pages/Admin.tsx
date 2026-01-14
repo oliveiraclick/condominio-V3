@@ -796,7 +796,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       // Corrected Join Syntax: profiles(...) relies on the FK constraint.
       const { data: freshPackages, error: fetchError } = await supabase
         .from('packages')
-        .select('*, profiles(name, unit, tower)')
+        // Explicitly specify the FK constraint to avoid ambiguity with picked_up_by
+        .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
         .eq('status', 'pending');
 
       if (fetchError) {
