@@ -66,10 +66,53 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
 
 // --- DASHBOARD ADMIN REDESIGNED ---
 export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogout: () => void }> = ({ onNavigate, onLogout }) => {
+  const [counts, setCounts] = useState({ residents: 0, reservations: 0, pendencies: 0 });
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      // 1. Residents Count
+      const { count: resCount } = await supabase
+        .from('profiles')
+        .select('*', { count: 'exact', head: true })
+        .eq('role', 'resident');
+
+      // 2. Reservations Today
+      const today = new Date().toISOString().split('T')[0];
+      const { count: reserveCount } = await supabase
+        .from('reservations')
+        .select('*', { count: 'exact', head: true })
+        .eq('date', today);
+
+      // 3. Pendencies (Open/Pending Requests)
+      const { count: pendingCount } = await supabase
+        .from('service_requests')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['pending', 'open', 'Aberto', 'Em Análise']); // Add all "pending" statuses used
+
+      setCounts({
+        residents: resCount || 0,
+        reservations: reserveCount || 0,
+        pendencies: pendingCount || 0
+      });
+    };
+
+    fetchStats();
+
+    // Subscribe to realtime changes (Optional but cool)
+    const channel = supabase
+      .channel('admin-dashboard-stats')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'service_requests' }, fetchStats)
+      .subscribe();
+
+    return () => { supabase.removeChannel(channel); };
+  }, []);
+
   const stats = [
-    { label: 'Moradores', value: '142', icon: <Users size={16} />, color: 'bg-blue-500' },
-    { label: 'Reservas Hoje', value: '3', icon: <CalendarDays size={16} />, color: 'bg-emerald-500' },
-    { label: 'Pendências', value: '8', icon: <AlertCircle size={16} />, color: 'bg-amber-500' },
+    { label: 'Moradores', value: counts.residents, icon: <Users size={16} />, color: 'bg-blue-500' },
+    { label: 'Reservas Hoje', value: counts.reservations, icon: <CalendarDays size={16} />, color: 'bg-emerald-500' },
+    { label: 'Pendências', value: counts.pendencies, icon: <AlertCircle size={16} />, color: 'bg-amber-500' },
   ];
 
   const operationalGroups = [

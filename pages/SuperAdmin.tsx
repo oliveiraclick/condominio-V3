@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 
@@ -89,7 +89,9 @@ const DashboardView = () => {
 const CondosView = () => {
   const [condos, setCondos] = useState<any[]>([]);
   const [showNew, setShowNew] = useState(false);
-  const [newCondo, setNewCondo] = useState({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active' });
+  const [newCondo, setNewCondo] = useState({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '' });
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
 
   useEffect(() => { loadCondos(); }, []);
 
@@ -100,14 +102,39 @@ const CondosView = () => {
 
   const handleCreate = async () => {
     if (!newCondo.name) return;
-    const { error } = await supabase.from('condominiums').insert([newCondo]);
+    setUploading(true);
+    let finalLogoUrl = newCondo.logo_url;
+
+    // 1. Upload Logo if selected
+    if (logoFile) {
+      try {
+        const fileExt = logoFile.name.split('.').pop();
+        const fileName = `${Date.now()}_logo.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('condo_assets').upload(fileName, logoFile);
+
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage.from('condo_assets').getPublicUrl(fileName);
+        finalLogoUrl = publicUrl;
+      } catch (err: any) {
+        alert('Erro no upload da logo: ' + err.message);
+        setUploading(false);
+        return;
+      }
+    }
+
+    // 2. Insert Condo
+    const { error } = await supabase.from('condominiums').insert([{ ...newCondo, logo_url: finalLogoUrl }]);
+
     if (!error) {
       setShowNew(false);
       loadCondos();
-      setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active' });
+      setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '' });
+      setLogoFile(null);
     } else {
       alert(error.message);
     }
+    setUploading(false);
   };
 
   const handleDelete = async (id: string) => {
@@ -132,21 +159,68 @@ const CondosView = () => {
       {showNew && (
         <div className="bg-white p-6 rounded-[32px] shadow-2xl border border-slate-100 space-y-4 animate-in zoom-in-95 mb-8 ring-4 ring-slate-50">
           <h3 className="font-black italic text-slate-900 text-lg">Novo Condomínio</h3>
+
+          {/* Logo Upload */}
+          <div className="flex items-center gap-4">
+            <div
+              className="w-20 h-20 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 flex items-center justify-center overflow-hidden cursor-pointer relative hover:border-violet-500 transition-colors"
+              onClick={() => document.getElementById('logo-upload')?.click()}
+            >
+              {logoFile ? (
+                <img src={URL.createObjectURL(logoFile)} className="w-full h-full object-cover" />
+              ) : newCondo.logo_url ? (
+                <img src={newCondo.logo_url} className="w-full h-full object-cover" />
+              ) : (
+                <ImageIcon className="text-slate-300" />
+              )}
+              <input
+                id="logo-upload"
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => setLogoFile(e.target.files?.[0] || null)}
+              />
+            </div>
+            <div>
+              <p className="text-xs font-black text-slate-900 uppercase">Logo da Marca</p>
+              <p className="text-[10px] text-slate-400">Clique para enviar (PNG/JPG)</p>
+            </div>
+          </div>
+
           <Input placeholder="Nome do Condomínio" value={newCondo.name} onChange={e => setNewCondo({ ...newCondo, name: e.target.value })} />
           <Input placeholder="Endereço Completo" value={newCondo.address} onChange={e => setNewCondo({ ...newCondo, address: e.target.value })} />
+
           <div className="grid grid-cols-2 gap-3">
-            <select
-              className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-slate-900 font-bold text-xs outline-none focus:border-violet-500"
-              value={newCondo.type}
-              onChange={e => setNewCondo({ ...newCondo, type: e.target.value })}
-            >
-              <option value="vertical">Prédio (Vertical)</option>
-              <option value="horizontal">Casas (Horizontal)</option>
-            </select>
-            <div className="w-full h-12 bg-slate-100 border border-slate-200 rounded-2xl px-4 flex items-center text-slate-400 font-bold text-xs">Plano PRO</div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Tipo</label>
+              <select
+                className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 text-slate-900 font-bold text-xs outline-none focus:border-violet-500"
+                value={newCondo.type}
+                onChange={e => setNewCondo({ ...newCondo, type: e.target.value })}
+              >
+                <option value="vertical">Prédio (Vertical)</option>
+                <option value="horizontal">Casas (Horizontal)</option>
+              </select>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Cor Principal</label>
+              <div className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-2 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={newCondo.primary_color}
+                  onChange={(e) => setNewCondo({ ...newCondo, primary_color: e.target.value })}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer"
+                />
+                <span className="text-xs font-bold text-slate-600 uppercase">{newCondo.primary_color}</span>
+              </div>
+            </div>
           </div>
+
           <div className="flex gap-2 pt-2">
-            <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleCreate(); }} className="bg-violet-600 text-white shadow-lg shadow-violet-200">Criar</Button>
+            <Button fullWidth onClick={() => { setNewCondo({ ...newCondo, plan: 'pro' }); handleCreate(); }} disabled={uploading} className="bg-violet-600 text-white shadow-lg shadow-violet-200">
+              {uploading ? 'Enviando...' : 'Criar'}
+            </Button>
             <Button fullWidth onClick={() => setShowNew(false)} variant="secondary">Cancelar</Button>
           </div>
         </div>
@@ -156,10 +230,16 @@ const CondosView = () => {
         {condos.map(c => (
           <div key={c.id} className={`p-5 rounded-[28px] border flex items-center justify-between transition-all ${c.status === 'blocked' ? 'bg-slate-50 border-slate-200 opacity-60' : 'bg-white border-slate-100 shadow-sm'}`}>
             <div className="flex items-center gap-4">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg ${c.status === 'blocked' ? 'bg-slate-200 text-slate-400' : 'bg-slate-100 text-slate-400'}`}>{c.name?.[0]}</div>
+              <div
+                className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border-2 ${c.status === 'blocked' ? 'bg-slate-200 text-slate-400 border-transparent' : 'bg-white text-slate-400 border-slate-100'}`}
+                style={{ borderColor: c.primary_color || 'transparent' }}
+              >
+                {c.logo_url ? <img src={c.logo_url} className="w-full h-full object-cover rounded-xl" /> : c.name?.[0]}
+              </div>
               <div>
                 <h4 className={`font-bold text-sm ${c.status === 'blocked' ? 'text-slate-500 line-through' : 'text-slate-900'}`}>{c.name}</h4>
                 <p className="text-[10px] text-slate-400 font-bold uppercase">{c.plan} • {c.type}</p>
+                {c.primary_color && <div className="flex items-center gap-1 mt-1"><div className="w-2 h-2 rounded-full" style={{ background: c.primary_color }}></div><span className="text-[9px] text-slate-400">{c.primary_color}</span></div>}
               </div>
             </div>
             <div className="flex items-center gap-2">

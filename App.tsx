@@ -126,12 +126,18 @@ const App: React.FC = () => {
         });
 
         if (profile.condominium_id) {
-          supabase.from('condominiums').select('name').eq('id', profile.condominium_id).maybeSingle()
+          supabase.from('condominiums').select('name, primary_color, logo_url').eq('id', profile.condominium_id).maybeSingle()
             .then(({ data: condo }) => {
               if (condo) {
+                // Apply Branding
+                if (condo.primary_color) {
+                  document.documentElement.style.setProperty('--primary', condo.primary_color);
+                  // Optional: Calculate darker/lighter shades if needed, or just rely on CSS color-mix
+                }
+
                 setCurrentUser((prev: any) => {
-                  const updated = { ...prev, condo: condo.name };
-                  localStorage.setItem('userProfile_cache', JSON.stringify(updated)); // Atualiza cache com condo
+                  const updated = { ...prev, condo: condo.name, logo: condo.logo_url, primaryColor: condo.primary_color };
+                  localStorage.setItem('userProfile_cache', JSON.stringify(updated)); // Atualiza cache com condo e branding
                   return updated;
                 });
               }

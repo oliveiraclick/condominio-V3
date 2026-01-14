@@ -681,16 +681,17 @@ export const ResidentHome: React.FC<{
       />
 
       {/* HEADER DINÂMICO */}
-      <div className="bg-violet-600 p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-violet-500">
-        <div className="flex items-center justify-between mb-8">
+      <div className="bg-primary p-6 pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-hidden">
+        <div className="flex items-center justify-between mb-8 relative z-10">
+          {/* Left Side: Avatar & Name */}
           <div className="flex items-center gap-4">
-            <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-violet-400/30 shadow-xl bg-white/10 backdrop-blur-sm">
+            <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-xl bg-white/10 backdrop-blur-sm">
               <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
             </div>
             <div>
               <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
-              <p className="text-xs font-bold text-violet-200 uppercase tracking-widest flex items-center gap-1">
-                <MapPin size={12} className="text-violet-200" />
+              <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1">
+                <MapPin size={12} className="text-white/70" />
                 {currentUser?.unit?.toString().toUpperCase().includes('RUA')
                   ? `${currentUser.unit}, ${currentUser.tower}`
                   : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
@@ -698,10 +699,19 @@ export const ResidentHome: React.FC<{
               </p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setDigitalIdOpen(true)} className="bg-white p-2 rounded-full shadow-sm active:scale-95 transition-all">
-              <QrCode size={24} className="text-slate-900" />
+
+          {/* Right Side: Logo & Actions */}
+          <div className="flex items-center gap-3">
+            {currentUser?.logo && (
+              <div className="w-12 h-12 bg-white rounded-xl p-1.5 flex items-center justify-center shadow-lg">
+                <img src={currentUser.logo} className="w-full h-full object-contain" />
+              </div>
+            )}
+
+            <button onClick={() => setDigitalIdOpen(true)} className="bg-white p-2.5 rounded-xl shadow-sm active:scale-95 transition-all">
+              <QrCode size={20} className="text-slate-900" />
             </button>
+
             <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
               <Bell size={24} className="text-white" />
               <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
@@ -963,7 +973,7 @@ export const ResidentHome: React.FC<{
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -1119,7 +1129,7 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
   );
 };
 
-export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any; categories?: any[] }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser, categories = [] }) => {
+export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any; categories?: any[]; setMuralOpen?: (open: boolean) => void }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser, categories = [], setMuralOpen }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
 
