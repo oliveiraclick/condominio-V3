@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon, Key, Lock, CircleAlert } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon, Key, Lock, CircleAlert, FileText, ChevronDown, ChevronUp, Package, ShoppingBag, Zap, Calendar, User } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 
@@ -1053,7 +1053,176 @@ const PushView = () => {
   );
 };
 
+// --- SYSTEM OVERVIEW VIEW ---
+const SystemOverviewView = () => {
+  const [expandedCard, setExpandedCard] = useState<string | null>('resident');
+
+  const systemFeatures = {
+    resident: {
+      title: 'MORADOR',
+      subtitle: 'Resident',
+      icon: Users,
+      gradient: 'from-blue-500 to-purple-600',
+      bgGradient: 'from-blue-50 to-purple-50',
+      features: [
+        { icon: Grid, title: 'Home / Dashboard', desc: 'Visualização centralizada de pacotes, notificações, serviços e marketplace' },
+        { icon: Bell, title: 'Notificações', desc: 'Central de avisos e alertas em tempo real' },
+        { icon: UserCheck, title: 'Identidade Digital', desc: 'QR Code pessoal e gestão de autorizações de visitantes' },
+        { icon: Package, title: 'Pacotes', desc: 'Visualização de encomendas, scanner QR Code e histórico' },
+        { icon: ShoppingBag, title: 'e-Shop', desc: 'Marketplace de produtos entre moradores e profissionais' },
+        { icon: Zap, title: 'Desapego', desc: 'Publicar e visualizar itens para doação/venda' },
+        { icon: Briefcase, title: 'Serviços', desc: 'Busca de profissionais, solicitações e avaliações' },
+        { icon: Calendar, title: 'Reservas', desc: 'Reserva de áreas comuns e calendário de disponibilidade' },
+        { icon: Bell, title: 'Comunicação', desc: 'Hub de comunicação com síndico e avisos' },
+        { icon: User, title: 'Perfil', desc: 'Edição de dados pessoais e configurações' }
+      ]
+    },
+    professional: {
+      title: 'PRESTADOR',
+      subtitle: 'Professional',
+      icon: Briefcase,
+      gradient: 'from-emerald-500 to-cyan-600',
+      bgGradient: 'from-emerald-50 to-cyan-50',
+      features: [
+        { icon: Grid, title: 'Dashboard', desc: 'Visão geral de solicitações, estatísticas e avaliações' },
+        { icon: Briefcase, title: 'Serviços', desc: 'Cadastro e gerenciamento de serviços oferecidos' },
+        { icon: ShoppingBag, title: 'Loja (e-Shop)', desc: 'Cadastro de produtos, gestão de estoque e vendas' },
+        { icon: Calendar, title: 'Agenda', desc: 'Solicitações pendentes, aceitar/rejeitar e calendário' },
+        { icon: Star, title: 'Avaliações', desc: 'Visualização de reviews e estatísticas de satisfação' },
+        { icon: UserCheck, title: 'Identidade Digital', desc: 'QR Code profissional para acesso a condomínios' },
+        { icon: User, title: 'Perfil', desc: 'Dados profissionais, foto/logo, WhatsApp e especialidades' }
+      ]
+    },
+    admin: {
+      title: 'ADMIN',
+      subtitle: 'Administrador',
+      icon: ShieldCheck,
+      gradient: 'from-orange-500 to-red-600',
+      bgGradient: 'from-orange-50 to-red-50',
+      features: [
+        { icon: LayoutGrid, title: 'Dashboard', desc: 'Estatísticas do condomínio e visão geral de atividades' },
+        { icon: Package, title: 'Gestão de Pacotes', desc: 'Registro, notificação, controle de retiradas e scanner' },
+        { icon: Calendar, title: 'Gestão de Reservas', desc: 'Aprovação/rejeição, configuração de áreas e regras' },
+        { icon: Users, title: 'Gestão de Moradores', desc: 'Visualização de perfis e aprovação de cadastros' },
+        { icon: Briefcase, title: 'Gestão de Profissionais', desc: 'Aprovação de prestadores e moderação de serviços' },
+        { icon: UserCheck, title: 'Controle de Acesso', desc: 'Validação de QR Codes e registro de entradas/saídas' },
+        { icon: Bell, title: 'Comunicação', desc: 'Envio de avisos gerais e gestão do mural' }
+      ]
+    },
+    superadmin: {
+      title: 'SUPER ADMIN',
+      subtitle: 'Super Administrador',
+      icon: Star,
+      gradient: 'from-purple-500 to-pink-600',
+      bgGradient: 'from-purple-50 to-pink-50',
+      features: [
+        { icon: LayoutGrid, title: 'Dashboard', desc: 'Estatísticas globais, métricas de uso e visão de todos os condomínios' },
+        { icon: Building, title: 'Gestão de Condomínios', desc: 'Cadastro, edição, ativação/desativação e configurações' },
+        { icon: Users, title: 'Gestão de Usuários', desc: 'Visualização global, controle de permissões e moderação' },
+        { icon: Briefcase, title: 'Gestão de Profissionais', desc: 'Cadastro de tags/especialidades e aprovação global' },
+        { icon: ShieldCheck, title: 'Dispositivos de Acesso', desc: 'Cadastro de dispositivos, vinculação e logs de acesso' },
+        { icon: Bell, title: 'Notificações Push', desc: 'Envio global, segmentação por perfil e histórico' },
+        { icon: Layers, title: 'Documentação API', desc: 'Documentação técnica, endpoints e exemplos de uso' },
+        { icon: FileText, title: 'Visão Geral do Sistema', desc: 'Documentação de funcionalidades e resumo por perfil' }
+      ]
+    }
+  };
+
+  const toggleCard = (key: string) => {
+    setExpandedCard(expandedCard === key ? null : key);
+  };
+
+  return (
+    <div className={PAGE_CONTAINER}>
+      <div className="mb-8">
+        <h1 className={HEADER_TITLE}>Visão <span className="text-brand-600">Geral</span></h1>
+        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-2">
+          Documentação completa de funcionalidades por perfil
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4">
+        {Object.entries(systemFeatures).map(([key, profile]) => {
+          const isExpanded = expandedCard === key;
+          const Icon = profile.icon;
+
+          return (
+            <div
+              key={key}
+              className={`bg-gradient-to-br ${profile.bgGradient} rounded-[32px] border border-white/50 shadow-lg overflow-hidden transition-all duration-300 ${isExpanded ? 'shadow-xl' : 'shadow-md'}`}
+            >
+              {/* Header */}
+              <button
+                onClick={() => toggleCard(key)}
+                className="w-full p-6 flex items-center justify-between hover:bg-white/30 transition-all"
+              >
+                <div className="flex items-center gap-4">
+                  <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${profile.gradient} flex items-center justify-center text-white shadow-lg`}>
+                    <Icon size={28} strokeWidth={2.5} />
+                  </div>
+                  <div className="text-left">
+                    <h3 className="font-black text-lg text-slate-900 tracking-tight">{profile.title}</h3>
+                    <p className="text-xs text-slate-500 font-bold uppercase tracking-widest">{profile.subtitle}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <Badge className="bg-white/80 text-slate-700 border-none shadow-sm">
+                    {profile.features.length} recursos
+                  </Badge>
+                  {isExpanded ? <ChevronUp className="text-slate-600" size={20} /> : <ChevronDown className="text-slate-600" size={20} />}
+                </div>
+              </button>
+
+              {/* Expanded Content */}
+              {isExpanded && (
+                <div className="px-6 pb-6 space-y-3 animate-in slide-in-from-top-4 duration-300">
+                  {profile.features.map((feature, idx) => {
+                    const FeatureIcon = feature.icon;
+                    return (
+                      <div
+                        key={idx}
+                        className="bg-white/80 backdrop-blur-sm p-4 rounded-2xl border border-white/50 shadow-sm hover:shadow-md transition-all group"
+                      >
+                        <div className="flex items-start gap-3">
+                          <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${profile.gradient} flex items-center justify-center text-white flex-shrink-0 group-hover:scale-110 transition-transform`}>
+                            <FeatureIcon size={18} strokeWidth={2.5} />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="font-bold text-sm text-slate-900 mb-1">{feature.title}</h4>
+                            <p className="text-xs text-slate-600 leading-relaxed">{feature.desc}</p>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Footer Info */}
+      <div className="mt-8 bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-brand-50 text-brand-600 flex items-center justify-center flex-shrink-0">
+            <BookOpen size={20} />
+          </div>
+          <div>
+            <h4 className="font-bold text-sm text-slate-900 mb-1">Sobre esta documentação</h4>
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Esta visão geral apresenta todas as funcionalidades disponíveis no sistema, organizadas por tipo de usuário.
+              Cada perfil tem acesso a recursos específicos para suas necessidades.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- MAIN LAYOUT ---
+
 export const SuperAdmin = () => {
   const [activeTab, setActiveTab] = useState('professionals'); // Default to professionals for User flow
 
@@ -1069,6 +1238,7 @@ export const SuperAdmin = () => {
           {activeTab === 'access' && <AccessDevicesView />}
           {activeTab === 'api' && <ApiDocsView />}
           {activeTab === 'notifications' && <PushView />}
+          {activeTab === 'overview' && <SystemOverviewView />}
         </div>
 
         {/* BOTTOM NAV */}
@@ -1081,6 +1251,7 @@ export const SuperAdmin = () => {
             { id: 'access', icon: ShieldCheck, label: 'Acesso' },
             { id: 'api', icon: Layers, label: 'API' },
             { id: 'notifications', icon: Bell, label: 'Push' },
+            { id: 'overview', icon: FileText, label: 'Docs' },
           ].map(item => (
             <button
               key={item.id}
