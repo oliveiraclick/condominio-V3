@@ -699,18 +699,25 @@ export const ResidentHome: React.FC<{
       />
 
       {/* HEADER DINÂMICO */}
-      {/* HEADER DINÂMICO */}
       <div className="bg-primary pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
         {/* WATERMARK SYMBOL (Novo) */}
-        {(currentUser?.symbol_url || currentUser?.logo) && (
+        {(currentUser?.symbol_url || currentUser?.symbol) && (
           <div
-            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden flex items-center justify-center p-20"
+            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden flex items-center justify-center"
             style={{ opacity: (currentUser.symbol_opacity || 15) / 100 }}
           >
             <img
-              src={currentUser.symbol_url || currentUser.logo}
-              className="w-full h-full object-contain opacity-40 grayscale brightness-200"
+              src={currentUser.symbol_url || currentUser.symbol}
+              className="w-full h-full object-cover"
               alt="Background Branding"
+              style={{
+                filter: 'grayscale(100%) brightness(2)',
+                mixBlendMode: 'overlay'
+              }}
+              onError={(e) => {
+                // Hide watermark on image load error
+                e.currentTarget.parentElement!.style.display = 'none';
+              }}
             />
           </div>
         )}
@@ -765,9 +772,17 @@ export const ResidentHome: React.FC<{
         </div>
 
         {/* LOGO CENTRALIZADA (BAIXO) */}
-        {currentUser?.logo && (
+        {currentUser?.logo && currentUser.logo.trim() && (
           <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-24 h-24 bg-white rounded-full p-2 shadow-xl flex items-center justify-center z-20">
-            <img src={currentUser.logo} className="w-full h-full object-contain" />
+            <img
+              src={currentUser.logo}
+              className="w-full h-full object-contain"
+              alt="Logo"
+              onError={(e) => {
+                // Hide logo on image load error
+                e.currentTarget.parentElement!.style.display = 'none';
+              }}
+            />
           </div>
         )}
       </div>
