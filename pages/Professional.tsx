@@ -976,6 +976,15 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
                 </div>
               )}
 
+              {request.scheduled_time && (
+                <div className="flex items-center gap-2 text-xs text-brand-600 bg-brand-50 px-3 py-2 rounded-xl">
+                  <Calendar size={14} />
+                  <span className="font-black uppercase tracking-wider">
+                    Horário Agendado: {request.scheduled_time}
+                  </span>
+                </div>
+              )}
+
               {/* Actions */}
               {request.status === 'pending' && (
                 <div className="flex gap-2 pt-2">
@@ -1023,7 +1032,8 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
     title: '',
     category: '',
     description: '',
-    price_range: ''
+    price_range: '',
+    booking_type: 'whatsapp'
   });
 
   // Period management states
@@ -1111,7 +1121,8 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
       title: service.title,
       category: service.category,
       description: service.description || '',
-      price_range: service.price_range || ''
+      price_range: service.price_range || '',
+      booking_type: service.booking_type || 'whatsapp'
     });
     setShowForm(true);
   };
@@ -1142,7 +1153,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
   };
 
   const resetForm = () => {
-    setFormData({ title: '', category: '', description: '', price_range: '' });
+    setFormData({ title: '', category: '', description: '', price_range: '', booking_type: 'whatsapp' });
     setEditingService(null);
     setShowForm(false);
   };
@@ -1302,6 +1313,27 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
               className="h-14 rounded-2xl"
             />
 
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Tipo de Contato/Reserva</label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  onClick={() => setFormData({ ...formData, booking_type: 'whatsapp' })}
+                  className={`h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.booking_type === 'whatsapp' ? 'bg-emerald-500 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}
+                >
+                  WhatsApp (Padrão)
+                </button>
+                <button
+                  onClick={() => setFormData({ ...formData, booking_type: 'agenda' })}
+                  className={`h-12 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${formData.booking_type === 'agenda' ? 'bg-brand-600 text-white shadow-lg' : 'bg-slate-50 text-slate-400'}`}
+                >
+                  Agenda Direta
+                </button>
+              </div>
+              <p className="text-[9px] text-slate-400 italic px-2">
+                * O WhatsApp sempre ficará visível. A 'Agenda Direta' habilita a escolha de horários pelo morador.
+              </p>
+            </div>
+
             <Button
               fullWidth
               onClick={handleSubmit}
@@ -1333,9 +1365,14 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
                   <h4 className="font-black text-slate-900 text-base italic tracking-tight">{service.title}</h4>
                   <p className="text-[10px] font-bold text-emerald-600 uppercase bg-emerald-50 px-2 py-1 rounded-full inline-block mt-1">{service.category}</p>
                 </div>
-                <Badge className={`text-[8px] uppercase px-2 py-1 ${service.active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
-                  {service.active ? 'Ativo' : 'Inativo'}
-                </Badge>
+                <div className="flex flex-wrap gap-2 mt-1">
+                  <Badge className={`text-[8px] uppercase px-2 py-1 ${service.active ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    {service.active ? 'Ativo' : 'Inativo'}
+                  </Badge>
+                  <Badge className="text-[8px] uppercase px-2 py-1 bg-slate-100 text-slate-500">
+                    {service.booking_type === 'agenda' ? 'Agenda Habilitada' : 'Apenas WhatsApp'}
+                  </Badge>
+                </div>
               </div>
 
               {service.description && (

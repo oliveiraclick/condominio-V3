@@ -8,7 +8,7 @@
 -- Tabela para armazenar períodos disponíveis por serviço
 CREATE TABLE IF NOT EXISTS service_time_periods (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  service_id UUID REFERENCES services(id) ON DELETE CASCADE,
+  service_id UUID REFERENCES professional_services(id) ON DELETE CASCADE,
   period_name TEXT NOT NULL, -- ex: "Manhã Cedo", "Tarde", "Final de Tarde"
   start_time TIME NOT NULL,
   end_time TIME NOT NULL,
@@ -30,6 +30,11 @@ ADD COLUMN IF NOT EXISTS selected_period_id UUID REFERENCES service_time_periods
 ADD COLUMN IF NOT EXISTS confirmed_period_start TIME,
 ADD COLUMN IF NOT EXISTS confirmed_period_end TIME,
 ADD COLUMN IF NOT EXISTS period_confirmed_at TIMESTAMPTZ;
+
+-- Adicionar tipo de agendamento na tabela de serviços
+ALTER TABLE professional_services 
+ADD COLUMN IF NOT EXISTS booking_type TEXT DEFAULT 'whatsapp' 
+CHECK (booking_type IN ('whatsapp', 'agenda'));
 
 -- Índices para performance
 CREATE INDEX IF NOT EXISTS idx_service_periods_service ON service_time_periods(service_id);
@@ -64,14 +69,14 @@ CREATE POLICY "Prestadores gerenciam períodos próprios"
 ON service_time_periods FOR ALL
 USING (
   service_id IN (
-    SELECT id FROM services 
-    WHERE professional_id = auth.uid()
+    SELECT id FROM professional_services 
+    WHERE provider_id = auth.uid()
   )
 )
 WITH CHECK (
   service_id IN (
-    SELECT id FROM services 
-    WHERE professional_id = auth.uid()
+    SELECT id FROM professional_services 
+    WHERE provider_id = auth.uid()
   )
 );
 
@@ -82,7 +87,7 @@ ON service_time_periods FOR SELECT
 USING (
   active = true AND
   service_id IN (
-    SELECT id FROM services WHERE active = true
+    SELECT id FROM professional_services WHERE active = true
   )
 );
 
@@ -111,13 +116,4 @@ COMMENT ON COLUMN service_requests.selected_period_id IS 'Período escolhido pel
 COMMENT ON COLUMN service_requests.confirmed_period_start IS 'Horário de início confirmado pelo prestador';
 COMMENT ON COLUMN service_requests.confirmed_period_end IS 'Horário de fim confirmado pelo prestador';
 
--- =====================================================
--- Verificação final
--- =====================================================
-
-DO $$
-BEGIN
-  RAISE NOTICE 'Migration service_periods completed successfully!';
-  RAISE NOTICE 'Tables created: service_time_periods';
-  RAISE NOTICE 'Columns added to service_requests: resident_period_preference, resident_period_notes, selected_period_id, confirmed_period_start, confirmed_period_end, period_confirmed_at';
-END $$;
+-- Migração concluída com sucesso.

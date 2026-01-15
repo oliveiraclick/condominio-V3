@@ -1182,11 +1182,14 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
 export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch?: string; onBack: () => void; onNavigate: (t: string) => void; onServiceRequest: (req: any) => void; services?: any[]; currentUser: any; categories?: any[]; setMuralOpen?: (open: boolean) => void }> = ({ initialCategory, initialSearch = '', onBack, onServiceRequest, services = [], currentUser, categories = [], setMuralOpen }) => {
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
+  const [selectedPro, setSelectedPro] = useState<any>(null);
+  const [showingPeriods, setShowingPeriods] = useState(false);
+  const [availablePeriods, setAvailablePeriods] = useState<any[]>([]);
+  const [loadingPeriods, setLoadingPeriods] = useState(false);
 
   useEffect(() => {
     if (initialSearch) setSearchTerm(initialSearch);
   }, [initialSearch]);
-  const [selectedPro, setSelectedPro] = useState<any>(null);
 
   const handleProClick = async (pro: any) => {
     setSelectedPro(pro);
@@ -1264,7 +1267,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
     return filtered;
   }, [services, activeCategory, searchTerm, categories]);
 
-  const handleRequest = (proName: string, proId: string) => {
+  const handleRequest = (proName: string, proId: string, period?: any) => {
     onServiceRequest({
       id: Date.now(),
       name: `Serviço com ${proName}`,
@@ -1272,9 +1275,37 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       time: 'Agora',
       location: 'Minha Unidade',
       status: 'pending',
-      professional_id: proId
+      professional_id: proId,
+      period_id: period?.id,
+      scheduled_time: period ? `${period.start_time} - ${period.end_time}` : null
     });
-    alert(`Solicitação enviada para ${proName}!`);
+    alert(`Solicitação enviada para ${proName}${period ? ` para o período ${period.period_name}` : ''}!`);
+    setSelectedPro(null);
+    setShowingPeriods(false);
+  };
+
+  const loadProPeriods = async (pro: any) => {
+    setLoadingPeriods(true);
+    setShowingPeriods(true);
+    try {
+      const { data, error } = await supabase
+        .from('service_time_periods')
+        .select('*')
+        .eq('service_id', pro.id)
+        .eq('active', true)
+        .order('start_time');
+
+      if (data && !error) {
+        setAvailablePeriods(data);
+      } else {
+        setAvailablePeriods([]);
+      }
+    } catch (err) {
+      console.error('Error loading periods:', err);
+      setAvailablePeriods([]);
+    } finally {
+      setLoadingPeriods(false);
+    }
   };
 
   const openWhatsApp = async (phone: string, proId: string) => {
@@ -1505,21 +1536,68 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   </div>
                 </div>
 
-                <div className="flex gap-3 pt-4 border-t border-slate-100">
-                  <Button
-                    fullWidth
-                    className="h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-500/20"
-                    onClick={() => openWhatsApp(selectedPro.providerPhone, selectedPro.id)}
-                  >
-                    <Phone className="mr-2" size={18} /> WhatsApp
-                  </Button>
-                  <Button
-                    fullWidth
-                    className="h-14 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-600/20"
-                    onClick={() => handleRequest(selectedPro.providerName, selectedPro.id)}
-                  >
-                    <Zap className="mr-2" size={18} /> Solicitar
-                  </Button>
+                <div className="flex flex-col gap-3 pt-4 border-t border-slate-100">
+                  <div className="flex gap-3">
+                    <Button
+                      fullWidth
+                      className="h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-500/20"
+                      onClick={() => openWhatsApp(selectedPro.providerPhone, selectedPro.id)}
+                    >
+                      <Phone className="mr-2" size={18} /> WhatsApp
+                    </Button>
+                    <Button
+                      fullWidth
+                      className="h-14 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs"
+                      onClick={() => handleRequest(selectedPro.providerName, selectedPro.id)}
+                    >
+                      <Zap className="mr-2" size={18} /> Solicitar
+                    </Button>
+                  </div>
+
+                  {selectedPro.booking_type === 'agenda' && !showingPeriods && (
+                    <Button
+                      fullWidth
+                      className="h-14 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-600/20 animate-in fade-in zoom-in-95"
+                      onClick={() => loadProPeriods(selectedPro)}
+                    >
+                      <Calendar className="mr-2" size={18} /> Ver Horários Disponíveis
+                    </Button>
+                  )}
+
+                  {showingPeriods && (
+                    <div className="space-y-4 animate-in slide-in-from-top-2 p-2">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em]">Horários Disponíveis</h5>
+                        <button onClick={() => setShowingPeriods(false)} className="text-[9px] font-bold text-slate-400 uppercase">Fechar</button>
+                      </div>
+
+                      {loadingPeriods ? (
+                        <div className="flex justify-center py-4">
+                          <div className="w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      ) : availablePeriods.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 text-center py-2">Nenhum horário cadastrado</p>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-2">
+                          {availablePeriods.map(period => (
+                            <button
+                              key={period.id}
+                              onClick={() => handleRequest(selectedPro.providerName, selectedPro.id, period)}
+                              className="w-full p-4 bg-brand-50 hover:bg-brand-100 border border-brand-100 rounded-2xl flex items-center justify-between group transition-all"
+                            >
+                              <div className="text-left">
+                                <p className="font-bold text-brand-900 text-xs">{period.period_name}</p>
+                                <p className="text-[10px] text-brand-600 font-medium">{period.start_time.slice(0, 5)} - {period.end_time.slice(0, 5)}</p>
+                              </div>
+                              <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-brand-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Check size={16} />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
