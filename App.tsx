@@ -574,7 +574,7 @@ const App: React.FC = () => {
           case 'dashboard': return <ProfessionalDashboard serviceRequests={pending} activeServices={accepted} completedServices={completed} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;
           case 'services': return <ProfessionalServices currentUser={currentUser} categories={categories} />;
           case 'agenda': return <ProfessionalAgenda activeServices={accepted} onUpdateRequest={handleUpdateServiceRequest} currentUser={currentUser} serviceRequests={serviceRequests} />;
-          case 'earnings': return <ProfessionalEarnings services={completed} />;
+          case 'earnings': return <ProfessionalEarnings currentUser={currentUser} />;
           case 'shop': return <ProfessionalShop currentUser={currentUser} />;
           case 'profile': return <ProfessionalProfileView currentUser={currentUser} categories={categories} onLogout={() => supabase.auth.signOut()} />;
           default: return <ProfessionalDashboard serviceRequests={pending} activeServices={accepted} completedServices={completed} onUpdateRequest={handleUpdateServiceRequest} subscription={{ status: currentUser?.subscription_status, trialEndsAt: currentUser?.trial_ends_at }} currentUser={currentUser} onNavigate={pushScreen} />;

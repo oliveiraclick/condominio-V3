@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2,
   Megaphone, MessageCircle, UserCheck,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown
 } from 'lucide-react';
 import { supabase } from '../supabase';
 
@@ -1496,12 +1496,336 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
   );
 };
 
-export const ProfessionalEarnings = () => (
-  <div className="p-6">
-    <h2 className="text-xl font-black text-slate-900 mb-4">Extrato Financeiro</h2>
-    <p className="text-gray-500">Detalhamento de ganhos.</p>
-  </div>
-);
+export const ProfessionalEarnings = ({ currentUser }: any) => {
+  const [activeTab, setActiveTab] = useState<'receivable' | 'payable'>('receivable');
+  const [receivables, setReceivables] = useState<any[]>([]);
+  const [payables, setPayables] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [formData, setFormData] = useState({
+    description: '',
+    amount: '',
+    due_date: '',
+    status: 'pending'
+  });
+
+  useEffect(() => {
+    loadFinancialData();
+  }, [currentUser]);
+
+  const loadFinancialData = async () => {
+    if (!currentUser?.id) return;
+    setLoading(true);
+
+    // Load receivables from completed services
+    const { data: services } = await supabase
+      .from('service_requests')
+      .select('*, profiles:resident_id(name, tower, unit)')
+      .eq('provider_id', currentUser.id)
+      .eq('status', 'completed')
+      .order('created_at', { ascending: false });
+
+    if (services) {
+      setReceivables(services.map((s: any) => ({
+        id: s.id,
+        description: s.title || s.description,
+        amount: s.price || 0,
+        client: s.profiles?.name || 'Cliente',
+        location: `${s.profiles?.tower || ''} - ${s.profiles?.unit || ''}`,
+        date: s.created_at,
+        status: s.payment_status || 'pending',
+        type: 'service'
+      })));
+    }
+
+    // Load payables (expenses)
+    const { data: expenses } = await supabase
+      .from('professional_expenses')
+      .select('*')
+      .eq('professional_id', currentUser.id)
+      .order('due_date', { ascending: false });
+
+    if (expenses) {
+      setPayables(expenses);
+    }
+
+    setLoading(false);
+  };
+
+  const handleAddExpense = async () => {
+    if (!formData.description || !formData.amount) {
+      alert('Preencha descrição e valor');
+      return;
+    }
+
+    const { error } = await supabase
+      .from('professional_expenses')
+      .insert([{
+        professional_id: currentUser.id,
+        description: formData.description,
+        amount: parseFloat(formData.amount),
+        due_date: formData.due_date || new Date().toISOString(),
+        status: formData.status
+      }]);
+
+    if (!error) {
+      alert('Despesa cadastrada!');
+      setFormData({ description: '', amount: '', due_date: '', status: 'pending' });
+      setShowAddForm(false);
+      loadFinancialData();
+    } else {
+      alert('Erro: ' + error.message);
+    }
+  };
+
+  const handleUpdateStatus = async (id: string, table: string, newStatus: string) => {
+    const { error } = await supabase
+      .from(table)
+      .update({ status: newStatus })
+      .eq('id', id);
+
+    if (!error) {
+      loadFinancialData();
+    }
+  };
+
+  const totalReceivable = receivables.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const totalPayable = payables.reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const balance = totalReceivable - totalPayable;
+
+  const pendingReceivable = receivables.filter(r => r.status === 'pending').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+  const pendingPayable = payables.filter(p => p.status === 'pending').reduce((acc, curr) => acc + (curr.amount || 0), 0);
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <div>
+          <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Financeiro</h2>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestão Financeira</p>
+        </div>
+      </header>
+
+      <div className="p-6 space-y-6">
+        {/* Financial Summary Cards */}
+        <div className="grid grid-cols-1 gap-4">
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 p-6 rounded-[32px] shadow-xl text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingUp size={16} />
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-90">A Receber</p>
+              </div>
+              <h3 className="text-4xl font-black italic tracking-tighter mb-1">R$ {totalReceivable.toFixed(2)}</h3>
+              <p className="text-xs font-bold opacity-75">Pendente: R$ {pendingReceivable.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <div className="bg-gradient-to-br from-rose-500 to-rose-600 p-6 rounded-[32px] shadow-xl text-white relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <TrendingDown size={16} />
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-90">A Pagar</p>
+              </div>
+              <h3 className="text-4xl font-black italic tracking-tighter mb-1">R$ {totalPayable.toFixed(2)}</h3>
+              <p className="text-xs font-bold opacity-75">Pendente: R$ {pendingPayable.toFixed(2)}</p>
+            </div>
+          </div>
+
+          <div className={`p-6 rounded-[32px] shadow-xl text-white relative overflow-hidden ${balance >= 0 ? 'bg-gradient-to-br from-slate-700 to-slate-900' : 'bg-gradient-to-br from-amber-500 to-amber-600'
+            }`}>
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -mr-12 -mt-12"></div>
+            <div className="relative z-10">
+              <div className="flex items-center gap-2 mb-2">
+                <Wallet size={16} />
+                <p className="text-[10px] font-black uppercase tracking-widest opacity-90">Saldo</p>
+              </div>
+              <h3 className="text-4xl font-black italic tracking-tighter">
+                {balance >= 0 ? '+' : ''} R$ {balance.toFixed(2)}
+              </h3>
+            </div>
+          </div>
+        </div>
+
+        {/* Tabs */}
+        <div className="flex p-1.5 bg-white rounded-3xl shadow-sm border border-slate-100">
+          <button
+            onClick={() => setActiveTab('receivable')}
+            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'receivable' ? 'bg-emerald-500 text-white shadow-lg' : 'text-slate-400'
+              }`}
+          >
+            Contas a Receber
+          </button>
+          <button
+            onClick={() => setActiveTab('payable')}
+            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'payable' ? 'bg-rose-500 text-white shadow-lg' : 'text-slate-400'
+              }`}
+          >
+            Contas a Pagar
+          </button>
+        </div>
+
+        {/* Add Expense Button (only for payables) */}
+        {activeTab === 'payable' && !showAddForm && (
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="w-full h-14 bg-rose-50 text-rose-600 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+          >
+            <Plus size={18} />
+            Adicionar Despesa
+          </button>
+        )}
+
+        {/* Add Expense Form */}
+        {showAddForm && (
+          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
+            <div className="flex items-center justify-between">
+              <h3 className="text-lg font-black italic text-slate-900 uppercase">Nova Despesa</h3>
+              <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-slate-600">
+                <X size={20} />
+              </button>
+            </div>
+
+            <Input
+              placeholder="Descrição da despesa"
+              value={formData.description}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+              className="h-14 rounded-2xl"
+            />
+
+            <Input
+              type="number"
+              placeholder="Valor (R$)"
+              value={formData.amount}
+              onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+              className="h-14 rounded-2xl"
+            />
+
+            <Input
+              type="date"
+              placeholder="Data de vencimento"
+              value={formData.due_date}
+              onChange={(e) => setFormData({ ...formData, due_date: e.target.value })}
+              className="h-14 rounded-2xl"
+            />
+
+            <select
+              value={formData.status}
+              onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+              className="w-full h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-rose-500"
+            >
+              <option value="pending">Pendente</option>
+              <option value="paid">Pago</option>
+            </select>
+
+            <Button
+              fullWidth
+              onClick={handleAddExpense}
+              className="h-14 bg-rose-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-rose-600/30"
+            >
+              Cadastrar Despesa
+            </Button>
+          </div>
+        )}
+
+        {/* Content */}
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="w-8 h-8 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activeTab === 'receivable' && (
+              receivables.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <DollarSign size={24} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-400 font-bold text-sm">Nenhuma conta a receber</p>
+                  <p className="text-slate-300 text-xs mt-1">Complete serviços para gerar receitas</p>
+                </div>
+              ) : (
+                receivables.map((item) => (
+                  <div key={item.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h4 className="font-black text-slate-900 text-base italic tracking-tight">{item.description}</h4>
+                        <p className="text-xs text-slate-500 mt-1">{item.client} • {item.location}</p>
+                      </div>
+                      <Badge className={`text-[8px] uppercase px-2 py-1 ${item.status === 'paid' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'
+                        }`}>
+                        {item.status === 'paid' ? 'Pago' : 'Pendente'}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor</p>
+                        <span className="text-xl font-black text-emerald-600">R$ {item.amount.toFixed(2)}</span>
+                      </div>
+                      {item.status !== 'paid' && (
+                        <button
+                          onClick={() => handleUpdateStatus(item.id, 'service_requests', 'paid')}
+                          className="h-10 px-4 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all"
+                        >
+                          Marcar como Pago
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+
+            {activeTab === 'payable' && (
+              payables.length === 0 ? (
+                <div className="text-center py-12">
+                  <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <DollarSign size={24} className="text-slate-300" />
+                  </div>
+                  <p className="text-slate-400 font-bold text-sm">Nenhuma despesa cadastrada</p>
+                  <p className="text-slate-300 text-xs mt-1">Clique no botão acima para adicionar</p>
+                </div>
+              ) : (
+                payables.map((item) => (
+                  <div key={item.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1">
+                        <h4 className="font-black text-slate-900 text-base italic tracking-tight">{item.description}</h4>
+                        <p className="text-xs text-slate-500 mt-1">
+                          Vencimento: {new Date(item.due_date).toLocaleDateString('pt-BR')}
+                        </p>
+                      </div>
+                      <Badge className={`text-[8px] uppercase px-2 py-1 ${item.status === 'paid' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'
+                        }`}>
+                        {item.status === 'paid' ? 'Pago' : 'Pendente'}
+                      </Badge>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 border-t border-slate-50">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor</p>
+                        <span className="text-xl font-black text-rose-600">R$ {item.amount.toFixed(2)}</span>
+                      </div>
+                      {item.status !== 'paid' && (
+                        <button
+                          onClick={() => handleUpdateStatus(item.id, 'professional_expenses', 'paid')}
+                          className="h-10 px-4 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all"
+                        >
+                          Marcar como Pago
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))
+              )
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
 
 export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout }: any) => {
   const [loading, setLoading] = useState(false);
@@ -1982,6 +2306,7 @@ export const ProfessionalNavigation = ({ activeTab, onChange }: any) => {
     { id: 'agenda', icon: Calendar, label: 'Agenda' },
     { id: 'services', icon: Briefcase, label: 'Serviços' },
     { id: 'shop', icon: Store, label: 'Loja' },
+    { id: 'earnings', icon: Wallet, label: 'Financeiro' },
     { id: 'profile', icon: User, label: 'Perfil' },
   ];
 
