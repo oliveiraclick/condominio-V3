@@ -1102,132 +1102,187 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         )}
 
         {isRegistering && (
-          <Card className="p-8 space-y-6 border-none shadow-2xl rounded-[40px] bg-white animate-in slide-in-from-top-4">
-            <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black italic text-slate-900">{editingPackage ? 'Editar' : 'Registrar'} Encomenda</h3>
-              <button onClick={closeRegistration} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X size={16} /></button>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* BUSCA POR NOME */}
-              <div className="relative">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Nome no Pacote</label>
-                <Input
-                  placeholder="Nome..."
-                  value={searchName || formData.resident_name}
-                  onChange={e => {
-                    setSearchName(e.target.value);
-                    setFormData({ ...formData, resident_name: e.target.value });
-                    setSelectedResident(null);
-                    setIsUnidentified(false);
-                  }}
-                  className="h-14"
-                />
-                {searchName && !selectedResident && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
-                    {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchName.toLowerCase())).map(r => (
-                      <button key={r.id} onClick={() => {
-                        setSelectedResident(r);
-                        setSearchName(r.name);
-                        setSearchUnit(r.unit);
-                        setFormData({ ...formData, resident_name: '' });
-                      }} className="w-full px-6 py-4 hover:bg-brand-50 text-left border-b border-slate-50 last:border-none">
-                        <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* BUSCA POR ENDEREÇO */}
-              <div className="relative">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Endereço / Unidade</label>
-                <Input
-                  placeholder="Ex: 402-B"
-                  value={searchUnit}
-                  onChange={e => {
-                    setSearchUnit(e.target.value);
-                    setSelectedResident(null);
-                    setIsUnidentified(false);
-                  }}
-                  className="h-14"
-                />
-                {searchUnit && !selectedResident && (
-                  <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
-                    {residentsList.filter(r => (r.unit || '').toLowerCase().includes(searchUnit.toLowerCase())).map(r => (
-                      <button key={r.id} onClick={() => {
-                        setSelectedResident(r);
-                        setSearchName(r.name);
-                        setSearchUnit(r.unit);
-                      }} className="w-full px-6 py-4 hover:bg-brand-50 text-left border-b border-slate-50 last:border-none">
-                        <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  setIsUnidentified(true);
-                  setSelectedResident(null);
-                  setSearchName('');
-                  setSearchUnit('');
-                  setFormData({ ...formData, resident_name: 'Não Identificado' });
-                }}
-                className={`flex-1 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${isUnidentified ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
-              >
-                Não Identificado
-              </button>
-              {selectedResident && (
-                <div className="flex-1 h-12 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center gap-2">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Identificado</span>
+          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
+            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-xl transition-all" onClick={closeRegistration}></div>
+            <Card className="relative w-full max-w-lg p-8 space-y-6 border border-white/20 shadow-2xl rounded-[40px] bg-white/80 backdrop-blur-md animate-in zoom-in-95 duration-300">
+              <div className="flex justify-between items-center mb-2">
+                <div>
+                  <h3 className="text-2xl font-black italic text-slate-900 tracking-tight uppercase">
+                    {editingPackage ? 'Editar' : 'Registrar'} Encomenda
+                  </h3>
+                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Nova entrada no sistema</p>
                 </div>
-              )}
-            </div>
+                <button onClick={closeRegistration} className="w-12 h-12 bg-white/50 hover:bg-white rounded-2xl flex items-center justify-center shadow-sm transition-all active:scale-90 border border-slate-100">
+                  <X size={20} className="text-slate-400" />
+                </button>
+              </div>
 
-            <Input placeholder="Descrição / Conteúdo (Ex: Caixa Amazon)" value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="h-14" />
+              <div className="space-y-4">
+                {/* BUSCA POR NOME (FULL WIDTH) */}
+                <div className="relative group">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 flex items-center gap-2">
+                    <UserCircle2 size={12} className="text-brand-500" /> Nome no Pacote
+                  </label>
+                  <Input
+                    placeholder="Quem deve receber?"
+                    value={searchName || formData.resident_name}
+                    onChange={e => {
+                      setSearchName(e.target.value);
+                      setFormData({ ...formData, resident_name: e.target.value });
+                      setSelectedResident(null);
+                      setIsUnidentified(false);
+                    }}
+                    className="h-16 rounded-2xl bg-white/50 border-slate-100 focus:border-brand-500 transition-all font-bold text-slate-700"
+                  />
+                  {searchName && !selectedResident && (
+                    <div className="absolute top-full left-0 right-0 bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl mt-2 max-h-48 overflow-y-auto z-50 animate-in slide-in-from-top-2">
+                      {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchName.toLowerCase())).map(r => (
+                        <button key={r.id} onClick={() => {
+                          setSelectedResident(r);
+                          setSearchName(r.name);
+                          setSearchUnit(r.unit);
+                          setFormData({ ...formData, resident_name: '' });
+                        }} className="w-full px-6 py-4 hover:bg-brand-50/50 text-left border-b border-slate-50 last:border-none group">
+                          <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{r.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rua {r.tower || '---'}, {r.unit}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
 
-            <div className="flex gap-3">
-              <Button
-                fullWidth
-                onClick={() => setIsLinkingQR(true)}
-                className="bg-brand-600 h-14 font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
-              >
-                <QrCode size={18} /> {editingPackage ? 'Vincular Novo QR e Salvar' : 'Scan Etiqueta e Salvar'}
-              </Button>
-              <Button
-                variant="outline"
-                fullWidth
-                onClick={() => handleRegister()}
-                className="h-14 font-black uppercase tracking-widest text-[10px]"
-              >
-                Salvar sem QR
-              </Button>
-            </div>
-          </Card>
+                {/* BUSCA POR ENDEREÇO (VERTICAL) */}
+                <div className="relative group">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 flex items-center gap-2">
+                    <MapPin size={12} className="text-brand-500" /> Endereço / Unidade
+                  </label>
+                  <Input
+                    placeholder="Ex: 402 ou Rua 1"
+                    value={searchUnit}
+                    onChange={e => {
+                      setSearchUnit(e.target.value);
+                      setSelectedResident(null);
+                      setIsUnidentified(false);
+                    }}
+                    className="h-16 rounded-2xl bg-white/50 border-slate-100 focus:border-brand-500 transition-all font-bold text-slate-700"
+                  />
+                  {searchUnit && !selectedResident && (
+                    <div className="absolute top-full left-0 right-0 bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl mt-2 max-h-48 overflow-y-auto z-50 animate-in slide-in-from-top-2">
+                      {residentsList.filter(r =>
+                        (r.unit || '').toLowerCase().includes(searchUnit.toLowerCase()) ||
+                        (r.tower || '').toLowerCase().includes(searchUnit.toLowerCase())
+                      ).map(r => (
+                        <button key={r.id} onClick={() => {
+                          setSelectedResident(r);
+                          setSearchName(r.name);
+                          setSearchUnit(r.unit);
+                        }} className="w-full px-6 py-4 hover:bg-brand-50/50 text-left border-b border-slate-50 last:border-none group">
+                          <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{r.name}</p>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rua {r.tower || '---'}, {r.unit}</p>
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+
+                <div className="flex gap-3">
+                  <button
+                    onClick={() => {
+                      setIsUnidentified(true);
+                      setSelectedResident(null);
+                      setSearchName('');
+                      setSearchUnit('');
+                      setFormData({ ...formData, resident_name: 'Não Identificado' });
+                    }}
+                    className={`flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${isUnidentified ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 border border-slate-100 hover:border-slate-200'}`}
+                  >
+                    Não Identificado
+                  </button>
+                  {selectedResident && (
+                    <div className="flex-1 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center gap-3 animate-pulse">
+                      <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.5)]"></div>
+                      <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Morador Identificado</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="relative">
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 flex items-center gap-2">
+                    <Package size={12} className="text-brand-500" /> Descrição
+                  </label>
+                  <Input
+                    placeholder="Ex: Caixa Amazon, Encomenda iFood"
+                    value={formData.desc}
+                    onChange={e => setFormData({ ...formData, desc: e.target.value })}
+                    className="h-16 rounded-2xl bg-white/50 border-slate-100 focus:border-brand-500 transition-all font-bold text-slate-700"
+                  />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3 pt-4">
+                <Button
+                  fullWidth
+                  onClick={() => setIsLinkingQR(true)}
+                  className="bg-brand-600 hover:bg-brand-700 h-16 rounded-3xl font-black uppercase tracking-widest text-sm flex items-center justify-center gap-3 shadow-xl shadow-brand-500/30 transition-all active:scale-95 group relative overflow-hidden"
+                >
+                  <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/10 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  <QrCode size={22} className="group-hover:rotate-12 transition-transform" />
+                  <span className="relative z-10">{editingPackage ? 'Vincular Novo QR' : 'Scan Etiqueta e Salvar'}</span>
+                </Button>
+
+                <button
+                  disabled={!formData.desc || (!isUnidentified && !selectedResident)}
+                  onClick={() => {
+                    if (confirm('Atenção: A falta de QR Code dificulta o handshake digital. Deseja salvar assim mesmo?')) {
+                      handleRegister();
+                    }
+                  }}
+                  className="h-12 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
+                >
+                  <Save size={14} /> Salvar sem Etiqueta (Manual)
+                </button>
+              </div>
+            </Card>
+          </div>
         )}
 
         {/* QR LINKAGE MODAL */}
         {isLinkingQR && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95">
-            <div className="w-full max-w-sm bg-white rounded-[40px] overflow-hidden relative p-8">
-              <div className="text-center mb-6">
-                <h3 className="text-xl font-black italic text-slate-900">ESCANEIE A ETIQUETA</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Aponte para o QR Code da caixa</p>
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-2xl animate-in fade-in duration-300">
+            <div className="w-full max-w-sm bg-white/90 backdrop-blur-md rounded-[48px] overflow-hidden relative p-10 border border-white/20 shadow-2xl scale-in-center">
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-brand-500/10 text-brand-600 rounded-3xl flex items-center justify-center mx-auto mb-4 animate-bounce duration-[2000ms]">
+                  <QrCode size={32} />
+                </div>
+                <h3 className="text-2xl font-black italic text-slate-900 tracking-tight uppercase">Bipe agora</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 px-4 leading-relaxed">Aponte a câmera para o QR Code da etiqueta afixada na encomenda</p>
               </div>
 
-              <div className="rounded-3xl overflow-hidden border-4 border-slate-100 shadow-2xl aspect-square relative">
+              <div className="rounded-[40px] overflow-hidden border-8 border-white shadow-inner aspect-square relative bg-slate-100 group">
                 <Scanner onScan={(r) => r[0] && handleRegister(r[0].rawValue)} />
-                <div className="absolute inset-0 border-[40px] border-black/20 pointer-events-none"></div>
+                <div className="absolute inset-0 border-[60px] border-black/30 pointer-events-none transition-all group-hover:border-black/20"></div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-48 h-48 border-2 border-brand-500/50 rounded-[40px] animate-pulse"></div>
+                </div>
+                {/* Laser Effect */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-brand-500 shadow-[0_0_15px_#6366f1] animate-laser pointer-events-none"></div>
               </div>
+
+              <style>{`
+                @keyframes laser {
+                  0% { top: 0%; opacity: 0; }
+                  10% { opacity: 1; }
+                  90% { opacity: 1; }
+                  100% { top: 100%; opacity: 0; }
+                }
+                .animate-laser {
+                  animation: laser 3s linear infinite;
+                }
+              `}</style>
 
               <button
                 onClick={() => setIsLinkingQR(false)}
-                className="w-full mt-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs"
+                className="w-full mt-8 py-5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-sm transition-all active:scale-95"
               >
                 Cancelar
               </button>

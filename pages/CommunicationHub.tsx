@@ -174,13 +174,16 @@ export const CommunicationHub: React.FC<{ onBack: () => void; currentUser: any }
         const deliveredPackages = packages.filter(p => p.status === 'delivered');
 
         return (
-            <div className="min-h-screen bg-[#f8f9fa] safe-area-bottom pb-10">
-                <header className="p-6 pt-12 flex items-center gap-4 bg-white sticky top-0 z-40 shadow-sm">
-                    <button onClick={() => setView('hub')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
-                    <div className="flex-1 text-center">
-                        <h2 className="text-xl font-black italic uppercase text-slate-800 tracking-tight">Encomendas</h2>
+            <div className="min-h-screen bg-[#fcfcfd] safe-area-bottom pb-10">
+                <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 backdrop-blur-xl border-b border-slate-100 sticky top-0 z-40 shadow-sm">
+                    <button onClick={() => setView('hub')} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center active:scale-90 transition-transform shadow-sm border border-slate-100"><ArrowLeft size={20} className="text-slate-600" /></button>
+                    <div className="flex-1">
+                        <h2 className="text-xl font-black italic uppercase text-slate-900 tracking-tighter">Encomendas</h2>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Sua logística pessoal</p>
                     </div>
-                    <div className="w-10" /> {/* Spacer */}
+                    <div className="w-12 h-12 bg-orange-100 rounded-2xl flex items-center justify-center text-orange-600 shadow-sm">
+                        <Package size={22} />
+                    </div>
                 </header>
 
                 <div className="p-6 space-y-8">
@@ -203,26 +206,58 @@ export const CommunicationHub: React.FC<{ onBack: () => void; currentUser: any }
                     </button>
 
                     {/* Aguardando Retirada (Receival History) */}
-                    <section>
-                        <h3 className="text-lg font-black text-slate-800 mb-4 px-1">Aguardando Retirada</h3>
+                    <section className="animate-in slide-in-from-bottom-4 duration-500">
+                        <div className="flex items-center justify-between mb-4 px-1">
+                            <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest flex items-center gap-2">
+                                <div className="w-2 h-2 rounded-full bg-orange-500 animate-pulse"></div>
+                                Aguardando Retirada
+                            </h3>
+                            {availablePackages.length > 0 && <Badge className="bg-orange-100 text-orange-600 font-bold">{availablePackages.length}</Badge>}
+                        </div>
                         {availablePackages.length === 0 ? (
-                            <div className="bg-white p-8 rounded-[32px] border border-dashed border-slate-200 text-center">
-                                <Package className="mx-auto text-slate-200 mb-2" size={32} />
-                                <p className="text-xs text-slate-400 font-bold">Tudo entregue!</p>
+                            <div className="bg-white p-12 rounded-[40px] border border-dashed border-slate-200 text-center shadow-inner">
+                                <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 opacity-50">
+                                    <Package className="text-slate-300" size={32} />
+                                </div>
+                                <p className="text-xs text-slate-400 font-bold italic tracking-wide uppercase">Tudo entregue no momento!</p>
                             </div>
                         ) : (
-                            <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
+                            <div className="flex gap-4 overflow-x-auto pb-6 snap-x no-scrollbar -mx-2 px-2">
                                 {availablePackages.map(pkg => (
-                                    <div key={pkg.id} className="min-w-[85%] snap-center bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-12 h-12 bg-orange-500/5 rounded-bl-full" />
-                                        <div className="flex items-center gap-4">
-                                            <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center text-orange-500">
-                                                <Package size={24} />
+                                    <div key={pkg.id} className="min-w-[88%] snap-center bg-gradient-to-br from-white to-slate-50 p-6 rounded-[40px] border border-white shadow-xl shadow-slate-200/50 relative overflow-hidden group">
+                                        {/* Premium Reflective Background */}
+                                        <div className="absolute top-0 right-0 w-32 h-32 bg-orange-500/10 rounded-bl-[80px] blur-2xl group-hover:scale-125 transition-transform duration-700" />
+                                        <div className="absolute top-4 right-6">
+                                            <Badge className="bg-orange-500 text-white border-0 shadow-lg shadow-orange-500/20 text-[8px] px-3 py-1 font-black">PENDENTE</Badge>
+                                        </div>
+
+                                        <div className="flex items-start gap-5">
+                                            <div className="w-16 h-16 rounded-[24px] bg-orange-100 text-orange-600 flex items-center justify-center shadow-inner relative">
+                                                <Package size={32} />
+                                                <div className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full flex items-center justify-center shadow-sm border border-orange-50">
+                                                    <Clock size={12} className="text-orange-400" />
+                                                </div>
                                             </div>
-                                            <div className="flex-1">
-                                                <h4 className="font-bold text-slate-800 text-sm">{pkg.description}</h4>
-                                                <p className="text-[10px] text-slate-400 font-bold uppercase">Recebido em {formatDate(pkg.received_at)} às {formatTime(pkg.received_at)}</p>
+                                            <div className="flex-1 space-y-2 pt-1">
+                                                <h4 className="font-black text-slate-900 text-lg leading-none tracking-tight">{pkg.description}</h4>
+                                                <div className="flex flex-col gap-1">
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                                                        <User size={10} className="text-slate-300" /> Recebido por: {pkg.received_by || 'Portaria'}
+                                                    </p>
+                                                    <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter">
+                                                        {formatDate(pkg.received_at)} • {formatTime(pkg.received_at)}
+                                                    </p>
+                                                </div>
                                             </div>
+                                        </div>
+
+                                        <div className="mt-6 flex items-center justify-between border-t border-slate-100 pt-4">
+                                            <div className="flex -space-x-2">
+                                                {[1, 2, 3].map(i => <div key={i} className="w-6 h-6 rounded-full bg-slate-100 border-2 border-white" />)}
+                                            </div>
+                                            <button className="text-[10px] font-black text-orange-600 uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                                                Ver Detalhes <ChevronRight size={14} />
+                                            </button>
                                         </div>
                                     </div>
                                 ))}
@@ -231,23 +266,26 @@ export const CommunicationHub: React.FC<{ onBack: () => void; currentUser: any }
                     </section>
 
                     {/* Histórico de Entregas */}
-                    <section>
-                        <h3 className="text-lg font-black text-slate-800 mb-4 px-1">Histórico de Entregas</h3>
+                    <section className="animate-in slide-in-from-bottom-4 duration-700">
+                        <h3 className="text-xs font-black text-slate-400 uppercase tracking-[0.2em] mb-4 px-1">Histórico de Movimentação</h3>
                         {deliveredPackages.length === 0 ? (
-                            <div className="bg-white p-8 rounded-[32px] border border-dashed border-slate-200 text-center">
-                                <p className="text-xs text-slate-400 font-bold">Nenhuma entrega recente.</p>
+                            <div className="bg-slate-50/50 p-8 rounded-[32px] border border-slate-100 text-center">
+                                <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest leading-relaxed">Nenhum registro<br />nas últimas 48 horas</p>
                             </div>
                         ) : (
-                            <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
+                            <div className="space-y-3">
                                 {deliveredPackages.map(pkg => (
-                                    <div key={pkg.id} className="min-w-[85%] snap-center bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center">
-                                            <Check size={24} className="stroke-[3]" />
+                                    <div key={pkg.id} className="bg-white p-5 rounded-[28px] border border-slate-50 shadow-sm flex items-center gap-4 group hover:shadow-md transition-all active:scale-[0.99]">
+                                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner shrink-0 group-hover:rotate-6 transition-transform">
+                                            <Check size={28} className="stroke-[3]" />
                                         </div>
                                         <div className="flex-1">
-                                            <h4 className="font-bold text-slate-800 text-sm uppercase">Unidade {pkg.unit || '---'}</h4>
-                                            <p className="text-[10px] text-slate-400 font-black uppercase">
-                                                RETIRADO EM {formatDate(pkg.delivered_at || pkg.received_at)} ÀS {formatTime(pkg.delivered_at || pkg.received_at)} POR {pkg.delivered_to || 'MORADOR'}
+                                            <div className="flex justify-between items-start">
+                                                <h4 className="font-black text-slate-900 text-xs uppercase tracking-tight">Retirado: {pkg.description || 'Encomenda'}</h4>
+                                                <span className="text-[9px] font-bold text-slate-300 uppercase">{formatDate(pkg.delivered_at || pkg.received_at)}</span>
+                                            </div>
+                                            <p className="text-[10px] text-slate-400 font-bold mt-1 uppercase leading-none">
+                                                Portador: <span className="text-slate-600 italic">Morador (Handshake Digital)</span>
                                             </p>
                                         </div>
                                     </div>

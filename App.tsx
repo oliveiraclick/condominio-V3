@@ -523,8 +523,8 @@ const App: React.FC = () => {
       if (userRole === UserRole.RESIDENT) {
         switch (activeTab) {
           case 'resident':
-          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} />;
-          case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
+          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} categories={categories} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} />;
+          case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
           case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
@@ -553,13 +553,13 @@ const App: React.FC = () => {
           case 'privacy': return <PrivacyPage onBack={goBack} />;
 
           // --- E-SHOP & DESAPEGO ROUTES ---
-          case 'shop-detail': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} />;
+          case 'shop-detail': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'shop-product-detail': return <ProductDetailPage item={selectedProduct} onBack={goBack} />;
           case 'desapegos-all': return <DesapegoFullView onBack={goBack} desapegos={desapegos} currentUser={currentUser} onSelect={handleSelectDesapego} />;
           case 'desapego-detail': return <DesapegoDetailView item={selectedDesapego} onBack={goBack} currentUser={currentUser} />;
           case 'create-desapego': return <CreateDesapegoPage onBack={goBack} onAdd={handleAddDesapego} currentUser={currentUser} />;
 
-          default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} />;
+          default: return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={[]} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} categories={categories} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} />;
         }
       }
 

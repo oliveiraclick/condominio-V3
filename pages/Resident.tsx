@@ -537,7 +537,7 @@ export const ResidentHome: React.FC<{
   onPostMuralDemand: (category: string, description: string) => void;
   muralCategories: string[];
   activeTab?: string;
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories, activeTab }) => {
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories, categories = [], activeTab }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
@@ -652,7 +652,7 @@ export const ResidentHome: React.FC<{
     }
   };
 
-  // Filter for completed requests that haven't been reviewed (mock check for now, ideally check DB)
+  // Filter for completed requests that haven't been reviewed (Database-backed check)
   const completedRequests = serviceRequests.filter(r => r.status === 'completed' && !r.reviewed);
 
   const handleReviewSubmit = async (rating: number, comment: string) => {
@@ -668,11 +668,15 @@ export const ResidentHome: React.FC<{
     }]);
 
     if (!error) {
-      // Mark request as reviewed locally or in DB (so it disappears from list)
-      // ideally update 'service_requests' metadata or local exclude
+      // Mark request as reviewed in DB
+      await supabase.from('service_requests').update({ reviewed: true }).eq('id', selectedRequestToReview.id);
+
       alert('Avaliação enviada com sucesso! Obrigado.');
       setReviewModalOpen(false);
-      // Refresh?
+      // Refresh local data if possible, or wait for subscription
+      if (typeof window !== 'undefined' && (window as any).refreshAppData) {
+        (window as any).refreshAppData();
+      }
     } else {
       alert('Erro ao enviar avaliação: ' + error.message);
     }
@@ -720,58 +724,107 @@ export const ResidentHome: React.FC<{
       {/* MURAL MODAL */}
       <MuralDemandModal isOpen={muralOpen} onClose={() => setMuralOpen(false)} onPost={onPostMuralDemand} categories={muralCategories} />
 
-      {/* PACKAGE ALERT MODAL */}
+      {/* PACKAGE ALERT MODAL - PREMIUM REDESIGN */}
       {showPackageModal && (
-        <div className="fixed inset-0 z-[70] flex items-center justify-center animate-in fade-in bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[40px] p-8 max-w-sm w-full mx-4 shadow-2xl relative overflow-hidden">
-            <div className="absolute top-0 left-0 w-full h-2 bg-amber-400"></div>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center p-4 animate-in fade-in duration-300 bg-slate-950/40 backdrop-blur-xl">
+          <div className="absolute inset-0 z-0" onClick={() => setShowPackageModal(false)}></div>
+          <div className="bg-white/90 backdrop-blur-2xl rounded-[48px] p-8 max-w-sm w-full shadow-2xl relative overflow-hidden border border-white/20 scale-in-center z-10">
+            <div className="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-amber-400 via-orange-500 to-amber-400"></div>
 
             {localPackages.some(p => p.status === 'awaiting_confirmation') ? (
-              /* HANDSHAKE MODE */
+              /* HANDSHAKE MODE - FUTURISTIC */
               <div className="space-y-6">
-                <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600 mb-2 border-4 border-amber-50">
-                  <Handshake size={40} />
+                <div className="relative">
+                  <div className="w-24 h-24 bg-amber-500/10 rounded-[32px] flex items-center justify-center mx-auto text-amber-600 mb-2 border border-amber-500/20 shadow-inner relative z-10">
+                    <Handshake size={48} className="animate-pulse" />
+                  </div>
+                  {/* Decorative Rings */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-amber-500/10 rounded-full animate-ping"></div>
                 </div>
+
                 <div className="text-center">
-                  <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase">Confirma Recebimento?</h3>
-                  <p className="text-slate-500 mt-2 font-medium leading-relaxed">O funcionário bipou seu pacote. Confirme o recebimento para finalizar.</p>
+                  <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase leading-none">
+                    Aperto de Mão<br /><span className="text-amber-500">Digital</span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-3 px-2">
+                    O funcionário está com seu pacote agora.<br />Confirme para autorizar a entrega.
+                  </p>
                 </div>
-                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+
+                <div className="space-y-2">
                   {localPackages.filter(p => p.status === 'awaiting_confirmation').map(p => (
-                    <div key={p.id} className="flex items-center gap-3">
-                      <BadgeCheck size={16} className="text-emerald-500" />
-                      <span className="text-sm font-bold text-slate-700">{p.description}</span>
+                    <div key={p.id} className="bg-slate-50/80 p-4 rounded-2xl border border-slate-100 flex items-center gap-4 transition-all hover:bg-white hover:shadow-sm">
+                      <div className="w-10 h-10 bg-amber-100 rounded-xl flex items-center justify-center text-amber-600 shadow-sm leading-none">
+                        <Package size={20} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-black text-slate-800 italic truncate uppercase tracking-tight">{p.description}</p>
+                        <p className="text-[8px] text-slate-400 font-bold uppercase tracking-widest">Aguardando seu OK</p>
+                      </div>
+                      <BadgeCheck size={20} className="text-emerald-500 animate-bounce" />
                     </div>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <Button fullWidth onClick={() => {
-                    localPackages.filter(p => p.status === 'awaiting_confirmation').forEach(p => handleConfirmHandshake(p.id));
-                    setShowPackageModal(false);
-                  }} className="h-14 bg-emerald-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl">
-                    Sim, Recebi
+
+                <div className="grid grid-cols-1 gap-3 pt-2">
+                  <Button
+                    fullWidth
+                    onClick={() => {
+                      localPackages.filter(p => p.status === 'awaiting_confirmation').forEach(p => handleConfirmHandshake(p.id));
+                      setShowPackageModal(false);
+                    }}
+                    className="h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 group overflow-hidden"
+                  >
+                    <span className="relative z-10 flex items-center gap-2 justify-center">
+                      <Check size={20} className="stroke-[3]" /> Sim, Recebi agora
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   </Button>
-                  <Button variant="outline" fullWidth onClick={() => setShowPackageModal(false)} className="h-14 border-slate-200 text-slate-400 font-black uppercase tracking-widest text-xs rounded-2xl">
-                    Não sei
-                  </Button>
+                  <button onClick={() => setShowPackageModal(false)} className="py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none hover:text-slate-600 transition-colors">
+                    Não estou com ele
+                  </button>
                 </div>
               </div>
             ) : (
-              /* NORMAL PENDING MODE */
-              <div className="space-y-6">
-                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-2">
-                  <Package size={40} />
+              /* NORMAL PENDING MODE - UNBOXING */
+              <div className="space-y-8 py-2">
+                <div className="relative flex justify-center">
+                  <div className="w-24 h-24 bg-gradient-to-br from-amber-50 to-orange-50 rounded-[40px] flex items-center justify-center text-amber-500 shadow-xl border border-white relative z-10 transform -rotate-6">
+                    <Package size={48} />
+                  </div>
+                  <div className="absolute -top-2 -right-2 w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white z-20 font-black italic text-xs animate-bounce">
+                    {localPackages.length}
+                  </div>
                 </div>
+
                 <div className="text-center">
-                  <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Encomenda Chegou!</h3>
-                  <p className="text-slate-500 mt-2 font-medium leading-relaxed">Você tem volumes aguardando retirada na portaria.</p>
+                  <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase leading-none">
+                    Suas Encomendas<br /><span className="text-amber-500">Chegaram!</span>
+                  </h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4 leading-relaxed">
+                    Você tem {localPackages.length} {localPackages.length === 1 ? 'volume' : 'volumes'} prontos para retirada<br />na portaria principal.
+                  </p>
                 </div>
-                <Button fullWidth onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }} className="h-14 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl">
-                  Ver meu QR Code
-                </Button>
-                <button onClick={() => setShowPackageModal(false)} className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest">
-                  Fechar
-                </button>
+
+                <div className="space-y-4 pt-2">
+                  <Button
+                    fullWidth
+                    onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }}
+                    className="h-16 bg-slate-950 hover:bg-black text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-2xl relative overflow-hidden group transition-all active:scale-95"
+                  >
+                    <span className="relative z-10 flex items-center gap-3 justify-center">
+                      <QrCode size={22} /> Gerar meu QR de Coleta
+                    </span>
+                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+                  </Button>
+
+                  <button
+                    onClick={() => setShowPackageModal(false)}
+                    className="w-full py-2 text-[10px] font-black text-slate-300 uppercase tracking-[0.3em] hover:text-slate-500 transition-colors"
+                  >
+                    Lembrar mais tarde
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -994,13 +1047,19 @@ export const ResidentHome: React.FC<{
                     { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
                     { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
                     { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                    { icon: <Paintbrush size={20} />, label: 'Pintura', category: 'Pintor', color: 'text-pink-600', bg: 'bg-pink-50' },
-                  ].map((act, i) => (
-                    <button key={i} onClick={() => onSelectCategory(act.category)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
-                      <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
-                      <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none">{act.label}</span>
-                    </button>
-                  ))}
+                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'Manutenção', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                  ].map((act, i) => {
+                    // Check if category exists in DB (case-insensitive or exact)
+                    const dbCat = categories.find(c => c.name.toLowerCase() === act.category.toLowerCase());
+                    const finalCategory = dbCat ? dbCat.name : act.category;
+
+                    return (
+                      <button key={i} onClick={() => onSelectCategory(finalCategory)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                        <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
+                        <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )
@@ -1200,8 +1259,14 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
   );
 };
 
-export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCategory: (cat: string) => void; services?: any[]; products?: any[] }> = ({ onNavigate, onSelectCategory, products }) => {
-  const categories = [
+export const Marketplace: React.FC<{
+  onNavigate: (t: string) => void;
+  onSelectCategory: (cat: string) => void;
+  services?: any[];
+  products?: any[];
+  categories?: any[];
+}> = ({ onNavigate, onSelectCategory, products, categories = [] }) => {
+  const displayCategories = categories.length > 0 ? categories.slice(0, 4) : [
     { id: '1', name: 'Alimentação', icon: <Utensils size={28} />, bg: 'bg-orange-50', color: 'text-orange-600' },
     { id: '2', name: 'Manutenção', icon: <Wrench size={28} />, bg: 'bg-blue-50', color: 'text-blue-600' },
     { id: '3', name: 'Limpeza', icon: <Droplets size={28} />, bg: 'bg-emerald-50', color: 'text-emerald-600' },
@@ -1225,10 +1290,20 @@ export const Marketplace: React.FC<{ onNavigate: (t: string) => void; onSelectCa
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          {categories.map(cat => (
-            <button key={cat.id} onClick={() => onSelectCategory(cat.name)} className={`${cat.bg} p-8 rounded-[40px] flex flex-col gap-4 text-left group active:scale-95 transition-all border-2 border-transparent hover:border-white hover:shadow-xl`}>
-              <div className={`${cat.color} group-hover:scale-110 transition-transform`}>{cat.icon}</div>
-              <h4 className={`font-black italic text-lg tracking-tight leading-none ${cat.color}`}>{cat.name}</h4>
+          {displayCategories.map((cat, idx) => (
+            <button
+              key={cat.id || idx}
+              onClick={() => onSelectCategory(cat.name)}
+              className={`${cat.bg || 'bg-slate-50'} p-8 rounded-[40px] flex flex-col gap-4 text-left group active:scale-95 transition-all border-2 border-transparent hover:border-white hover:shadow-xl relative overflow-hidden`}
+            >
+              {cat.icon_url ? (
+                <img src={cat.icon_url} className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
+              ) : (
+                <div className={`${cat.color || 'text-slate-600'} group-hover:scale-110 transition-transform`}>
+                  {cat.icon || <Package size={28} />}
+                </div>
+              )}
+              <h4 className={`font-black italic text-lg tracking-tight leading-none ${cat.color || 'text-slate-900'}`}>{cat.name}</h4>
             </button>
           ))}
         </div>

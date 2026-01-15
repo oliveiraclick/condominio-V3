@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import { supabase } from '../supabase';
 import {
     Dumbbell, MessageSquare, Car, LogOut, LayoutGrid, Users,
     ShieldCheck, Calendar, Bell, Search, ChevronRight, TrendingUp,
@@ -7,12 +8,70 @@ import {
 
 export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void }> = ({ onNavigate }) => {
     const [activeMenu, setActiveMenu] = useState('overview');
+    const [counts, setCounts] = useState({ residents: 0, incidents: 0, reservations: 0, accessToday: 0 });
+    const [recentActivity, setRecentActivity] = useState<any[]>([]);
+    const [chartData, setChartData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            // 1. Residents
+            const { count: resCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'resident');
+
+            // 2. Incidents (Open)
+            const { count: incCount } = await supabase.from('service_requests').select('*', { count: 'exact', head: true }).in('status', ['pending', 'open']);
+
+            // 3. Reservations (Today)
+            const today = new Date().toISOString().split('T')[0];
+            const { count: resvCount } = await supabase.from('reservations').select('*', { count: 'exact', head: true }).eq('date', today);
+
+            // 4. Access Today
+            const { count: accCount } = await supabase.from('access_logs').select('*', { count: 'exact', head: true }).gte('created_at', new Date(new Date().setHours(0, 0, 0, 0)).toISOString());
+
+            setCounts({
+                residents: resCount || 0,
+                incidents: incCount || 0,
+                reservations: resvCount || 0,
+                accessToday: accCount || 0
+            });
+
+            // 5. Recent Activity
+            const { data: logs } = await supabase.from('access_logs').select('*, profiles(name)').order('created_at', { ascending: false }).limit(4);
+            if (logs) {
+                setRecentActivity(logs.map(l => ({
+                    user: l.profiles?.name || 'Visitante',
+                    action: l.event_type === 'entry_granted' ? 'Acesso liberado' : 'Acesso negado',
+                    time: new Date(l.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }),
+                    icon: ShieldCheck,
+                    color: l.event_type === 'entry_granted' ? 'text-emerald-400' : 'text-rose-400'
+                })));
+            }
+
+            // 6. Chart Data (Last 12 hours)
+            const { data: chartLogs } = await supabase.from('access_logs').select('created_at').gte('created_at', new Date(Date.now() - 12 * 60 * 60 * 1000).toISOString());
+            if (chartLogs) {
+                const hours = new Array(12).fill(0);
+                const now = new Date();
+                chartLogs.forEach(l => {
+                    const logDate = new Date(l.created_at);
+                    const diff = Math.floor((now.getTime() - logDate.getTime()) / (1000 * 60 * 60));
+                    if (diff >= 0 && diff < 12) {
+                        hours[11 - diff]++;
+                    }
+                });
+                // Normalize for visualization (max height 100)
+                const max = Math.max(...hours, 1);
+                setChartData(hours.map(h => Math.min(100, (h / max) * 100)));
+            }
+        };
+
+        fetchData();
+    }, []);
 
     const stats = [
-        { label: 'Moradores', value: '142', change: '+12%', icon: Users, color: 'text-brand-400', bg: 'bg-brand-400/10' },
-        { label: 'Chamados', value: '08', change: '-2%', icon: MessageSquare, color: 'text-amber-400', bg: 'bg-amber-400/10' },
-        { label: 'Reservas', value: '24', change: '+5%', icon: Calendar, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-        { label: 'Acessos Hoje', value: '56', change: '+23%', icon: ShieldCheck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
+        { label: 'Moradores', value: counts.residents.toString(), change: '+12%', icon: Users, color: 'text-brand-400', bg: 'bg-brand-400/10' },
+        { label: 'Ocorrências', value: counts.incidents.toString().padStart(2, '0'), change: '-2%', icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10' },
+        { label: 'Reservas Hoje', value: counts.reservations.toString(), change: '+5%', icon: Calendar, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
+        { label: 'Acessos Hoje', value: counts.accessToday.toString(), change: '+23%', icon: ShieldCheck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     ];
 
     return (
@@ -115,7 +174,7 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                     {/* Charts & Activity Section */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
 
-                        {/* Main Chart (Mockup) */}
+                        {/* Dynamic Activity Chart (Live Data) */}
                         <div className="lg:col-span-2 bg-[#161b22] border border-white/5 rounded-2xl p-6">
                             <div className="flex items-center justify-between mb-8">
                                 <h3 className="font-bold text-white flex items-center gap-2">
@@ -129,7 +188,7 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                             </div>
 
                             <div className="h-64 flex items-end justify-between gap-2 px-4">
-                                {[40, 65, 30, 85, 50, 95, 60, 45, 70, 80, 55, 90].map((h, i) => (
+                                {chartData.map((h, i) => (
                                     <div key={i} className="w-full bg-[#0f111a] rounded-t-lg relative group">
                                         <div
                                             className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-brand-600/50 to-indigo-500 rounded-t-lg transition-all duration-500 group-hover:from-brand-500 group-hover:to-fuchsia-500"
@@ -148,12 +207,9 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                         <div className="bg-[#161b22] border border-white/5 rounded-2xl p-6">
                             <h3 className="font-bold text-white mb-6">Atividade Recente</h3>
                             <div className="space-y-6">
-                                {[
-                                    { user: 'Ana Silva', action: 'Reservou o Salão de Festas', time: '2 min atrás', icon: Calendar, color: 'text-emerald-400' },
-                                    { user: 'Portaria', action: 'Recebeu encomenda (Apto 302)', time: '15 min atrás', icon: ShieldCheck, color: 'text-blue-400' },
-                                    { user: 'Carlos Oliveira', action: 'Abriu chamado: Vazamento', time: '1h atrás', icon: AlertTriangle, color: 'text-amber-400' },
-                                    { user: 'Sistema', action: 'Backup automático realizado', time: '3h atrás', icon: ShieldCheck, color: 'text-brand-400' },
-                                ].map((item, i) => (
+                                {recentActivity.length === 0 ? (
+                                    <p className="text-xs text-slate-500 text-center py-4">Nenhuma atividade recente</p>
+                                ) : recentActivity.map((item, i) => (
                                     <div key={i} className="flex items-start gap-4">
                                         <div className={`mt-1 p-2 rounded-lg bg-white/5 ${item.color}`}>
                                             <item.icon size={14} />

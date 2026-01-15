@@ -357,17 +357,20 @@ const CondosView = () => {
 // --- PROFESSIONALS VIEW (Prev. Subscriptions) ---
 const ProfessionalsView = () => {
   const [pros, setPros] = useState<any[]>([]);
+  const [categories, setCategories] = useState<any[]>([]);
   const [editingPro, setEditingPro] = useState<any>(null);
   const [tagInput, setTagInput] = useState('');
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => { loadPros(); }, []);
+  useEffect(() => { loadPros(); loadCategories(); }, []);
 
   const loadPros = async () => {
-    setLoading(true);
     const { data } = await supabase.from('profiles').select('*').eq('role', 'professional').order('created_at', { ascending: false });
     if (data) setPros(data);
-    setLoading(false);
+  };
+
+  const loadCategories = async () => {
+    const { data } = await supabase.from('categories').select('*').order('name');
+    if (data) setCategories(data);
   };
 
   const handleSaveTags = async () => {
@@ -438,15 +441,7 @@ const ProfessionalsView = () => {
                   onChange={e => setEditingPro({ ...editingPro, category: e.target.value })}
                 >
                   <option value="">Selecione...</option>
-                  <option value="Manutenção">Manutenção</option>
-                  <option value="Limpeza">Limpeza</option>
-                  <option value="Jardinagem">Jardinagem</option>
-                  <option value="Eletricista">Eletricista</option>
-                  <option value="Pintor">Pintor</option>
-                  <option value="Tecnologia">Tecnologia</option>
-                  <option value="Outros">Outros</option>
-                  <option value="Beleza">Beleza</option>
-                  <option value="Saúde">Saúde</option>
+                  {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
                 </select>
               </div>
 
@@ -829,7 +824,7 @@ const AccessDevicesView = () => {
           </div>
 
           <div className="space-y-4">
-            {/* Mock Logs for now, effectively waiting for real data */}
+            {/* Live Access Logs from DB */}
             {logs.length === 0 ? (
               <div className="text-center py-8 text-slate-500 text-xs font-bold uppercase tracking-widest border border-dashed border-slate-700/50 rounded-2xl">
                 Aguardando registros...
