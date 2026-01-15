@@ -14,7 +14,7 @@ import {
   Activity, Shield, Camera, Image as ImageIcon,
   Droplets, Leaf, Waves, Heart, Baby, Calendar, Mail, IdCard,
   Lock, Settings, Eye, EyeOff, User, Paperclip, Mic, CheckCheck,
-  Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell, LogOut
+  Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell, LogOut, ListFilter
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scanner } from '@yudiel/react-qr-scanner';
@@ -765,6 +765,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   const [selectedResident, setSelectedResident] = useState<any>(null);
   const [searchName, setSearchName] = useState('');
   const [searchUnit, setSearchUnit] = useState('');
+  const [searchStatus, setSearchStatus] = useState<'all' | 'pending' | 'delivered'>('all');
+  const [searchDate, setSearchDate] = useState('');
   const [isUnidentified, setIsUnidentified] = useState(false);
   const [isLinkingQR, setIsLinkingQR] = useState(false);
   const [editingPackage, setEditingPackage] = useState<any>(null);
@@ -1002,61 +1004,88 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       <AdminHeader title="ENCOMENDAS" onBack={onBack} />
       <div className="p-6 space-y-6">
 
-        <div className="flex gap-3">
-          <Button fullWidth onClick={() => setIsRegistering(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2 shadow-xl shadow-slate-900/20">
-            <Plus size={20} /> Nova Encomenda
+        <div className="grid grid-cols-2 gap-4">
+          <Button
+            fullWidth
+            onClick={() => setIsRegistering(true)}
+            className="h-20 rounded-[32px] !bg-[#7c3aed] text-white flex flex-col items-center justify-center gap-1 shadow-2xl shadow-violet-500/40 active:scale-95 transition-all group relative overflow-hidden border-b-4 border-violet-800"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+            <Plus size={24} className="group-hover:rotate-90 transition-transform duration-500" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Registrar</span>
           </Button>
-          <Button fullWidth onClick={() => setIsScanning(true)} className="h-16 rounded-[24px] bg-emerald-500 text-white flex items-center gap-2 shadow-xl shadow-emerald-500/20">
-            <Scan size={20} /> Entregar
+          <Button
+            fullWidth
+            onClick={() => setIsScanning(true)}
+            className="h-20 rounded-[32px] !bg-[#10b981] text-white flex flex-col items-center justify-center gap-1 shadow-2xl shadow-emerald-500/40 active:scale-95 transition-all group relative overflow-hidden border-b-4 border-emerald-700"
+          >
+            <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent"></div>
+            <Scan size={24} className="group-hover:scale-110 transition-transform" />
+            <span className="text-[10px] font-black uppercase tracking-[0.2em]">Entregar</span>
           </Button>
         </div>
 
         {/* MANAGE ALL BUTTON */}
-        <button onClick={() => setIsViewingAll(true)} className="w-full py-3 bg-white border border-slate-200 rounded-[20px] text-slate-500 font-bold text-xs uppercase tracking-widest hover:bg-slate-50 transition-colors">
-          Ver Todas / Gerenciar
+        <button
+          onClick={() => setIsViewingAll(true)}
+          className="w-full py-4 bg-white border border-slate-100 rounded-full text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
+        >
+          <ListFilter size={14} /> Ver Todas / Gerenciar
         </button>
 
         {/* SCANNER MODAL */}
         {isScanning && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/90">
-            <div className="w-full max-w-sm bg-white rounded-3xl overflow-hidden relative">
-              <Scanner onScan={(r) => r[0] && handleScan(r[0].rawValue)} />
-              <button onClick={() => setIsScanning(false)} className="absolute top-4 right-4 bg-white/20 p-2 rounded-full text-white"><X size={24} /></button>
-              <p className="text-center p-4 font-bold text-slate-500">Aponte para o QR Code do Morador</p>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
+            <div className="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-[48px] overflow-hidden relative p-8 border border-white/10 shadow-2xl">
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-black italic text-white tracking-widest uppercase">Identificar Morador</h3>
+                <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mt-2">Aponte para o QR Code do Morador</p>
+              </div>
+              <div className="rounded-[40px] overflow-hidden border-8 border-white/20 shadow-2xl aspect-square relative bg-black/20 group">
+                <Scanner onScan={(r) => r[0] && handleScan(r[0].rawValue)} />
+                <div className="absolute inset-0 border-[60px] border-black/40 pointer-events-none transition-all group-hover:border-black/20"></div>
+                <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                  <div className="w-48 h-48 border-2 border-emerald-500/50 rounded-[40px] animate-pulse"></div>
+                </div>
+                {/* Laser Effect */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-emerald-500 shadow-[0_0_15px_#10b981] animate-laser pointer-events-none"></div>
+              </div>
+              <button
+                onClick={() => setIsScanning(false)}
+                className="w-full mt-8 py-5 bg-white/10 hover:bg-white/20 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] border border-white/10 transition-all active:scale-95"
+              >
+                Cancelar
+              </button>
             </div>
           </div>
         )}
 
         {/* CONFIRMATION MODAL */}
         {scannedResident && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in bg-black/50">
-            <Card className="w-full max-w-sm p-6 rounded-[32px] m-4 space-y-4">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in bg-slate-950/60 backdrop-blur-xl">
+            <Card className="w-full max-w-sm p-8 rounded-[48px] space-y-6 shadow-2xl border border-white/20 bg-white/95 backdrop-blur-md relative overflow-hidden">
+              <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
               <div className="text-center">
-                <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <CheckCircle2 size={32} />
+                <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-[28px] flex items-center justify-center mx-auto mb-4 shadow-inner border border-emerald-100">
+                  <CheckCircle2 size={40} className="stroke-[2.5]" />
                 </div>
-                <h3 className="text-xl font-black text-slate-900 uppercase italic">Volumes para Entrega</h3>
-                <div className="text-sm text-slate-500 mt-2 text-left bg-slate-50 p-5 rounded-[28px] border border-slate-100">
-                  <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Morador: <strong className="text-slate-900">{scannedResident.name}</strong></p>
+                <h3 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Volumes Identificados</h3>
+                <div className="mt-4 bg-slate-50 p-6 rounded-[32px] border border-slate-100 shadow-inner">
+                  <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Morador: <strong className="text-slate-900 block text-sm mt-1">{scannedResident.name}</strong></p>
 
                   <div className="space-y-3">
                     {pendingDeliveryList.map(p => (
-                      <div key={p.id} className="flex gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
-                        <div className="w-8 h-8 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center shrink-0">
-                          <Package size={16} />
+                      <div key={p.id} className="flex gap-4 bg-white p-4 rounded-2xl border border-slate-50 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500/5 rounded-bl-[20px] transition-transform group-hover:scale-150"></div>
+                        <div className="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                          <Package size={20} />
                         </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-slate-900 text-xs leading-tight">{p.description || 'Sem descrição'}</p>
-                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade: {p.unit}</p>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-black text-slate-900 text-xs italic tracking-tight truncate">{p.description || 'Encomenda'}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">UNID: {p.unit}</p>
                         </div>
                       </div>
                     ))}
-                  </div>
-
-                  <div className="mt-4 pt-4 border-t border-slate-100">
-                    <p className="text-center text-[9px] font-bold text-slate-400 leading-relaxed uppercase">
-                      Bipe cada pacote para o "Aperto de Mão" ou use o botão manual em casos excepcionais.
-                    </p>
                   </div>
                 </div>
               </div>
@@ -1064,14 +1093,12 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 <Button
                   fullWidth
                   onClick={() => setIsScanningPackageHandshake(true)}
-                  className="bg-brand-600 text-white h-14 rounded-2xl flex items-center justify-center gap-2 font-black uppercase tracking-widest text-xs"
+                  className="bg-brand-600 hover:bg-brand-700 text-white h-16 rounded-3xl flex items-center justify-center gap-3 font-black uppercase tracking-widest text-xs shadow-xl shadow-brand-500/20 active:scale-95 transition-all group"
                 >
-                  <Scan size={20} /> Handshake do Pacote
+                  <Scan size={22} className="group-hover:rotate-12 transition-transform" />
+                  <span className="relative z-10">Bipar Pacotes</span>
                 </Button>
-                <div className="flex gap-2">
-                  <Button fullWidth onClick={() => setScannedResident(null)} className="bg-slate-100 text-slate-500 h-14 rounded-2xl">Cancelar</Button>
-                  <Button variant="outline" fullWidth onClick={confirmDelivery} className="text-slate-400 h-14 rounded-2xl text-[10px] border-slate-100">Forçar Manual</Button>
-                </div>
+                <button onClick={() => setScannedResident(null)} className="py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center hover:text-slate-600">Fechar</button>
               </div>
             </Card>
           </div>
@@ -1230,17 +1257,6 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                   <span className="relative z-10">{editingPackage ? 'Vincular Novo QR' : 'Scan Etiqueta e Salvar'}</span>
                 </Button>
 
-                <button
-                  disabled={!formData.desc || (!isUnidentified && !selectedResident)}
-                  onClick={() => {
-                    if (confirm('Atenção: A falta de QR Code dificulta o handshake digital. Deseja salvar assim mesmo?')) {
-                      handleRegister();
-                    }
-                  }}
-                  className="h-12 text-[9px] font-black uppercase tracking-[0.2em] text-slate-400 hover:text-slate-600 active:scale-95 transition-all disabled:opacity-30 flex items-center justify-center gap-2"
-                >
-                  <Save size={14} /> Salvar sem Etiqueta (Manual)
-                </button>
               </div>
             </Card>
           </div>
@@ -1291,152 +1307,251 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         )}
 
         <div className="space-y-4">
-          <SectionHeader title="Aguardando Retirada" />
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
+          <SectionHeader title="Aguardando Retirada" actionLabel={`${pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).length} Volumes`} />
+          <div className="flex gap-5 overflow-x-auto pb-6 snap-x no-scrollbar -mx-2 px-2">
             {pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).length === 0 ? (
-              <div className="min-w-full bg-slate-50 p-8 rounded-[32px] border border-dashed border-slate-200 text-center">
-                <Package className="mx-auto text-slate-200 mb-2" size={32} />
-                <p className="text-xs text-slate-400 font-bold italic">Tudo entregue!</p>
+              <div className="min-w-full bg-slate-50 p-12 rounded-[40px] border border-dashed border-slate-200 text-center shadow-inner">
+                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 opacity-50">
+                  <Package className="text-slate-200" size={32} />
+                </div>
+                <p className="text-xs text-slate-400 font-black italic uppercase tracking-widest leading-relaxed">Pátio Limpo!<br />Nada pendente agora.</p>
               </div>
             ) : (
-              pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).map(p => (
-                <div key={p.id} className="min-w-[85%] snap-center bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 shadow-sm relative overflow-hidden">
-                  <div className={`w-1.5 absolute left-0 top-0 bottom-0 ${p.status === 'awaiting_confirmation' ? 'bg-emerald-500' : 'bg-amber-400'}`}></div>
-                  <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shrink-0">
-                    <Package size={24} />
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <h5 className="font-bold text-slate-900 italic uppercase">
-                        {p.unit}, {p.profiles?.tower}
-                      </h5>
-                      {p.status === 'awaiting_confirmation' && (
-                        <Badge className="bg-emerald-100 text-emerald-600 text-[8px] px-2 py-0.5 animate-pulse">Handshake...</Badge>
-                      )}
-                    </div>
-                    <p className="text-[10px] font-black text-slate-400 uppercase">{p.resident_name}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    <div onClick={() => startEdit(p)} className="cursor-pointer w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
-                      <Edit3 size={16} />
-                    </div>
-                    <div onClick={() => setGeneratedQR(p.qr_code)} className="cursor-pointer w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
-                      <QrCode size={16} />
-                    </div>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
-
-        <div className="space-y-4 pt-4 border-t border-slate-100">
-          <SectionHeader title="Histórico de Entregas" />
-          <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
-            {pkgList.filter(p => p.status === 'delivered').length === 0 ? (
-              <div className="min-w-full text-center py-8 text-slate-300 font-bold italic">Nenhuma entrega recente.</div>
-            ) : (
               pkgList
-                .filter(p => p.status === 'delivered')
-                .sort((a, b) => new Date(b.picked_up_at || 0).getTime() - new Date(a.picked_up_at || 0).getTime())
+                .filter(p => p.status !== 'delivered')
+                .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                .slice(0, 5)
                 .map(p => (
-                  <div key={p.id} className="min-w-[85%] snap-center bg-slate-50 p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 opacity-100 transition-opacity">
-                    <div className="w-12 h-12 bg-emerald-100 text-emerald-600 rounded-2xl flex items-center justify-center shrink-0">
-                      <CheckCircle2 size={24} className="stroke-[3]" />
+                  <div key={p.id} className="min-w-[80%] snap-center bg-gradient-to-br from-white to-slate-50 p-5 rounded-[32px] border border-white shadow-lg shadow-slate-200/40 relative overflow-hidden group active:scale-[0.98] transition-all">
+                    {/* Premium Reflective Background */}
+                    <div className={`absolute top-0 right-0 w-32 h-32 ${p.status === 'awaiting_confirmation' ? 'bg-emerald-500/10' : 'bg-amber-500/10'} rounded-bl-[80px] blur-2xl group-hover:scale-125 transition-transform duration-700`} />
+
+                    <div className="absolute top-4 right-4 flex items-center gap-2">
+                      {p.status === 'awaiting_confirmation' && (
+                        <Badge className="bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-500/20 text-[8px] px-3 py-1 font-black animate-pulse">EM HANDSHAKE</Badge>
+                      )}
+                      <Badge className={`${p.status === 'awaiting_confirmation' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'} text-[8px] px-3 py-1 font-black`}>
+                        {p.status === 'awaiting_confirmation' ? 'CONFIRMAÇÃO' : 'PENDENTE'}
+                      </Badge>
                     </div>
-                    <div className="flex-1">
-                      <h5 className="font-bold text-slate-900 italic uppercase">
-                        {p.unit}, {p.profiles?.tower}
-                      </h5>
-                      <p className="text-[10px] font-black text-slate-400 uppercase">
-                        RETIRADO EM {new Date(p.picked_up_at).toLocaleDateString()} ÀS {new Date(p.picked_up_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} POR {p.profiles?.name || 'Morador'}
-                      </p>
+
+                    <div className="flex items-start gap-4">
+                      <div className={`w-12 h-12 rounded-[20px] ${p.status === 'awaiting_confirmation' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} flex items-center justify-center shadow-inner relative shrink-0`}>
+                        <Package size={24} />
+                      </div>
+                      <div className="flex-1 space-y-2 pt-1 min-w-0">
+                        <h4 className="font-black text-slate-900 text-base leading-none tracking-tight italic uppercase truncate">
+                          {p.unit}, {p.profiles?.tower || 'Vizinho'}
+                        </h4>
+                        <div className="flex flex-col gap-1">
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
+                            <User size={10} className="text-slate-300" /> {p.resident_name || 'Desconhecido'}
+                          </p>
+                          <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter truncate leading-none">
+                            {p.description || 'Sem descrição'}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
+                      <div className="flex gap-2">
+                        <button onClick={() => startEdit(p)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-100 hover:bg-brand-50 transition-all shadow-sm active:scale-90">
+                          <Edit3 size={18} />
+                        </button>
+                        <button onClick={() => setGeneratedQR(p.qr_code)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-100 hover:bg-brand-50 transition-all shadow-sm active:scale-90">
+                          <QrCode size={18} />
+                        </button>
+                      </div>
+                      <button onClick={() => {
+                        // Action to deliver or show details
+                      }} className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                        Opções <ChevronRight size={14} />
+                      </button>
                     </div>
                   </div>
                 ))
             )}
           </div>
         </div>
-      </div>
 
-      {/* MANAGE ALL PACKAGES MODAL/VIEW */}
-      {isViewingAll && (
-        <div className="fixed inset-0 z-50 bg-[#fcfcfd] overflow-y-auto animate-in slide-in-from-bottom-4">
-          <div className="p-6 pb-32 space-y-6">
-            <div className="flex items-center gap-4 mb-2">
-              <button onClick={() => setIsViewingAll(false)} className="w-12 h-12 bg-white border border-slate-100 rounded-full flex items-center justify-center shadow-sm">
-                <ArrowLeft size={20} className="text-slate-900" />
-              </button>
-              <h1 className="text-2xl font-black italic text-slate-900">TODAS AS ENCOMENDAS</h1>
-            </div>
-
-            {/* FILTERS */}
-            <div className="flex gap-3">
-              <div className="flex-1 relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
-                <input
-                  placeholder="Buscar morador, unidade..."
-                  className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                  onChange={(e) => setSearchName(e.target.value)}
-                />
+        <div className="space-y-4 pt-4 border-t border-slate-100 animate-in slide-in-from-bottom-4 duration-700">
+          <SectionHeader title="Logística Finalizada" actionLabel="Últimos 7 dias" />
+          <div className="space-y-3">
+            {pkgList.filter(p => p.status === 'delivered').length === 0 ? (
+              <div className="bg-slate-50/50 p-10 rounded-[40px] border border-slate-100 text-center shadow-inner">
+                <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest leading-relaxed">Nenhuma movimentação<br />registrada recentemente</p>
               </div>
-              <div className="relative shrink-0">
-                <div className="absolute inset-0 flex items-center justify-center pointer-events-none z-10">
-                  <Calendar size={20} className="text-slate-500" />
-                </div>
-                <input
-                  type="date"
-                  className="h-14 w-14 opacity-0 cursor-pointer absolute inset-0 z-20"
-                  onChange={(e) => setSearchName(e.target.value)}
-                />
-                <div className="h-14 w-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-sm">
-                  {/* Visual container only */}
-                </div>
-              </div>
-            </div>
-
-            <div className="bg-white rounded-[32px] border border-slate-100 shadow-sm overflow-hidden">
-              {pkgList.length === 0 ? (
-                <p className="p-8 text-center text-slate-400 font-bold italic">Nenhuma encomenda registrada.</p>
-              ) : (
-                <div className="divide-y divide-slate-50">
-                  {pkgList
-                    .filter(p => !searchName ||
-                      p.resident_name?.toLowerCase().includes(searchName.toLowerCase()) ||
-                      p.unit?.toLowerCase().includes(searchName.toLowerCase()) ||
-                      (p.picked_up_at && p.picked_up_at.includes(searchName))
-                    )
-                    .map((p) => (
-                      <div key={p.id} className="p-6 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
-                        <div className="flex justify-between items-start">
-                          <div className="flex items-center gap-2">
-                            <span className={`w-2.5 h-2.5 rounded-full ${p.status === 'pending' ? 'bg-amber-500' : 'bg-emerald-500'}`}></span>
-                            <span className="font-black text-slate-900 text-lg">RUA {p.profiles?.tower}, {p.unit}</span>
-                          </div>
-                          {p.status === 'pending' ? (
-                            <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Pendente</span>
-                          ) : p.status === 'awaiting_confirmation' ? (
-                            <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Handshake</span>
-                          ) : (
-                            <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Entregue</span>
-                          )}
-                        </div>
-
-                        <div className="pl-4 border-l-2 border-slate-100 space-y-1">
-                          <p className="text-sm text-slate-600 font-medium"><strong>Morador:</strong> {p.resident_name}</p>
-                          <p className="text-sm text-slate-600 font-medium"><strong>Descrição:</strong> {p.description}</p>
-                          <p className="text-xs text-slate-400"><strong>Data Chegada:</strong> {new Date(p.created_at).toLocaleString()}</p>
-                          {p.picked_up_at && (
-                            <p className="text-xs text-emerald-600 font-bold mt-1">
-                              Retirado em: {new Date(p.picked_up_at).toLocaleString()} por {p.picked_up_by ? (pkgList.find(x => x.resident_id === p.picked_up_by)?.profiles?.name || 'Morador') : 'Morador'}
-                            </p>
-                          )}
+            ) : (
+              pkgList
+                .filter(p => p.status === 'delivered')
+                .sort((a, b) => new Date(b.picked_up_at || 0).getTime() - new Date(a.picked_up_at || 0).getTime())
+                .slice(0, 5) // Show only latest 5 on dashboard
+                .map(p => (
+                  <div key={p.id} className="bg-white p-4 rounded-[24px] border border-slate-50 shadow-sm flex items-center gap-3 group hover:shadow-md transition-all active:scale-[0.99] relative overflow-hidden">
+                    <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/5 rounded-bl-full"></div>
+                    <div className="w-11 h-11 rounded-[16px] bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner shrink-0 group-hover:rotate-6 transition-transform">
+                      <CheckCircle2 size={22} className="stroke-[3]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex justify-between items-start">
+                        <h4 className="font-black text-slate-900 text-sm italic uppercase tracking-tighter truncate leading-none">
+                          {p.unit}, {p.profiles?.tower || '---'}
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 uppercase shrink-0">
+                            ENTREGUE
+                          </span>
                         </div>
                       </div>
-                    ))}
+
+                      <p className="text-[10px] text-slate-400 font-bold mt-2 uppercase leading-none truncate pr-4 italic">
+                        {p.description || 'Encomenda'}
+                      </p>
+
+                      <div className="flex items-center justify-between mt-3 text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-slate-50 pt-2">
+                        <div className="flex items-center gap-2">
+                          <span className="flex items-center gap-1 opacity-70"><Calendar size={9} /> {new Date(p.picked_up_at).toLocaleDateString('pt-BR')}</span>
+                        </div>
+                        <div className="flex items-center gap-1 text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">
+                          <User size={9} className="text-brand-500" />
+                          <span className="truncate max-w-[70px]">{p.profiles?.name || 'Morador'}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <ChevronRight size={16} className="text-slate-200 group-hover:text-slate-400 transition-colors" />
+                  </div>
+                ))
+            )}
+          </div>
+        </div>
+
+      </div>
+
+      {/* MANAGE ALL PACKAGES MODAL/VIEW - PREMIUM OVERHAUL */}
+      {isViewingAll && (
+        <div className="fixed inset-0 z-50 bg-[#f8fafc] overflow-y-auto animate-in slide-in-from-bottom-6 duration-500">
+          {/* Header Area with Glass Background */}
+          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-100 p-6 flex items-center gap-6">
+            <button
+              onClick={() => setIsViewingAll(false)}
+              className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm active:scale-90 transition-all"
+            >
+              <ArrowLeft size={20} className="text-slate-900" />
+            </button>
+            <div className="flex-1">
+              <h1 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Gestão de Logística</h1>
+              <p className="text-[10px] font-bold text-brand-500 uppercase tracking-[0.2em]">Fluxo Completo de Encomendas</p>
+            </div>
+          </div>
+
+          <div className="p-6 pb-40 space-y-8">
+            {/* SEARCH & FILTERS - PREMIUM STYLE */}
+            <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="relative group md:col-span-2">
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
+                  <input
+                    placeholder="Buscar morador, unidade..."
+                    className="w-full h-16 pl-14 bg-white border border-slate-100 rounded-[28px] font-bold text-slate-700 placeholder:text-slate-300 shadow-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all placeholder:font-medium placeholder:italic"
+                    onChange={(e) => setSearchName(e.target.value)}
+                  />
                 </div>
-              )}
+                <div className="relative group">
+                  <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
+                  <input
+                    type="date"
+                    className="w-full h-16 pl-14 bg-white border border-slate-100 rounded-[28px] font-black text-slate-700 uppercase tracking-tighter shadow-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all"
+                    onChange={(e) => setSearchDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              {/* Status Toggles */}
+              <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-[32px] border border-slate-100/80">
+                {[
+                  { id: 'all', label: 'TUDO' },
+                  { id: 'pending', label: 'A ENTREGAR' },
+                  { id: 'delivered', label: 'ENTREGUES' }
+                ].map((s) => (
+                  <button
+                    key={s.id}
+                    onClick={() => setSearchStatus(s.id as any)}
+                    className={`flex-1 py-3.5 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all ${searchStatus === s.id
+                      ? 'bg-white text-brand-600 shadow-sm'
+                      : 'text-slate-400 hover:text-slate-600'
+                      }`}
+                  >
+                    {s.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2 flex items-center gap-3">
+                <span className="w-8 h-[1px] bg-slate-100"></span>
+                Resultados Localizados
+              </p>
+
+              <div className="space-y-3">
+                {pkgList.length === 0 ? (
+                  <div className="bg-white p-20 rounded-[48px] border border-slate-50 text-center shadow-sm">
+                    <p className="text-sm text-slate-300 font-black italic uppercase tracking-widest">Nenhum registro</p>
+                  </div>
+                ) : (
+                  pkgList
+                    .filter(p => {
+                      const matchesName = !searchName ||
+                        p.resident_name?.toLowerCase().includes(searchName.toLowerCase()) ||
+                        p.unit?.toLowerCase().includes(searchName.toLowerCase());
+
+                      const matchesStatus = searchStatus === 'all' ||
+                        (searchStatus === 'delivered' ? p.status === 'delivered' : p.status !== 'delivered');
+
+                      const matchesDate = !searchDate ||
+                        new Date(p.created_at).toISOString().split('T')[0] === searchDate;
+
+                      return matchesName && matchesStatus && matchesDate;
+                    })
+                    .map(p => (
+                      <div key={p.id} className="bg-white p-4 rounded-[28px] border border-slate-50 shadow-sm hover:shadow-md transition-all group relative overflow-hidden flex items-center gap-4">
+                        <div className={`absolute top-0 left-0 w-1.5 h-full ${p.status === 'delivered' ? 'bg-emerald-500' :
+                          p.status === 'awaiting_confirmation' ? 'bg-brand-500' : 'bg-amber-400'
+                          }`} />
+
+                        <div className={`w-12 h-12 rounded-[20px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform ${p.status === 'delivered' ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-400'
+                          }`}>
+                          {p.status === 'delivered' ? <CheckCircle2 size={24} /> : <Package size={24} />}
+                        </div>
+
+                        <div className="flex-1 min-w-0">
+                          <div className="flex justify-between items-start mb-0.5">
+                            <h4 className="font-black text-slate-900 text-sm italic uppercase tracking-tighter leading-none truncate pr-2">
+                              {p.unit}, {p.profiles?.tower || '---'}
+                            </h4>
+                            <Badge className={`text-[8px] font-black uppercase tracking-widest py-0.5 px-2 ${p.status === 'delivered' ? 'bg-emerald-500 text-white' :
+                              p.status === 'awaiting_confirmation' ? 'bg-brand-500 text-white' : 'bg-amber-100 text-amber-600'
+                              }`}>
+                              {p.status === 'delivered' ? 'ENTREGUE' : p.status === 'awaiting_confirmation' ? 'HANDSHAKE' : 'PENDENTE'}
+                            </Badge>
+                          </div>
+                          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">{p.resident_name || 'Desconhecido'}</p>
+                          <div className="flex items-center gap-3 text-[9px] font-black text-slate-300 uppercase tracking-tighter">
+                            <span className="flex items-center gap-1"><Calendar size={9} /> {new Date(p.created_at).toLocaleDateString()}</span>
+                            {p.status === 'delivered' && <span className="text-emerald-500 font-black">RETIRADO EM {new Date(p.picked_up_at).toLocaleDateString()}</span>}
+                          </div>
+                        </div>
+
+                        <div className="flex gap-2">
+                          <button onClick={() => startEdit(p)} className="w-10 h-10 bg-slate-50 hover:bg-brand-50 text-slate-400 hover:text-brand-600 rounded-xl flex items-center justify-center transition-all">
+                            <Edit3 size={16} />
+                          </button>
+                        </div>
+                      </div>
+                    ))
+                )}
+              </div>
             </div>
           </div>
         </div>
