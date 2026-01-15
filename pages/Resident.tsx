@@ -703,16 +703,15 @@ export const ResidentHome: React.FC<{
         {/* WATERMARK SYMBOL (Novo) */}
         {(currentUser?.symbol_url || currentUser?.symbol) && (
           <div
-            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden flex items-center justify-center"
+            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden"
             style={{ opacity: (currentUser.symbol_opacity || 15) / 100 }}
           >
             <img
               src={currentUser.symbol_url || currentUser.symbol}
-              className="w-full h-full object-cover"
+              className="absolute inset-0 w-full h-full object-cover"
               alt="Background Branding"
               style={{
-                filter: 'grayscale(100%) brightness(2)',
-                mixBlendMode: 'overlay'
+                transform: 'scale(1.2)'
               }}
               onError={(e) => {
                 // Hide watermark on image load error
