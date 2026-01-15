@@ -6,7 +6,8 @@ import { ToastProvider } from './components/ui';
 import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
 // Imports de Páginas e Componentes
 import { SplashScreen, LoginScreen, RoleSelection, ResidentRegistration, ProfessionalRegistration } from './pages/Auth';
-import { PrivacyPage } from './pages/Privacy';
+import { PrivacyPage } from './pages/Privacidade';
+import { SupportPage } from './pages/Suporte';
 import {
   ResidentHome, Marketplace, AppNavigation, AcessoPage, FinanceiroPage, ChamadosPage,
   FloatingBackButton, SectionHeader, NotificationsModal, DesapegoCard, ResidentProfile,
@@ -33,7 +34,7 @@ import { ResidentModern } from './pages/ResidentModern';
 
 const App: React.FC = () => {
   // --- ESTADOS DE CONTROLE DE FLUXO ---
-  const [appState, setAppState] = useState<'splash' | 'login' | 'roleSelection' | 'registerResident' | 'registerProfessional' | 'main' | 'privacy'>('splash');
+  const [appState, setAppState] = useState<'splash' | 'login' | 'roleSelection' | 'registerResident' | 'registerProfessional' | 'main' | 'privacy' | 'support'>('splash');
   const [session, setSession] = useState<any>(null);
   const [userRole, setUserRole] = useState<UserRole | null>(null);
   const [history, setHistory] = useState<string[]>(['home']);
@@ -271,9 +272,12 @@ const App: React.FC = () => {
       }
     };
 
-    // Check for privacy route on load
-    if (window.location.hash === '#/privacy') {
+    // Check for privacy/support routes on load
+    if (window.location.hash === '#/privacy' || window.location.hash === '#/privacidade') {
       setAppState('privacy');
+      setLoading(false);
+    } else if (window.location.hash === '#/suporte' || window.location.hash === '#/support') {
+      setAppState('support');
       setLoading(false);
     } else {
       initAuth();
@@ -665,6 +669,7 @@ const App: React.FC = () => {
   }
 
   if (appState === 'privacy') return <PrivacyPage onBack={() => { window.location.hash = ''; setAppState('login'); }} />;
+  if (appState === 'support') return <SupportPage onBack={() => { window.location.hash = ''; setAppState('login'); }} onNavigateToPrivacy={() => { window.location.hash = '#/privacidade'; setAppState('privacy'); }} />;
 
   const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
 

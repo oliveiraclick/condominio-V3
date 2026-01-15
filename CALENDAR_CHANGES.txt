@@ -1,0 +1,24 @@
+// Substituir a linha 1739 por:
+                  {availablePeriods.length > 0 && !showingPeriods && !showCalendar && (
+                    <Button
+                      fullWidth
+                      className="h-14 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-600/20 animate-in fade-in zoom-in-95"
+                      onClick={() => setShowCalendar(true)}
+                    >
+                      <Calendar className="mr-2" size={18} /> Agendar Serviço
+                    </Button>
+                  )}
+
+// Adicionar antes do fechamento do modal (antes da linha 1787):
+      {/* CALENDAR MODAL */}
+      {showCalendar && (
+        <CalendarPicker
+          onSelectDate={(date) => {
+            setSelectedDate(date);
+            setShowCalendar(false);
+            setShowingPeriods(true);
+          }}
+          onClose={() => setShowCalendar(false)}
+          minDate={new Date()}
+        />
+      )}
