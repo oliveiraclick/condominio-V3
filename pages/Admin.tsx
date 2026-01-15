@@ -961,7 +961,11 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
     if (!error) {
       alert(`Encomenda ${pkg.description} validada! Aguardando confirmação no celular do morador.`);
       // Remove from current list to avoid double scan
-      setPendingDeliveryList(prev => prev.filter(p => p.id !== pkg.id));
+      setPendingDeliveryList(prev => {
+        const remaining = prev.filter(p => p.id !== pkg.id);
+        if (remaining.length === 0) setScannedResident(null);
+        return remaining;
+      });
       fetchPackages();
     } else {
       alert('Erro ao processar handshake: ' + error.message);

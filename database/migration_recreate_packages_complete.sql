@@ -71,3 +71,12 @@ CREATE POLICY "Residents view own" ON public.packages
 FOR SELECT USING (
     resident_id = auth.uid() OR picked_up_by = auth.uid()
 );
+
+-- 7. Residents Confirm Own (Handshake)
+DROP POLICY IF EXISTS "Residents update own" ON public.packages;
+CREATE POLICY "Residents update own" ON public.packages
+FOR UPDATE USING (
+    resident_id = auth.uid()
+) WITH CHECK (
+    resident_id = auth.uid()
+);

@@ -536,7 +536,8 @@ export const ResidentHome: React.FC<{
   onSitePros?: any[];
   onPostMuralDemand: (category: string, description: string) => void;
   muralCategories: string[];
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories }) => {
+  activeTab?: string;
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories, activeTab }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
@@ -639,12 +640,18 @@ export const ResidentHome: React.FC<{
     if (!error) {
       alert('Entrega confirmada! Obrigado.');
       // Local state will refresh via subscription/useEffect
+      // Force immediate refresh of localPackages if possible (the subscription handles it but safety first)
+      const { data } = await supabase
+        .from('packages')
+        .select('*')
+        .eq('resident_id', currentUser.id)
+        .in('status', ['pending', 'awaiting_confirmation']);
+      if (data) setLocalPackages(data);
     } else {
       alert('Erro ao confirmar: ' + error.message);
     }
   };
 
-  const myPackages = packages.filter(p => p.unit === (currentUser?.unit || ''));
   // Filter for completed requests that haven't been reviewed (mock check for now, ideally check DB)
   const completedRequests = serviceRequests.filter(r => r.status === 'completed' && !r.reviewed);
 
@@ -779,7 +786,7 @@ export const ResidentHome: React.FC<{
 
       {/* PACKAGE SCANNER MODAL */}
       <PackageScanner
-        isOpen={onNavigate?.name === 'scanner-encomenda' || (window.location.hash === '#scanner')}
+        isOpen={activeTab === 'scanner-encomenda' || (window.location.hash === '#scanner')}
         onClose={() => { window.location.hash = ''; onNavigate('home'); }}
         currentUser={currentUser}
       />
@@ -940,19 +947,7 @@ export const ResidentHome: React.FC<{
           </div>
         )}
 
-        {/* ENCOMENDAS ATIVAS */}
-        {myPackages.length > 0 && (
-          <div className="bg-slate-950 rounded-[44px] p-8 text-white shadow-2xl animate-in zoom-in duration-500">
-            <div className="flex items-center gap-5 mb-6">
-              <div className="w-14 h-14 bg-white/10 rounded-2xl flex items-center justify-center border border-white/10"><Package size={24} className="text-brand-400" /></div>
-              <div>
-                <h3 className="font-black text-lg tracking-tight">Sua encomenda chegou!</h3>
-                <p className="text-[9px] text-slate-500 uppercase font-black mt-1">Retirada no Locker: {myPackages[0].locker}</p>
-              </div>
-            </div>
-            <Button fullWidth className="bg-brand-600 h-14 rounded-2xl font-black uppercase text-[10px]" onClick={() => setPackages(packages.filter(p => p.unit !== currentUser?.unit))}>Confirmar Retirada</Button>
-          </div>
-        )}
+
 
         {/* ATALHOS RÁPIDOS (COM ABAS) */}
         <div className="space-y-6">
@@ -3127,7 +3122,8 @@ export const BannerCarousel: React.FC = () => {
       {banners.map((banner, index) => (
         <div
           key={banner.id}
-          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100 z-10' : 'opacity-0 z-0'}`}
+          onClick={() => banner.link_url && window.open(banner.link_url, '_blank')}
+          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100 z-10 cursor-pointer' : 'opacity-0 z-0'}`}
         >
           <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
