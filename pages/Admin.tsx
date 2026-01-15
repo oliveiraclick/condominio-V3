@@ -760,10 +760,14 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   const [scannedResident, setScannedResident] = useState<any>(null);
   const [pendingDeliveryList, setPendingDeliveryList] = useState<any[]>([]);
 
-  const [formData, setFormData] = useState({ photo: '', desc: '' });
+  const [formData, setFormData] = useState({ photo: '', desc: '', resident_name: '' });
   const [pkgList, setPkgList] = useState<any[]>([]);
   const [selectedResident, setSelectedResident] = useState<any>(null);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchName, setSearchName] = useState('');
+  const [searchUnit, setSearchUnit] = useState('');
+  const [isUnidentified, setIsUnidentified] = useState(false);
+  const [isLinkingQR, setIsLinkingQR] = useState(false);
+  const [editingPackage, setEditingPackage] = useState<any>(null);
   const [residentsList, setResidentsList] = useState<any[]>([]);
   const [generatedQR, setGeneratedQR] = useState<string | null>(null);
 
@@ -792,44 +796,76 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
     if (data) setResidentsList(data);
   };
 
-  const handleRegister = async () => {
-    if (!selectedResident) return;
+  const handleRegister = async (scannedQR?: string) => {
+    if (!selectedResident && !isUnidentified) {
+      alert('Selecione um morador ou marque como Não Identificado');
+      return;
+    }
 
-    // Simplified Registration for Reverse Flow
-    const payload = {
-      resident_id: selectedResident.id,
-      unit: selectedResident.unit,
-      resident_name: selectedResident.name,
+    const payload: any = {
+      resident_id: selectedResident?.id || null,
+      unit: selectedResident?.unit || searchUnit || 'Não Identificado',
+      resident_name: formData.resident_name || selectedResident?.name || 'Não Identificado',
       description: formData.desc || 'Encomenda Recebida',
       photo_url: formData.photo || 'https://placehold.co/600x400/png?text=Pacote',
-      qr_code: `PKG-${Date.now()}`, // Internal ID only
+      qr_code: scannedQR || `TEMP-${Date.now()}`,
       status: 'pending'
     };
 
-    const { error } = await supabase.from('packages').insert([payload]);
+    let result;
+    if (editingPackage) {
+      result = await supabase.from('packages').update(payload).eq('id', editingPackage.id);
+    } else {
+      result = await supabase.from('packages').insert([payload]);
+    }
 
-    if (!error) {
-      await supabase.from('sent_notifications').insert([{
-        title: 'Nova Encomenda!',
-        body: `Uma nova encomenda chegou! Apresente seu QR Code na portaria para retirar.`,
-        target_role: 'resident',
-        condominium_id: selectedResident.condominium_id || null
-      }]);
+    if (!result.error) {
+      if (selectedResident) {
+        await supabase.from('sent_notifications').insert([{
+          title: 'Nova Encomenda!',
+          body: `Uma nova encomenda chegou para ${payload.resident_name}! Retire na portaria.`,
+          target_role: 'resident',
+          condominium_id: selectedResident.condominium_id || null
+        }]);
+      }
 
-      alert('Encomenda registrada com sucesso!');
+      alert(editingPackage ? 'Encomenda atualizada!' : 'Encomenda registrada!');
       fetchPackages();
       closeRegistration();
     } else {
-      alert('Erro ao registrar: ' + error.message);
+      alert('Erro ao processar: ' + result.error.message);
+    }
+  };
+
+  const startEdit = (pkg: any) => {
+    setEditingPackage(pkg);
+    setIsRegistering(true);
+    setFormData({
+      photo: pkg.photo_url || '',
+      desc: pkg.description || '',
+      resident_name: pkg.resident_name || ''
+    });
+    const res = residentsList.find(r => r.id === pkg.resident_id);
+    if (res) {
+      setSelectedResident(res);
+      setSearchName(res.name);
+      setSearchUnit(res.unit);
+    } else {
+      setIsUnidentified(true);
+      setSearchUnit(pkg.unit);
     }
   };
 
   const closeRegistration = () => {
     setIsRegistering(false);
+    setIsLinkingQR(false);
+    setEditingPackage(null);
     setGeneratedQR(null);
-    setFormData({ photo: '', desc: '' });
+    setFormData({ photo: '', desc: '', resident_name: '' });
     setSelectedResident(null);
-    setSearchTerm('');
+    setSearchName('');
+    setSearchUnit('');
+    setIsUnidentified(false);
   };
 
   const handleScan = async (text: string) => {
@@ -988,34 +1024,135 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         {isRegistering && (
           <Card className="p-8 space-y-6 border-none shadow-2xl rounded-[40px] bg-white animate-in slide-in-from-top-4">
             <div className="flex justify-between items-center">
-              <h3 className="text-lg font-black italic text-slate-900">Registrar Encomenda</h3>
+              <h3 className="text-lg font-black italic text-slate-900">{editingPackage ? 'Editar' : 'Registrar'} Encomenda</h3>
               <button onClick={closeRegistration} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center"><X size={16} /></button>
             </div>
 
-            <div className="relative">
-              <Input
-                placeholder="Buscar Morador (Nome ou Casa)..."
-                value={searchTerm}
-                onChange={e => { setSearchTerm(e.target.value); setSelectedResident(null); }}
-                className="h-14"
-              />
-              {searchTerm && !selectedResident && (
-                <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
-                  {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) || (r.unit || '').includes(searchTerm)).map(r => (
-                    <button key={r.id} onClick={() => { setSelectedResident(r); setSearchTerm(`${r.name} - ${r.unit}`); }} className="w-full px-6 py-4 hover:bg-brand-50 text-left border-b border-slate-50 last:border-none">
-                      <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
-                    </button>
-                  ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {/* BUSCA POR NOME */}
+              <div className="relative">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Nome no Pacote</label>
+                <Input
+                  placeholder="Nome..."
+                  value={searchName || formData.resident_name}
+                  onChange={e => {
+                    setSearchName(e.target.value);
+                    setFormData({ ...formData, resident_name: e.target.value });
+                    setSelectedResident(null);
+                    setIsUnidentified(false);
+                  }}
+                  className="h-14"
+                />
+                {searchName && !selectedResident && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
+                    {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchName.toLowerCase())).map(r => (
+                      <button key={r.id} onClick={() => {
+                        setSelectedResident(r);
+                        setSearchName(r.name);
+                        setSearchUnit(r.unit);
+                        setFormData({ ...formData, resident_name: '' });
+                      }} className="w-full px-6 py-4 hover:bg-brand-50 text-left border-b border-slate-50 last:border-none">
+                        <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* BUSCA POR ENDEREÇO */}
+              <div className="relative">
+                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 block">Endereço / Unidade</label>
+                <Input
+                  placeholder="Ex: 402-B"
+                  value={searchUnit}
+                  onChange={e => {
+                    setSearchUnit(e.target.value);
+                    setSelectedResident(null);
+                    setIsUnidentified(false);
+                  }}
+                  className="h-14"
+                />
+                {searchUnit && !selectedResident && (
+                  <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-xl rounded-2xl mt-2 max-h-48 overflow-y-auto z-50">
+                    {residentsList.filter(r => (r.unit || '').toLowerCase().includes(searchUnit.toLowerCase())).map(r => (
+                      <button key={r.id} onClick={() => {
+                        setSelectedResident(r);
+                        setSearchName(r.name);
+                        setSearchUnit(r.unit);
+                      }} className="w-full px-6 py-4 hover:bg-brand-50 text-left border-b border-slate-50 last:border-none">
+                        <span className="font-bold text-slate-900">{r.name}</span> <span className="text-slate-400 text-xs">({r.unit})</span>
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  setIsUnidentified(true);
+                  setSelectedResident(null);
+                  setSearchName('');
+                  setSearchUnit('');
+                  setFormData({ ...formData, resident_name: 'Não Identificado' });
+                }}
+                className={`flex-1 h-12 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${isUnidentified ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-400'}`}
+              >
+                Não Identificado
+              </button>
+              {selectedResident && (
+                <div className="flex-1 h-12 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center gap-2">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Identificado</span>
                 </div>
               )}
             </div>
 
-            <Input placeholder="Descrição (Ex: Caixa Amazon Grande)" value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="h-14" />
+            <Input placeholder="Descrição / Conteúdo (Ex: Caixa Amazon)" value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} className="h-14" />
 
-            <Button fullWidth onClick={handleRegister} disabled={!selectedResident} className="bg-brand-600 h-14 font-black uppercase tracking-widest text-xs">
-              Confirmar Recebimento
-            </Button>
+            <div className="flex gap-3">
+              <Button
+                fullWidth
+                onClick={() => setIsLinkingQR(true)}
+                className="bg-brand-600 h-14 font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2"
+              >
+                <QrCode size={18} /> {editingPackage ? 'Vincular Novo QR e Salvar' : 'Scan Etiqueta e Salvar'}
+              </Button>
+              <Button
+                variant="outline"
+                fullWidth
+                onClick={() => handleRegister()}
+                className="h-14 font-black uppercase tracking-widest text-[10px]"
+              >
+                Salvar sem QR
+              </Button>
+            </div>
           </Card>
+        )}
+
+        {/* QR LINKAGE MODAL */}
+        {isLinkingQR && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95">
+            <div className="w-full max-w-sm bg-white rounded-[40px] overflow-hidden relative p-8">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-black italic text-slate-900">ESCANEIE A ETIQUETA</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Aponte para o QR Code da caixa</p>
+              </div>
+
+              <div className="rounded-3xl overflow-hidden border-4 border-slate-100 shadow-2xl aspect-square relative">
+                <Scanner onScan={(r) => r[0] && handleRegister(r[0].rawValue)} />
+                <div className="absolute inset-0 border-[40px] border-black/20 pointer-events-none"></div>
+              </div>
+
+              <button
+                onClick={() => setIsLinkingQR(false)}
+                className="w-full mt-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs"
+              >
+                Cancelar
+              </button>
+            </div>
+          </div>
         )}
 
         {/* PENDENTES DE RETIRADA (Aguardando Retirada) */}
@@ -1041,8 +1178,13 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                     <p className="text-[10px] font-black text-slate-400 uppercase">{p.resident_name}</p>
                     <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
                   </div>
-                  <div onClick={() => setGeneratedQR(p.qr_code)} className="cursor-pointer">
-                    <QrCode size={24} className="text-slate-300 hover:text-slate-900 transition-colors" />
+                  <div className="flex gap-2">
+                    <div onClick={() => startEdit(p)} className="cursor-pointer w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
+                      <Edit3 size={16} />
+                    </div>
+                    <div onClick={() => setGeneratedQR(p.qr_code)} className="cursor-pointer w-8 h-8 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-slate-900 transition-colors">
+                      <QrCode size={16} />
+                    </div>
                   </div>
                 </div>
               ))
@@ -1097,7 +1239,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 <input
                   placeholder="Buscar morador, unidade..."
                   className="w-full h-14 pl-12 bg-white border border-slate-200 rounded-2xl font-bold focus:ring-2 focus:ring-brand-500/20 outline-none transition-all"
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchName(e.target.value)}
                 />
               </div>
               <div className="relative shrink-0">
@@ -1107,7 +1249,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 <input
                   type="date"
                   className="h-14 w-14 opacity-0 cursor-pointer absolute inset-0 z-20"
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onChange={(e) => setSearchName(e.target.value)}
                 />
                 <div className="h-14 w-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-sm">
                   {/* Visual container only */}
@@ -1121,9 +1263,10 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
               ) : (
                 <div className="divide-y divide-slate-50">
                   {pkgList
-                    .filter(p => !searchTerm ||
-                      JSON.stringify(p).toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (p.picked_up_at && p.picked_up_at.includes(searchTerm))
+                    .filter(p => !searchName ||
+                      p.resident_name?.toLowerCase().includes(searchName.toLowerCase()) ||
+                      p.unit?.toLowerCase().includes(searchName.toLowerCase()) ||
+                      (p.picked_up_at && p.picked_up_at.includes(searchName))
                     )
                     .map((p) => (
                       <div key={p.id} className="p-6 flex flex-col gap-3 hover:bg-slate-50 transition-colors">
