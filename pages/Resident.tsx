@@ -13,7 +13,7 @@ import {
   Trophy, Target, Dumbbell, GlassWater, Waves, Store, Heart, Navigation,
   MessageSquare, Send, Paperclip, Mic, MoreVertical, CheckCheck, Award, Quote, Camera, MessageCircle,
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
-  Building2, Camera as CameraIcon, Download, Scan
+  Building2, Camera as CameraIcon, Download, Scan, Handshake, BadgeCheck
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PackageScanner } from '../components/PackageScanner';
@@ -548,6 +548,7 @@ export const ResidentHome: React.FC<{
   const [showPackageAlert, setShowPackageAlert] = useState(false); // Controls Banner
   const [showPackageModal, setShowPackageModal] = useState(false); // Controls Modal
   const [authModalOpen, setAuthModalOpen] = useState(false);
+  const [localPackages, setLocalPackages] = useState<any[]>([]);
 
   // Random Initial Index & Auto-Rotation for Desapego
   useEffect(() => {
@@ -566,22 +567,28 @@ export const ResidentHome: React.FC<{
   }, [desapegos.length]); // Depend only on length to avoid reset on index change
 
   useEffect(() => {
-    // Check for pending packages on load
+    if (!currentUser?.id) return;
+
+    // 1. Initial Check
     const checkPackages = async () => {
       const { data } = await supabase
         .from('packages')
         .select('*')
         .eq('resident_id', currentUser.id)
-        .eq('status', 'pending');
+        .in('status', ['pending', 'awaiting_confirmation']);
 
       if (data && data.length > 0) {
-        setShowPackageAlert(true); // Always show banner if packages exist
-
-        // Show modal only once per session
-        const hasSeenModal = sessionStorage.getItem('hasSeenPackageModal');
-        if (!hasSeenModal) {
+        setShowPackageAlert(true);
+        // If there's any package awaiting handshake, show modal immediately
+        if (data.some(p => p.status === 'awaiting_confirmation')) {
           setShowPackageModal(true);
-          sessionStorage.setItem('hasSeenPackageModal', 'true');
+        } else {
+          // Normal pending: show modal only once per session
+          const hasSeenModal = sessionStorage.getItem('hasSeenPackageModal');
+          if (!hasSeenModal) {
+            setShowPackageModal(true);
+            sessionStorage.setItem('hasSeenPackageModal', 'true');
+          }
         }
       } else {
         setShowPackageAlert(false);
@@ -589,6 +596,28 @@ export const ResidentHome: React.FC<{
     };
 
     checkPackages();
+
+    // 2. Real-time Subscription for Handshake
+    const channel = supabase
+      .channel('resident-packages')
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'packages',
+        filter: `resident_id=eq.${currentUser.id}`
+      }, (payload) => {
+        if (payload.new.status === 'awaiting_confirmation') {
+          setShowPackageModal(true);
+          setShowPackageAlert(true);
+        }
+        // Refresh local list if needed (handled by parent setPackages usually)
+        checkPackages();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [currentUser]);
 
   useEffect(() => {
@@ -598,6 +627,20 @@ export const ResidentHome: React.FC<{
   const handleHomeSearch = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && homeSearch.trim()) {
       onSelectCategory('Todos', homeSearch.trim());
+    }
+  };
+
+  const handleConfirmHandshake = async (pkgId: string) => {
+    const { error } = await supabase
+      .from('packages')
+      .update({ status: 'delivered' })
+      .eq('id', pkgId);
+
+    if (!error) {
+      alert('Entrega confirmada! Obrigado.');
+      // Local state will refresh via subscription/useEffect
+    } else {
+      alert('Erro ao confirmar: ' + error.message);
     }
   };
 
@@ -636,16 +679,23 @@ export const ResidentHome: React.FC<{
 
       {/* PACKAGE ALERT BANNER (Persistent Strip) */}
       {showPackageAlert && (
-        <div className="bg-amber-400 p-4 px-6 flex items-center justify-center text-center shadow-sm relative z-30 animate-in slide-in-from-top-2">
+        <div className="bg-amber-400 p-4 px-6 flex items-center justify-between shadow-sm relative z-30 animate-in slide-in-from-top-2">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-black/10 rounded-full flex items-center justify-center">
               <Package size={16} className="text-amber-950" />
             </div>
-            <div>
-              <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 leading-none mb-0.5">Encomenda Chegou</p>
-              <p className="text-xs font-bold text-amber-950">Aguardando retirada na portaria</p>
+            <div className="text-left">
+              <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 leading-none mb-0.5">
+                {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Aperto de Mão!' : 'Encomendas'}
+              </p>
+              <p className="text-xs font-bold text-amber-950">
+                {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Responda na portaria agora' : 'Aguardando retirada'}
+              </p>
             </div>
           </div>
+          <button onClick={() => setShowPackageModal(true)} className="bg-black/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase text-amber-950">
+            {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Confirmar' : 'Ver'}
+          </button>
         </div>
       )}
 
@@ -666,21 +716,57 @@ export const ResidentHome: React.FC<{
       {/* PACKAGE ALERT MODAL */}
       {showPackageModal && (
         <div className="fixed inset-0 z-[70] flex items-center justify-center animate-in fade-in bg-black/60 backdrop-blur-sm">
-          <div className="bg-white rounded-[32px] p-8 max-w-sm w-full mx-4 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="bg-white rounded-[40px] p-8 max-w-sm w-full mx-4 shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-2 bg-amber-400"></div>
-            <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-2">
-              <Package size={40} />
-            </div>
-            <div className="text-center">
-              <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Encomenda Chegou!</h3>
-              <p className="text-slate-500 mt-2 font-medium leading-relaxed">Você tem volumes aguardando retirada na portaria.</p>
-            </div>
-            <Button fullWidth onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }} className="h-14 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl">
-              Ver meu QR Code
-            </Button>
-            <button onClick={() => setShowPackageModal(false)} className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest">
-              Fechar
-            </button>
+
+            {localPackages.some(p => p.status === 'awaiting_confirmation') ? (
+              /* HANDSHAKE MODE */
+              <div className="space-y-6">
+                <div className="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto text-amber-600 mb-2 border-4 border-amber-50">
+                  <Handshake size={40} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase">Confirma Recebimento?</h3>
+                  <p className="text-slate-500 mt-2 font-medium leading-relaxed">O funcionário bipou seu pacote. Confirme o recebimento para finalizar.</p>
+                </div>
+                <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                  {localPackages.filter(p => p.status === 'awaiting_confirmation').map(p => (
+                    <div key={p.id} className="flex items-center gap-3">
+                      <BadgeCheck size={16} className="text-emerald-500" />
+                      <span className="text-sm font-bold text-slate-700">{p.description}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button fullWidth onClick={() => {
+                    localPackages.filter(p => p.status === 'awaiting_confirmation').forEach(p => handleConfirmHandshake(p.id));
+                    setShowPackageModal(false);
+                  }} className="h-14 bg-emerald-500 text-white font-black uppercase tracking-widest text-xs rounded-2xl">
+                    Sim, Recebi
+                  </Button>
+                  <Button variant="outline" fullWidth onClick={() => setShowPackageModal(false)} className="h-14 border-slate-200 text-slate-400 font-black uppercase tracking-widest text-xs rounded-2xl">
+                    Não sei
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              /* NORMAL PENDING MODE */
+              <div className="space-y-6">
+                <div className="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center mx-auto text-amber-500 mb-2">
+                  <Package size={40} />
+                </div>
+                <div className="text-center">
+                  <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Encomenda Chegou!</h3>
+                  <p className="text-slate-500 mt-2 font-medium leading-relaxed">Você tem volumes aguardando retirada na portaria.</p>
+                </div>
+                <Button fullWidth onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }} className="h-14 bg-slate-900 text-white font-black uppercase tracking-widest text-xs rounded-2xl shadow-xl">
+                  Ver meu QR Code
+                </Button>
+                <button onClick={() => setShowPackageModal(false)} className="w-full py-3 text-slate-400 font-bold text-xs uppercase tracking-widest">
+                  Fechar
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}

@@ -770,11 +770,25 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   const [editingPackage, setEditingPackage] = useState<any>(null);
   const [residentsList, setResidentsList] = useState<any[]>([]);
   const [generatedQR, setGeneratedQR] = useState<string | null>(null);
+  const [isScanningPackageHandshake, setIsScanningPackageHandshake] = useState(false);
+  const [packageAwaitingHandshake, setPackageAwaitingHandshake] = useState<any>(null);
 
   // Fetch initial packages and residents
   useEffect(() => {
     fetchPackages();
     fetchResidents();
+
+    // Real-time subscription for updates (e.g., handshake confirmation)
+    const channel = supabase
+      .channel('admin-packages')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, () => {
+        fetchPackages();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, []);
 
   const fetchPackages = async () => {
@@ -924,25 +938,58 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
     }
   };
 
-  const confirmDelivery = async () => {
-    if (!scannedResident || pendingDeliveryList.length === 0) return;
+  const handleScanPackageHandshake = async (scannedPkgQR: string) => {
+    setIsScanningPackageHandshake(false);
+
+    // Find the package in the pending delivery list
+    const pkg = pendingDeliveryList.find(p => p.qr_code === scannedPkgQR);
+
+    if (!pkg) {
+      alert('QR Code não corresponde a nenhuma encomenda pendente para este morador!');
+      return;
+    }
 
     const { error } = await supabase
       .from('packages')
       .update({
-        status: 'delivered',
+        status: 'awaiting_confirmation',
         picked_up_at: new Date().toISOString(),
         picked_up_by: scannedResident.id
       })
-      .in('id', pendingDeliveryList.map(p => p.id));
+      .eq('id', pkg.id);
 
     if (!error) {
-      alert(`${pendingDeliveryList.length} encomendas entregues com sucesso!`);
-      setScannedResident(null);
-      setPendingDeliveryList([]);
+      alert(`Encomenda ${pkg.description} validada! Aguardando confirmação no celular do morador.`);
+      // Remove from current list to avoid double scan
+      setPendingDeliveryList(prev => prev.filter(p => p.id !== pkg.id));
       fetchPackages();
     } else {
-      alert('Erro ao confirmar entrega: ' + error.message);
+      alert('Erro ao processar handshake: ' + error.message);
+    }
+  };
+
+  const confirmDelivery = async () => {
+    // Legacy single-shot confirm without handshake (if needed, but we'll prioritize handshake)
+    if (!scannedResident || pendingDeliveryList.length === 0) return;
+
+    if (confirm(`Deseja confirmar a entrega de ${pendingDeliveryList.length} volumes SEM o aperto de mão digital?`)) {
+      const { error } = await supabase
+        .from('packages')
+        .update({
+          status: 'delivered',
+          picked_up_at: new Date().toISOString(),
+          picked_up_by: scannedResident.id
+        })
+        .in('id', pendingDeliveryList.map(p => p.id));
+
+      if (!error) {
+        alert('Entregas confirmadas manualmente!');
+        setScannedResident(null);
+        setPendingDeliveryList([]);
+        fetchPackages();
+      } else {
+        alert('Erro: ' + error.message);
+      }
     }
   };
 
@@ -984,40 +1031,69 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle2 size={32} />
                 </div>
-                <h3 className="text-xl font-black text-slate-900">Confirmar Entrega?</h3>
-                <div className="text-sm text-slate-500 mt-2 text-left bg-slate-50 p-4 rounded-2xl">
-                  <p className="mb-2 text-center">Entregar <strong className="text-slate-900">{pendingDeliveryList.length} volumes</strong> para:</p>
+                <h3 className="text-xl font-black text-slate-900 uppercase italic">Volumes para Entrega</h3>
+                <div className="text-sm text-slate-500 mt-2 text-left bg-slate-50 p-5 rounded-[28px] border border-slate-100">
+                  <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Morador: <strong className="text-slate-900">{scannedResident.name}</strong></p>
 
-                  {/* OWN UNIT */}
-                  {pendingDeliveryList.some(p => p.unit === scannedResident.unit) && (
-                    <div className="mb-2">
-                      <strong className="text-brand-600 block">Rua {scannedResident.tower} - {scannedResident.unit} (Própria)</strong>
-                      <span className="text-xs text-slate-400">{pendingDeliveryList.filter(p => p.unit === scannedResident.unit).length} volume(s)</span>
-                    </div>
-                  )}
-
-                  {/* AUTHORIZED UNITS */}
-                  {scannedResident.authorizedUnits?.map((auth: any) => {
-                    const count = pendingDeliveryList.filter(p => p.unit === auth.unit).length;
-                    if (count === 0) return null;
-                    return (
-                      <div key={auth.unit} className="mb-2">
-                        <strong className="text-amber-600 block">Rua {auth.tower} - {auth.unit} (Autorizado)</strong>
-                        <span className="text-xs text-slate-400">{count} volume(s)</span>
+                  <div className="space-y-3">
+                    {pendingDeliveryList.map(p => (
+                      <div key={p.id} className="flex gap-3 bg-white p-3 rounded-2xl border border-slate-100 shadow-sm">
+                        <div className="w-8 h-8 bg-amber-50 text-amber-500 rounded-lg flex items-center justify-center shrink-0">
+                          <Package size={16} />
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-slate-900 text-xs leading-tight">{p.description || 'Sem descrição'}</p>
+                          <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">Unidade: {p.unit}</p>
+                        </div>
                       </div>
-                    );
-                  })}
+                    ))}
+                  </div>
 
-                  <div className="mt-4 pt-2 border-t border-slate-200 text-center">
-                    <span className="text-xs text-slate-400">Retirado por: <strong>{scannedResident.name}</strong></span>
+                  <div className="mt-4 pt-4 border-t border-slate-100">
+                    <p className="text-center text-[9px] font-bold text-slate-400 leading-relaxed uppercase">
+                      Bipe cada pacote para o "Aperto de Mão" ou use o botão manual em casos excepcionais.
+                    </p>
                   </div>
                 </div>
               </div>
-              <div className="flex gap-3 pt-2">
-                <Button fullWidth onClick={() => setScannedResident(null)} className="bg-slate-100 text-slate-500">Cancelar</Button>
-                <Button fullWidth onClick={confirmDelivery} className="bg-emerald-500 text-white">Confirmar</Button>
+              <div className="flex flex-col gap-3 pt-2">
+                <Button
+                  fullWidth
+                  onClick={() => setIsScanningPackageHandshake(true)}
+                  className="bg-brand-600 text-white h-14 rounded-2xl flex items-center justify-center gap-2 font-black uppercase tracking-widest text-xs"
+                >
+                  <Scan size={20} /> Handshake do Pacote
+                </Button>
+                <div className="flex gap-2">
+                  <Button fullWidth onClick={() => setScannedResident(null)} className="bg-slate-100 text-slate-500 h-14 rounded-2xl">Cancelar</Button>
+                  <Button variant="outline" fullWidth onClick={confirmDelivery} className="text-slate-400 h-14 rounded-2xl text-[10px] border-slate-100">Forçar Manual</Button>
+                </div>
               </div>
             </Card>
+          </div>
+        )}
+
+        {/* PACKAGE HANDSHAKE SCANNER */}
+        {isScanningPackageHandshake && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95">
+            <div className="w-full max-w-sm bg-white rounded-[40px] overflow-hidden relative p-8">
+              <div className="text-center mb-6">
+                <h3 className="text-xl font-black italic text-slate-900 uppercase">Handshake de Pacote</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Bipa o QR Code da encomenda agora</p>
+              </div>
+
+              <div className="rounded-3xl overflow-hidden border-4 border-slate-100 shadow-2xl aspect-square relative">
+                <Scanner onScan={(r) => r[0] && handleScanPackageHandshake(r[0].rawValue)} />
+                <div className="absolute inset-0 border-[40px] border-black/20 pointer-events-none"></div>
+              </div>
+
+              <button
+                onClick={() => setIsScanningPackageHandshake(false)}
+                className="w-full mt-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs"
+              >
+                Cancelar
+              </button>
+            </div>
           </div>
         )}
 
@@ -1155,26 +1231,30 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           </div>
         )}
 
-        {/* PENDENTES DE RETIRADA (Aguardando Retirada) */}
         <div className="space-y-4">
           <SectionHeader title="Aguardando Retirada" />
           <div className="flex gap-4 overflow-x-auto pb-4 snap-x no-scrollbar">
-            {pkgList.filter(p => p.status === 'pending').length === 0 ? (
+            {pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).length === 0 ? (
               <div className="min-w-full bg-slate-50 p-8 rounded-[32px] border border-dashed border-slate-200 text-center">
                 <Package className="mx-auto text-slate-200 mb-2" size={32} />
                 <p className="text-xs text-slate-400 font-bold italic">Tudo entregue!</p>
               </div>
             ) : (
-              pkgList.filter(p => p.status === 'pending').map(p => (
+              pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).map(p => (
                 <div key={p.id} className="min-w-[85%] snap-center bg-white p-6 rounded-[32px] border border-slate-100 flex items-center gap-4 shadow-sm relative overflow-hidden">
-                  <div className="w-1.5 absolute left-0 top-0 bottom-0 bg-amber-400"></div>
+                  <div className={`w-1.5 absolute left-0 top-0 bottom-0 ${p.status === 'awaiting_confirmation' ? 'bg-emerald-500' : 'bg-amber-400'}`}></div>
                   <div className="w-12 h-12 bg-amber-50 text-amber-500 rounded-2xl flex items-center justify-center shrink-0">
                     <Package size={24} />
                   </div>
                   <div className="flex-1">
-                    <h5 className="font-bold text-slate-900 italic uppercase">
-                      {p.unit}, {p.profiles?.tower}
-                    </h5>
+                    <div className="flex items-center gap-2">
+                      <h5 className="font-bold text-slate-900 italic uppercase">
+                        {p.unit}, {p.profiles?.tower}
+                      </h5>
+                      {p.status === 'awaiting_confirmation' && (
+                        <Badge className="bg-emerald-100 text-emerald-600 text-[8px] px-2 py-0.5 animate-pulse">Handshake...</Badge>
+                      )}
+                    </div>
                     <p className="text-[10px] font-black text-slate-400 uppercase">{p.resident_name}</p>
                     <p className="text-[10px] text-slate-400 mt-1">{p.description}</p>
                   </div>
@@ -1277,6 +1357,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                           </div>
                           {p.status === 'pending' ? (
                             <span className="bg-amber-100 text-amber-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Pendente</span>
+                          ) : p.status === 'awaiting_confirmation' ? (
+                            <span className="bg-blue-100 text-blue-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider animate-pulse">Handshake</span>
                           ) : (
                             <span className="bg-emerald-100 text-emerald-700 text-[10px] font-black px-3 py-1 rounded-full uppercase tracking-wider">Entregue</span>
                           )}
