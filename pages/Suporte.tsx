@@ -135,11 +135,11 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onBack, onNavigateToPr
                     </p>
 
                     <a
-                        href="mailto:suporte@morador.app?subject=Solicitação de Suporte - App Morador"
+                        href="mailto:ia.oliveira.click@gmail.com?subject=Solicitação de Suporte - App Morador"
                         className="flex items-center justify-center gap-3 w-full h-14 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl font-bold transition-all active:scale-95 shadow-lg shadow-brand-600/20"
                     >
                         <Mail className="w-5 h-5" />
-                        suporte@morador.app
+                        ia.oliveira.click@gmail.com
                     </a>
 
                     <div className="mt-4 p-4 bg-slate-50 rounded-xl">
