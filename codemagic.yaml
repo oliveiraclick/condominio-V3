@@ -20,9 +20,11 @@ workflows:
         script: |
           node -v
           npm install
+      - name: Build web assets
+        script: |
+          npm run build
       - name: Capacitor sync
         script: |
-          node -v
           npx cap sync ios
       - name: Set up code signing settings on Xcode project
         script: |
@@ -65,9 +67,11 @@ workflows:
         script: |
           node -v
           npm install
+      - name: Build web assets
+        script: |
+          npm run build
       - name: Capacitor sync
         script: |
-          node -v
           npx cap sync android
       - name: Set up local.properties
         script: |
