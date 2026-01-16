@@ -25,7 +25,10 @@ workflows:
           npm run build
       - name: Generate assets
         script: |
+          echo "Generating iOS assets..."
           npx @capacitor/assets generate --ios
+          echo "Verifying AppIcon.appiconset content..."
+          ls -R ios/App/App/Assets.xcassets/AppIcon.appiconset/
       - name: Capacitor sync
         script: |
           node -v
@@ -41,8 +44,6 @@ workflows:
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.app
-      - $HOME/Library/Developer/Xcode/DerivedData/**/Build/**/*.dSYM
     publishing:
       email:
         recipients:
