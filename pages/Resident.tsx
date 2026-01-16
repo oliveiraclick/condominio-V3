@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useMemo, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '../components/ui';
 import {
   Bell, Search, MapPin, Grid, Calendar, ShoppingBag,
@@ -20,6 +20,7 @@ import { PackageScanner } from '../components/PackageScanner';
 import { CommunicationHub } from './CommunicationHub';
 import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
+import { CalendarPicker } from '../components/CalendarPicker';
 
 // --- COMPONENTES DE APOIO ---
 export const FloatingBackButton: React.FC<{ onClick: () => void; visible?: boolean }> = ({ onClick, visible = true }) => {
@@ -99,7 +100,7 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
         {/* Header */}
         <div className="p-6 pb-4 border-b border-slate-100 sticky top-0 bg-white rounded-t-[40px] z-10">
           <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">NotificaÃ§Ãµes</h2>
+            <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Notificações</h2>
             <button onClick={onClose} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all">
               <X size={20} className="text-slate-600" />
             </button>
@@ -133,8 +134,8 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
               <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Bell size={24} className="text-slate-300" />
               </div>
-              <p className="text-slate-400 font-bold text-sm">Nenhuma notificaÃ§Ã£o</p>
-              <p className="text-slate-300 text-xs mt-1">VocÃª estÃ¡ em dia!</p>
+              <p className="text-slate-400 font-bold text-sm">Nenhuma notificação</p>
+              <p className="text-slate-300 text-xs mt-1">Você está em dia!</p>
             </div>
           ) : (
             notifications.map((notif) => (
@@ -152,7 +153,7 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
                     <Clock size={12} />
-                    {new Date(notif.created_at).toLocaleDateString('pt-BR')} Ã s {new Date(notif.created_at).toLocaleTimeString('pt-BR').slice(0, 5)}
+                    {new Date(notif.created_at).toLocaleDateString('pt-BR')} às {new Date(notif.created_at).toLocaleTimeString('pt-BR').slice(0, 5)}
                   </div>
                   <button
                     onClick={() => markAsRead(notif.id)}
@@ -211,7 +212,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
         .neq('id', currentUser.id); // Cannot authorize self
 
       if (!neighbors || neighbors.length === 0) {
-        alert('Morador nÃ£o encontrado neste endereÃ§o.');
+        alert('Morador não encontrado neste endereço.');
         setLoading(false);
         return;
       }
@@ -226,7 +227,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
       // 2. Check overlap
       const exists = authorizations.find(a => a.grantee_id === neighbor.id);
       if (exists) {
-        alert(`O morador ${neighbor.name} (Rua ${neighbor.tower} - ${neighbor.unit}) jÃ¡ estÃ¡ autorizado.`);
+        alert(`O morador ${neighbor.name} (Rua ${neighbor.tower} - ${neighbor.unit}) já está autorizado.`);
         setLoading(false);
         return;
       }
@@ -294,10 +295,10 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">AutorizaÃ§Ãµes Ativas</h4>
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
           {authorizations.length === 0 ? (
             <div className="text-center py-8 text-slate-300">
-              <p className="text-xs italic">NinguÃ©m autorizado.</p>
+              <p className="text-xs italic">Ninguém autorizado.</p>
             </div>
           ) : (
             authorizations.map(auth => (
@@ -349,7 +350,7 @@ export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; cu
           </div>
 
           <p className="text-center text-slate-400 text-xs max-w-[200px] leading-relaxed mb-6">
-            Apresente este cÃ³digo na portaria para retirar suas encomendas com seguranÃ§a.
+            Apresente este código na portaria para retirar suas encomendas com segurança.
           </p>
 
           <Button onClick={onOpenAuth} className="bg-slate-100 text-slate-900 hover:bg-slate-200 h-12 rounded-xl text-xs font-black uppercase tracking-widest w-full mb-4">
@@ -400,7 +401,7 @@ export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; 
 
         <div className="space-y-6">
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">O que vocÃª precisa?</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">O que você precisa?</label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map(cat => (
                 <button
@@ -415,10 +416,10 @@ export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; 
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">DÃª mais detalhes</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Dê mais detalhes</label>
             <textarea
               className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              placeholder="Ex: Preciso consertar uma torneira na cozinha amanhÃ£ de manhÃ£..."
+              placeholder="Ex: Preciso consertar uma torneira na cozinha amanhã de manhã..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
@@ -491,7 +492,7 @@ export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
           <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-amber-500/20">
             <Star size={32} fill="currentColor" />
           </div>
-          <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Avaliar ServiÃ§o</h3>
+          <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Avaliar Serviço</h3>
           <p className="text-sm text-slate-500">Como foi o atendimento de <span className="font-bold text-slate-900">{proName}</span>?</p>
 
           <div className="flex justify-center gap-2 py-4">
@@ -503,14 +504,14 @@ export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
           </div>
 
           <textarea
-            placeholder="Deixe um comentÃ¡rio (opcional)..."
+            placeholder="Deixe um comentário (opcional)..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
             className="w-full h-24 bg-slate-50 rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-amber-400 transition-all font-medium"
           />
 
           <Button onClick={() => onSubmit(rating, comment)} fullWidth className="h-14 bg-amber-400 text-amber-950 font-black uppercase tracking-widest shadow-lg shadow-amber-400/30 hover:bg-amber-500 hover:text-white">
-            Enviar AvaliaÃ§Ã£o
+            Enviar Avaliação
           </Button>
           <button onClick={onClose} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancelar</button>
         </div>
@@ -671,14 +672,14 @@ export const ResidentHome: React.FC<{
       // Mark request as reviewed in DB
       await supabase.from('service_requests').update({ reviewed: true }).eq('id', selectedRequestToReview.id);
 
-      alert('AvaliaÃ§Ã£o enviada com sucesso! Obrigado.');
+      alert('Avaliação enviada com sucesso! Obrigado.');
       setReviewModalOpen(false);
       // Refresh local data if possible, or wait for subscription
       if (typeof window !== 'undefined' && (window as any).refreshAppData) {
         (window as any).refreshAppData();
       }
     } else {
-      alert('Erro ao enviar avaliaÃ§Ã£o: ' + error.message);
+      alert('Erro ao enviar avaliação: ' + error.message);
     }
   };
 
@@ -697,7 +698,7 @@ export const ResidentHome: React.FC<{
             </div>
             <div className="text-left">
               <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 leading-none mb-0.5">
-                {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Aperto de MÃ£o!' : 'Encomendas'}
+                {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Aperto de Mão!' : 'Encomendas'}
               </p>
               <p className="text-xs font-bold text-amber-950">
                 {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Responda na portaria agora' : 'Aguardando retirada'}
@@ -744,10 +745,10 @@ export const ResidentHome: React.FC<{
 
                 <div className="text-center">
                   <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase leading-none">
-                    Aperto de MÃ£o<br /><span className="text-amber-500">Digital</span>
+                    Aperto de Mão<br /><span className="text-amber-500">Digital</span>
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-3 px-2">
-                    O funcionÃ¡rio estÃ¡ com seu pacote agora.<br />Confirme para autorizar a entrega.
+                    O funcionário está com seu pacote agora.<br />Confirme para autorizar a entrega.
                   </p>
                 </div>
 
@@ -781,7 +782,7 @@ export const ResidentHome: React.FC<{
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   </Button>
                   <button onClick={() => setShowPackageModal(false)} className="py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none hover:text-slate-600 transition-colors">
-                    NÃ£o estou com ele
+                    Não estou com ele
                   </button>
                 </div>
               </div>
@@ -802,7 +803,7 @@ export const ResidentHome: React.FC<{
                     Suas Encomendas<br /><span className="text-amber-500">Chegaram!</span>
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4 leading-relaxed">
-                    VocÃª tem {localPackages.length} {localPackages.length === 1 ? 'volume' : 'volumes'} prontos para retirada<br />na portaria principal.
+                    Você tem {localPackages.length} {localPackages.length === 1 ? 'volume' : 'volumes'} prontos para retirada<br />na portaria principal.
                   </p>
                 </div>
 
@@ -844,7 +845,7 @@ export const ResidentHome: React.FC<{
         currentUser={currentUser}
       />
 
-      {/* HEADER DINÃ‚MICO */}
+      {/* HEADER DINÂMICO */}
       <div className="bg-primary pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
         {/* WATERMARK SYMBOL (Novo) */}
         {(currentUser?.symbol_url || currentUser?.symbol) && (
@@ -875,7 +876,7 @@ export const ResidentHome: React.FC<{
                 <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white italic tracking-tighter">OlÃ¡, {currentUser?.name?.split(' ')[0]}</h1>
+                <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
                 <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1">
                   <MapPin size={12} className="text-white/70" />
                   {currentUser?.unit?.toString().toUpperCase().includes('RUA')
@@ -907,7 +908,7 @@ export const ResidentHome: React.FC<{
               <Search className="text-white/70" size={18} />
             </button>
             <Input
-              placeholder="Procurar produto ou serviÃ§o..."
+              placeholder="Procurar produto ou serviço..."
               className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder:text-white/60 focus:bg-white/20 transition-all font-sans"
               value={homeSearch}
               onChange={(e) => setHomeSearch(e.target.value)}
@@ -941,7 +942,7 @@ export const ResidentHome: React.FC<{
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Prestadores no CondomÃ­nio</h3>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Prestadores no Condomínio</h3>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {onSitePros.map((pro, i) => (
@@ -976,7 +977,7 @@ export const ResidentHome: React.FC<{
           </div>
         )}
 
-        {/* PENDENTE DE AVALIAÃ‡ÃƒO */}
+        {/* PENDENTE DE AVALIAÇÃO */}
         {completedRequests.length > 0 && (
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
@@ -987,7 +988,7 @@ export const ResidentHome: React.FC<{
               {completedRequests.map((req, i) => (
                 <div key={i} className="bg-white p-5 rounded-[24px] border border-amber-100 shadow-lg shadow-amber-500/10 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ConcluÃ­do em {new Date(req.created_at).toLocaleDateString('pt-BR')}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Concluído em {new Date(req.created_at).toLocaleDateString('pt-BR')}</p>
                     <h4 className="font-black text-slate-900 text-sm mt-1">{req.title}</h4>
                     <p className="text-xs text-slate-500">Com {req.providerName || 'Prestador'}</p>
                   </div>
@@ -1002,7 +1003,7 @@ export const ResidentHome: React.FC<{
 
 
 
-        {/* ATALHOS RÃPIDOS (COM ABAS) */}
+        {/* ATALHOS RÁPIDOS (COM ABAS) */}
         <div className="space-y-6">
           {/* Tabs */}
           <div className="flex p-1 bg-slate-100/80 rounded-2xl">
@@ -1016,15 +1017,15 @@ export const ResidentHome: React.FC<{
               onClick={() => setActiveSection('gestao')}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeSection === 'gestao' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              GestÃ£o CondomÃ­nio
+              Gestão Condomínio
             </button>
           </div>
 
-          {/* ConteÃºdo DinÃ¢mico */}
+          {/* Conteúdo Dinâmico */}
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             {activeSection === 'gestao' ? (
               <div>
-                <SectionHeader title="GestÃ£o CondomÃ­nio" actionLabel="Ver Todos" onAction={() => onNavigate('home')} />
+                <SectionHeader title="Gestão Condomínio" actionLabel="Ver Todos" onAction={() => onNavigate('home')} />
                 <div className="grid grid-cols-4 gap-3">
                   {[
                     { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-brand-600', bg: 'bg-brand-50' },
@@ -1047,7 +1048,7 @@ export const ResidentHome: React.FC<{
                     { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
                     { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
                     { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'ManutenÃ§Ã£o', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'Manutenção', color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   ].map((act, i) => {
                     // Check if category exists in DB (case-insensitive or exact)
                     const dbCat = categories.find(c => c.name.toLowerCase() === act.category.toLowerCase());
@@ -1067,7 +1068,7 @@ export const ResidentHome: React.FC<{
           </div>
         </div>
 
-        {/* E-SHOP (Carousel DinÃ¢mico) */}
+        {/* E-SHOP (Carousel Dinâmico) */}
         <div>
           <SectionHeader title="e-Shop" actionLabel="Ver Todos" onAction={() => onNavigate('shop-detail')} />
           {products.length > 0 ? (
@@ -1113,7 +1114,7 @@ export const ResidentHome: React.FC<{
                   </h4>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 font-medium line-clamp-2">
-                  Encontre produtos e serviÃ§os dos seus vizinhos e comÃ©rcio local.
+                  Encontre produtos e serviços dos seus vizinhos e comércio local.
                 </p>
               </div>
               <div className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white shrink-0">
@@ -1123,7 +1124,7 @@ export const ResidentHome: React.FC<{
           )}
         </div>
 
-        {/* MURAL DO DESAPEGO (CARROSSEL ÃšNICO) */}
+        {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
         <div>
           <SectionHeader title="Mural do Desapego" actionLabel="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
 
@@ -1238,8 +1239,8 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
       <div className="p-10 space-y-4">
         {[
           { icon: <User size={20} />, label: 'Dados Pessoais', desc: 'Edite seu perfil e contatos', onClick: () => onNavigate('personal-data') },
-          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'ConfiguraÃ§Ãµes de visibilidade', onClick: () => onNavigate('privacy') },
-          { icon: <LogOut size={20} />, label: 'Encerrar SessÃ£o', color: 'text-rose-500', bg: 'bg-rose-50', onClick: handleLogout },
+          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade', onClick: () => onNavigate('privacy') },
+          { icon: <LogOut size={20} />, label: 'Encerrar Sessão', color: 'text-rose-500', bg: 'bg-rose-50', onClick: handleLogout },
         ].map((item, i) => (
           <button key={i} onClick={item.onClick} className="w-full p-6 bg-slate-50 rounded-[30px] flex items-center justify-between group transition-all hover:bg-brand-50">
             <div className="flex items-center gap-5">
@@ -1267,10 +1268,10 @@ export const Marketplace: React.FC<{
   categories?: any[];
 }> = ({ onNavigate, onSelectCategory, products, categories = [] }) => {
   const displayCategories = categories.length > 0 ? categories.slice(0, 4) : [
-    { id: '1', name: 'AlimentaÃ§Ã£o', icon: <Utensils size={28} />, bg: 'bg-orange-50', color: 'text-orange-600' },
-    { id: '2', name: 'ManutenÃ§Ã£o', icon: <Wrench size={28} />, bg: 'bg-blue-50', color: 'text-blue-600' },
+    { id: '1', name: 'Alimentação', icon: <Utensils size={28} />, bg: 'bg-orange-50', color: 'text-orange-600' },
+    { id: '2', name: 'Manutenção', icon: <Wrench size={28} />, bg: 'bg-blue-50', color: 'text-blue-600' },
     { id: '3', name: 'Limpeza', icon: <Droplets size={28} />, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-    { id: '4', name: 'EstÃ©tica', icon: <Scissors size={28} />, bg: 'bg-rose-50', color: 'text-rose-600' },
+    { id: '4', name: 'Estética', icon: <Scissors size={28} />, bg: 'bg-rose-50', color: 'text-rose-600' },
   ];
 
   return (
@@ -1286,7 +1287,7 @@ export const Marketplace: React.FC<{
       <div className="p-6 space-y-10">
         <div className="relative group" onClick={() => onNavigate('shop-detail')}>
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input readOnly placeholder="Qual serviÃ§o vocÃª precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100 cursor-pointer pointer-events-none" />
+          <Input readOnly placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100 cursor-pointer pointer-events-none" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -1342,6 +1343,8 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   const [showingPeriods, setShowingPeriods] = useState(false);
   const [availablePeriods, setAvailablePeriods] = useState<any[]>([]);
   const [loadingPeriods, setLoadingPeriods] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (initialSearch) setSearchTerm(initialSearch);
@@ -1349,12 +1352,32 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
   const handleProClick = async (pro: any) => {
     setSelectedPro(pro);
+    setShowingPeriods(false);
+    setShowCalendar(false);
+    setSelectedDate(null);
+
+    // Load periods immediately to check if professional has scheduling enabled
     try {
       if (pro.provider_id || pro.id) {
         await supabase.rpc('increment_profile_view', { profile_uuid: pro.provider_id || pro.id });
       }
+
+      // Load available periods
+      const { data, error } = await supabase
+        .from('service_time_periods')
+        .select('*')
+        .eq('service_id', pro.id)
+        .eq('active', true)
+        .order('start_time');
+
+      if (data && !error) {
+        setAvailablePeriods(data);
+      } else {
+        setAvailablePeriods([]);
+      }
     } catch (err) {
-      console.error('Error incrementing view:', err);
+      console.error('Error loading professional data:', err);
+      setAvailablePeriods([]);
     }
   };
 
@@ -1365,7 +1388,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
     'Eletricista': { icon: <Zap size={24} />, color: 'text-yellow-600', bg: 'bg-yellow-50' },
     'Limpeza': { icon: <Droplets size={24} />, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     'Pintor': { icon: <Paintbrush size={24} />, color: 'text-pink-600', bg: 'bg-pink-50' },
-    'ManutenÃ§Ã£o': { icon: <Wrench size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
+    'Manutenção': { icon: <Wrench size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
     'Tecnologia': { icon: <Monitor size={24} />, color: 'text-brand-600', bg: 'bg-brand-50' },
     'Beleza': { icon: <Scissors size={24} />, color: 'text-rose-600', bg: 'bg-rose-50' },
     'Outros': { icon: <Briefcase size={24} />, color: 'text-slate-600', bg: 'bg-slate-50' },
@@ -1426,18 +1449,21 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   const handleRequest = (proName: string, proId: string, period?: any) => {
     onServiceRequest({
       id: Date.now(),
-      name: `ServiÃ§o com ${proName}`,
+      name: `Serviço com ${proName}`,
       user: 'Morador',
       time: 'Agora',
       location: 'Minha Unidade',
       status: 'pending',
       professional_id: proId,
       period_id: period?.id,
-      scheduled_time: period ? `${period.start_time} - ${period.end_time}` : null
+      scheduled_time: period ? `${period.start_time} - ${period.end_time}` : null,
+      scheduled_date: selectedDate ? selectedDate.toISOString().split('T')[0] : null
     });
-    alert(`SolicitaÃ§Ã£o enviada para ${proName}${period ? ` para o perÃ­odo ${period.period_name}` : ''}!`);
+    alert(`Solicitação enviada para ${proName}${period ? ` para ${selectedDate?.toLocaleDateString('pt-BR')} no período ${period.period_name}` : ''}!`);
     setSelectedPro(null);
     setShowingPeriods(false);
+    setShowCalendar(false);
+    setSelectedDate(null);
   };
 
   const loadProPeriods = async (pro: any) => {
@@ -1478,7 +1504,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       }
       window.open(`https://wa.me/55${cleanPhone}`, '_blank');
     } else {
-      alert('Telefone nÃ£o disponÃ­vel');
+      alert('Telefone não disponível');
     }
   };
 
@@ -1506,7 +1532,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={activeCategory === 'Todos' ? "Busque por serviÃ§o (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
+            placeholder={activeCategory === 'Todos' ? "Busque por serviço (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
             className="pl-12 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all"
           />
         </div>
@@ -1571,7 +1597,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomÃ­nio.'}</p>
+                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomínio.'}</p>
                   </div>
                 </div>
 
@@ -1618,7 +1644,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Megaphone size={14} className="text-brand-400" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">NÃ£o achou?</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">Não achou?</span>
             </div>
             <h3 className="font-black text-lg italic leading-tight mb-1">Mural de Oportunidades</h3>
             <p className="text-slate-400 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
@@ -1661,7 +1687,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className="bg-brand-100 text-brand-700">{selectedPro.category}</Badge>
-                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No CondomÃ­nio!</Badge>}
+                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condomínio!</Badge>}
                   </div>
                 </div>
                 <div className="text-right">
@@ -1669,20 +1695,20 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <Star size={16} className="text-amber-400 fill-amber-400" />
                     <span className="text-lg font-black text-slate-900">{selectedPro.rating || '4.8'}</span>
                   </div>
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">AvaliaÃ§Ãµes</span>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avaliações</span>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Sobre o Profissional</h4>
-                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomÃ­nio.'}</p>
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomínio.'}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
                     <Clock size={20} className="text-brand-500 mb-2" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">HorÃ¡rio</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horário</p>
                     <p className="font-bold text-slate-700">Seg - Sex, 08h-18h</p>
                   </div>
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
@@ -1716,14 +1742,14 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                       className="h-14 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-600/20 animate-in fade-in zoom-in-95"
                       onClick={() => loadProPeriods(selectedPro)}
                     >
-                      <Calendar className="mr-2" size={18} /> Ver HorÃ¡rios DisponÃ­veis
+                      <Calendar className="mr-2" size={18} /> Ver Horários Disponíveis
                     </Button>
                   )}
 
                   {showingPeriods && (
                     <div className="space-y-4 animate-in slide-in-from-top-2 p-2">
                       <div className="flex items-center justify-between">
-                        <h5 className="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em]">HorÃ¡rios DisponÃ­veis</h5>
+                        <h5 className="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em]">Horários Disponíveis</h5>
                         <button onClick={() => setShowingPeriods(false)} className="text-[9px] font-bold text-slate-400 uppercase">Fechar</button>
                       </div>
 
@@ -1732,7 +1758,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                           <div className="w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
                         </div>
                       ) : availablePeriods.length === 0 ? (
-                        <p className="text-[10px] text-slate-400 text-center py-2">Nenhum horÃ¡rio cadastrado</p>
+                        <p className="text-[10px] text-slate-400 text-center py-2">Nenhum horário cadastrado</p>
                       ) : (
                         <div className="grid grid-cols-1 gap-2">
                           {availablePeriods.map(period => (
@@ -1782,22 +1808,22 @@ export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; 
 );
 
 export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ onBack, item, currentUser, onDelete }) => {
-  if (!item) return <div className="p-10">Item nÃ£o encontrado. <button onClick={onBack}>Voltar</button></div>;
+  if (!item) return <div className="p-10">Item não encontrado. <button onClick={onBack}>Voltar</button></div>;
 
   const isOwner = currentUser?.name === item.user;
 
   const handleInterest = () => {
     if (item.phone) {
       const cleanPhone = item.phone.replace(/\D/g, '');
-      const message = encodeURIComponent(`OlÃ¡, vi seu anÃºncio do *${item.name}* no app do condomÃ­nio e tenho interesse!`);
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.name}* no app do condomínio e tenho interesse!`);
       window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
     } else {
-      alert('Telefone do vendedor nÃ£o disponÃ­vel.');
+      alert('Telefone do vendedor não disponível.');
     }
   };
 
   const handleDelete = () => {
-    if (onDelete && confirm('Tem certeza que deseja remover este anÃºncio?')) {
+    if (onDelete && confirm('Tem certeza que deseja remover este anúncio?')) {
       onDelete(item.id);
     }
   };
@@ -1843,14 +1869,14 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
 
         <div className="space-y-4">
           <h3 className="font-bold text-slate-900">Sobre o produto</h3>
-          <p className="text-sm text-slate-500 leading-relaxed">{item.desc || 'Sem descriÃ§Ã£o detalhada.'}</p>
+          <p className="text-sm text-slate-500 leading-relaxed">{item.desc || 'Sem descrição detalhada.'}</p>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-50">
         {isOwner ? (
           <Button fullWidth onClick={handleDelete} className="bg-rose-50 text-rose-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-rose-100">
-            <Trash2 size={18} className="mr-2" /> Remover AnÃºncio
+            <Trash2 size={18} className="mr-2" /> Remover Anúncio
           </Button>
         ) : (
           <Button fullWidth onClick={handleInterest} className="bg-emerald-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs shadow-lg shadow-emerald-500/30">
@@ -1945,7 +1971,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
             <div className="space-y-3 text-right">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mr-4">Status</label>
               <div className="flex gap-2 justify-end">
-                {['NOVO', 'USADO', 'DOAÃ‡ÃƒO'].map(s => (
+                {['NOVO', 'USADO', 'DOAÇÃO'].map(s => (
                   <button
                     key={s}
                     onClick={() => setForm({ ...form, status: s })}
@@ -1959,7 +1985,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">DescriÃ§Ã£o Detalhada</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Descrição Detalhada</label>
             <textarea
               placeholder="Conte mais sobre o estado do item, tempo de uso e motivo do desapego..."
               value={form.desc}
@@ -1978,7 +2004,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
           >
             {isSubmitting ? 'Publicando...' : 'Publicar Desapego'}
           </Button>
-          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu anÃºncio ficarÃ¡ visÃ­vel para todo o condomÃ­nio</p>
+          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu anúncio ficará visível para todo o condomínio</p>
         </div>
       </div>
     </div>
@@ -2044,7 +2070,7 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
           <div className="grid grid-cols-2 gap-4">
             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
               <option>Visita</option>
-              <option>ServiÃ§o</option>
+              <option>Serviço</option>
               <option>Delivery</option>
             </select>
             <Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="h-14" />
@@ -2053,10 +2079,10 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
         </Card>
 
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">AutorizaÃ§Ãµes Ativas</h4>
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
           {authorizations.length === 0 ? (
             <div className="text-center py-8 text-slate-300">
-              <p className="text-xs italic">NinguÃ©m autorizado.</p>
+              <p className="text-xs italic">Ninguém autorizado.</p>
             </div>
           ) : (
             authorizations.map(auth => (
@@ -2095,7 +2121,7 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
             <h3 className="text-4xl font-black italic tracking-tighter">R$ {pending.value}</h3>
             <p className="text-[10px] font-bold mt-2 opacity-80">Vence em: {new Date(pending.dueDate).toLocaleDateString('pt-BR')}</p>
             <div className="mt-8 flex gap-3">
-              <Button variant="secondary" className="flex-1 bg-white text-brand-600 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all" onClick={() => alert('CÃ³digo copiado!')}>Copia CÃ³digo</Button>
+              <Button variant="secondary" className="flex-1 bg-white text-brand-600 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all" onClick={() => alert('Código copiado!')}>Copia Código</Button>
               <button className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center active:scale-95 transition-all"><Download size={20} /></button>
             </div>
           </Card>
@@ -2103,13 +2129,13 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
           <div className="p-10 bg-emerald-500 text-white rounded-[48px] text-center space-y-4 shadow-xl shadow-emerald-500/20">
             <CheckCircle2 size={48} className="mx-auto" />
             <p className="font-black italic text-xl">Tudo em dia!</p>
-            <p className="text-xs opacity-80">VocÃª nÃ£o possui faturas pendentes.</p>
+            <p className="text-xs opacity-80">Você não possui faturas pendentes.</p>
           </div>
         )}
 
         <div className="space-y-4">
-          <SectionHeader title="HistÃ³rico" />
-          {paid.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-4">Nenhum histÃ³rico disponÃ­vel.</p> : paid.map((inv) => (
+          <SectionHeader title="Histórico" />
+          {paid.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-4">Nenhum histórico disponível.</p> : paid.map((inv) => (
             <div key={inv.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center"><Check size={24} /></div>
@@ -2126,7 +2152,7 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
 
 export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[]; onAddRequest?: (req: any) => void; currentUser?: any }> = ({ onBack, serviceRequests = [], onAddRequest, currentUser }) => {
   const [isNew, setIsNew] = useState(false);
-  const [form, setForm] = useState({ title: '', category: 'ManutenÃ§Ã£o', desc: '' });
+  const [form, setForm] = useState({ title: '', category: 'Manutenção', desc: '' });
 
   const handleOpen = () => {
     if (!form.title || !form.desc) return;
@@ -2142,7 +2168,7 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
         unit: currentUser?.unit || '---'
       });
       setIsNew(false);
-      setForm({ title: '', category: 'ManutenÃ§Ã£o', desc: '' });
+      setForm({ title: '', category: 'Manutenção', desc: '' });
       alert('Chamado aberto com sucesso!');
     }
   };
@@ -2163,7 +2189,7 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
               <div className="relative z-10">
                 <MessageSquare className="mx-auto text-brand-400 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
-                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faÃ§a sugestÃµes ou tire dÃºvidas diretamente com a administraÃ§Ã£o.</p>
+                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
                 <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
               </div>
             </div>
@@ -2174,10 +2200,10 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
                   <div className="flex justify-between items-start">
                     <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'ConcluÃ­do' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} â€¢ {req.date}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} • {req.date}</p>
                 </div>
               ))}
             </div>
@@ -2188,16 +2214,16 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
               <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
               <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
             </div>
-            <Input placeholder="TÃ­tulo (ex: LÃ¢mpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
+            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>ManutenÃ§Ã£o</option>
+              <option>Manutenção</option>
               <option>Limpeza</option>
-              <option>SeguranÃ§a</option>
-              <option>SugestÃ£o</option>
-              <option>ReclamaÃ§Ã£o</option>
+              <option>Segurança</option>
+              <option>Sugestão</option>
+              <option>Reclamação</option>
             </select>
             <textarea
-              placeholder="Descreva a situaÃ§Ã£o..."
+              placeholder="Descreva a situação..."
               className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
@@ -2212,14 +2238,14 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
 
 export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests: any[]; currentUser: any }> = ({ onBack, serviceRequests, currentUser }) => {
   const [isNew, setIsNew] = useState(false);
-  const [form, setForm] = useState({ title: '', category: 'ManutenÃ§Ã£o', desc: '' });
+  const [form, setForm] = useState({ title: '', category: 'Manutenção', desc: '' });
 
   const handleOpen = async () => {
     if (form.title && form.desc) {
-      // Registrar no banco (SimulaÃ§Ã£o ou Supabase dependendo da implementaÃ§Ã£o)
+      // Registrar no banco (Simulação ou Supabase dependendo da implementação)
       alert('Chamado aberto com sucesso!');
       setIsNew(false);
-      setForm({ title: '', category: 'ManutenÃ§Ã£o', desc: '' });
+      setForm({ title: '', category: 'Manutenção', desc: '' });
     }
   };
 
@@ -2239,7 +2265,7 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
               <div className="relative z-10">
                 <MessageSquare className="mx-auto text-brand-400 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
-                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faÃ§a sugestÃµes ou tire dÃºvidas diretamente com a administraÃ§Ã£o.</p>
+                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
                 <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
               </div>
             </div>
@@ -2250,10 +2276,10 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
                   <div className="flex justify-between items-start">
                     <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'ConcluÃ­do' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} â€¢ {req.date}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} • {req.date}</p>
                 </div>
               ))}
             </div>
@@ -2264,16 +2290,16 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
               <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
               <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
             </div>
-            <Input placeholder="TÃ­tulo (ex: LÃ¢mpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
+            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>ManutenÃ§Ã£o</option>
+              <option>Manutenção</option>
               <option>Limpeza</option>
-              <option>SeguranÃ§a</option>
-              <option>SugestÃ£o</option>
-              <option>ReclamaÃ§Ã£o</option>
+              <option>Segurança</option>
+              <option>Sugestão</option>
+              <option>Reclamação</option>
             </select>
             <textarea
-              placeholder="Descreva a situaÃ§Ã£o..."
+              placeholder="Descreva a situação..."
               className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
@@ -2342,7 +2368,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
       // 4. Open WhatsApp
       const cleanPhone = proposal.profiles?.phone?.replace(/\D/g, '');
       if (cleanPhone) {
-        const message = encodeURIComponent(`OlÃ¡ ${proposal.profiles.name}, aceitei sua proposta no Mural para o serviÃ§o de *${proposal.profiles.category}*!`);
+        const message = encodeURIComponent(`Olá ${proposal.profiles.name}, aceitei sua proposta no Mural para o serviço de *${proposal.profiles.category}*!`);
         window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
       }
       loadData();
@@ -2367,7 +2393,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Megaphone size={32} className="text-slate-200" />
             </div>
-            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">VocÃª ainda nÃ£o publicou nenhuma necessidade.</p>
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">Você ainda não publicou nenhuma necessidade.</p>
             <p className="text-slate-300 text-[10px] mt-2">Publique no Mural para receber propostas de profissionais!</p>
           </div>
         ) : (
@@ -2458,7 +2484,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
     const isSportsArea = selectedArea.category === 'Esportes';
 
     if (isSportsArea && !selectedHour) {
-      alert('Por favor, selecione um horÃ¡rio.');
+      alert('Por favor, selecione um horário.');
       return;
     }
 
@@ -2550,7 +2576,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
         {!selectedCategory ? (
           <div className="space-y-6 animate-in slide-in-from-left-4">
-            <SectionHeader title="O que vocÃª quer agendar?" />
+            <SectionHeader title="O que você quer agendar?" />
             <div className="grid grid-cols-2 gap-4">
               {categories.map(cat => (
                 <button key={cat} onClick={() => setSelectedCategory(cat)} className="aspect-square bg-white rounded-[40px] border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 active:scale-95 transition-all hover:border-brand-200 group">
@@ -2577,8 +2603,8 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
             {date && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">DisponÃ­veis em {new Date(date).toLocaleDateString('pt-BR')}</h4>
-                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">{availableAreas.length} opÃ§Ãµes</span>
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Disponíveis em {new Date(date).toLocaleDateString('pt-BR')}</h4>
+                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">{availableAreas.length} opções</span>
                 </div>
 
                 {availableAreas.length === 0 ? (
@@ -2620,7 +2646,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
               <div className="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-3xl">
                 <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor</div><div className="text-lg font-black text-slate-900">R$ {selectedArea.price}</div></div>
-                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">HorÃ¡rio</div><div className="text-lg font-black text-slate-900">{selectedArea.hours}</div></div>
+                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Horário</div><div className="text-lg font-black text-slate-900">{selectedArea.hours}</div></div>
                 <div className="col-span-2 border-t border-slate-200/50 pt-4 mt-2">
                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Itens Inclusos</div>
                   <div className="space-y-2">
@@ -2639,7 +2665,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
               {/* Hourly Selection for Sports Areas */}
               {selectedArea.category === 'Esportes' && (
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escolha o HorÃ¡rio</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escolha o Horário</label>
                   <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {hourlySlots.map(slot => {
                       const available = isHourAvailable(slot.start);
@@ -2659,7 +2685,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                             {slot.start}
                           </div>
                           <div className="text-[8px] text-slate-400 font-bold mt-0.5">
-                            {available ? 'âœ“ Livre' : 'âœ— Ocupado'}
+                            {available ? '? Livre' : '? Ocupado'}
                           </div>
                         </button>
                       );
@@ -2728,13 +2754,13 @@ export const AssembliesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
           <Badge color="bg-emerald-50 text-emerald-600">Aberta</Badge>
         </div>
         <div>
-          <h4 className="font-black text-slate-900 italic text-lg decoration-slice">AGO: PrevisÃ£o OrÃ§amentÃ¡ria 2026</h4>
-          <p className="text-xs text-slate-400 font-bold uppercase mt-1">15/01/2026 â€¢ 19:30</p>
+          <h4 className="font-black text-slate-900 italic text-lg decoration-slice">AGO: Previsão Orçamentária 2026</h4>
+          <p className="text-xs text-slate-400 font-bold uppercase mt-1">15/01/2026 • 19:30</p>
         </div>
         <Button fullWidth className="rounded-[24px] bg-slate-950 text-[10px] font-black uppercase tracking-widest">Ver Pauta e Votar</Button>
       </div>
       <div className="text-center py-10">
-        <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">HistÃ³rico de Atas disponÃ­vel no portal web.</p>
+        <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Histórico de Atas disponível no portal web.</p>
       </div>
     </div>
   </div>
@@ -2771,7 +2797,7 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
         <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 z-20"><ArrowLeft /></button>
         <div className="absolute bottom-12 left-8 right-8 text-white z-10">
           <h2 className="text-4xl font-black italic tracking-tighter leading-none mb-2">{selectedCategory === 'Todos' ? 'e-Shop' : selectedCategory}</h2>
-          <p className="font-medium opacity-80 text-brand-100">Encontre de tudo no seu condomÃ­nio.</p>
+          <p className="font-medium opacity-80 text-brand-100">Encontre de tudo no seu condomínio.</p>
         </div>
       </div>
 
@@ -2780,7 +2806,7 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
           <Search className="text-slate-400" size={20} />
           <input
             type="text"
-            placeholder="Buscar produtos e serviÃ§os..."
+            placeholder="Buscar produtos e serviços..."
             className="flex-1 outline-none text-slate-700 font-bold placeholder:text-slate-300 placeholder:font-medium"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -2803,7 +2829,7 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 
         <div className="space-y-4">
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">
-            {searchTerm ? `Resultados: ${filteredProducts.length}` : `DisponÃ­veis (${filteredProducts.length})`}
+            {searchTerm ? `Resultados: ${filteredProducts.length}` : `Disponíveis (${filteredProducts.length})`}
           </h4>
 
           {filteredProducts.length > 0 ? filteredProducts.map(p => (
@@ -2868,10 +2894,10 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
     const phone = item.profiles?.phone || '';
     if (phone) {
       const cleanPhone = phone.replace(/\D/g, '');
-      const message = encodeURIComponent(`OlÃ¡, vi seu anÃºncio do *${item.title}* no app do condomÃ­nio e tenho interesse!`);
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.title}* no app do condomínio e tenho interesse!`);
       window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
     } else {
-      alert('Telefone do vendedor nÃ£o disponÃ­vel.');
+      alert('Telefone do vendedor não disponível.');
     }
   };
 
@@ -2904,7 +2930,7 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
             <div>
               <p className="text-xs text-slate-900 font-bold">Vendido por {item.profiles?.name || 'Vendedor Parceiro'}</p>
               {item.profiles?.unit ? (
-                <p className="text-[10px] text-slate-400 font-medium">Residente â€¢ {item.profiles.tower || ''} {item.profiles.unit}</p>
+                <p className="text-[10px] text-slate-400 font-medium">Residente • {item.profiles.tower || ''} {item.profiles.unit}</p>
               ) : (
                 <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Loja Verificada</p>
               )}
@@ -2913,7 +2939,7 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
 
           <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide mb-2">Sobre este item</h3>
           <p className="text-slate-500 leading-relaxed text-sm font-medium mb-8">
-            {item.description || "Sem descriÃ§Ã£o detalhada."}
+            {item.description || "Sem descrição detalhada."}
           </p>
 
           <div className="flex items-center justify-between gap-6">
@@ -3007,7 +3033,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
       }).eq('id', currentUser.id);
 
       if (error) throw error;
-      alert('Dados atualizados com sucesso! O aplicativo serÃ¡ recarregado para aplicar as mudanÃ§as.');
+      alert('Dados atualizados com sucesso! O aplicativo será recarregado para aplicar as mudanças.');
       window.location.reload();
     } catch (err: any) {
       alert('Erro ao salvar: ' + err.message);
@@ -3051,7 +3077,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">CondomÃ­nio</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Condomínio</label>
             <select
               value={formData.condo}
               onChange={e => setFormData({ ...formData, condo: e.target.value })}
@@ -3068,7 +3094,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
               <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'NÃºmero' : 'Torre/Bloco'}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Torre/Bloco'}</label>
               <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium" />
             </div>
           </div>
@@ -3083,7 +3109,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
         </div>
 
         <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 rounded-[24px] bg-slate-900 text-white font-black uppercase text-xs tracking-widest shadow-xl shadow-slate-900/10">
-          {loading ? 'Salvando...' : 'Salvar AlteraÃ§Ãµes'}
+          {loading ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
       </div>
     </div>
@@ -3101,14 +3127,14 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
         <div className="bg-white p-8 rounded-[40px] shadow-sm space-y-8">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-slate-900">Perfil PÃºblico</h4>
+              <h4 className="font-bold text-slate-900">Perfil Público</h4>
               <p className="text-xs text-slate-400 max-w-[200px] mt-1">Permitir que outros moradores vejam seu nome e unidade</p>
             </div>
             <div className="w-14 h-8 bg-emerald-500 rounded-full p-1 flex justify-end cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-slate-900">NotificaÃ§Ãµes Push</h4>
+              <h4 className="font-bold text-slate-900">Notificações Push</h4>
               <p className="text-xs text-slate-400 max-w-[200px] mt-1">Receber avisos de encomendas e visitantes</p>
             </div>
             <div className="w-14 h-8 bg-emerald-500 rounded-full p-1 flex justify-end cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
@@ -3121,13 +3147,13 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <div className="w-14 h-8 bg-slate-200 rounded-full p-1 flex justify-start cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
           </div>
         </div>
-        <p className="text-center text-[10px] text-slate-400 uppercase font-bold tracking-widest px-10">Qualquer mudanÃ§a pode levar alguns minutos para refletir no sistema.</p>
+        <p className="text-center text-[10px] text-slate-400 uppercase font-bold tracking-widest px-10">Qualquer mudança pode levar alguns minutos para refletir no sistema.</p>
       </div>
     </div>
   );
 };
 
-// --- NAVEGAÃ‡ÃƒO ---
+// --- NAVEGAÇÃO ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
   <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-brand-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
     {[
@@ -3222,3 +3248,4 @@ export const BannerCarousel: React.FC = () => {
     </div>
   );
 };
+
