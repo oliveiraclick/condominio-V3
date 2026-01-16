@@ -10,7 +10,7 @@ workflows:
         distribution_type: app_store
         bundle_identifier: app.morador.app
       vars:
-        XCODE_WORKSPACE: "ios/App/App.xcworkspace"
+        XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
       node: 22.13.0
       xcode: latest
@@ -25,6 +25,7 @@ workflows:
           npm run build
       - name: Capacitor sync
         script: |
+          node -v
           npx cap sync ios
       - name: Set up code signing settings on Xcode project
         script: |
@@ -32,7 +33,7 @@ workflows:
       - name: Build ipa for distribution
         script: |
           xcode-project build-ipa \
-            --workspace "$XCODE_WORKSPACE" \
+            --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
     artifacts:
       - build/ios/ipa/*.ipa
@@ -72,6 +73,7 @@ workflows:
           npm run build
       - name: Capacitor sync
         script: |
+          node -v
           npx cap sync android
       - name: Set up local.properties
         script: |
