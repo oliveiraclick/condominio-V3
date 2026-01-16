@@ -12,15 +12,17 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      node: 22
+      node: v22.13.0
       xcode: latest
       cocoapods: default
     scripts:
       - name: Install dependencies
         script: |
+          node -v
           npm install
       - name: Capacitor sync
         script: |
+          node -v
           npx cap sync ios
       - name: Set up code signing settings on Xcode project
         script: |
@@ -57,13 +59,15 @@ workflows:
         - google_play
       vars:
         PACKAGE_NAME: "com.oliveiraclick.appmorador"
-      node: 22
+      node: v22.13.0
     scripts:
       - name: Install dependencies
         script: |
+          node -v
           npm install
       - name: Capacitor sync
         script: |
+          node -v
           npx cap sync android
       - name: Set up local.properties
         script: |
