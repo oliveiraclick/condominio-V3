@@ -1,7 +1,7 @@
 import type { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.oliveiraclick.appmorador',
+  appId: 'app.morador.app',
   appName: 'App Morador',
   webDir: 'dist',
   plugins: {
