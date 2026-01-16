@@ -12,7 +12,7 @@ workflows:
       vars:
         XCODE_WORKSPACE: "ios/App/App.xcworkspace"
         XCODE_SCHEME: "App"
-      node: v22.13.0
+      node: 22.13.0
       xcode: latest
       cocoapods: default
     scripts:
@@ -59,7 +59,7 @@ workflows:
         - google_play
       vars:
         PACKAGE_NAME: "com.oliveiraclick.appmorador"
-      node: v22.13.0
+      node: 22.13.0
     scripts:
       - name: Install dependencies
         script: |
