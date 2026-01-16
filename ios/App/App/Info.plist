@@ -50,6 +50,8 @@
 	<!-- Privacy Permissions -->
 	<key>NSCameraUsageDescription</key>
 	<string>Precisamos de acesso à câmera para ler QR Codes.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Precisamos de acesso ao microfone para funções de áudio e vídeo.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Precisamos de acesso à galeria para que você possa enviar fotos e documentos.</string>
 	<key>NSPhotoLibraryAddUsageDescription</key>
