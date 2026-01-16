@@ -95,6 +95,13 @@ workflows:
       - name: Build web assets
         script: |
           npm run build
+      - name: Generate assets manually
+        script: |
+          echo "Generating Android icons manually..."
+          # Usando capacitor/assets para Android pois ele é mais estável para os mipmaps do que o sips manual
+          npx @capacitor/assets generate --android
+          echo "Verifying Android assets..."
+          ls -R android/app/src/main/res/mipmap*
       - name: Capacitor sync
         script: |
           node -v
