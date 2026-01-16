@@ -47,6 +47,13 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<!-- Privacy Permissions -->
+	<key>NSCameraUsageDescription</key>
+	<string>Precisamos de acesso à câmera para ler QR Codes.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Precisamos de acesso à galeria para que você possa enviar fotos e documentos.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Precisamos de permissão para salvar fotos em sua galeria.</string>
 	<!-- Encryption Export Compliance -->
 	<key>ITSAppUsesNonExemptEncryption</key>
 	<false/>
