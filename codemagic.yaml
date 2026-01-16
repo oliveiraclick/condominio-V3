@@ -2,7 +2,7 @@ workflows:
   ios-capacitor-workflow:
     name: iOS Capacitor Build
     max_build_duration: 120
-    instance_type: mac_mini_m1
+    instance_type: mac_mini_m2 # Updated to m2 as per user's screenshot
     integrations:
       app_store_connect: morador.app
     environment:
@@ -23,12 +23,32 @@ workflows:
       - name: Build web assets
         script: |
           npm run build
-      - name: Generate assets
+      - name: Generate assets manually
         script: |
-          echo "Generating iOS assets..."
-          npx @capacitor/assets generate --ios
-          echo "Verifying AppIcon.appiconset content..."
-          ls -R ios/App/App/Assets.xcassets/AppIcon.appiconset/
+          echo "Generating icons manually with sips..."
+          ICON_SRC="assets/icon.png"
+          ICON_DST="ios/App/App/Assets.xcassets/AppIcon.appiconset"
+          mkdir -p $ICON_DST
+          # iPhone & iPad icons
+          sips -z 40 40     $ICON_SRC --out $ICON_DST/AppIcon-20x20@2x.png
+          sips -z 60 60     $ICON_SRC --out $ICON_DST/AppIcon-20x20@3x.png
+          sips -z 58 58     $ICON_SRC --out $ICON_DST/AppIcon-29x29@2x.png
+          sips -z 87 87     $ICON_SRC --out $ICON_DST/AppIcon-29x29@3x.png
+          sips -z 80 80     $ICON_SRC --out $ICON_DST/AppIcon-40x40@2x.png
+          sips -z 120 120   $ICON_SRC --out $ICON_DST/AppIcon-40x40@3x.png
+          sips -z 120 120   $ICON_SRC --out $ICON_DST/AppIcon-60x60@2x.png
+          sips -z 180 180   $ICON_SRC --out $ICON_DST/AppIcon-60x60@3x.png
+          # iPad specific
+          sips -z 20 20     $ICON_SRC --out $ICON_DST/AppIcon-20x20@1x.png
+          sips -z 29 29     $ICON_SRC --out $ICON_DST/AppIcon-29x29@1x.png
+          sips -z 40 40     $ICON_SRC --out $ICON_DST/AppIcon-40x40@1x.png
+          sips -z 76 76     $ICON_SRC --out $ICON_DST/AppIcon-76x76@1x.png
+          sips -z 152 152   $ICON_SRC --out $ICON_DST/AppIcon-76x76@2x.png
+          sips -z 167 167   $ICON_SRC --out $ICON_DST/AppIcon-83.5x83.5@2x.png
+          # Marketing
+          sips -z 1024 1024 $ICON_SRC --out $ICON_DST/AppIcon-512@2x.png
+          echo "Verifying icons..."
+          ls -l $ICON_DST
       - name: Capacitor sync
         script: |
           node -v
