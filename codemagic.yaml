@@ -53,9 +53,51 @@ workflows:
           failure: true
       app_store_connect:
         auth: integration
-        submit_to_testflight: false # Mudança aqui: Apenas faz o upload, não fica esperando
+        submit_to_testflight: false
         expire_testflight_builds: true
 
   android-capacitor-workflow:
     name: Android Capacitor Build
-    ... (restante igual)
+    max_build_duration: 120
+    instance_type: linux_x2
+    environment:
+      android_signing:
+        - keystore_reference
+      groups:
+        - google_play
+      vars:
+        PACKAGE_NAME: "com.oliveiraclick.appmorador"
+      node: 22.13.0
+    scripts:
+      - name: Install dependencies
+        script: |
+          node -v
+          npm install
+      - name: Build web assets
+        script: | |
+          npm run build
+      - name: Capacitor sync
+        script: |
+          node -v
+          npx cap sync android
+      - name: Set up local.properties
+        script: |
+          echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+      - name: Build Android release
+        script: |
+          cd android
+          ./gradlew bundleRelease
+    artifacts:
+      - android/app/build/outputs/**/*.aab
+      - android/app/build/outputs/**/*.apk
+    publishing:
+      email:
+        recipients:
+          - ia.oliveira.click@gmail.com
+        notify:
+          success: true
+          failure: true
+      google_play:
+        credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
+        track: internal
+        submit_as_draft: true
