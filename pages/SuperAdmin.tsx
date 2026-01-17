@@ -1416,7 +1416,7 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
 
   const navItems = [
     { id: 'dashboard', icon: LayoutGrid, label: 'Dash', isPriority: true },
-    { id: 'feedbacks', icon: Sparkles, label: 'Dicas & Sugestões', isPriority: true },
+    { id: 'feedbacks', icon: Sparkles, label: 'Dicas e Sugestões', isPriority: true },
     { id: 'professionals', icon: Briefcase, label: 'Pros', isPriority: true },
     { id: 'users', icon: Users, label: 'Users', isPriority: true },
     { id: 'condos', icon: Building, label: 'Condos', isPriority: false },
@@ -1425,13 +1425,33 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
     { id: 'notifications', icon: Bell, label: 'Push', isPriority: false },
     { id: 'overview', icon: FileText, label: 'Docs', isPriority: false },
 
+
   ];
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex justify-center pb-24 font-sans selection:bg-brand-200 text-slate-900">
-      <div className="w-full max-w-md bg-[#f8fafc] min-h-screen shadow-2xl relative overflow-hidden">
+      <div className="w-full max-w-md bg-[#f8fafc] min-h-screen shadow-2xl relative overflow-hidden flex flex-col">
 
-        <div className="h-full overflow-y-auto hide-scrollbar">
+        {/* TOP HEADER */}
+        <header className="sticky top-0 left-0 right-0 bg-white/80 backdrop-blur-md z-[60] px-6 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-brand-500 flex items-center justify-center text-white shadow-lg shadow-brand-500/20">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <h2 className="text-xl font-black italic text-slate-900 tracking-tighter leading-none uppercase">Painel <span className="text-brand-600">Master</span></h2>
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Super Admin Control</p>
+            </div>
+          </div>
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className="w-12 h-12 rounded-2xl bg-slate-900 text-white flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl shadow-slate-900/20"
+          >
+            {menuOpen ? <X size={24} /> : <Menu size={24} />}
+          </button>
+        </header>
+
+        <div className="h-full overflow-y-auto hide-scrollbar pt-4">
           {activeTab === 'dashboard' && <DashboardView />}
           {activeTab === 'condos' && <CondosView />}
           {activeTab === 'users' && <UsersView />}
@@ -1442,6 +1462,7 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
           {activeTab === 'overview' && <SystemOverviewView />}
           {activeTab === 'feedbacks' && <FeedbacksView />}
         </div>
+
 
         {/* MENU OVERLAY (HAMBURGER) */}
         {menuOpen && (
@@ -1504,10 +1525,12 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
               className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
             >
               <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              {item.id === 'feedbacks' && <span className="absolute top-2 right-4 w-2 h-2 bg-brand-500 rounded-full animate-pulse border-2 border-slate-900 shadow-[0_0_10px_rgba(124,58,237,0.5)]"></span>}
               <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id && !menuOpen ? 'text-slate-900' : 'text-slate-500'}`}>
-                {item.label}
+                {item.id === 'feedbacks' ? 'Dicas' : item.label}
               </span>
             </button>
+
           ))}
 
           {/* HAMBURGER BUTTON */}
@@ -1521,7 +1544,6 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
             </span>
           </button>
         </div>
-
 
       </div>
     </div>
