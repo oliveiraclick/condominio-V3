@@ -1416,14 +1416,15 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
 
   const navItems = [
     { id: 'dashboard', icon: LayoutGrid, label: 'Dash', isPriority: true },
-    { id: 'condos', icon: Building, label: 'Condos', isPriority: true },
+    { id: 'feedbacks', icon: Sparkles, label: 'Dicas & Sugestões', isPriority: true },
     { id: 'professionals', icon: Briefcase, label: 'Pros', isPriority: true },
     { id: 'users', icon: Users, label: 'Users', isPriority: true },
+    { id: 'condos', icon: Building, label: 'Condos', isPriority: false },
     { id: 'access', icon: ShieldCheck, label: 'Acesso', isPriority: false },
     { id: 'api', icon: Layers, label: 'API', isPriority: false },
     { id: 'notifications', icon: Bell, label: 'Push', isPriority: false },
     { id: 'overview', icon: FileText, label: 'Docs', isPriority: false },
-    { id: 'feedbacks', icon: Sparkles, label: 'Sugestões', isPriority: false },
+
   ];
 
   return (
