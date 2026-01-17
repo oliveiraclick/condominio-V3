@@ -4,7 +4,7 @@ import { MuralSkeleton, LeadsSkeleton } from '../components/skeletons';
 import {
   BarChart3, Calendar, MessageSquare, Bell,
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
-  Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2,
+  Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2, UserCog,
   Megaphone, MessageCircle, UserCheck,
   LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown
 } from 'lucide-react';
@@ -179,7 +179,7 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
       alert('Perfil atualizado com sucesso!');
       onClose();
       // Optional: trigger reload or callback
-      if (window.location.hash.includes('services')) window.location.reload(); 
+      if (window.location.hash.includes('services')) window.location.reload();
     } else {
       alert('Erro ao salvar: ' + error.message);
     }
@@ -200,11 +200,10 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
           <p className="text-xs text-slate-500 mt-2">Para cadastrar serviços ou produtos, precisamos de alguns dados adicionais.</p>
         </div>
         <div className="space-y-4">
-        <div className="space-y-4">
           <Input placeholder="Seu CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="h-14" />
           <Input placeholder="Nome da Empresa / Fantasia" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} className="h-14" />
           <Input placeholder="Endereço Comercial" value={formData.company_address} onChange={e => setFormData({ ...formData, company_address: e.target.value })} className="h-14" />
-          
+
           <div>
             <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-1 block tracking-widest">Bio / Apresentação</label>
             <textarea
@@ -1091,15 +1090,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
     booking_type: 'whatsapp'
   });
 
-  // Period management states
-  const [periods, setPeriods] = useState<any[]>([]);
-  const [showPeriodForm, setShowPeriodForm] = useState(false);
-  const [managingPeriodsFor, setManagingPeriodsFor] = useState<any>(null);
-  const [periodFormData, setPeriodFormData] = useState({
-    period_name: '',
-    start_time: '',
-    end_time: ''
-  });
+
 
   useEffect(() => {
     loadServices();
@@ -1213,82 +1204,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
     setShowForm(false);
   };
 
-  // Period Management Functions
-  const loadPeriods = async (serviceId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from('service_time_periods')
-        .select('*')
-        .eq('service_id', serviceId)
-        .eq('active', true)
-        .order('start_time');
-
-      if (data && !error) {
-        setPeriods(data);
-      } else if (error) {
-        console.warn('Períodos não disponíveis:', error.message);
-        setPeriods([]);
-      }
-    } catch (err) {
-      console.error('Erro ao carregar períodos:', err);
-      setPeriods([]);
-    }
-  };
-
-  const handleManagePeriods = async (service: any) => {
-    setManagingPeriodsFor(service);
-    await loadPeriods(service.id);
-    setShowPeriodForm(false);
-  };
-
-  const handleAddPeriod = async () => {
-    if (!periodFormData.period_name || !periodFormData.start_time || !periodFormData.end_time) {
-      alert('Preencha todos os campos do período');
-      return;
-    }
-
-    if (periodFormData.start_time >= periodFormData.end_time) {
-      alert('Horário de fim deve ser maior que horário de início');
-      return;
-    }
-
-    const { error } = await supabase
-      .from('service_time_periods')
-      .insert([{
-        service_id: managingPeriodsFor.id,
-        period_name: periodFormData.period_name,
-        start_time: periodFormData.start_time,
-        end_time: periodFormData.end_time
-      }]);
-
-    if (!error) {
-      alert('Período adicionado!');
-      setPeriodFormData({ period_name: '', start_time: '', end_time: '' });
-      setShowPeriodForm(false);
-      await loadPeriods(managingPeriodsFor.id);
-    }
-  };
-
-  const handleDeletePeriod = async (periodId: string) => {
-    if (!confirm('Deseja excluir este período?')) return;
-
-    const { error } = await supabase
-      .from('service_time_periods')
-      .update({ active: false })
-      .eq('id', periodId);
-
-    if (!error) {
-      alert('Período excluído!');
-      await loadPeriods(managingPeriodsFor.id);
-    }
-  };
-
-  const closePeriodManagement = () => {
-    setManagingPeriodsFor(null);
-    setPeriods([]);
-    setPeriodFormData({ period_name: '', start_time: '', end_time: '' });
-    setShowPeriodForm(false);
-  };
+  // Removed Period Management Functions (loadPeriods, handleManagePeriods, handleAddPeriod, handleDeletePeriod, closePeriodManagement)
 
   const parentCategories = categories.filter((c: any) => !c.parent_id && c.type === 'service');
   const getSubCategories = (parentId: string) => categories.filter((c: any) => c.parent_id === parentId);
@@ -1301,18 +1217,18 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
             <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Meus Serviços</h2>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{services.length} serviços</p>
           </div>
-            <button
-              onClick={() => setShowCompletionModal(true)}
-              className="w-12 h-12 bg-white text-slate-600 rounded-2xl flex items-center justify-center border border-slate-200 mr-2 active:scale-95 transition-all"
-            >
-              <UserCog size={24} />
-            </button>
-            <button
-              onClick={handleAddClick}
-              className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
-            >
-              <Plus size={24} />
-            </button>
+          <button
+            onClick={() => setShowCompletionModal(true)}
+            className="w-12 h-12 bg-white text-slate-600 rounded-2xl flex items-center justify-center border border-slate-200 mr-2 active:scale-95 transition-all"
+          >
+            <UserCog size={24} />
+          </button>
+          <button
+            onClick={handleAddClick}
+            className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
+          >
+            <Plus size={24} />
+          </button>
         </div>
       </header>
 
@@ -1453,13 +1369,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
                 >
                   {service.active ? 'Desativar' : 'Ativar'}
                 </button>
-                <button
-                  onClick={() => handleManagePeriods(service)}
-                  className="flex-1 h-10 bg-brand-50 text-brand-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all flex items-center justify-center gap-1"
-                >
-                  <Clock size={14} />
-                  Períodos
-                </button>
+
                 <button
                   onClick={() => handleEdit(service)}
                   className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all"
@@ -1478,118 +1388,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
         )}
       </div>
 
-      {/* Period Management Modal */}
-      {managingPeriodsFor && (
-        <div className="fixed inset-0 bg-black/50 z-50 flex items-end sm:items-center justify-center p-4 animate-in fade-in">
-          <div className="bg-white rounded-t-[40px] sm:rounded-[40px] w-full max-w-lg max-h-[90vh] overflow-y-auto shadow-2xl animate-in slide-in-from-bottom sm:slide-in-from-bottom-0">
-            <div className="sticky top-0 bg-white p-6 border-b border-slate-100 rounded-t-[40px] z-10">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tight">{managingPeriodsFor.title}</h3>
-                  <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest mt-1">Períodos de Atendimento</p>
-                </div>
-                <button onClick={closePeriodManagement} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 active:scale-95 transition-all">
-                  <X size={20} />
-                </button>
-              </div>
-            </div>
 
-            <div className="p-6 space-y-4">
-              {/* Add Period Button */}
-              {!showPeriodForm && (
-                <button
-                  onClick={() => setShowPeriodForm(true)}
-                  className="w-full h-14 bg-brand-50 text-brand-600 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-brand-100 active:scale-95 transition-all flex items-center justify-center gap-2"
-                >
-                  <Plus size={18} />
-                  Adicionar Período
-                </button>
-              )}
-
-              {/* Period Form */}
-              {showPeriodForm && (
-                <div className="bg-brand-50 p-5 rounded-[24px] space-y-3 animate-in slide-in-from-top-2">
-                  <div className="flex items-center justify-between">
-                    <h4 className="font-black text-brand-900 text-sm uppercase">Novo Período</h4>
-                    <button onClick={() => setShowPeriodForm(false)} className="text-brand-400 hover:text-brand-600">
-                      <X size={18} />
-                    </button>
-                  </div>
-
-                  <Input
-                    placeholder="Nome do período (ex: Manhã, Tarde)"
-                    value={periodFormData.period_name}
-                    onChange={(e) => setPeriodFormData({ ...periodFormData, period_name: e.target.value })}
-                    className="h-12 rounded-xl bg-white"
-                  />
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-brand-600 uppercase tracking-widest ml-2">Início</label>
-                      <input
-                        type="time"
-                        value={periodFormData.start_time}
-                        onChange={(e) => setPeriodFormData({ ...periodFormData, start_time: e.target.value })}
-                        className="w-full h-12 bg-white border border-brand-200 rounded-xl px-3 font-bold text-sm outline-none focus:border-brand-500"
-                      />
-                    </div>
-                    <div className="space-y-1">
-                      <label className="text-[9px] font-black text-brand-600 uppercase tracking-widest ml-2">Fim</label>
-                      <input
-                        type="time"
-                        value={periodFormData.end_time}
-                        onChange={(e) => setPeriodFormData({ ...periodFormData, end_time: e.target.value })}
-                        className="w-full h-12 bg-white border border-brand-200 rounded-xl px-3 font-bold text-sm outline-none focus:border-brand-500"
-                      />
-                    </div>
-                  </div>
-
-                  <Button
-                    fullWidth
-                    onClick={handleAddPeriod}
-                    className="h-12 bg-brand-600 text-white rounded-xl uppercase font-black text-xs tracking-widest shadow-lg shadow-brand-600/30"
-                  >
-                    Adicionar
-                  </Button>
-                </div>
-              )}
-
-              {/* Periods List */}
-              <div className="space-y-3">
-                {periods.length === 0 ? (
-                  <div className="text-center py-8">
-                    <div className="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                      <Clock size={20} className="text-slate-300" />
-                    </div>
-                    <p className="text-slate-400 font-bold text-sm">Nenhum período cadastrado</p>
-                    <p className="text-slate-300 text-xs mt-1">Adicione períodos de atendimento</p>
-                  </div>
-                ) : (
-                  periods.map((period) => (
-                    <div key={period.id} className="bg-white p-4 rounded-[20px] border border-slate-100 shadow-sm flex items-center justify-between">
-                      <div className="flex-1">
-                        <h5 className="font-black text-slate-900 text-sm">{period.period_name}</h5>
-                        <div className="flex items-center gap-2 mt-1">
-                          <Clock size={12} className="text-slate-400" />
-                          <span className="text-xs font-bold text-slate-500">
-                            {period.start_time.slice(0, 5)} às {period.end_time.slice(0, 5)}
-                          </span>
-                        </div>
-                      </div>
-                      <button
-                        onClick={() => handleDeletePeriod(period.id)}
-                        className="w-9 h-9 bg-rose-50 text-rose-600 rounded-xl flex items-center justify-center hover:bg-rose-100 active:scale-95 transition-all"
-                      >
-                        <X size={16} />
-                      </button>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };
