@@ -22,6 +22,9 @@ import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
 import { CalendarPicker } from '../components/CalendarPicker';
 
+import { AppFeedbackModal } from '../components/AppFeedbackModal';
+
+
 // --- COMPONENTES DE APOIO ---
 export const FloatingBackButton: React.FC<{ onClick: () => void; visible?: boolean }> = ({ onClick, visible = true }) => {
   const [show, setShow] = useState(false);
@@ -702,6 +705,7 @@ export const ResidentHome: React.FC<{
   const [showPackageModal, setShowPackageModal] = useState(false); // Controls Modal
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [localPackages, setLocalPackages] = useState<any[]>([]);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
 
   // Random Initial Index & Auto-Rotation for Desapego
   useEffect(() => {
@@ -727,7 +731,7 @@ export const ResidentHome: React.FC<{
       const { data } = await supabase
         .from('packages')
         .select('*')
-        .eq('resident_id', currentUser.id)
+        .or(`resident_id.eq.${currentUser.id},picked_up_by.eq.${currentUser.id}`)
         .in('status', ['pending', 'awaiting_confirmation']);
 
       if (data && data.length > 0) {
@@ -756,15 +760,17 @@ export const ResidentHome: React.FC<{
       .on('postgres_changes', {
         event: 'UPDATE',
         schema: 'public',
-        table: 'packages',
-        filter: `resident_id=eq.${currentUser.id}`
+        table: 'packages'
       }, (payload) => {
-        if (payload.new.status === 'awaiting_confirmation') {
+        // Handle Handshake confirmation UI
+        const isMine = payload.new.resident_id === currentUser.id || payload.new.picked_up_by === currentUser.id;
+
+        if (isMine && payload.new.status === 'awaiting_confirmation') {
           setShowPackageModal(true);
           setShowPackageAlert(true);
         }
-        // Refresh local list if needed (handled by parent setPackages usually)
-        checkPackages();
+
+        if (isMine) checkPackages();
       })
       .subscribe();
 
@@ -796,7 +802,7 @@ export const ResidentHome: React.FC<{
       const { data } = await supabase
         .from('packages')
         .select('*')
-        .eq('resident_id', currentUser.id)
+        .or(`resident_id.eq.${currentUser.id},picked_up_by.eq.${currentUser.id}`)
         .in('status', ['pending', 'awaiting_confirmation']);
       if (data) setLocalPackages(data);
     } else {
@@ -877,6 +883,14 @@ export const ResidentHome: React.FC<{
         professional={selectedPro}
       />
 
+      {/* FEEDBACK MODAL */}
+      <AppFeedbackModal
+        isOpen={feedbackOpen}
+        onClose={() => setFeedbackOpen(false)}
+        currentUser={currentUser}
+        userRole="resident"
+      />
+
       {/* NOTIFICATIONS MODAL */}
       <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} currentUser={currentUser} onUpdate={onClearNotifications} />
 
@@ -903,10 +917,10 @@ export const ResidentHome: React.FC<{
 
                 <div className="text-center">
                   <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase leading-none">
-                    Aperto de M�o<br /><span className="text-amber-500">Digital</span>
+                    Aperto de Mão<br /><span className="text-amber-500">Digital</span>
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-3 px-2">
-                    O funcion�rio est� com seu pacote agora.<br />Confirme para autorizar a entrega.
+                    O funcionário está com seu pacote agora.<br />Confirme para autorizar a entrega.
                   </p>
                 </div>
 
@@ -1034,7 +1048,7 @@ export const ResidentHome: React.FC<{
                 <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
               </div>
               <div>
-                <h1 className="text-2xl font-black text-white italic tracking-tighter">Ol�, {currentUser?.name?.split(' ')[0]}</h1>
+                <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
                 <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1">
                   <MapPin size={12} className="text-white/70" />
                   {currentUser?.unit?.toString().toUpperCase().includes('RUA')
@@ -1066,7 +1080,7 @@ export const ResidentHome: React.FC<{
               <Search className="text-white/70" size={18} />
             </button>
             <Input
-              placeholder="Procurar produto ou servi�o..."
+              placeholder="Procurar produto ou serviço..."
               className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder:text-white/60 focus:bg-white/20 transition-all font-sans"
               value={homeSearch}
               onChange={(e) => setHomeSearch(e.target.value)}
@@ -1100,7 +1114,7 @@ export const ResidentHome: React.FC<{
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Prestadores no Condom�nio</h3>
+              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Prestadores no Condomínio</h3>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {onSitePros.map((pro, i) => (
@@ -1157,7 +1171,7 @@ export const ResidentHome: React.FC<{
           </div>
         )}
 
-        {/* PENDENTE DE AVALIA��O */}
+        {/* PENDENTE DE AVALIAÇÃO */}
         {completedRequests.length > 0 && (
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
@@ -1168,7 +1182,7 @@ export const ResidentHome: React.FC<{
               {completedRequests.map((req, i) => (
                 <div key={i} className="bg-white p-5 rounded-[24px] border border-amber-100 shadow-lg shadow-amber-500/10 flex items-center justify-between">
                   <div>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Conclu�do em {new Date(req.created_at).toLocaleDateString('pt-BR')}</p>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Concluído em {new Date(req.created_at).toLocaleDateString('pt-BR')}</p>
                     <h4 className="font-black text-slate-900 text-sm mt-1">{req.title}</h4>
                     <p className="text-xs text-slate-500">Com {req.providerName || 'Prestador'}</p>
                   </div>
@@ -1183,7 +1197,7 @@ export const ResidentHome: React.FC<{
 
 
 
-        {/* ATALHOS R�PIDOS (COM ABAS) */}
+        {/* ATALHOS RÁPIDOS (COM ABAS) */}
         <div className="space-y-6">
           {/* Tabs */}
           <div className="flex p-1 bg-slate-100/80 rounded-2xl">
@@ -1197,23 +1211,27 @@ export const ResidentHome: React.FC<{
               onClick={() => setActiveSection('gestao')}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeSection === 'gestao' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
             >
-              Gest�o Condom�nio
+              Gestão Condomínio
             </button>
           </div>
 
-          {/* Conte�do Din�mico */}
+          {/* Conteúdo Dinâmico */}
           <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
             {activeSection === 'gestao' ? (
               <div>
-                <SectionHeader title="Gest�o Condom�nio" actionLabel="Ver Todos" onAction={() => onNavigate('home')} />
+                <SectionHeader title="Gestão Condomínio" actionLabel="Ver Todos" onAction={() => onNavigate('home')} />
                 <div className="grid grid-cols-4 gap-3">
                   {[
                     { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-brand-600', bg: 'bg-brand-50' },
                     { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { icon: <Scan size={20} />, label: 'Retirar Encomenda', target: 'scanner-encomenda', color: 'text-rose-500', bg: 'bg-slate-900 text-white' }, // New Scanner Action
-                    { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-blue-600', bg: 'bg-blue-50' },
+                    { icon: <Calendar size={20} />, label: 'Meus Agendamentos', target: 'resident-bookings', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { icon: <CreditCard size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                    { icon: <FileText size={20} />, label: 'Documentos', target: 'financeiro', color: 'text-blue-600', bg: 'bg-blue-50' }, // Financeiro handles documents usually or there is a docs page
+                    { icon: <Tag size={20} />, label: 'Desapego', target: 'desapegos-all', color: 'text-rose-600', bg: 'bg-rose-50' },
+                    { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-cyan-600', bg: 'bg-cyan-50' },
+                    { icon: <Scan size={20} />, label: 'Retirar Encomenda', target: 'scanner-encomenda', color: 'text-slate-100', bg: 'bg-slate-900 transition-colors group-hover:bg-slate-800' },
                   ].map((act, i) => (
-                    <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                    <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all group">
                       <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
                       <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
                     </button>
@@ -1228,7 +1246,7 @@ export const ResidentHome: React.FC<{
                     { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
                     { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
                     { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'Manuten��o', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'Manutenção', color: 'text-indigo-600', bg: 'bg-indigo-50' },
                   ].map((act, i) => {
                     // Check if category exists in DB (case-insensitive or exact)
                     const dbCat = categories.find(c => c.name.toLowerCase() === act.category.toLowerCase());
@@ -1343,6 +1361,37 @@ export const ResidentHome: React.FC<{
             )}
           </div>
         </div>
+
+        {/* FEEDBACK TRIGGER CARD */}
+        <div className="pb-12">
+          <Card
+            onClick={() => setFeedbackOpen(true)}
+            className="p-8 border-none bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-[40px] shadow-2xl shadow-slate-900/20 relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-brand-500/30 transition-all duration-700"></div>
+
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-brand-400 shadow-inner">
+                <Sparkles size={32} />
+              </div> {/* Closing div for the Sparkles container */}
+              <div className="flex-1">
+                <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none mb-2">💡 Ajude a melhorar o App</h3>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">Sua ideia pode ser a próxima funcionalidade do sistema!</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-brand-500 transition-all">
+                <ChevronRight size={20} />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* FEEDBACK MODAL */}
+        <AppFeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          currentUser={currentUser}
+          userRole="resident"
+        />
       </div>
     </div >
   );
@@ -2508,7 +2557,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
   );
 };
 
-export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]; onAddReservation: (res: any) => void; commonAreas: any[] }> = ({ onBack, reservations, onAddReservation, commonAreas }) => {
+export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]; onAddReservation: (res: any) => void; commonAreas: any[]; onNavigate?: (s: string) => void }> = ({ onBack, reservations, onAddReservation, commonAreas, onNavigate }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedArea, setSelectedArea] = useState<any>(null);
   const [date, setDate] = useState('');
@@ -2537,9 +2586,9 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
   const handleReserve = async () => {
     if (!selectedArea || !date) return;
 
-    const isSportsArea = selectedArea.category === 'Esportes';
+    const isHourly = selectedArea.reservation_type === 'hourly';
 
-    if (isSportsArea && !selectedHour) {
+    if (isHourly && !selectedHour) {
       alert('Por favor, selecione um horário.');
       return;
     }
@@ -2552,7 +2601,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
         date: date
       };
 
-      if (isSportsArea && selectedHour) {
+      if (isHourly && selectedHour) {
         const slot = hourlySlots.find(s => s.start === selectedHour);
         reservationData.startTime = slot?.start;
         reservationData.endTime = slot?.end;
@@ -2598,10 +2647,10 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
   // Filter available areas if date is selected
   const availableAreas = dateFiltered && date
     ? filteredAreas.filter(area => {
-      const isSportsArea = area.category === 'Esportes';
+      const isHourly = area.reservation_type === 'hourly';
 
-      if (isSportsArea) {
-        // For sports, check if at least one hour is available
+      if (isHourly) {
+        // For hourly areas, check if at least one hour is available
         return hourlySlots.some(slot => {
           return !reservations.some(r =>
             r.area_id === area.id &&
@@ -2624,15 +2673,24 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Reservas</h2>
+      <header className="p-6 pt-12 flex items-center justify-between bg-white border-b border-slate-100 sticky top-0 z-40">
+        <div className="flex items-center gap-4">
+          <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
+          <h2 className="text-xl font-black italic uppercase">Reservas</h2>
+        </div>
+        <button
+          onClick={() => onNavigate?.('resident-bookings')}
+          className="flex items-center gap-2 bg-brand-50 text-brand-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+        >
+          <Calendar size={14} />
+          Meus Agendamentos
+        </button>
       </header>
       <div className="p-6">
 
         {!selectedCategory ? (
           <div className="space-y-6 animate-in slide-in-from-left-4">
-            <SectionHeader title="O que voc� quer agendar?" />
+            <SectionHeader title="O que você quer agendar?" />
             <div className="grid grid-cols-2 gap-4">
               {categories.map(cat => (
                 <button key={cat} onClick={() => setSelectedCategory(cat)} className="aspect-square bg-white rounded-[40px] border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 active:scale-95 transition-all hover:border-brand-200 group">
@@ -2761,8 +2819,22 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
   );
 };
 
-export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[] }> = ({ onBack, reservations }) => {
-  const myReservations = reservations.filter(r => r.unit === '402-B');
+export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[]; currentUser: any; onRefresh: () => void }> = ({ onBack, reservations, currentUser, onRefresh }) => {
+  const myReservations = reservations.filter(r => r.resident_id === currentUser.id);
+
+  const handleCancel = async (id: number) => {
+    if (window.confirm('Deseja realmente cancelar este agendamento?')) {
+      try {
+        const { error } = await supabase.from('reservations').update({ status: 'cancelled' }).eq('id', id);
+        if (error) throw error;
+        alert('Reserva cancelada com sucesso!');
+        onRefresh();
+      } catch (e: any) {
+        alert('Erro ao cancelar: ' + e.message);
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
       <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
@@ -2781,8 +2853,22 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data</p>
                 <p className="font-bold text-slate-900">{new Date(r.date).toLocaleDateString('pt-BR')}</p>
+                {r.start_time && (
+                  <p className="text-[10px] text-brand-600 font-bold uppercase mt-1">
+                    {r.start_time.slice(0, 5)} - {r.end_time?.slice(0, 5)}
+                  </p>
+                )}
               </div>
-              <Badge color="bg-emerald-50 text-emerald-600 px-4 py-2 font-black italic uppercase text-[10px]">Confirmada</Badge>
+              <div className="flex flex-col items-end gap-2">
+                <Badge color={r.status === 'cancelled' ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}>
+                  {r.status === 'cancelled' ? 'CANCELADA' : 'CONFIRMADA'}
+                </Badge>
+                {r.status !== 'cancelled' && (
+                  <button onClick={() => handleCancel(r.id)} className="text-[9px] font-black text-rose-500 uppercase tracking-widest underline decoration-2 underline-offset-4">
+                    Cancelar
+                  </button>
+                )}
+              </div>
             </div>
           </Card>
         )) : (

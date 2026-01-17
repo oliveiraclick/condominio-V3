@@ -5,10 +5,11 @@ import {
   BarChart3, Calendar, MessageSquare, Bell,
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2, UserCog,
-  Megaphone, MessageCircle, UserCheck,
+  Megaphone, MessageCircle, UserCheck, Sparkles,
   LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import { AppFeedbackModal } from '../components/AppFeedbackModal';
 
 // --- NOTIFICATIONS MODAL ---
 export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userRole?: string; onUpdate?: () => void }> = ({ isOpen, onClose, userRole, onUpdate }) => {
@@ -570,6 +571,7 @@ export const ProfessionalDashboard: React.FC<{
   const [loadingGuide, setLoadingGuide] = useState(false);
   const [isOnSite, setIsOnSite] = useState(currentUser?.is_on_site || false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const carouselRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
 
@@ -892,9 +894,40 @@ export const ProfessionalDashboard: React.FC<{
         )}
 
         {/* CRM DE LEADS (NEW) */}
-        <div className="mt-8 mb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <div className="mt-8 mb-4 animate-in fade-in slide-in-from-bottom-4 duration-1000">
           <LeadsCRM currentUser={currentUser} />
         </div>
+
+        {/* FEEDBACK TRIGGER CARD */}
+        <div className="mb-12">
+          <Card
+            onClick={() => setFeedbackOpen(true)}
+            className="p-8 border-none bg-gradient-to-br from-slate-900 to-slate-800 text-white rounded-[40px] shadow-2xl shadow-slate-900/20 relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-brand-500/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-brand-500/30 transition-all duration-700"></div>
+
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-brand-400 shadow-inner">
+                <Sparkles size={32} />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none mb-2">💡 Sugestões para o App</h3>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">Sua ideia pode ser a próxima funcionalidade do sistema!</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-brand-500 transition-all">
+                <ChevronRight size={20} />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* FEEDBACK MODAL */}
+        <AppFeedbackModal
+          isOpen={feedbackOpen}
+          onClose={() => setFeedbackOpen(false)}
+          currentUser={currentUser}
+          userRole="professional"
+        />
       </div>
     </div>
   );

@@ -2,8 +2,11 @@
 import {
     Building, LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
     Bell, Search, MapPin, ChevronRight, Star, Key, Zap, CreditCard,
-    MessageSquare, Settings, LogOut
+    MessageSquare, Settings, LogOut, Sparkles
 } from 'lucide-react';
+import { Card } from '../components/ui';
+import { AppFeedbackModal } from '../components/AppFeedbackModal';
+
 
 export const ResidentModern: React.FC<{
     user: any;
@@ -15,8 +18,10 @@ export const ResidentModern: React.FC<{
     onNavigate?: (screen: string) => void;
     onSelectDesapego?: (item: any) => void;
 }> = ({ user, activeTab, onChangeTab, notifications = [], desapegos = [], packages = [], onNavigate, onSelectDesapego }) => {
+    const [feedbackOpen, setFeedbackOpen] = useState(false);
     const unreadCount = notifications.filter(n => !n.read).length;
     const myPackages = packages.filter(p => p.unit === (user?.unit || ''));
+
 
     return (
         <div className="min-h-screen bg-[#0f111a] text-slate-200 font-sans pb-24">
@@ -147,7 +152,38 @@ export const ResidentModern: React.FC<{
                     )}
                 </div>
 
+                {/* FEEDBACK TRIGGER CARD */}
+                <div className="mt-12 mb-12">
+                    <Card
+                        onClick={() => setFeedbackOpen(true)}
+                        className="p-8 border-none bg-gradient-to-br from-[#1c2230] to-[#0f111a] text-white rounded-[40px] shadow-2xl relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all border border-white/5"
+                    >
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-amber-500/10 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-amber-500/20 transition-all duration-700"></div>
+
+                        <div className="flex items-center gap-6 relative z-10">
+                            <div className="w-16 h-16 bg-amber-500/10 rounded-3xl flex items-center justify-center text-amber-500 shadow-inner">
+                                <Sparkles size={32} />
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none mb-2 text-white">💡 Sugestão para o App</h3>
+                                <p className="text-xs text-slate-400 font-medium leading-relaxed">Sua ideia pode ser a próxima funcionalidade do sistema!</p>
+                            </div>
+                            <div className="w-10 h-10 bg-white/5 rounded-full flex items-center justify-center group-hover:bg-amber-500 group-hover:text-black transition-all">
+                                <ChevronRight size={20} />
+                            </div>
+                        </div>
+                    </Card>
+                </div>
+
+                {/* FEEDBACK MODAL */}
+                <AppFeedbackModal
+                    isOpen={feedbackOpen}
+                    onClose={() => setFeedbackOpen(false)}
+                    currentUser={user}
+                    userRole="resident"
+                />
             </main>
+
 
             {/* BOTTOM NAVIGATION (Mantida a nova versão Gold pois é apenas visual) */}
             <nav className="fixed bottom-0 left-0 right-0 bg-[#0f111a]/95 backdrop-blur-xl border-t border-amber-500/10 px-6 py-4 flex justify-between items-end z-50 rounded-t-[32px]">

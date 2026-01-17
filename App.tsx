@@ -543,7 +543,7 @@ const App: React.FC = () => {
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
           case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
           case 'chamado': return <CommunicationHub onBack={goBack} currentUser={currentUser} />;
-          case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} commonAreas={commonAreas} onAddReservation={async (res) => {
+          case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} commonAreas={commonAreas} onNavigate={pushScreen} onAddReservation={async (res) => {
             const insertData: any = {
               resident_id: session.user.id,
               area_id: res.areaId,
@@ -565,6 +565,7 @@ const App: React.FC = () => {
           case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
+          case 'resident-bookings': return <ResidentBookings onBack={goBack} reservations={reservations} currentUser={currentUser} onRefresh={refreshAppData} />;
 
           // --- E-SHOP & DESAPEGO ROUTES ---
           case 'shop-detail': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;

@@ -244,7 +244,10 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
 export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: any; onUpdateArea?: (a: any) => void }> = ({ commonAreas, setCommonAreas, onUpdateArea }) => {
   const [isAdding, setIsAdding] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
-  const [form, setForm] = useState({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' });
+  const [form, setForm] = useState({
+    name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet',
+    reservation_type: 'full_day', available_start_time: '06:00:00', available_end_time: '22:00:00'
+  });
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -284,6 +287,9 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         hours: form.hours,
         inventory: form.inventory,
         category: form.category || 'Gourmet',
+        reservation_type: form.reservation_type || 'full_day',
+        available_start_time: form.available_start_time,
+        available_end_time: form.available_end_time,
         photos: [publicUrl]
       };
 
@@ -299,7 +305,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
 
       setIsAdding(false);
       setEditingId(null);
-      setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' });
+      setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet', reservation_type: 'full_day', available_start_time: '06:00:00', available_end_time: '22:00:00' });
       setImageFile(null);
       alert('Área salva com sucesso!');
 
@@ -318,7 +324,10 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
       hours: area.hours || '',
       inventory: area.inventory || '',
       photo: area.photos?.[0] || '',
-      category: area.category || 'Gourmet'
+      category: area.category || 'Gourmet',
+      reservation_type: area.reservation_type || 'full_day',
+      available_start_time: area.available_start_time || '06:00:00',
+      available_end_time: area.available_end_time || '22:00:00'
     });
     setEditingId(area.id);
     setIsAdding(true);
@@ -348,7 +357,9 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         </div>
         <div>
           <h5 className="font-black text-slate-900 italic leading-none">{area.name}</h5>
-          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest truncate max-w-[200px]">{area.hours} • R$ {area.price}</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest truncate max-w-[200px]">
+            {area.reservation_type === 'hourly' ? 'POR HORA' : 'DIA INTEIRO'} • {area.hours} • R$ {area.price}
+          </p>
           <p className="text-[9px] text-slate-300 truncate max-w-[200px] mt-0.5">{area.inventory}</p>
         </div>
       </div>
@@ -399,6 +410,9 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
             />
           </div>
 
+          <Input placeholder="Nome da Área (Ex: Salão de Festas)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
+          <Input placeholder="URL da Foto (Opcional se enviou arquivo)" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="h-14" />
+
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-900 uppercase">Categoria</label>
             <select
@@ -411,17 +425,43 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
             </select>
           </div>
 
-          <Input placeholder="Nome da Área (Ex: Salão de Festas)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
-          <Input placeholder="URL da Foto (Opcional se enviou arquivo)" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="h-14" />
           <div className="grid grid-cols-2 gap-4">
-            <Input placeholder="Preço (R$ 0,00)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-14" />
-            <Input placeholder="Horário (Ex: 08h - 22h)" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} className="h-14" />
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-900 uppercase">Tipo de Reserva</label>
+              <select
+                className="w-full h-14 bg-white rounded-2xl px-4 font-bold text-slate-700 outline-none border border-brand-100"
+                value={form.reservation_type}
+                onChange={e => setForm({ ...form, reservation_type: e.target.value })}
+              >
+                <option value="full_day">Dia Inteiro</option>
+                <option value="hourly">Por Hora</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-900 uppercase">Preço (R$ 0,00)</label>
+              <Input placeholder="Preço (R$ 0,00)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-14" />
+            </div>
           </div>
+
+          {form.reservation_type === 'hourly' && (
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-900 uppercase">Abre às</label>
+                <Input type="time" value={form.available_start_time} onChange={e => setForm({ ...form, available_start_time: e.target.value })} className="h-14" />
+              </div>
+              <div className="space-y-2">
+                <label className="text-[10px] font-black text-slate-900 uppercase">Fecha às</label>
+                <Input type="time" value={form.available_end_time} onChange={e => setForm({ ...form, available_end_time: e.target.value })} className="h-14" />
+              </div>
+            </div>
+          )}
+
+          <Input placeholder="Horário Texto (Ex: 08h - 22h)" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} className="h-14" />
           <Input placeholder="Inventário (Ex: 50 cadeiras, 1 freezer)" value={form.inventory} onChange={e => setForm({ ...form, inventory: e.target.value })} className="h-14" />
           <Input placeholder="Descrição / Regras" value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} className="h-14" />
 
           <div className="flex gap-3 pt-2">
-            <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
+            <Button fullWidth variant="secondary" onClick={() => { setIsAdding(false); setEditingId(null); }}>Cancelar</Button>
             <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950">
               {uploading ? 'Enviando...' : 'Salvar'}
             </Button>
@@ -458,10 +498,16 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<'Gourmet' | 'Esportes' | null>(null);
 
-  const handleCancel = (id: number, resDate: string) => {
+  const handleCancel = async (id: number) => {
     if (window.confirm('Confirmar cancelamento desta reserva no sistema?')) {
-      setReservations(reservations.filter(r => r.id !== id));
-      alert('Reserva removida com sucesso.');
+      try {
+        const { error } = await supabase.from('reservations').delete().eq('id', id);
+        if (error) throw error;
+        setReservations(reservations.filter(r => r.id !== id));
+        alert('Reserva removida com sucesso diretamente no banco.');
+      } catch (e: any) {
+        alert('Erro ao excluir do banco: ' + e.message);
+      }
     }
   };
 
@@ -622,7 +668,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
                   <Button
                     fullWidth
                     variant="outline"
-                    onClick={() => handleCancel(r.id, r.date)}
+                    onClick={() => handleCancel(r.id)}
                     className="py-5 border-rose-100 text-rose-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-3xl active:scale-95 transition-all"
                   >
                     Remover Reserva
@@ -808,7 +854,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   };
 
   const fetchResidents = async () => {
-    const { data } = await supabase.from('profiles').select('id, name, unit, tower').eq('role', 'resident');
+    const { data } = await supabase.from('profiles').select('id, name, unit, tower, condominium_id').eq('role', 'resident');
     if (data) setResidentsList(data);
   };
 
@@ -839,8 +885,9 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
       if (selectedResident) {
         await supabase.from('sent_notifications').insert([{
           title: 'Nova Encomenda!',
-          body: `Uma nova encomenda chegou para ${payload.resident_name}! Retire na portaria.`,
+          body: `Chegou um volume para ${payload.resident_name}! Retire na portaria.`,
           target_role: 'resident',
+          target_user_id: selectedResident.id,
           condominium_id: selectedResident.condominium_id || null
         }]);
       }

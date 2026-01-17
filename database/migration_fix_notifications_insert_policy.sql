@@ -10,5 +10,6 @@ DROP POLICY IF EXISTS "Admins can delete notifications" ON sent_notifications;
 
 CREATE POLICY "Admins can delete notifications" ON sent_notifications
   FOR DELETE TO authenticated
-  USING (true); 
-  -- In a stricter system, we would check: (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'super_admin')
+  USING (
+    (SELECT role FROM profiles WHERE id = auth.uid()) IN ('admin', 'super_admin')
+  );

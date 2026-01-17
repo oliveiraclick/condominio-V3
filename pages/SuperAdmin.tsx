@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, Image as ImageIcon, Key, Lock, CircleAlert, FileText, ChevronDown, ChevronUp, Package, ShoppingBag, Zap, Calendar, User } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, MessageCircle, Image as ImageIcon, Key, Lock, CircleAlert, FileText, ChevronDown, ChevronUp, Package, ShoppingBag, Zap, Calendar, User, Sparkles } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 
@@ -1308,6 +1308,106 @@ const SystemOverviewView = () => {
   );
 };
 
+// --- FEEDBACKS VIEW ---
+const FeedbacksView = () => {
+  const [feedbacks, setFeedbacks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => { loadFeedbacks(); }, []);
+
+  const loadFeedbacks = async () => {
+    setLoading(true);
+    const { data, error } = await supabase
+      .from('app_feedback')
+      .select(`
+                *,
+                profiles:user_id (name, condominium_id, condominiums:condominium_id (name))
+            `)
+      .order('created_at', { ascending: false });
+
+    if (data && !error) setFeedbacks(data);
+    setLoading(false);
+  };
+
+  const handleUpdateStatus = async (id: string, newStatus: string) => {
+    const { error } = await supabase.from('app_feedback').update({ status: newStatus }).eq('id', id);
+    if (!error) {
+      setFeedbacks(prev => prev.map(f => f.id === id ? { ...f, status: newStatus } : f));
+    }
+  };
+
+  if (loading) return <div className="p-12 text-center text-slate-400 font-bold uppercase tracking-widest animate-pulse">Carregando feedbacks...</div>;
+
+  return (
+    <div className={PAGE_CONTAINER}>
+      <header className="mb-8">
+        <h1 className={HEADER_TITLE}>Dicas & <span className={GRADIENT_TEXT}>Sugestões</span></h1>
+        <p className="text-xs text-slate-400 font-bold uppercase tracking-widest mt-1">Feedback da comunidade</p>
+      </header>
+
+      <div className="space-y-4">
+        {feedbacks.length === 0 ? (
+          <div className="text-center py-20 bg-white rounded-[40px] border border-slate-100 shadow-sm">
+            <Sparkles size={48} className="mx-auto text-slate-200 mb-4" />
+            <p className="text-slate-400 font-bold uppercase tracking-widest text-sm">Nenhum feedback recebido</p>
+          </div>
+        ) : feedbacks.map((f: any) => (
+          <div key={f.id} className={`${CARD_BASE} relative overflow-hidden group`}>
+            <div className={`absolute top-0 right-0 w-2 h-full ${f.status === 'new' ? 'bg-brand-500' : f.status === 'reviewed' ? 'bg-blue-400' : 'bg-slate-200'}`}></div>
+
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex items-center gap-3">
+                <Badge className={`${f.type === 'Dica' ? 'bg-amber-50 text-amber-600' : 'bg-brand-50 text-brand-600'} text-[9px] uppercase font-black px-2 py-0.5`}>
+                  {f.type}
+                </Badge>
+                <span className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{f.area}</span>
+              </div>
+              <span className="text-[10px] text-slate-400 font-medium">
+                {new Date(f.created_at).toLocaleDateString('pt-BR')}
+              </span>
+            </div>
+
+            <p className="text-sm text-slate-700 font-medium leading-relaxed mb-6">"{f.content}"</p>
+
+            <div className="flex items-center justify-between pt-4 border-t border-slate-50">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
+                  <User size={16} />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-[11px] font-black text-slate-900">{f.profiles?.name}</span>
+                  <span className="text-[9px] font-bold text-slate-400 uppercase tracking-tight">
+                    {f.role === 'resident' ? 'Morador' : 'Profissional'} • {f.profiles?.condominiums?.name}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                {f.status === 'new' && (
+                  <button
+                    onClick={() => handleUpdateStatus(f.id, 'reviewed')}
+                    className="px-3 py-1.5 bg-slate-100 hover:bg-slate-900 hover:text-white rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                  >
+                    Marcar Lido
+                  </button>
+                )}
+                {f.status !== 'archived' && (
+                  <button
+                    onClick={() => handleUpdateStatus(f.id, 'archived')}
+                    className="px-3 py-1.5 bg-slate-50 hover:bg-rose-50 hover:text-rose-600 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all"
+                  >
+                    Arquivar
+                  </button>
+                )}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // --- MAIN LAYOUT ---
 
 export const SuperAdmin = () => {
@@ -1326,6 +1426,7 @@ export const SuperAdmin = () => {
           {activeTab === 'api' && <ApiDocsView />}
           {activeTab === 'notifications' && <PushView />}
           {activeTab === 'overview' && <SystemOverviewView />}
+          {activeTab === 'feedbacks' && <FeedbacksView />}
         </div>
 
         {/* BOTTOM NAV */}
@@ -1339,6 +1440,7 @@ export const SuperAdmin = () => {
             { id: 'api', icon: Layers, label: 'API' },
             { id: 'notifications', icon: Bell, label: 'Push' },
             { id: 'overview', icon: FileText, label: 'Docs' },
+            { id: 'feedbacks', icon: Sparkles, label: 'Sugestões' },
           ].map(item => (
             <button
               key={item.id}

@@ -17,7 +17,7 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
             setScannedData(text);
 
             try {
-                // 1. Verify if package exists and belongs to unit (or just process it)
+                // 1. Verify if package exists and if user is authorized (Owner or Neighbor)
                 const { data: pkg, error: fetchError } = await supabase
                     .from('packages')
                     .select('*')
@@ -25,8 +25,24 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
                     .single();
 
                 if (fetchError || !pkg) throw new Error('Encomenda não encontrada ou QR Code inválido.');
-
                 if (pkg.status === 'delivered') throw new Error('Esta encomenda já foi retirada.');
+
+                // Check authorization
+                let isAuthorized = pkg.resident_id === currentUser.id;
+
+                if (!isAuthorized) {
+                    const { data: auth } = await supabase
+                        .from('package_authorizations')
+                        .select('id')
+                        .eq('grantor_id', pkg.resident_id)
+                        .eq('grantee_id', currentUser.id)
+                        .eq('status', 'active')
+                        .maybeSingle();
+
+                    if (auth) isAuthorized = true;
+                }
+
+                if (!isAuthorized) throw new Error('Você não tem autorização para retirar esta encomenda.');
 
                 // 2. Perform Digital Handshake (Update package with user info)
                 const { error: updateError } = await supabase
@@ -85,7 +101,7 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
                             <Scanner
                                 onScan={(result) => result?.[0]?.rawValue && handleScan(result[0].rawValue)}
                                 styles={{ container: { width: '100%', height: '100%' } }}
-                                components={{ audio: false, finder: false }}
+                                components={{ finder: false }}
                             />
 
                             {/* Custom Overlay */}
