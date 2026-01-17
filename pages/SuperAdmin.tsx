@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, MessageCircle, Image as ImageIcon, Key, Lock, CircleAlert, FileText, ChevronDown, ChevronUp, Package, ShoppingBag, Zap, Calendar, User, Sparkles } from 'lucide-react';
+import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, MessageCircle, Image as ImageIcon, Key, Lock, CircleAlert, FileText, ChevronDown, ChevronUp, Package, ShoppingBag, Zap, Calendar, User, Sparkles, UserCircle2, LogOut } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 
@@ -1410,8 +1410,21 @@ const FeedbacksView = () => {
 
 // --- MAIN LAYOUT ---
 
-export const SuperAdmin = () => {
-  const [activeTab, setActiveTab] = useState('professionals'); // Default to professionals for User flow
+export const SuperAdmin = ({ onLogout, currentUser }: any) => {
+  const [activeTab, setActiveTab] = useState('dashboard');
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  const navItems = [
+    { id: 'dashboard', icon: LayoutGrid, label: 'Dash', isPriority: true },
+    { id: 'condos', icon: Building, label: 'Condos', isPriority: true },
+    { id: 'professionals', icon: Briefcase, label: 'Pros', isPriority: true },
+    { id: 'users', icon: Users, label: 'Users', isPriority: true },
+    { id: 'access', icon: ShieldCheck, label: 'Acesso', isPriority: false },
+    { id: 'api', icon: Layers, label: 'API', isPriority: false },
+    { id: 'notifications', icon: Bell, label: 'Push', isPriority: false },
+    { id: 'overview', icon: FileText, label: 'Docs', isPriority: false },
+    { id: 'feedbacks', icon: Sparkles, label: 'Sugestões', isPriority: false },
+  ];
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex justify-center pb-24 font-sans selection:bg-brand-200 text-slate-900">
@@ -1429,32 +1442,80 @@ export const SuperAdmin = () => {
           {activeTab === 'feedbacks' && <FeedbacksView />}
         </div>
 
+        {/* MENU OVERLAY (HAMBURGER) */}
+        {menuOpen && (
+          <div className="fixed inset-0 z-[100] animate-in fade-in duration-300">
+            <div
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-bottom-10 duration-500">
+              <div className="p-6 bg-slate-50 border-b border-slate-100 mb-2">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-brand-500 flex items-center justify-center text-white shadow-lg">
+                    <UserCircle2 size={24} />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 uppercase tracking-tighter leading-none">{currentUser?.name || 'Super Admin'}</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Painel Master</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 p-4">
+                {navItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      setActiveTab(item.id);
+                      setMenuOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-brand-500 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                  >
+                    <item.icon size={20} />
+                    <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-4 pt-2 border-t border-slate-50">
+                <button
+                  onClick={() => onLogout()}
+                  className="w-full h-14 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
+                >
+                  <LogOut size={18} />
+                  Sair do Sistema
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* BOTTOM NAV */}
         <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-slate-900/90 backdrop-blur-xl text-white shadow-2xl shadow-slate-900/40 rounded-[32px] p-2 flex justify-between items-center z-50 border border-white/10 overflow-x-auto hide-scrollbar">
-          {[
-            { id: 'dashboard', icon: LayoutGrid, label: 'Dash' },
-            { id: 'condos', icon: Building, label: 'Condos' },
-            { id: 'professionals', icon: Briefcase, label: 'Pros' },
-            { id: 'users', icon: Users, label: 'Users' },
-            { id: 'access', icon: ShieldCheck, label: 'Acesso' },
-            { id: 'api', icon: Layers, label: 'API' },
-            { id: 'notifications', icon: Bell, label: 'Push' },
-            { id: 'overview', icon: FileText, label: 'Docs' },
-            { id: 'feedbacks', icon: Sparkles, label: 'Sugestões' },
-          ].map(item => (
+          {navItems.filter(i => i.isPriority).map(item => (
             <button
               key={item.id}
               onClick={() => setActiveTab(item.id)}
-              className={`relative min-w-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${activeTab === item.id ? 'bg-white text-slate-900 shadow-lg scale-110' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+              className={`relative min-w-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-white text-slate-900 shadow-lg scale-110' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
             >
               <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
             </button>
           ))}
+
+          {/* HAMBURGER BUTTON */}
+          <button
+            onClick={() => setMenuOpen(!menuOpen)}
+            className={`relative min-w-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+          >
+            <Menu size={22} strokeWidth={menuOpen ? 2.5 : 2} />
+          </button>
         </div>
 
       </div>
     </div>
   );
 };
+
 
 
