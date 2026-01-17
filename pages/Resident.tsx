@@ -13,7 +13,7 @@ import {
   Trophy, Target, Dumbbell, GlassWater, Waves, Store, Heart, Navigation,
   MessageSquare, Send, Paperclip, Mic, MoreVertical, CheckCheck, Award, Quote, Camera, MessageCircle,
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
-  Building2, Camera as CameraIcon, Download, Scan, Handshake, BadgeCheck
+  Building2, Camera as CameraIcon, Download, Scan, Handshake, BadgeCheck, Menu
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PackageScanner } from '../components/PackageScanner';
@@ -3297,43 +3297,137 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 };
 
 // --- NAVEGA��O ---
-export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-brand-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
-    {[
-      { id: 'home', icon: <LayoutGrid size={24} />, label: 'Home' },
-      { id: 'market', icon: <ShoppingBag size={24} />, label: 'Shop' },
-      { id: 'create-desapego', icon: <Plus size={28} />, isAction: true },
-      { id: 'booking', icon: <CalendarDays size={24} />, label: 'Reservas' },
-      { id: 'profile', icon: <User size={24} />, label: 'Perfil' },
-    ].map((item) => {
-      if (item.isAction) {
-        return (
+// --- NAVIGATION WITH HAMBURGER MENU ---
+export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void; currentUser?: any; onLogout?: () => void }> = ({ activeTab, onChange, currentUser, onLogout }) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  // Full list of navigation items
+  const navItems = [
+    { id: 'home', icon: LayoutGrid, label: 'Home', isPriority: true },
+    { id: 'booking', icon: CalendarDays, label: 'Reservas', isPriority: true },
+    { id: 'create-desapego', icon: Plus, label: 'Anunciar', isPriority: true, isAction: true },
+    { id: 'market', icon: ShoppingBag, label: 'Shop', isPriority: false },
+    { id: 'profile', icon: User, label: 'Perfil', isPriority: false },
+    // You can add more secondary items here if needed in future
+  ];
+
+  return (
+    <>
+      {/* TOP HEADER - Added via Navigation to share state */}
+      <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-md z-[60] px-6 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm transition-all duration-300">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-600/20">
+            <Building2 size={20} weight="fill" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black italic text-slate-900 leading-none tracking-tighter">CONDO<span className="text-brand-600">APP</span></h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Morador</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-all"
+        >
+          <Menu size={20} />
+        </button>
+      </header>
+      {/* MENU OVERLAY */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[100] animate-in fade-in duration-300">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-bottom-10 duration-500">
+            <div className="p-6 bg-slate-50 border-b border-slate-100 mb-2">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500 flex items-center justify-center text-white shadow-lg">
+                  <UserCircle2 size={24} />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 uppercase tracking-tighter leading-none">{currentUser?.name || 'Morador'}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Menu Principal</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 p-4">
+              {navItems.filter(i => !i.isAction).map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onChange(item.id);
+                    setMenuOpen(false);
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-brand-500 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                >
+                  <item.icon size={20} />
+                  <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4 pt-2 border-t border-slate-50">
+              <button
+                onClick={() => {
+                  if (onLogout) onLogout();
+                  else {
+                    // Fallback logout if prop not provided (though proper way is via prop)
+                    supabase.auth.signOut().then(() => window.location.reload());
+                  }
+                }}
+                className="w-full h-14 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
+              >
+                <LogOut size={18} />
+                Sair do App
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM NAV */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[98%] max-w-[420px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-100 rounded-[32px] p-2 flex justify-between items-center z-50">
+
+        {/* Priority Items (Left Side) - Home & Booking */}
+        {navItems.filter(i => i.isPriority && !i.isAction).slice(0, 2).map(item => (
           <button
             key={item.id}
-            onClick={() => onChange(item.id)}
-            className="mb-4 -mt-12 w-16 h-16 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-brand-500/40 border-[4px] border-[#fcfcfd] active:scale-95 transition-transform"
+            onClick={() => { onChange(item.id); setMenuOpen(false); }}
+            className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-brand-50 text-brand-600' : 'text-slate-300 hover:bg-slate-50'}`}
           >
-            {item.icon}
+            <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'text-brand-600' : 'text-slate-300'}`}>
+              {item.label}
+            </span>
           </button>
-        );
-      }
-      return (
+        ))}
+
+        {/* Action Button (Center) */}
+        {navItems.find(i => i.isAction) && (
+          <button
+            onClick={() => { onChange('create-desapego'); setMenuOpen(false); }}
+            className="mb-8 w-16 h-16 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-brand-500/40 border-[4px] border-[#fcfcfd] active:scale-95 transition-transform"
+          >
+            <Plus size={28} />
+          </button>
+        )}
+
+        {/* Menu Trigger (Right Side) */}
         <button
-          key={item.id}
-          onClick={() => onChange(item.id)}
-          className={`flex flex-col items-center gap-1 transition-all duration-300 w-12 ${activeTab === item.id ? 'text-brand-600 -translate-y-1' : 'text-brand-200 hover:text-brand-400'}`}
+          onClick={() => setMenuOpen(!menuOpen)}
+          className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-50'}`}
         >
-          {item.icon}
-          {activeTab === item.id && <div className="w-1.5 h-1.5 bg-brand-600 rounded-full animate-bounce" />}
+          <Menu size={24} strokeWidth={menuOpen ? 2.5 : 2} />
+          <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${menuOpen ? 'text-white' : 'text-slate-300'}`}>
+            Menu
+          </span>
         </button>
-      );
-    })}
-    {/* Version Display */}
-    <div className="absolute bottom-1 left-0 right-0 text-center">
-      <span className="text-[8px] text-slate-300 font-bold">v1.8.0</span>
-    </div>
-  </div>
-);
+
+      </div>
+    </>
+  );
+};
 
 export const BannerCarousel: React.FC = () => {
   const [banners, setBanners] = useState<any[]>([]);

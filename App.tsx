@@ -691,8 +691,8 @@ const App: React.FC = () => {
       <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
         {renderContent()}
         {!isSubPage && userRole && (
-          userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={baseScreen} /> :
-            userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} /> :
+          userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
+            userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
               userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
         )}
       </div>

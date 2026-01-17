@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2, UserCog,
   Megaphone, MessageCircle, UserCheck, Sparkles,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown, Menu, Building2
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
@@ -2267,33 +2267,121 @@ export const ProfessionalShop = ({ currentUser }: any) => {
   );
 };
 
-export const ProfessionalNavigation = ({ activeTab, onChange }: any) => {
+export const ProfessionalNavigation = ({ activeTab, onChange, currentUser, onLogout }: any) => {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   const navItems = [
-    { id: 'dashboard', icon: Grid, label: 'Início' },
-    { id: 'agenda', icon: Calendar, label: 'Agenda' },
-    { id: 'services', icon: Briefcase, label: 'Serviços' },
-    { id: 'shop', icon: Store, label: 'Loja' },
-    { id: 'earnings', icon: Wallet, label: 'Financeiro' },
-    { id: 'profile', icon: User, label: 'Perfil' },
+    { id: 'dashboard', icon: Grid, label: 'Início', isPriority: true },
+    { id: 'agenda', icon: Calendar, label: 'Agenda', isPriority: true },
+    { id: 'earnings', icon: Wallet, label: 'Financeiro', isPriority: true },
+    { id: 'services', icon: Briefcase, label: 'Serviços', isPriority: false },
+    { id: 'shop', icon: Store, label: 'Loja', isPriority: false },
+    { id: 'profile', icon: User, label: 'Perfil', isPriority: false },
   ];
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-5px_30px_rgba(124,58,237,0.15)] border-t border-brand-100 px-6 py-4 flex justify-between items-end z-50 max-w-md mx-auto rounded-t-[32px] mb-0">
-      {navItems.map((item) => {
-        const isActive = activeTab === item.id;
-        return (
+    <>
+      {/* TOP HEADER */}
+      <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-md z-[60] px-6 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm transition-all duration-300">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
+            <Briefcase size={20} weight="fill" />
+          </div>
+          <div>
+            <h1 className="text-lg font-black italic text-slate-900 leading-none tracking-tighter">CONDO<span className="text-slate-600">PRO</span></h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Parceiro</p>
+          </div>
+        </div>
+        <button
+          onClick={() => setMenuOpen(true)}
+          className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-all"
+        >
+          <Menu size={20} />
+        </button>
+      </header>
+
+      {/* MENU OVERLAY */}
+      {menuOpen && (
+        <div className="fixed inset-0 z-[100] animate-in fade-in duration-300">
+          <div
+            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+            onClick={() => setMenuOpen(false)}
+          />
+          <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-bottom-10 duration-500">
+            <div className="p-6 bg-slate-50 border-b border-slate-100 mb-2">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg">
+                  <UserCircle2 size={24} />
+                </div>
+                <div>
+                  <h3 className="font-black text-slate-900 uppercase tracking-tighter leading-none">{currentUser?.name || 'Profissional'}</h3>
+                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Menu Parceiro</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 gap-2 p-4">
+              {navItems.map(item => (
+                <button
+                  key={item.id}
+                  onClick={() => {
+                    onChange(item.id);
+                    setMenuOpen(false);
+                  }}
+                  className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                >
+                  <item.icon size={20} />
+                  <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="p-4 pt-2 border-t border-slate-50">
+              <button
+                onClick={() => {
+                  if (onLogout) onLogout();
+                  else {
+                    supabase.auth.signOut().then(() => window.location.reload());
+                  }
+                }}
+                className="w-full h-14 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
+              >
+                <LogOut size={18} />
+                Sair da Conta
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* BOTTOM NAV */}
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[98%] max-w-[420px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-100 rounded-[32px] p-2 flex justify-between items-center z-50">
+
+        {/* Priority Items */}
+        {navItems.filter(i => i.isPriority).map(item => (
           <button
             key={item.id}
-            onClick={() => onChange(item.id)}
-            className={`flex flex-col items-center gap-1 transition-all duration-300 ${isActive ? '-translate-y-2' : ''}`}
+            onClick={() => { onChange(item.id); setMenuOpen(false); }}
+            className={`flex-1 relative h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-slate-50 text-slate-900' : 'text-slate-300 hover:bg-slate-50'}`}
           >
-            <div className={`p-3 rounded-2xl transition-all duration-300 ${isActive ? 'bg-slate-900 text-white shadow-lg shadow-slate-900/30' : 'text-slate-300 hover:text-slate-600'}`}>
-              <item.icon size={24} strokeWidth={isActive ? 2.5 : 2} />
-            </div>
-            {isActive && <span className="text-[10px] font-black uppercase tracking-wider text-slate-900 animate-in fade-in slide-in-from-bottom-2">{item.label}</span>}
+            <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'text-slate-900' : 'text-slate-300'}`}>
+              {item.label}
+            </span>
           </button>
-        );
-      })}
-    </div>
+        ))}
+
+        {/* Menu Trigger */}
+        <button
+          onClick={() => setMenuOpen(!menuOpen)}
+          className={`relative w-16 h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-50'}`}
+        >
+          <Menu size={24} strokeWidth={menuOpen ? 2.5 : 2} />
+          <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${menuOpen ? 'text-white' : 'text-slate-300'}`}>
+            Menu
+          </span>
+        </button>
+      </div>
+    </>
   );
 };
