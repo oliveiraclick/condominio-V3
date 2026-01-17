@@ -1493,25 +1493,35 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
         )}
 
         {/* BOTTOM NAV */}
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-[380px] bg-slate-900/90 backdrop-blur-xl text-white shadow-2xl shadow-slate-900/40 rounded-[32px] p-2 flex justify-between items-center z-50 border border-white/10 overflow-x-auto hide-scrollbar">
+        <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[98%] max-w-[420px] bg-slate-900/90 backdrop-blur-xl text-white shadow-2xl shadow-slate-900/40 rounded-[32px] p-2 flex justify-between items-center z-50 border border-white/10">
           {navItems.filter(i => i.isPriority).map(item => (
             <button
               key={item.id}
-              onClick={() => setActiveTab(item.id)}
-              className={`relative min-w-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-white text-slate-900 shadow-lg scale-110' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+              onClick={() => {
+                setActiveTab(item.id);
+                setMenuOpen(false);
+              }}
+              className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-white text-slate-900 shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
             >
-              <item.icon size={22} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              <item.icon size={20} strokeWidth={activeTab === item.id ? 2.5 : 2} />
+              <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id && !menuOpen ? 'text-slate-900' : 'text-slate-500'}`}>
+                {item.label}
+              </span>
             </button>
           ))}
 
           {/* HAMBURGER BUTTON */}
           <button
             onClick={() => setMenuOpen(!menuOpen)}
-            className={`relative min-w-[56px] w-14 h-14 rounded-full flex items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
+            className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-white/10'}`}
           >
-            <Menu size={22} strokeWidth={menuOpen ? 2.5 : 2} />
+            <Menu size={20} strokeWidth={menuOpen ? 2.5 : 2} />
+            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${menuOpen ? 'text-white' : 'text-slate-500'}`}>
+              Menu
+            </span>
           </button>
         </div>
+
 
       </div>
     </div>
