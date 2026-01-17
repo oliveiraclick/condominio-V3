@@ -1448,10 +1448,10 @@ export const Marketplace: React.FC<{
   categories?: any[];
 }> = ({ onNavigate, onSelectCategory, products, categories = [] }) => {
   const displayCategories = categories.length > 0 ? categories.slice(0, 4) : [
-    { id: '1', name: 'Alimenta��o', icon: <Utensils size={28} />, bg: 'bg-orange-50', color: 'text-orange-600' },
-    { id: '2', name: 'Manuten��o', icon: <Wrench size={28} />, bg: 'bg-blue-50', color: 'text-blue-600' },
+    { id: '1', name: 'Alimentação', icon: <Utensils size={28} />, bg: 'bg-orange-50', color: 'text-orange-600' },
+    { id: '2', name: 'Manutenção', icon: <Wrench size={28} />, bg: 'bg-blue-50', color: 'text-blue-600' },
     { id: '3', name: 'Limpeza', icon: <Droplets size={28} />, bg: 'bg-emerald-50', color: 'text-emerald-600' },
-    { id: '4', name: 'Est�tica', icon: <Scissors size={28} />, bg: 'bg-rose-50', color: 'text-rose-600' },
+    { id: '4', name: 'Estética', icon: <Scissors size={28} />, bg: 'bg-rose-50', color: 'text-rose-600' },
   ];
 
   return (
@@ -1467,7 +1467,7 @@ export const Marketplace: React.FC<{
       <div className="p-6 space-y-10">
         <div className="relative group" onClick={() => onNavigate('shop-detail')}>
           <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input readOnly placeholder="Qual servi�o voc� precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100 cursor-pointer pointer-events-none" />
+          <Input readOnly placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100 cursor-pointer pointer-events-none" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -1545,7 +1545,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
     'Eletricista': { icon: <Zap size={24} />, color: 'text-yellow-600', bg: 'bg-yellow-50' },
     'Limpeza': { icon: <Droplets size={24} />, color: 'text-cyan-600', bg: 'bg-cyan-50' },
     'Pintor': { icon: <Paintbrush size={24} />, color: 'text-pink-600', bg: 'bg-pink-50' },
-    'Manuten��o': { icon: <Wrench size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
+    'Manutenção': { icon: <Wrench size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
     'Tecnologia': { icon: <Monitor size={24} />, color: 'text-brand-600', bg: 'bg-brand-50' },
     'Beleza': { icon: <Scissors size={24} />, color: 'text-rose-600', bg: 'bg-rose-50' },
     'Outros': { icon: <Briefcase size={24} />, color: 'text-slate-600', bg: 'bg-slate-50' },
@@ -1618,7 +1618,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       }
       window.open(`https://wa.me/55${cleanPhone}`, '_blank');
     } else {
-      alert('Telefone no disponvel');
+      alert('Telefone não disponível');
     }
   };
 
@@ -1646,7 +1646,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={activeCategory === 'Todos' ? "Busque por servio (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
+            placeholder={activeCategory === 'Todos' ? "Busque por serviço (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
             className="pl-12 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all"
           />
         </div>
@@ -1711,7 +1711,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomnio.'}</p>
+                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomínio.'}</p>
                   </div>
                 </div>
 
@@ -1752,7 +1752,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Megaphone size={14} className="text-brand-400" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">No achou?</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">Não achou?</span>
             </div>
             <h3 className="font-black text-lg italic leading-tight mb-1">Mural de Oportunidades</h3>
             <p className="text-slate-400 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
@@ -1795,7 +1795,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className="bg-brand-100 text-brand-700">{selectedPro.category}</Badge>
-                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condomnio!</Badge>}
+                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condomínio!</Badge>}
                   </div>
                 </div>
                 <div className="text-right">
@@ -1803,20 +1803,20 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <Star size={16} className="text-amber-400 fill-amber-400" />
                     <span className="text-lg font-black text-slate-900">{selectedPro.rating || '4.8'}</span>
                   </div>
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avaliaes</span>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avaliações</span>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Sobre o Profissional</h4>
-                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomnio.'}</p>
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomínio.'}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
                     <Clock size={20} className="text-brand-500 mb-2" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horrio</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horário</p>
                     <p className="font-bold text-slate-700">Seg - Sex, 08h-18h</p>
                   </div>
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
@@ -1864,22 +1864,22 @@ export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; 
 );
 
 export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ onBack, item, currentUser, onDelete }) => {
-  if (!item) return <div className="p-10">Item n�o encontrado. <button onClick={onBack}>Voltar</button></div>;
+  if (!item) return <div className="p-10">Item não encontrado. <button onClick={onBack}>Voltar</button></div>;
 
   const isOwner = currentUser?.name === item.user;
 
   const handleInterest = () => {
     if (item.phone) {
       const cleanPhone = item.phone.replace(/\D/g, '');
-      const message = encodeURIComponent(`Ol�, vi seu an�ncio do *${item.name}* no app do condom�nio e tenho interesse!`);
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.name}* no app do condomínio e tenho interesse!`);
       window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
     } else {
-      alert('Telefone do vendedor n�o dispon�vel.');
+      alert('Telefone do vendedor não disponível.');
     }
   };
 
   const handleDelete = () => {
-    if (onDelete && confirm('Tem certeza que deseja remover este an�ncio?')) {
+    if (onDelete && confirm('Tem certeza que deseja remover este anúncio?')) {
       onDelete(item.id);
     }
   };
@@ -1925,14 +1925,14 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
 
         <div className="space-y-4">
           <h3 className="font-bold text-slate-900">Sobre o produto</h3>
-          <p className="text-sm text-slate-500 leading-relaxed">{item.desc || 'Sem descri��o detalhada.'}</p>
+          <p className="text-sm text-slate-500 leading-relaxed">{item.desc || 'Sem descrição detalhada.'}</p>
         </div>
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-50">
         {isOwner ? (
           <Button fullWidth onClick={handleDelete} className="bg-rose-50 text-rose-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-rose-100">
-            <Trash2 size={18} className="mr-2" /> Remover An�ncio
+            <Trash2 size={18} className="mr-2" /> Remover Anúncio
           </Button>
         ) : (
           <Button fullWidth onClick={handleInterest} className="bg-emerald-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs shadow-lg shadow-emerald-500/30">
@@ -2027,7 +2027,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
             <div className="space-y-3 text-right">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mr-4">Status</label>
               <div className="flex gap-2 justify-end">
-                {['NOVO', 'USADO', 'DOA��O'].map(s => (
+                {['NOVO', 'USADO', 'DOAÇÃO'].map(s => (
                   <button
                     key={s}
                     onClick={() => setForm({ ...form, status: s })}
@@ -2041,7 +2041,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Descri��o Detalhada</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Descrição Detalhada</label>
             <textarea
               placeholder="Conte mais sobre o estado do item, tempo de uso e motivo do desapego..."
               value={form.desc}
@@ -2060,7 +2060,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
           >
             {isSubmitting ? 'Publicando...' : 'Publicar Desapego'}
           </Button>
-          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu an�ncio ficar� vis�vel para todo o condom�nio</p>
+          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu anúncio ficará visível para todo o condomínio</p>
         </div>
       </div>
     </div>
@@ -2126,7 +2126,7 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
           <div className="grid grid-cols-2 gap-4">
             <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
               <option>Visita</option>
-              <option>Servi�o</option>
+              <option>Serviço</option>
               <option>Delivery</option>
             </select>
             <Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="h-14" />
@@ -2135,10 +2135,10 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
         </Card>
 
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autoriza��es Ativas</h4>
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
           {authorizations.length === 0 ? (
             <div className="text-center py-8 text-slate-300">
-              <p className="text-xs italic">Ningu�m autorizado.</p>
+              <p className="text-xs italic">Ninguém autorizado.</p>
             </div>
           ) : (
             authorizations.map(auth => (
@@ -2177,7 +2177,7 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
             <h3 className="text-4xl font-black italic tracking-tighter">R$ {pending.value}</h3>
             <p className="text-[10px] font-bold mt-2 opacity-80">Vence em: {new Date(pending.dueDate).toLocaleDateString('pt-BR')}</p>
             <div className="mt-8 flex gap-3">
-              <Button variant="secondary" className="flex-1 bg-white text-brand-600 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all" onClick={() => alert('C�digo copiado!')}>Copia C�digo</Button>
+              <Button variant="secondary" className="flex-1 bg-white text-brand-600 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all" onClick={() => alert('Código copiado!')}>Copia Código</Button>
               <button className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center active:scale-95 transition-all"><Download size={20} /></button>
             </div>
           </Card>
@@ -2185,13 +2185,13 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
           <div className="p-10 bg-emerald-500 text-white rounded-[48px] text-center space-y-4 shadow-xl shadow-emerald-500/20">
             <CheckCircle2 size={48} className="mx-auto" />
             <p className="font-black italic text-xl">Tudo em dia!</p>
-            <p className="text-xs opacity-80">Voc� n�o possui faturas pendentes.</p>
+            <p className="text-xs opacity-80">Você não possui faturas pendentes.</p>
           </div>
         )}
 
         <div className="space-y-4">
-          <SectionHeader title="Hist�rico" />
-          {paid.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-4">Nenhum hist�rico dispon�vel.</p> : paid.map((inv) => (
+          <SectionHeader title="Histórico" />
+          {paid.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-4">Nenhum histórico disponível.</p> : paid.map((inv) => (
             <div key={inv.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center"><Check size={24} /></div>
@@ -2208,7 +2208,7 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
 
 export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[]; onAddRequest?: (req: any) => void; currentUser?: any }> = ({ onBack, serviceRequests = [], onAddRequest, currentUser }) => {
   const [isNew, setIsNew] = useState(false);
-  const [form, setForm] = useState({ title: '', category: 'Manuten��o', desc: '' });
+  const [form, setForm] = useState({ title: '', category: 'Manutenção', desc: '' });
 
   const handleOpen = () => {
     if (!form.title || !form.desc) return;
@@ -2224,7 +2224,7 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
         unit: currentUser?.unit || '---'
       });
       setIsNew(false);
-      setForm({ title: '', category: 'Manuten��o', desc: '' });
+      setForm({ title: '', category: 'Manutenção', desc: '' });
       alert('Chamado aberto com sucesso!');
     }
   };
@@ -2245,7 +2245,7 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
               <div className="relative z-10">
                 <MessageSquare className="mx-auto text-brand-400 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
-                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, fa�a sugest�es ou tire d�vidas diretamente com a administra��o.</p>
+                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
                 <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
               </div>
             </div>
@@ -2256,10 +2256,10 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
                   <div className="flex justify-between items-start">
                     <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'Conclu�do' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} � {req.date}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} – {req.date}</p>
                 </div>
               ))}
             </div>
@@ -2270,16 +2270,16 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
               <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
               <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
             </div>
-            <Input placeholder="T�tulo (ex: L�mpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
+            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>Manuten��o</option>
+              <option>Manutenção</option>
               <option>Limpeza</option>
-              <option>Seguran�a</option>
-              <option>Sugest�o</option>
-              <option>Reclama��o</option>
+              <option>Segurança</option>
+              <option>Sugestão</option>
+              <option>Reclamação</option>
             </select>
             <textarea
-              placeholder="Descreva a situa��o..."
+              placeholder="Descreva a situação..."
               className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
@@ -2294,14 +2294,14 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
 
 export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests: any[]; currentUser: any }> = ({ onBack, serviceRequests, currentUser }) => {
   const [isNew, setIsNew] = useState(false);
-  const [form, setForm] = useState({ title: '', category: 'Manuten��o', desc: '' });
+  const [form, setForm] = useState({ title: '', category: 'Manutenção', desc: '' });
 
   const handleOpen = async () => {
     if (form.title && form.desc) {
-      // Registrar no banco (Simula��o ou Supabase dependendo da implementa��o)
+      // Registrar no banco (Simulação ou Supabase dependendo da implementação)
       alert('Chamado aberto com sucesso!');
       setIsNew(false);
-      setForm({ title: '', category: 'Manuten��o', desc: '' });
+      setForm({ title: '', category: 'Manutenção', desc: '' });
     }
   };
 
@@ -2321,7 +2321,7 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
               <div className="relative z-10">
                 <MessageSquare className="mx-auto text-brand-400 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
-                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, fa�a sugest�es ou tire d�vidas diretamente com a administra��o.</p>
+                <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
                 <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
               </div>
             </div>
@@ -2332,10 +2332,10 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
                   <div className="flex justify-between items-start">
                     <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'Conclu�do' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} � {req.date}</p>
+                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} – {req.date}</p>
                 </div>
               ))}
             </div>
@@ -2346,16 +2346,16 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
               <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
               <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
             </div>
-            <Input placeholder="T�tulo (ex: L�mpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
+            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
             <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>Manuten��o</option>
+              <option>Manutenção</option>
               <option>Limpeza</option>
-              <option>Seguran�a</option>
-              <option>Sugest�o</option>
-              <option>Reclama��o</option>
+              <option>Segurança</option>
+              <option>Sugestão</option>
+              <option>Reclamação</option>
             </select>
             <textarea
-              placeholder="Descreva a situa��o..."
+              placeholder="Descreva a situação..."
               className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
@@ -2424,7 +2424,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
       // 4. Open WhatsApp
       const cleanPhone = proposal.profiles?.phone?.replace(/\D/g, '');
       if (cleanPhone) {
-        const message = encodeURIComponent(`Ol� ${proposal.profiles.name}, aceitei sua proposta no Mural para o servi�o de *${proposal.profiles.category}*!`);
+        const message = encodeURIComponent(`Olá ${proposal.profiles.name}, aceitei sua proposta no Mural para o serviço de *${proposal.profiles.category}*!`);
         window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
       }
       loadData();
@@ -2449,7 +2449,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
             <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
               <Megaphone size={32} className="text-slate-200" />
             </div>
-            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">Voc� ainda n�o publicou nenhuma necessidade.</p>
+            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">Você ainda não publicou nenhuma necessidade.</p>
             <p className="text-slate-300 text-[10px] mt-2">Publique no Mural para receber propostas de profissionais!</p>
           </div>
         ) : (
@@ -2540,7 +2540,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
     const isSportsArea = selectedArea.category === 'Esportes';
 
     if (isSportsArea && !selectedHour) {
-      alert('Por favor, selecione um hor�rio.');
+      alert('Por favor, selecione um horário.');
       return;
     }
 

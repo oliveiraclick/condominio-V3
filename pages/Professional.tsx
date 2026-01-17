@@ -146,8 +146,27 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
   const [formData, setFormData] = useState({
     cpf: '',
     company_name: '',
-    company_address: ''
+    company_address: '',
+    description: ''
   });
+
+  useEffect(() => {
+    if (userId && isOpen) {
+      loadProfile();
+    }
+  }, [userId, isOpen]);
+
+  const loadProfile = async () => {
+    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (data) {
+      setFormData({
+        cpf: data.cpf || '',
+        company_name: data.company_name || '',
+        company_address: data.company_address || '',
+        description: data.description || ''
+      });
+    }
+  };
 
   const handleSave = async () => {
     if (!formData.cpf || !formData.company_name) {
@@ -157,8 +176,10 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
     setLoading(true);
     const { error } = await supabase.from('profiles').update(formData).eq('id', userId);
     if (!error) {
-      alert('Perfil completado com sucesso!');
-      window.location.reload();
+      alert('Perfil atualizado com sucesso!');
+      onClose();
+      // Optional: trigger reload or callback
+      if (window.location.hash.includes('services')) window.location.reload(); 
     } else {
       alert('Erro ao salvar: ' + error.message);
     }
@@ -179,10 +200,22 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
           <p className="text-xs text-slate-500 mt-2">Para cadastrar serviços ou produtos, precisamos de alguns dados adicionais.</p>
         </div>
         <div className="space-y-4">
+        <div className="space-y-4">
           <Input placeholder="Seu CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="h-14" />
           <Input placeholder="Nome da Empresa / Fantasia" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} className="h-14" />
           <Input placeholder="Endereço Comercial" value={formData.company_address} onChange={e => setFormData({ ...formData, company_address: e.target.value })} className="h-14" />
-          <Button fullWidth onClick={handleSave} disabled={loading} className="h-14 bg-slate-900 text-white font-black uppercase text-xs tracking-widest mt-2">{loading ? 'Salvando...' : 'Salvar e Continuar'}</Button>
+          
+          <div>
+            <label className="text-[10px] font-black uppercase text-slate-400 ml-4 mb-1 block tracking-widest">Bio / Apresentação</label>
+            <textarea
+              placeholder="Fale sobre você ou sua empresa..."
+              value={formData.description}
+              onChange={e => setFormData({ ...formData, description: e.target.value })}
+              className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all text-slate-600"
+            />
+          </div>
+
+          <Button fullWidth onClick={handleSave} disabled={loading} className="h-14 bg-slate-900 text-white font-black uppercase text-xs tracking-widest mt-2">{loading ? 'Salvando...' : 'Salvar Perfil'}</Button>
         </div>
       </div>
     </div>
@@ -1268,12 +1301,18 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
             <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Meus Serviços</h2>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{services.length} serviços</p>
           </div>
-          <button
-            onClick={handleAddClick}
-            className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
-          >
-            <Plus size={24} />
-          </button>
+            <button
+              onClick={() => setShowCompletionModal(true)}
+              className="w-12 h-12 bg-white text-slate-600 rounded-2xl flex items-center justify-center border border-slate-200 mr-2 active:scale-95 transition-all"
+            >
+              <UserCog size={24} />
+            </button>
+            <button
+              onClick={handleAddClick}
+              className="w-12 h-12 bg-emerald-600 text-white rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-600/30 active:scale-95 transition-all"
+            >
+              <Plus size={24} />
+            </button>
         </div>
       </header>
 
