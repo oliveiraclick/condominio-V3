@@ -1583,100 +1583,7 @@ export const AdminConciergeChat: React.FC<{ onBack: () => void }> = ({ onBack })
   );
 };
 
-export const AdminNotices: React.FC<{ onBack: () => void; onAddNotification?: (n: any) => void }> = ({ onBack, onAddNotification }) => {
-  const [form, setForm] = useState({ title: '', desc: '', type: 'AVISO' });
 
-  const handleSend = () => {
-    if (!form.title || !form.desc) return;
-    if (onAddNotification) {
-      onAddNotification({
-        id: Date.now(),
-        title: form.title,
-        desc: form.desc,
-        time: 'Agora',
-        read: false
-      });
-      alert('Notificação enviada com sucesso!');
-      setForm({ title: '', desc: '', type: 'AVISO' });
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <AdminHeader title="AVISOS MURAL" onBack={onBack} />
-      <div className="p-6 space-y-8">
-        <Card className="p-8 border-none shadow-xl rounded-[40px] bg-white space-y-6">
-          <h3 className="text-lg font-black italic text-slate-900">Nova Notificação</h3>
-          <Input placeholder="Título (ex: Encomenda na Portaria)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
-          <textarea
-            placeholder="Mensagem..."
-            className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all"
-            value={form.desc}
-            onChange={e => setForm({ ...form, desc: e.target.value })}
-          />
-          <Button fullWidth onClick={handleSend} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar Notificação</Button>
-        </Card>
-      </div>
-    </div>
-  );
-};
-export const AdminFinance: React.FC<{ onBack: () => void; invoices?: any[]; onAddInvoice?: (i: any) => void }> = ({ onBack, invoices = [], onAddInvoice }) => {
-  const [form, setForm] = useState({ title: '', value: '', resident: 'Alex Ferreira', date: '' });
-
-  const handleIssue = () => {
-    if (!form.title || !form.value || !form.date) return;
-    if (onAddInvoice) {
-      onAddInvoice({
-        id: Date.now().toString(),
-        title: form.title,
-        value: form.value,
-        status: 'Pendente',
-        dueDate: form.date,
-        read: false,
-        resident: form.resident
-      });
-      alert('Cobrança emitida com sucesso!');
-      setForm({ title: '', value: '', resident: 'Alex Ferreira', date: '' });
-    }
-  };
-
-  return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <AdminHeader title="FINANCEIRO" onBack={onBack} />
-      <div className="p-6 space-y-8">
-        <Card className="p-8 border-none shadow-xl rounded-[40px] bg-white space-y-6 animate-in slide-in-from-top-4">
-          <h3 className="text-lg font-black italic text-slate-900">Nova Cobrança</h3>
-          <Input placeholder="Título (ex: Mensalidade Nov/24)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
-          <div className="grid grid-cols-2 gap-4">
-            <Input placeholder="Valor (R$)" value={form.value} onChange={e => setForm({ ...form, value: e.target.value })} className="h-14" />
-            <Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="h-14" />
-          </div>
-          <select value={form.resident} onChange={e => setForm({ ...form, resident: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-            <option>Alex Ferreira (Apt 402-B)</option>
-            <option>Clara Mendes (Apt 105-B)</option>
-          </select>
-          <Button fullWidth onClick={handleIssue} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Emitir Boleto</Button>
-        </Card>
-
-        <div className="space-y-4">
-          <SectionHeader title="Cobranças Recentes" />
-          {invoices.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-4">Nenhuma cobrança registrada.</p> : invoices.map((inv) => (
-            <div key={inv.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm">
-              <div>
-                <h5 className="font-bold text-slate-900 italic">{inv.title}</h5>
-                <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest leading-none mt-1">Vence em {new Date(inv.dueDate).toLocaleDateString('pt-BR')}</p>
-              </div>
-              <div className="text-right">
-                <p className="font-black text-slate-900">R$ {inv.value}</p>
-                <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-full inline-block mt-1 ${inv.status === 'Pago' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}`}>{inv.status}</div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 export const AdminIncidents: React.FC<{ onBack: () => void; serviceRequests?: any[]; onUpdateRequest?: (id: number, status: string) => void }> = ({ onBack, serviceRequests = [], onUpdateRequest }) => {
   const [filter, setFilter] = useState('Todos');
   const filtered = filter === 'Todos' ? serviceRequests : serviceRequests.filter(req => req.status === filter);
@@ -2161,6 +2068,155 @@ export const AdminBanners: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  );
+};
+
+// --- MURAL DE AVISOS (NOTICES) ---
+export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  const [notices, setNotices] = useState<any[]>([]);
+  const [isAdding, setIsAdding] = useState(false);
+  const [form, setForm] = useState({ title: '', body: '', isUrgent: false, targetRole: 'all' });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => { loadNotices(); }, []);
+
+  const loadNotices = async () => {
+    // Fetch global notices or notices created by admin
+    const { data } = await supabase
+      .from('sent_notifications')
+      .select('*')
+      .order('created_at', { ascending: false });
+    if (data) setNotices(data);
+  };
+
+  const handleSend = async () => {
+    if (!form.title || !form.body) return alert('Preencha título e mensagem');
+    setLoading(true);
+
+    const { error } = await supabase.from('sent_notifications').insert([{
+      title: form.title,
+      body: form.body,
+      target_role: form.targetRole, // Uses selected role
+      target_user_id: null,
+      condominium_id: null
+    }]);
+
+    setLoading(false);
+
+    if (error) {
+      alert('Erro: ' + error.message);
+    } else {
+      alert('Aviso publicado com sucesso!');
+      setIsAdding(false);
+      setForm({ title: '', body: '', isUrgent: false, targetRole: 'all' });
+      loadNotices();
+    }
+  };
+
+  const handleDelete = async (id: number) => {
+    if (!confirm('Excluir este aviso?')) return;
+    const { error } = await supabase.from('sent_notifications').delete().eq('id', id);
+    if (!error) loadNotices();
+  };
+
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <AdminHeader title="Mural de Avisos" onBack={onBack} />
+      <div className="p-6 space-y-6">
+
+        {!isAdding && (
+          <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2">
+            <Plus size={20} /> Novo Comunicado
+          </Button>
+        )}
+
+        {isAdding && (
+          <Card className="p-8 space-y-4 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
+            <h3 className="text-lg font-black italic text-slate-900">Novo Comunicado Geral</h3>
+
+            <div className="space-y-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Destinatários</label>
+              <div className="flex gap-2">
+                {[
+                  { id: 'all', label: 'Todos' },
+                  { id: 'resident', label: 'Moradores' },
+                  { id: 'professional', label: 'Prestadores' }
+                ].map((role) => (
+                  <button
+                    key={role.id}
+                    onClick={() => setForm({ ...form, targetRole: role.id })}
+                    className={`flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border-2 ${form.targetRole === role.id
+                      ? 'bg-slate-900 text-white border-slate-900'
+                      : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'
+                      }`}
+                  >
+                    {role.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <Input
+              placeholder="Título do Aviso"
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+              className="h-14 bg-slate-50 border-transparent focus:bg-white"
+            />
+            <textarea
+              placeholder="Digite a mensagem..."
+              className="w-full h-32 bg-slate-50 border-none rounded-3xl p-5 text-sm resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-slate-700 focus:bg-white"
+              value={form.body}
+              onChange={e => setForm({ ...form, body: e.target.value })}
+            />
+            <div className="flex gap-3 pt-2">
+              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
+              <Button fullWidth onClick={handleSend} disabled={loading} className="bg-brand-600 text-white font-black uppercase text-xs tracking-widest">
+                {loading ? 'Enviando...' : 'Publicar'}
+              </Button>
+            </div>
+          </Card>
+        )}
+
+        <div className="space-y-4">
+          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Histórico de Avisos</h3>
+          {notices.length === 0 && <p className="text-slate-400 text-xs font-bold italic text-center py-8">Nenhum aviso publicado.</p>}
+
+          {notices.map(notice => (
+            <div key={notice.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group">
+              <div className="flex justify-between items-start mb-2">
+                <h4 className="text-lg font-black italic text-slate-900">{notice.title}</h4>
+                <button onClick={() => handleDelete(notice.id)} className="text-slate-300 hover:text-rose-500 transition-colors">
+                  <Trash2 size={18} />
+                </button>
+              </div>
+              <p className="text-slate-600 font-medium text-sm leading-relaxed mb-4">{notice.body}</p>
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+                <Clock size={12} />
+                {new Date(notice.created_at).toLocaleDateString('pt-BR')} às {new Date(notice.created_at).toLocaleTimeString('pt-BR').slice(0, 5)}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- FINANCEIRO (PLACEHOLDER) ---
+export const AdminFinance: React.FC<{ onBack: () => void }> = ({ onBack }) => {
+  return (
+    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+      <AdminHeader title="Financeiro" onBack={onBack} />
+      <div className="p-10 flex flex-col items-center justify-center text-center space-y-6 opacity-60">
+        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+          <Wallet className="text-slate-400" size={48} />
+        </div>
+        <h3 className="text-2xl font-black italic text-slate-900">Em Breve</h3>
+        <p className="text-slate-500 font-medium max-w-xs mx-auto">
+          O módulo financeiro administrativo está sendo preparado com relatórios avançados e gestão de cobranças.
+        </p>
       </div>
     </div>
   );

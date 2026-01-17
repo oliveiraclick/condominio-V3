@@ -316,16 +316,18 @@ const App: React.FC = () => {
         return data;
       };
 
-      const [areas, resvs, requests, pros, cats, onSite, prods, desap, allProfiles] = await Promise.all([
+      const [areas, resvs, requests, pros, cats, onSite, prods, desap, allProfiles, unreadNotifs] = await Promise.all([
         fetchTable('common_areas', supabase.from('common_areas').select('*').order('name')),
         fetchTable('reservations', supabase.from('reservations').select('*, common_areas(name)').order('date')),
         fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false })),
         fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
         fetchTable('categories', supabase.from('categories').select('*').order('name')),
-        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', new Date(Date.now() - 1 * 60 * 60 * 1000).toISOString())),
+        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)),
         fetchTable('products', supabase.from('products').select('*').eq('available', true)),
         fetchTable('marketplace', supabase.from('marketplace').select('*')),
-        fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar, specialties'))
+        fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar, specialties')),
+        // NEW: Fetch directly from the VIEW. DB handles filtering and unread status.
+        fetchTable('my_unread_notifications', supabase.from('my_unread_notifications').select('*').order('created_at', { ascending: false }))
       ]);
 
       const profileMap = (allProfiles || []).reduce((acc: any, p: any) => {
@@ -405,6 +407,14 @@ const App: React.FC = () => {
           };
         }));
       }
+
+      // HANDLE NOTIFICATIONS (SIMPLIFIED)
+      if (unreadNotifs) {
+        setNotifications(unreadNotifs);
+      } else {
+        setNotifications([]);
+      }
+
     } catch (e) {
       console.error("[App] Erro fatal no refresh", e);
     }
@@ -527,7 +537,7 @@ const App: React.FC = () => {
       if (userRole === UserRole.RESIDENT) {
         switch (activeTab) {
           case 'resident':
-          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} categories={categories} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} />;
+          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} categories={categories} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} />;
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
@@ -600,6 +610,8 @@ const App: React.FC = () => {
           case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
           case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
           case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={refreshAppData} />;
+          case 'admin-notices': return <AdminNotices onBack={goBack} />;
+          case 'admin-finance': return <AdminFinance onBack={goBack} />;
           case 'profile': return <AdminProfile currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
           default: return <AdminDashboard onNavigate={pushScreen} onLogout={() => supabase.auth.signOut()} />;
         }

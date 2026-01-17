@@ -60,7 +60,7 @@ export const SectionHeader: React.FC<{ title: string; onAction?: () => void; act
 );
 
 // --- NOTIFICATIONS MODAL ---
-export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any; onUpdate?: () => void }> = ({ isOpen, onClose, currentUser, onUpdate }) => {
+export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any }> = ({ isOpen, onClose, currentUser }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -72,11 +72,14 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
 
   const loadNotifications = async () => {
     setLoading(true);
-
     const { data, error } = await supabase
-      .from('my_unread_notifications')
+      .from('sent_notifications')
       .select('*')
-      .order('created_at', { ascending: false });
+      .or(`target_role.eq.all,target_role.eq.${currentUser.role}`)
+      // NEW: Filter by global (null) or user's condominium
+      .or(`condominium_id.is.null,condominium_id.eq.${currentUser.condominium_id}`)
+      .order('created_at', { ascending: false })
+      .limit(50);
 
     if (data && !error) {
       setNotifications(data);
@@ -84,24 +87,8 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
     setLoading(false);
   };
 
-
-
-  const markAsRead = async (id: string) => {
-    // Optimistic UI Update
+  const markAsRead = (id: string) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
-
-    // Persist to DB
-    const { error } = await supabase.from('notification_reads').insert({
-      notification_id: id,
-      user_id: currentUser.id
-    });
-
-    if (error) {
-      console.error('Erro ao marcar como lido:', error);
-      // alert('Erro ao salvar leitura: ' + error.message); // Silent fail is better for UX if View works
-    } else {
-      if (onUpdate) onUpdate(); // Trigger parent refresh (badge update)
-    }
   };
 
   if (!isOpen) return null;
@@ -533,143 +520,6 @@ export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
   );
 };
 
-export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () => void; professional: any }> = ({ isOpen, onClose, professional }) => {
-  const [rating, setRating] = useState<number | null>(null);
-  const [reviewsCount, setReviewsCount] = useState(0);
-  const [reviews, setReviews] = useState<any[]>([]);
-
-  useEffect(() => {
-    if (isOpen && professional?.id) {
-      fetchData();
-    }
-  }, [isOpen, professional]);
-
-  const fetchData = async () => {
-    // Fetch Rating
-    const { data: ratingData } = await supabase.from('reviews').select('rating').eq('target_id', professional.id);
-    if (ratingData && ratingData.length > 0) {
-      const avg = ratingData.reduce((acc, curr) => acc + curr.rating, 0) / ratingData.length;
-      setRating(avg);
-      setReviewsCount(ratingData.length);
-    } else {
-      setRating(null);
-      setReviewsCount(0);
-    }
-
-    // Fetch Reviews List
-    const { data: reviewsData } = await supabase
-      .from('reviews')
-      .select('*, reviewer:reviewer_id(name)')
-      .eq('target_id', professional.id)
-      .order('created_at', { ascending: false });
-
-    if (reviewsData) {
-      setReviews(reviewsData);
-    }
-  };
-
-  if (!isOpen || !professional) return null;
-
-  return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-sm bg-white rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
-
-        {/* HEADER: Avatar & Info */}
-        <div className="flex flex-col items-center shrink-0">
-          {/* Avatar - Smaller & Focused */}
-          <div className="w-24 h-24 bg-slate-100 rounded-[24px] overflow-hidden shadow-md border-4 border-white relative z-10 mb-3">
-            <img
-              src={professional.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${professional.name}`}
-              className="w-full h-full object-cover object-top"
-            />
-          </div>
-
-          <div className="text-center space-y-1 w-full">
-            <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter leading-none">
-              {professional.name}
-            </h2>
-            <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200 inline-block">
-              {professional.category || 'Prestador'}
-            </span>
-          </div>
-
-          {/* BIG STARS */}
-          <div className="flex items-center justify-center gap-1 py-4">
-            {[1, 2, 3, 4, 5].map(s => (
-              <Star key={s} size={24} fill={rating && s <= Math.round(rating) ? "#fbbf24" : "none"} className={rating && s <= Math.round(rating) ? "text-amber-400" : "text-slate-200"} strokeWidth={3} />
-            ))}
-          </div>
-          <p className="text-xs font-bold text-slate-400 -mt-2 mb-4">
-            {rating ? rating.toFixed(1) : 'Novo'} • {reviewsCount} avaliações
-          </p>
-        </div>
-
-        {/* SCROLLABLE CONTENT: Description & Reviews */}
-        <div className="flex-1 overflow-y-auto space-y-6 pr-2 -mr-2 min-h-0">
-          {/* Description */}
-          <div className="bg-slate-50 rounded-2xl p-4">
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Sobre</h4>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              {professional.description || 'Este profissional ainda não adicionou uma descrição detalhada.'}
-            </p>
-          </div>
-
-          {/* Reviews List */}
-          <div>
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 sticky top-0 bg-white py-2 z-10">
-              O que dizem os vizinhos
-            </h4>
-            <div className="space-y-3">
-              {reviews.length === 0 ? (
-                <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma avaliação ainda.</p>
-              ) : (
-                reviews.map((rev) => (
-                  <div key={rev.id} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-slate-900">{rev.reviewer?.name || 'Vizinho'}</span>
-                      <div className="flex text-amber-400">
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <Star key={s} size={10} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "" : "text-slate-200"} />
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">{rev.comment || 'Sem comentário.'}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* FOOTER ACTIONS */}
-        <div className="pt-4 shrink-0 grid gap-2">
-          <button
-            onClick={() => {
-              if (professional.phone) {
-                const cleanPhone = professional.phone.replace(/\D/g, '');
-                window.open(`https://wa.me/55${cleanPhone}`, '_blank');
-              } else {
-                alert('Telefone indisponível');
-              }
-            }}
-            className="h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[20px] flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all w-full"
-          >
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <MessageCircle size={18} className="text-white" fill="currentColor" />
-            </div>
-            <span className="font-black uppercase tracking-widest text-xs">Chamar no WhatsApp</span>
-          </button>
-
-          <button onClick={onClose} className="h-10 text-slate-400 font-bold uppercase tracking-widest text-xs hover:bg-slate-50 rounded-xl">
-            Fechar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-};
-
 export const ResidentHome: React.FC<{
   onNavigate: (target: string) => void;
   onSelectCategory: (cat: string, search?: string) => void;
@@ -688,8 +538,7 @@ export const ResidentHome: React.FC<{
   onPostMuralDemand: (category: string, description: string) => void;
   muralCategories: string[];
   activeTab?: string;
-}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories, categories = [], activeTab, onClearNotifications }) => {
-  const [selectedPro, setSelectedPro] = useState<any>(null);
+}> = ({ onNavigate, onSelectCategory, packages = [], setPackages, desapegos = [], currentUser, notifications = [], serviceRequests = [], activeServices = [], onSelectDesapego, products = [], onSelectProduct, onSitePros = [], onPostMuralDemand, muralCategories, categories = [], activeTab }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentDesapegoIndex, setCurrentDesapegoIndex] = useState(0);
   const [activeSection, setActiveSection] = useState<'prestadores' | 'gestao'>('prestadores');
@@ -870,15 +719,8 @@ export const ResidentHome: React.FC<{
         proName={selectedRequestToReview?.providerName || 'Profissional'}
       />
 
-      {/* PROFESSIONAL DETAIL MODAL (NEW) */}
-      <ProfessionalDetailModal
-        isOpen={!!selectedPro}
-        onClose={() => setSelectedPro(null)}
-        professional={selectedPro}
-      />
-
       {/* NOTIFICATIONS MODAL */}
-      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} currentUser={currentUser} onUpdate={onClearNotifications} />
+      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} currentUser={currentUser} />
 
       {/* MURAL MODAL */}
       <MuralDemandModal isOpen={muralOpen} onClose={() => setMuralOpen(false)} onPost={onPostMuralDemand} categories={muralCategories} />
@@ -1104,51 +946,29 @@ export const ResidentHome: React.FC<{
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {onSitePros.map((pro, i) => (
-                <div
-                  key={i}
-                  onClick={() => {
-                    setSelectedPro(pro); // OPEN MODAL
-                  }}
-                  className="min-w-[140px] bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center gap-3 cursor-pointer hover:shadow-md transition-all active:scale-95"
-                >
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 relative">
-                    <img
-                      src={pro.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
+                <div key={i} className="min-w-[140px] bg-white p-4 rounded-[24px] border border-emerald-100 shadow-lg shadow-emerald-500/10 flex flex-col items-center gap-2 relative">
+                  <div className="absolute top-2 right-2 w-3 h-3 bg-emerald-500 border-2 border-white rounded-full"></div>
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100">
+                    <img src={pro.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`} className="w-full h-full object-cover" />
                   </div>
-
                   <div className="text-center">
-                    <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                      {pro.category || 'Prestador'}
-                    </p>
-                    <h4 className="font-black text-slate-900 text-xs leading-tight line-clamp-1">
-                      {pro.name || 'Prestador'}
-                    </h4>
+                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{pro.category || 'Prestador'}</p>
+                    <h4 className="font-bold text-slate-900 text-xs leading-tight line-clamp-1">{pro.name}</h4>
                   </div>
-
-                  <button
-                    onClick={async (e) => {
-                      e.stopPropagation();
-
-                      if (pro.phone && currentUser?.id) {
-                        const cleanPhone = pro.phone.replace(/\D/g, '');
-
+                  <button onClick={async () => {
+                    const cleanPhone = pro.phone?.replace(/\D/g, '');
+                    if (cleanPhone) {
+                      if (currentUser?.id) {
                         await supabase.from('professional_leads').insert([{
                           professional_id: pro.id,
                           resident_id: currentUser.id,
                           source: 'whatsapp_click',
                           metadata: { origin: 'home_onsite_banner' }
                         }]);
-
-                        window.open(`https://wa.me/55${cleanPhone}`, '_blank');
-                      } else {
-                        alert('Telefone não disponível para este prestador.');
                       }
-                    }}
-                    className="mt-1 w-full py-2 bg-emerald-50 text-emerald-600 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-colors"
-                  >
+                      window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+                    }
+                  }} className="mt-1 w-full py-2 bg-emerald-50 text-emerald-600 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-emerald-500 hover:text-white transition-colors">
                     Chamar
                   </button>
                 </div>
@@ -1520,7 +1340,11 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   const [activeCategory, setActiveCategory] = useState(initialCategory);
   const [searchTerm, setSearchTerm] = useState(initialSearch);
   const [selectedPro, setSelectedPro] = useState<any>(null);
-
+  const [showingPeriods, setShowingPeriods] = useState(false);
+  const [availablePeriods, setAvailablePeriods] = useState<any[]>([]);
+  const [loadingPeriods, setLoadingPeriods] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
     if (initialSearch) setSearchTerm(initialSearch);
@@ -1528,13 +1352,32 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
   const handleProClick = async (pro: any) => {
     setSelectedPro(pro);
+    setShowingPeriods(false);
+    setShowCalendar(false);
+    setSelectedDate(null);
 
+    // Load periods immediately to check if professional has scheduling enabled
     try {
       if (pro.provider_id || pro.id) {
         await supabase.rpc('increment_profile_view', { profile_uuid: pro.provider_id || pro.id });
       }
+
+      // Load available periods
+      const { data, error } = await supabase
+        .from('service_time_periods')
+        .select('*')
+        .eq('service_id', pro.id)
+        .eq('active', true)
+        .order('start_time');
+
+      if (data && !error) {
+        setAvailablePeriods(data);
+      } else {
+        setAvailablePeriods([]);
+      }
     } catch (err) {
-      console.error('Error logging view:', err);
+      console.error('Error loading professional data:', err);
+      setAvailablePeriods([]);
     }
   };
 
@@ -1592,17 +1435,60 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       });
 
       filtered = filtered.filter(s =>
-        (s.title && s.title.toLowerCase().includes(lower)) ||
-        (s.providerName && s.providerName.toLowerCase().includes(lower)) ||
-        (s.category && s.category.toLowerCase().includes(lower)) ||
+        s.title.toLowerCase().includes(lower) ||
+        s.providerName?.toLowerCase().includes(lower) ||
+        s.category?.toLowerCase().includes(lower) ||
         relevantCatNames.has(s.category) ||
-        (s.description && s.description.toLowerCase().includes(lower)) ||
-        (Array.isArray(s.specialties) && s.specialties.some((tag: string) => tag && tag.toLowerCase().includes(lower)))
+        s.description?.toLowerCase().includes(lower) ||
+        (s.specialties && s.specialties.some((tag: string) => tag.toLowerCase().includes(lower)))
       );
     }
     return filtered;
   }, [services, activeCategory, searchTerm, categories]);
 
+  const handleRequest = (proName: string, proId: string, period?: any) => {
+    onServiceRequest({
+      id: Date.now(),
+      name: `Servi�o com ${proName}`,
+      user: 'Morador',
+      time: 'Agora',
+      location: 'Minha Unidade',
+      status: 'pending',
+      professional_id: proId,
+      period_id: period?.id,
+      scheduled_time: period ? `${period.start_time} - ${period.end_time}` : null,
+      scheduled_date: selectedDate ? selectedDate.toISOString().split('T')[0] : null
+    });
+    alert(`Solicita��o enviada para ${proName}${period ? ` para ${selectedDate?.toLocaleDateString('pt-BR')} no per�odo ${period.period_name}` : ''}!`);
+    setSelectedPro(null);
+    setShowingPeriods(false);
+    setShowCalendar(false);
+    setSelectedDate(null);
+  };
+
+  const loadProPeriods = async (pro: any) => {
+    setLoadingPeriods(true);
+    setShowingPeriods(true);
+    try {
+      const { data, error } = await supabase
+        .from('service_time_periods')
+        .select('*')
+        .eq('service_id', pro.id)
+        .eq('active', true)
+        .order('start_time');
+
+      if (data && !error) {
+        setAvailablePeriods(data);
+      } else {
+        setAvailablePeriods([]);
+      }
+    } catch (err) {
+      console.error('Error loading periods:', err);
+      setAvailablePeriods([]);
+    } finally {
+      setLoadingPeriods(false);
+    }
+  };
 
   const openWhatsApp = async (phone: string, proId: string) => {
     const cleanPhone = phone?.replace(/\D/g, '');
@@ -1618,7 +1504,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       }
       window.open(`https://wa.me/55${cleanPhone}`, '_blank');
     } else {
-      alert('Telefone no disponvel');
+      alert('Telefone n�o dispon�vel');
     }
   };
 
@@ -1646,7 +1532,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={activeCategory === 'Todos' ? "Busque por servio (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
+            placeholder={activeCategory === 'Todos' ? "Busque por servi�o (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
             className="pl-12 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all"
           />
         </div>
@@ -1711,7 +1597,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                         </div>
                       )}
                     </div>
-                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomnio.'}</p>
+                    <p className="text-xs text-slate-400 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condom�nio.'}</p>
                   </div>
                 </div>
 
@@ -1723,9 +1609,15 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   <div className="flex gap-2">
                     <button
                       onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone, pro.id); }}
-                      className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-emerald-500 hover:text-white px-4 font-bold text-xs uppercase tracking-widest"
+                      className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-emerald-500 hover:text-white"
                     >
-                      <Phone size={18} className="mr-2" /> WhatsApp
+                      <Phone size={18} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); handleRequest(pro.providerName, pro.id); }}
+                      className="w-10 h-10 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-brand-600 hover:text-white"
+                    >
+                      <Zap size={18} />
                     </button>
                   </div>
                 </div>
@@ -1752,7 +1644,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
               <Megaphone size={14} className="text-brand-400" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">No achou?</span>
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-400">N�o achou?</span>
             </div>
             <h3 className="font-black text-lg italic leading-tight mb-1">Mural de Oportunidades</h3>
             <p className="text-slate-400 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
@@ -1795,7 +1687,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
                   <div className="flex items-center gap-2 mt-2">
                     <Badge className="bg-brand-100 text-brand-700">{selectedPro.category}</Badge>
-                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condomnio!</Badge>}
+                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condom�nio!</Badge>}
                   </div>
                 </div>
                 <div className="text-right">
@@ -1803,20 +1695,20 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <Star size={16} className="text-amber-400 fill-amber-400" />
                     <span className="text-lg font-black text-slate-900">{selectedPro.rating || '4.8'}</span>
                   </div>
-                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avaliaes</span>
+                  <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avalia��es</span>
                 </div>
               </div>
 
               <div className="space-y-6">
                 <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Sobre o Profissional</h4>
-                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomnio.'}</p>
+                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condom�nio.'}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
                     <Clock size={20} className="text-brand-500 mb-2" />
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horrio</p>
+                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Hor�rio</p>
                     <p className="font-bold text-slate-700">Seg - Sex, 08h-18h</p>
                   </div>
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
@@ -1835,7 +1727,59 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     >
                       <Phone className="mr-2" size={18} /> WhatsApp
                     </Button>
+                    <Button
+                      fullWidth
+                      className="h-14 bg-slate-100 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-xs"
+                      onClick={() => handleRequest(selectedPro.providerName, selectedPro.id)}
+                    >
+                      <Zap className="mr-2" size={18} /> Solicitar
+                    </Button>
                   </div>
+
+                  {selectedPro.booking_type === 'agenda' && !showingPeriods && (
+                    <Button
+                      fullWidth
+                      className="h-14 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-brand-600/20 animate-in fade-in zoom-in-95"
+                      onClick={() => loadProPeriods(selectedPro)}
+                    >
+                      <Calendar className="mr-2" size={18} /> Ver Hor�rios Dispon�veis
+                    </Button>
+                  )}
+
+                  {showingPeriods && (
+                    <div className="space-y-4 animate-in slide-in-from-top-2 p-2">
+                      <div className="flex items-center justify-between">
+                        <h5 className="text-[10px] font-black text-brand-600 uppercase tracking-[0.2em]">Hor�rios Dispon�veis</h5>
+                        <button onClick={() => setShowingPeriods(false)} className="text-[9px] font-bold text-slate-400 uppercase">Fechar</button>
+                      </div>
+
+                      {loadingPeriods ? (
+                        <div className="flex justify-center py-4">
+                          <div className="w-6 h-6 border-2 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
+                        </div>
+                      ) : availablePeriods.length === 0 ? (
+                        <p className="text-[10px] text-slate-400 text-center py-2">Nenhum hor�rio cadastrado</p>
+                      ) : (
+                        <div className="grid grid-cols-1 gap-2">
+                          {availablePeriods.map(period => (
+                            <button
+                              key={period.id}
+                              onClick={() => handleRequest(selectedPro.providerName, selectedPro.id, period)}
+                              className="w-full p-4 bg-brand-50 hover:bg-brand-100 border border-brand-100 rounded-2xl flex items-center justify-between group transition-all"
+                            >
+                              <div className="text-left">
+                                <p className="font-bold text-brand-900 text-xs">{period.period_name}</p>
+                                <p className="text-[10px] text-brand-600 font-medium">{period.start_time.slice(0, 5)} - {period.end_time.slice(0, 5)}</p>
+                              </div>
+                              <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center text-brand-600 shadow-sm opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Check size={16} />
+                              </div>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -2829,10 +2773,9 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
   const activeCategoryData = categories.find(c => c.name === selectedCategory);
 
   const filteredProducts = products.filter(p => {
-    const lower = searchTerm.toLowerCase();
-    const matchesSearch = (p.title && p.title.toLowerCase().includes(lower)) ||
-      (p.description && p.description.toLowerCase().includes(lower)) ||
-      (p.profiles && p.profiles.name && p.profiles.name.toLowerCase().includes(lower));
+    const matchesSearch = p.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.profiles?.name?.toLowerCase().includes(searchTerm.toLowerCase());
 
     const matchesCategory = selectedCategory === 'Todos' || p.category === selectedCategory;
 

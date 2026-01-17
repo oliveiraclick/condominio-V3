@@ -11,7 +11,7 @@ import {
 import { supabase } from '../supabase';
 
 // --- NOTIFICATIONS MODAL ---
-const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userRole: string }> = ({ isOpen, onClose, userRole }) => {
+export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userRole?: string; onUpdate?: () => void }> = ({ isOpen, onClose, userRole, onUpdate }) => {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -23,12 +23,11 @@ const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userR
 
   const loadNotifications = async () => {
     setLoading(true);
+
     const { data, error } = await supabase
-      .from('sent_notifications')
+      .from('my_unread_notifications')
       .select('*')
-      .or(`target_role.eq.all,target_role.eq.${userRole}`)
-      .order('created_at', { ascending: false })
-      .limit(50);
+      .order('created_at', { ascending: false });
 
     if (data && !error) {
       setNotifications(data);
@@ -36,8 +35,19 @@ const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void; userR
     setLoading(false);
   };
 
-  const markAsRead = (id: string) => {
+  const markAsRead = async (id: string) => {
+    // Optimistic UI
     setNotifications(prev => prev.filter(n => n.id !== id));
+
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      const { error } = await supabase.from('notification_reads').insert({
+        notification_id: id,
+        user_id: user.id
+      });
+      if (error) console.error("Error marking read:", error);
+      if (onUpdate) onUpdate();
+    }
   };
 
   if (!isOpen) return null;
@@ -527,8 +537,18 @@ export const ProfessionalDashboard: React.FC<{
   const [guideCards, setGuideCards] = useState<any[]>([]);
   const [loadingGuide, setLoadingGuide] = useState(false);
   const [isOnSite, setIsOnSite] = useState(currentUser?.is_on_site || false);
+  const [unreadCount, setUnreadCount] = useState(0);
   const carouselRef = useRef<HTMLDivElement>(null);
   const { showToast } = useToast();
+
+  useEffect(() => {
+    checkUnread();
+  }, []);
+
+  const checkUnread = async () => {
+    const { count } = await supabase.from('my_unread_notifications').select('*', { count: 'exact', head: true });
+    setUnreadCount(count || 0);
+  };
 
   const handleScrollCarousel = (direction: 'left' | 'right') => {
     if (carouselRef.current) {
@@ -622,7 +642,7 @@ export const ProfessionalDashboard: React.FC<{
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       {/* NOTIFICATIONS MODAL */}
-      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} userRole="professional" />
+      <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} userRole="professional" onUpdate={checkUnread} />
 
       <div className="p-6">
         {/* Header */}
@@ -643,7 +663,9 @@ export const ProfessionalDashboard: React.FC<{
 
           <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center text-slate-600 shadow-sm active:scale-90 transition-transform relative">
             <Bell size={22} />
-            <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+            {unreadCount > 0 && (
+              <span className="absolute top-2 right-2 w-3 h-3 bg-rose-500 rounded-full border-2 border-white animate-pulse"></span>
+            )}
           </button>
         </div>
 
@@ -1554,7 +1576,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
     if (!currentUser?.id) return;
     setLoading(true);
 
-    // Load receivables from completed services
+    // Load receivables from completed services (AUTO)
     const { data: services } = await supabase
       .from('service_requests')
       .select('*, profiles:resident_id(name, tower, unit)')
@@ -1562,8 +1584,18 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
       .eq('status', 'completed')
       .order('created_at', { ascending: false });
 
+    // Load manual incomes (NEW)
+    const { data: manualIncomes } = await supabase
+      .from('professional_expenses') // Using same table, type='income'
+      .select('*')
+      .eq('professional_id', currentUser.id)
+      .eq('type', 'income')
+      .order('due_date', { ascending: false });
+
+    let allReceivables: any[] = [];
+
     if (services) {
-      setReceivables(services.map((s: any) => ({
+      allReceivables = services.map((s: any) => ({
         id: s.id,
         description: s.title || s.description,
         amount: s.price || 0,
@@ -1572,14 +1604,33 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
         date: s.created_at,
         status: s.payment_status || 'pending',
         type: 'service'
-      })));
+      }));
     }
+
+    if (manualIncomes) {
+      const manualMapped = manualIncomes.map((inc: any) => ({
+        id: inc.id,
+        description: inc.description,
+        amount: inc.amount,
+        client: 'Manual',
+        location: '-',
+        date: inc.due_date,
+        status: inc.status,
+        type: 'manual'
+      }));
+      allReceivables = [...allReceivables, ...manualMapped];
+    }
+    // Sort combined
+    allReceivables.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+    setReceivables(allReceivables);
+
 
     // Load payables (expenses)
     const { data: expenses } = await supabase
       .from('professional_expenses')
       .select('*')
       .eq('professional_id', currentUser.id)
+      .or('type.eq.expense,type.is.null') // Backward compatibility
       .order('due_date', { ascending: false });
 
     if (expenses) {
@@ -1589,24 +1640,25 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
     setLoading(false);
   };
 
-  const handleAddExpense = async () => {
+  const handleAddFinancialItem = async () => {
     if (!formData.description || !formData.amount) {
       alert('Preencha descrição e valor');
       return;
     }
 
-    const { error } = await supabase
-      .from('professional_expenses')
-      .insert([{
-        professional_id: currentUser.id,
-        description: formData.description,
-        amount: parseFloat(formData.amount),
-        due_date: formData.due_date || new Date().toISOString(),
-        status: formData.status
-      }]);
+    const type = activeTab === 'receivable' ? 'income' : 'expense';
+
+    const { error } = await supabase.from('professional_expenses').insert([{
+      professional_id: currentUser.id,
+      description: formData.description,
+      amount: parseFloat(formData.amount),
+      due_date: formData.due_date || new Date().toISOString(),
+      status: formData.status,
+      type: type
+    }]);
 
     if (!error) {
-      alert('Despesa cadastrada!');
+      alert(type === 'income' ? 'Receita lançada!' : 'Despesa lançada!');
       setFormData({ description: '', amount: '', due_date: '', status: 'pending' });
       setShowAddForm(false);
       loadFinancialData();
@@ -1614,6 +1666,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
       alert('Erro: ' + error.message);
     }
   };
+
 
   const handleUpdateStatus = async (id: string, table: string, newStatus: string) => {
     const { error } = await supabase
@@ -1702,14 +1755,17 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
           </button>
         </div>
 
-        {/* Add Expense Button (only for payables) */}
-        {activeTab === 'payable' && !showAddForm && (
+        {/* Add Buttons (for both tabs now) */}
+        {!showAddForm && (
           <button
             onClick={() => setShowAddForm(true)}
-            className="w-full h-14 bg-rose-50 text-rose-600 rounded-2xl font-bold text-xs uppercase tracking-wider hover:bg-rose-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+            className={`w-full h-14 rounded-2xl font-bold text-xs uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2 ${activeTab === 'receivable'
+              ? 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100'
+              : 'bg-rose-50 text-rose-600 hover:bg-rose-100'
+              }`}
           >
             <Plus size={18} />
-            Adicionar Despesa
+            {activeTab === 'receivable' ? 'Lançar Receita' : 'Lançar Despesa'}
           </button>
         )}
 
@@ -1717,7 +1773,9 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
         {showAddForm && (
           <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
             <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black italic text-slate-900 uppercase">Nova Despesa</h3>
+              <h3 className={`text-lg font-black italic uppercase ${activeTab === 'receivable' ? 'text-emerald-700' : 'text-rose-700'}`}>
+                {activeTab === 'receivable' ? 'Nova Receita' : 'Nova Despesa'}
+              </h3>
               <button onClick={() => setShowAddForm(false)} className="text-slate-400 hover:text-slate-600">
                 <X size={20} />
               </button>
@@ -1757,10 +1815,11 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
 
             <Button
               fullWidth
-              onClick={handleAddExpense}
-              className="h-14 bg-rose-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-rose-600/30"
+              onClick={handleAddFinancialItem}
+              className={`h-14 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl ${activeTab === 'receivable' ? 'bg-emerald-600 shadow-emerald-600/30' : 'bg-rose-600 shadow-rose-600/30'
+                }`}
             >
-              Cadastrar Despesa
+              {activeTab === 'receivable' ? 'Salvar Receita' : 'Salvar Despesa'}
             </Button>
           </div>
         )}

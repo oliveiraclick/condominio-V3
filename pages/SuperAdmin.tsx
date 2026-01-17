@@ -9,6 +9,73 @@ const HEADER_TITLE = "text-3xl font-black italic text-slate-900 uppercase tracki
 const CARD_BASE = "bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm hover:shadow-md transition-all";
 const GRADIENT_TEXT = "bg-gradient-to-r from-brand-600 to-fuchsia-600 bg-clip-text text-transparent";
 
+// --- MESSAGE USER MODAL ---
+const MessageUserModal: React.FC<{ isOpen: boolean; onClose: () => void; user: any }> = ({ isOpen, onClose, user }) => {
+  const [form, setForm] = useState({ title: '', body: '' });
+  const [loading, setLoading] = useState(false);
+
+  if (!isOpen || !user) return null;
+
+  const handleSend = async () => {
+    if (!form.title || !form.body) return alert('Preencha título e mensagem');
+    setLoading(true);
+
+    const { error } = await supabase.from('sent_notifications').insert([{
+      title: form.title,
+      body: form.body,
+      target_role: user.role, // Fallback/Reference
+      target_user_id: user.id, // DIRECT TARGETING
+      condominium_id: user.condominium_id
+    }]);
+
+    setLoading(false);
+
+    if (error) {
+      alert('Erro: ' + error.message);
+    } else {
+      alert(`Mensagem enviada para ${user.name}!`);
+      onClose();
+      setForm({ title: '', body: '' });
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
+      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="bg-white w-full max-w-md rounded-[40px] p-8 shadow-2xl relative animate-in zoom-in-95 duration-300">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h3 className="text-2xl font-black italic text-slate-900 tracking-tight">Nova Mensagem</h3>
+            <p className="text-xs text-slate-400 font-bold uppercase tracking-widest">Para: {user.name}</p>
+          </div>
+          <button onClick={onClose} className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center hover:bg-slate-100 transition-colors">
+            <X size={20} className="text-slate-400" />
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          <Input
+            placeholder="Título"
+            value={form.title}
+            onChange={e => setForm({ ...form, title: e.target.value })}
+            className="h-14 bg-slate-50 border-transparent focus:bg-white"
+          />
+          <textarea
+            placeholder="Digite sua mensagem..."
+            className="w-full h-32 bg-slate-50 border-none rounded-3xl p-5 text-sm resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-slate-700 focus:bg-white"
+            value={form.body}
+            onChange={e => setForm({ ...form, body: e.target.value })}
+          />
+
+          <Button fullWidth onClick={handleSend} disabled={loading} className="h-14 bg-slate-900 text-white uppercase font-black text-xs shadow-xl tracking-wider">
+            {loading ? 'Enviando...' : 'Enviar Mensagem'}
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- DASHBOARD VIEW ---
 const DashboardView = () => {
   const [stats, setStats] = useState({ condos: 0, users: 0, mrr: 0 });
@@ -373,11 +440,12 @@ const ProfessionalsView = () => {
     if (data) setCategories(data);
   };
 
-  const handleSaveTags = async () => {
+  const handleSavePro = async () => {
     if (!editingPro) return;
     const { error } = await supabase.from('profiles').update({
       category: editingPro.category,
-      specialties: editingPro.specialties
+      specialties: editingPro.specialties,
+      phone: editingPro.phone
     }).eq('id', editingPro.id);
 
     if (error) alert('Erro: ' + error.message);
@@ -446,6 +514,16 @@ const ProfessionalsView = () => {
               </div>
 
               <div className="space-y-2">
+                <label className="text-xs font-black text-slate-900 uppercase tracking-wide">Telefone / WhatsApp</label>
+                <Input
+                  placeholder="Ex: 11999999999"
+                  value={editingPro.phone || ''}
+                  onChange={e => setEditingPro({ ...editingPro, phone: e.target.value })}
+                  className="h-14"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <label className="text-xs font-black text-slate-900 uppercase tracking-wide">Especialidades (Tags)</label>
                 <p className="text-[10px] text-slate-400 leading-tight">Adicione palavras-chave para a busca (ex: Piscina, Telhado).</p>
 
@@ -474,7 +552,7 @@ const ProfessionalsView = () => {
                 </div>
               </div>
 
-              <Button fullWidth onClick={handleSaveTags} className="h-14 bg-slate-900 text-white uppercase font-black text-xs shadow-xl tracking-wider">Salvar Alterações</Button>
+              <Button fullWidth onClick={handleSavePro} className="h-14 bg-slate-900 text-white uppercase font-black text-xs shadow-xl tracking-wider">Salvar Alterações</Button>
             </div>
           </div>
         </div>
@@ -528,6 +606,8 @@ const UsersView = () => {
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
 
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+
   useEffect(() => { loadUsers(); }, []);
 
   const loadUsers = async () => {
@@ -545,6 +625,9 @@ const UsersView = () => {
 
   return (
     <div className={PAGE_CONTAINER}>
+      {/* MESSAGE MODAL */}
+      <MessageUserModal isOpen={!!selectedUser} onClose={() => setSelectedUser(null)} user={selectedUser} />
+
       <h1 className={HEADER_TITLE}>Clientes <span className="text-brand-600">Moradores</span></h1>
 
       <div className="bg-white p-4 rounded-[28px] shadow-sm border border-slate-100 flex items-center gap-3 mb-6">
@@ -577,10 +660,19 @@ const UsersView = () => {
                 </div>
               </div>
 
-              <div className="text-right">
-                <Badge className={u.status === 'blocked' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-600'}>
-                  {u.status === 'blocked' ? 'Bloqueado' : 'Ativo'}
-                </Badge>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => setSelectedUser(u)}
+                  className="w-10 h-10 bg-brand-50 text-brand-600 rounded-xl flex items-center justify-center hover:bg-brand-600 hover:text-white transition-all active:scale-90"
+                  title="Enviar Mensagem"
+                >
+                  <MessageCircle size={18} />
+                </button>
+                <div className="text-right">
+                  <Badge className={u.status === 'blocked' ? 'bg-rose-50 text-rose-500' : 'bg-emerald-50 text-emerald-600'}>
+                    {u.status === 'blocked' ? 'Bloqueado' : 'Ativo'}
+                  </Badge>
+                </div>
               </div>
             </div>
           ))}
