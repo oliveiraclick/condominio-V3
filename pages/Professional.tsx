@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2, UserCog,
   Megaphone, MessageCircle, UserCheck, Sparkles,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown, Menu, Building2
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown, Menu, Building2, Trash2
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
@@ -1906,9 +1906,37 @@ export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout
       </div>
 
       <div className="space-y-4">
-        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase text-xs tracking-widest rounded-[24px]">
+        <Button
+          fullWidth
+          onClick={handleSave}
+          disabled={loading}
+          className="h-16 bg-slate-900 text-white font-black uppercase tracking-widest shadow-xl shadow-slate-900/20"
+        >
           {loading ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
+
+        <button
+          onClick={async () => {
+            if (confirm('ATENÇÃO: Deseja realmente excluir sua conta profissional permanentemente?')) {
+              if (confirm('Todos os seus dados, produtos e histórico serão apagados.')) {
+                setLoading(true);
+                const { error } = await supabase.rpc('delete_client_user');
+                if (error) {
+                  alert('Erro ao excluir: ' + error.message);
+                  setLoading(false);
+                } else {
+                  alert('Conta excluída com sucesso.');
+                  await supabase.auth.signOut();
+                  window.location.reload();
+                }
+              }
+            }
+          }}
+          className="w-full h-14 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
+        >
+          <Trash2 size={18} />
+          Excluir Minha Conta
+        </button>
         <Button
           variant="secondary"
           onClick={async () => {

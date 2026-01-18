@@ -3218,24 +3218,22 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Condom�nio</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Condomínio</label>
             <select
-              value={formData.condo}
-              onChange={e => setFormData({ ...formData, condo: e.target.value })}
-              className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 border-none outline-none focus:ring-2 focus:ring-brand-100"
+              disabled
+              className="w-full h-14 bg-slate-100/50 text-slate-400 rounded-2xl px-4 font-bold border-none outline-none appearance-none"
             >
-              <option value="">Selecione...</option>
-              {condos.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <option>{selectedCondoData?.name || 'Carregando...'}</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Unidade'}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
               <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'N�mero' : 'Torre/Bloco'}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
               <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium" />
             </div>
           </div>
@@ -3244,14 +3242,37 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
             <Input value={formData.email} readOnly className="h-14 font-medium bg-slate-50 text-slate-400" />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Telefone</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">WhatsApp</label>
             <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
           </div>
         </div>
 
-        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 rounded-[24px] bg-slate-900 text-white font-black uppercase text-xs tracking-widest shadow-xl shadow-slate-900/10">
-          {loading ? 'Salvando...' : 'Salvar Altera��es'}
+        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase tracking-widest shadow-xl shadow-slate-900/20">
+          {loading ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
+
+        <button
+          onClick={async () => {
+            if (confirm('ATENÇÃO: Deseja realmente excluir sua conta permanentemente? Esta ação não pode ser desfeita.')) {
+              if (confirm('Tem certeza absoluta? Todos os seus dados serão apagados.')) {
+                setLoading(true);
+                const { error } = await supabase.rpc('delete_client_user');
+                if (error) {
+                  alert('Erro ao excluir: ' + error.message);
+                  setLoading(false);
+                } else {
+                  alert('Conta excluída com sucesso.');
+                  await supabase.auth.signOut();
+                  window.location.reload();
+                }
+              }
+            }
+          }}
+          className="w-full h-14 mt-4 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
+        >
+          <Trash2 size={18} />
+          Excluir Minha Conta
+        </button>
       </div>
     </div>
   );
