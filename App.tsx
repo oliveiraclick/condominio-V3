@@ -684,14 +684,14 @@ const App: React.FC = () => {
   if (appState === 'privacy') return <PrivacyPage onBack={() => { window.location.hash = ''; setAppState('login'); }} />;
   if (appState === 'support') return <SupportPage onBack={() => { window.location.hash = ''; setAppState('login'); }} onNavigateToPrivacy={() => { window.location.hash = '#/privacidade'; setAppState('privacy'); }} />;
 
-  const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'create-desapego', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
+  const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
 
   return (
     <ToastProvider>
       <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
         {renderContent()}
         {!isSubPage && userRole && (
-          userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
+          userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={(tab) => tab === 'create-desapego' ? pushScreen(tab) : baseScreen(tab)} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
             userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
               userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
         )}

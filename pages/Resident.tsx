@@ -1018,7 +1018,7 @@ export const ResidentHome: React.FC<{
       />
 
       {/* HEADER DIN�MICO */}
-      <div className="bg-primary pt-12 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
+      <div className="bg-primary pt-24 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
         {/* WATERMARK SYMBOL (Novo) */}
         {(currentUser?.symbol_url || currentUser?.symbol) && (
           <div
@@ -1224,10 +1224,8 @@ export const ResidentHome: React.FC<{
                   {[
                     { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-brand-600', bg: 'bg-brand-50' },
                     { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { icon: <Calendar size={20} />, label: 'Meus Agendamentos', target: 'resident-bookings', color: 'text-indigo-600', bg: 'bg-indigo-50' },
                     { icon: <CreditCard size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
                     { icon: <FileText size={20} />, label: 'Documentos', target: 'financeiro', color: 'text-blue-600', bg: 'bg-blue-50' }, // Financeiro handles documents usually or there is a docs page
-                    { icon: <Tag size={20} />, label: 'Desapego', target: 'desapegos-all', color: 'text-rose-600', bg: 'bg-rose-50' },
                     { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-cyan-600', bg: 'bg-cyan-50' },
                     { icon: <Scan size={20} />, label: 'Retirar Encomenda', target: 'scanner-encomenda', color: 'text-slate-100', bg: 'bg-slate-900 transition-colors group-hover:bg-slate-800' },
                   ].map((act, i) => (
@@ -1438,7 +1436,7 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
 
   return (
     <div className="min-h-screen bg-white pb-32">
-      <div className="h-64 bg-brand-600 relative flex items-end px-10 pb-10">
+      <div className="h-64 bg-brand-600 relative flex items-end px-10 pb-10 pt-20">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-600 to-indigo-700"></div>
         <div className="relative z-10 flex items-center gap-6">
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
@@ -1506,7 +1504,7 @@ export const Marketplace: React.FC<{
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
       <FloatingBackButton onClick={() => onNavigate('home')} />
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100"><ArrowLeft size={20} className="text-slate-900" /></button>
         <div className="flex-1 flex items-center justify-between">
           <h2 className="text-2xl font-black italic tracking-tighter uppercase">e-Shop</h2>
@@ -1677,7 +1675,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-10">
       <FloatingBackButton onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} />
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100">
           <ArrowLeft size={20} className="text-slate-600" />
         </button>
@@ -1898,7 +1896,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; currentUser?: any; onDelete?: (id: string) => void; onSelect?: (item: any) => void }> = ({ onBack, desapegos, currentUser, onDelete, onSelect }) => (
   <div className="min-h-screen bg-slate-50 pb-32">
     <FloatingBackButton onClick={onBack} />
-    <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+    <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
       <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90"><ArrowLeft size={20} /></button>
       <h2 className="text-xl font-black italic uppercase">Desapego</h2>
     </header>
@@ -1938,7 +1936,7 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
       <div className="h-96 relative bg-slate-200">
         <img src={item.img} className="w-full h-full object-cover" alt={item.name} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-slate-50/90"></div>
-        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/20"><ArrowLeft /></button>
+        <button onClick={onBack} className="absolute top-24 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/20"><ArrowLeft /></button>
 
         <div className="absolute bottom-8 left-6 right-6">
           <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg mb-3 inline-block">{item.status}</span>
@@ -2024,7 +2022,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
 
   return (
     <div className="min-h-screen bg-white pb-10">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 backdrop-blur-md sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white/80 backdrop-blur-md sticky top-0 z-40">
         <button onClick={onBack} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shadow-sm"><ArrowLeft size={24} className="text-slate-900" /></button>
         <h2 className="text-2xl font-black italic uppercase tracking-tighter">Novo Desapego</h2>
       </header>
@@ -2164,7 +2162,7 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-transform"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Controle de Acesso</h2>
       </header>
@@ -2214,7 +2212,7 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-50 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-50 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Boleto Digital</h2>
       </header>
@@ -2282,7 +2280,7 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Atendimento</h2>
       </header>
@@ -2358,7 +2356,7 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Atendimento</h2>
       </header>
@@ -2483,7 +2481,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
 
   return (
     <div className="min-h-screen bg-[#f8fafc] pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Minhas Demandas</h2>
       </header>
@@ -2837,7 +2835,7 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
 
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Meus Agendamentos</h2>
       </header>
@@ -3055,7 +3053,7 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent opacity-60"></div>
-        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg"><ArrowLeft /></button>
+        <button onClick={onBack} className="absolute top-24 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg"><ArrowLeft /></button>
       </div>
 
       <div className="px-8 -mt-10 relative z-10">
@@ -3191,7 +3189,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Dados Pessoais</h2>
       </header>
@@ -3262,7 +3260,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
 export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
         <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase">Privacidade</h2>
       </header>
@@ -3304,23 +3302,24 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
   // Full list of navigation items
   const navItems = [
     { id: 'home', icon: LayoutGrid, label: 'Home', isPriority: true },
-    { id: 'booking', icon: CalendarDays, label: 'Reservas', isPriority: true },
     { id: 'create-desapego', icon: Plus, label: 'Anunciar', isPriority: true, isAction: true },
     { id: 'market', icon: ShoppingBag, label: 'Shop', isPriority: false },
     { id: 'profile', icon: User, label: 'Perfil', isPriority: false },
+    { id: 'resident-bookings', icon: Calendar, label: 'Meus Agendamentos', isPriority: false },
+    { id: 'desapegos-all', icon: Tag, label: 'Desapego', isPriority: false },
     // You can add more secondary items here if needed in future
   ];
 
   return (
     <>
       {/* TOP HEADER - Added via Navigation to share state */}
-      <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-md z-[60] px-6 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm transition-all duration-300">
+      <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/95 backdrop-blur-md z-[60] px-6 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm transition-all duration-300">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-brand-600 rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-600/20">
-            <Building2 size={20} weight="fill" />
+          <div className="w-10 h-10 flex items-center justify-center">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-lg font-black italic text-slate-900 leading-none tracking-tighter">CONDO<span className="text-brand-600">APP</span></h1>
+            <h1 className="text-lg font-black text-slate-900 leading-none tracking-tighter">Morador.app</h1>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Morador</p>
           </div>
         </div>
