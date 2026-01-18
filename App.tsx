@@ -316,13 +316,19 @@ const App: React.FC = () => {
         return data;
       };
 
+      // Lazy Cleanup: Trigger auto-disable if expired (Fire and forget, don't await blocking)
+      supabase.rpc('auto_disable_expired_onsite_status').then(({ error }) => { if (error) console.log('Auto-disable error (ignore):', error.message) });
+
+      // Calculate 1 hour ago for filtering
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+
       const [areas, resvs, requests, pros, cats, onSite, prods, desap, allProfiles, unreadNotifs] = await Promise.all([
         fetchTable('common_areas', supabase.from('common_areas').select('*').order('name')),
         fetchTable('reservations', supabase.from('reservations').select('*, common_areas(name)').order('date')),
         fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false })),
         fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
         fetchTable('categories', supabase.from('categories').select('*').order('name')),
-        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)),
+        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', oneHourAgo)),
         fetchTable('products', supabase.from('products').select('*').eq('available', true)),
         fetchTable('marketplace', supabase.from('marketplace').select('*')),
         fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar, specialties')),
