@@ -228,7 +228,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         Criar Nova Conta
       </Button>
 
-      <p className="text-center text-[9px] text-slate-300 font-black uppercase tracking-[0.4em] mt-12">v2.3.4 • App Morador</p>
+      <p className="text-center text-[9px] text-slate-500 font-black uppercase tracking-[0.4em] mt-12">v2.3.4 • App Morador</p>
 
       {/* TEST USERS SETUP BUTTON REMOVED */}
     </div>
