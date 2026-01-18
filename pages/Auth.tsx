@@ -183,54 +183,125 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
-      <div className="mb-12">
-        <div className="w-20 h-20 bg-white rounded-3xl flex items-center justify-center mb-6 shadow-xl border border-white p-4">
-          <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
-        </div>
-        <h2 className="text-4xl font-black italic tracking-tighter text-slate-950 mb-2 uppercase">App Morador</h2>
-        <p className="text-slate-500 font-medium italic">Clicou, Achou!</p>
+    <div className="min-h-screen relative overflow-hidden flex flex-col justify-center p-6">
+      {/* PREMIUM BACKGROUND */}
+      <div className="absolute inset-0 z-0">
+        <div className="absolute inset-0 bg-slate-950"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.2),transparent_70%)]"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.15),transparent_60%)]"></div>
       </div>
 
-      <div className="space-y-4 mb-8">
-        {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic animate-shake">{error}</div>}
-        <div className="relative group">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input type="email" autoComplete="email" placeholder="Seu e-mail" className="pl-12 h-14 bg-white border-none shadow-sm" value={email} onChange={e => setEmail(e.target.value)} />
-        </div>
-        <div className="relative group">
-          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input type="password" autoComplete="current-password" placeholder="Sua senha" className="pl-12 h-14 bg-white border-none shadow-sm" value={password} onChange={e => setPassword(e.target.value)} />
+      {/* GLASS CARD */}
+      <div className="relative z-10 w-full max-w-sm mx-auto animate-in fade-in zoom-in-95 duration-700">
+        {/* LOGO HEADER */}
+        <div className="text-center mb-8">
+          <div className="w-24 h-24 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/10 rotate-3 transform hover:rotate-6 transition-transform duration-500">
+            <img src="/logo.png" alt="Logo" className="w-[85%] h-[85%] object-contain drop-shadow-lg" />
+          </div>
+          <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase drop-shadow-sm">
+            App <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Morador</span>
+          </h2>
+          <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em] mt-2">Conecte-se. Clicou, Achou.</p>
         </div>
 
-        <div className="flex items-center justify-between mt-2">
-          <label className="flex items-center gap-2 cursor-pointer group select-none">
-            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-colors ${rememberMe ? 'bg-brand-600 border-brand-600' : 'bg-white border-slate-200 group-hover:border-brand-300'}`}>
-              {rememberMe && <Check size={14} className="text-white" strokeWidth={4} />}
+        {/* LOGIN FORM - GLASS */}
+        <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-[40px] shadow-2xl overflow-hidden">
+          <div className="bg-slate-950/40 p-6 rounded-[32px] border border-white/5 space-y-4">
+
+            {/* ERROR ALERT */}
+            {error && (
+              <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-black uppercase tracking-wide flex items-center gap-3 animate-shake">
+                <ShieldCheck size={16} />
+                {error}
+              </div>
+            )}
+
+            {/* EMAIL INPUT */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">E-mail</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-focus-within:text-emerald-400 group-focus-within:bg-emerald-400/10 transition-all duration-300">
+                  <Mail size={18} />
+                </div>
+                <Input
+                  type="email"
+                  autoComplete="email"
+                  placeholder="seu@email.com"
+                  className="pl-16 h-14 bg-white/5 border-white/5 text-white placeholder:text-slate-600 rounded-2xl focus:bg-white/10 focus:border-emerald-500/30 font-medium transition-all"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                />
+              </div>
             </div>
-            <input type="checkbox" className="hidden" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Lembrar E-mail</span>
-          </label>
-          <button onClick={() => setView('forgot')} className="text-brand-600 text-[10px] font-black uppercase tracking-widest hover:underline">Esqueceu a senha?</button>
+
+            {/* PASSWORD INPUT */}
+            <div className="space-y-1.5">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Senha</label>
+              <div className="relative group">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-focus-within:text-emerald-400 group-focus-within:bg-emerald-400/10 transition-all duration-300">
+                  <Lock size={18} />
+                </div>
+                <Input
+                  type="password"
+                  autoComplete="current-password"
+                  placeholder="••••••••"
+                  className="pl-16 h-14 bg-white/5 border-white/5 text-white placeholder:text-slate-600 rounded-2xl focus:bg-white/10 focus:border-emerald-500/30 font-medium transition-all"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                />
+              </div>
+            </div>
+
+            {/* ACTIONS: REMEMBER ME & FORGOT PASSWORD */}
+            <div className="flex items-center justify-between px-1 pt-2">
+              <label className="flex items-center gap-3 cursor-pointer group select-none opacity-80 hover:opacity-100 transition-opacity">
+                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${rememberMe ? 'bg-emerald-500 border-emerald-500' : 'bg-transparent border-slate-600 group-hover:border-slate-400'}`}>
+                  {rememberMe && <Check size={12} className="text-white" strokeWidth={4} />}
+                </div>
+                <input type="checkbox" className="hidden" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
+                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lembrar</span>
+              </label>
+              <button
+                onClick={() => setView('forgot')}
+                className="text-[10px] font-black text-emerald-400 uppercase tracking-wider hover:text-emerald-300 transition-colors"
+              >
+                Esqueceu?
+              </button>
+            </div>
+
+            {/* ACTION BUTTONS */}
+            <div className="pt-4 space-y-3">
+              <Button
+                fullWidth
+                onClick={handleSignIn}
+                disabled={loading}
+                className="h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-black uppercase tracking-[0.2em] italic shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-xs rounded-2xl border-none"
+              >
+                {loading ? (
+                  <div className="flex items-center gap-2">
+                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                    <span>Entrando...</span>
+                  </div>
+                ) : 'Acessar Conta'}
+              </Button>
+
+              <button
+                onClick={onRegister}
+                className="w-full h-14 rounded-2xl border border-white/10 text-slate-300 font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 hover:text-white hover:border-white/20 transition-all"
+              >
+                Criar Nova Conta
+              </button>
+            </div>
+
+          </div>
         </div>
+
+        {/* VERSION LABEL */}
+        <p className="text-center text-[9px] text-slate-600 font-black uppercase tracking-[0.4em] mt-8 opacity-60 hover:opacity-100 transition-opacity">
+          v2.3.4 • Build 234
+        </p>
+
       </div>
-
-      <Button fullWidth onClick={handleSignIn} disabled={loading} className="h-16 bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 mb-6">
-        {loading ? 'Validando...' : 'Entrar Agora'}
-      </Button>
-
-      <div className="relative mb-8">
-        <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-slate-200"></div></div>
-        <span className="relative px-4 bg-slate-50 mx-auto block w-fit text-[10px] text-slate-400 uppercase font-black italic">Novo por aqui?</span>
-      </div>
-
-      <Button fullWidth variant="secondary" onClick={onRegister} className="h-16 bg-white border-2 border-slate-200 text-slate-900 font-black uppercase tracking-widest italic hover:border-brand-600 transition-all">
-        Criar Nova Conta
-      </Button>
-
-      <p className="text-center text-[9px] text-slate-500 font-black uppercase tracking-[0.4em] mt-12">v2.3.4 • App Morador</p>
-
-      {/* TEST USERS SETUP BUTTON REMOVED */}
     </div>
   );
 };
