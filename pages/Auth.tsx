@@ -131,6 +131,15 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [view, setView] = useState<'login' | 'forgot'>('login');
+  const [rememberMe, setRememberMe] = useState(false);
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem('condo_saved_email');
+    if (savedEmail) {
+      setEmail(savedEmail);
+      setRememberMe(true);
+    }
+  }, []);
 
   const handleSignIn = async () => {
     if (!email || !password) {
@@ -139,6 +148,14 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
     }
     setLoading(true);
     setError(null);
+
+    // Save or Clear Email
+    if (rememberMe) {
+      localStorage.setItem('condo_saved_email', email);
+    } else {
+      localStorage.removeItem('condo_saved_email');
+    }
+
     try {
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
@@ -179,13 +196,23 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
         {error && <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-xs font-bold italic animate-shake">{error}</div>}
         <div className="relative group">
           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input placeholder="Seu e-mail" className="pl-12 h-14 bg-white border-none shadow-sm" value={email} onChange={e => setEmail(e.target.value)} />
+          <Input type="email" autoComplete="email" placeholder="Seu e-mail" className="pl-12 h-14 bg-white border-none shadow-sm" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
         <div className="relative group">
           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input type="password" placeholder="Sua senha" className="pl-12 h-14 bg-white border-none shadow-sm" value={password} onChange={e => setPassword(e.target.value)} />
+          <Input type="password" autoComplete="current-password" placeholder="Sua senha" className="pl-12 h-14 bg-white border-none shadow-sm" value={password} onChange={e => setPassword(e.target.value)} />
         </div>
-        <button onClick={() => setView('forgot')} className="w-full text-right text-brand-600 text-xs font-black uppercase tracking-widest mt-2 hover:underline">Esqueceu a senha?</button>
+
+        <div className="flex items-center justify-between mt-2">
+          <label className="flex items-center gap-2 cursor-pointer group select-none">
+            <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-colors ${rememberMe ? 'bg-brand-600 border-brand-600' : 'bg-white border-slate-200 group-hover:border-brand-300'}`}>
+              {rememberMe && <Check size={14} className="text-white" strokeWidth={4} />}
+            </div>
+            <input type="checkbox" className="hidden" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider group-hover:text-slate-600 transition-colors">Lembrar E-mail</span>
+          </label>
+          <button onClick={() => setView('forgot')} className="text-brand-600 text-[10px] font-black uppercase tracking-widest hover:underline">Esqueceu a senha?</button>
+        </div>
       </div>
 
       <Button fullWidth onClick={handleSignIn} disabled={loading} className="h-16 bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 mb-6">

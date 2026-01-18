@@ -674,7 +674,7 @@ export const ProfessionalDashboard: React.FC<{
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32 pt-24">
       {/* NOTIFICATIONS MODAL */}
       <NotificationsModal isOpen={showNotifications} onClose={() => setShowNotifications(false)} userRole="professional" onUpdate={checkUnread} />
 
@@ -974,8 +974,8 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
   ];
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#fcfcfd] pb-32 pt-24">
+      <header className="p-6 pt-0 bg-white border-b border-slate-100 sticky top-24 z-40">
         <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Agenda</h2>
         <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Solicitações de serviço</p>
       </header>
@@ -1243,8 +1243,8 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
   const getSubCategories = (parentId: string) => categories.filter((c: any) => c.parent_id === parentId);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#fcfcfd] pb-32 pt-24">
+      <header className="p-6 pt-0 bg-white border-b border-slate-100 sticky top-24 z-40">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Meus Serviços</h2>
@@ -1558,8 +1558,8 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
   const pendingPayable = payables.filter(p => p.status === 'pending').reduce((acc, curr) => acc + (curr.amount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#fcfcfd] pb-32 pt-24">
+      <header className="p-6 pt-0 bg-white border-b border-slate-100 sticky top-24 z-40">
         <div>
           <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Financeiro</h2>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Gestão Financeira</p>
@@ -1852,7 +1852,7 @@ export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout
   };
 
   return (
-    <div className="p-6 pb-32">
+    <div className="p-6 pb-32 pt-28">
       <h2 className="text-xl font-black text-slate-900 mb-6">Meu Perfil</h2>
 
       <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 mb-6 flex flex-col items-center">
@@ -2085,8 +2085,8 @@ export const ProfessionalShop = ({ currentUser }: any) => {
   const categories = ['Alimentos', 'Artesanato', 'Serviços', 'Outros'];
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 bg-white border-b border-slate-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-[#fcfcfd] pb-32 pt-24">
+      <header className="p-6 pt-0 bg-white border-b border-slate-100 sticky top-24 z-40">
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Minha Loja</h2>
@@ -2284,11 +2284,11 @@ export const ProfessionalNavigation = ({ activeTab, onChange, currentUser, onLog
       {/* TOP HEADER */}
       <header className="fixed top-0 left-1/2 -translate-x-1/2 w-full max-w-md bg-white/80 backdrop-blur-md z-[60] px-6 py-4 flex justify-between items-center border-b border-slate-100 shadow-sm transition-all duration-300">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 bg-slate-900 rounded-xl flex items-center justify-center text-white shadow-lg shadow-slate-900/20">
-            <Briefcase size={20} weight="fill" />
+          <div className="w-10 h-10 bg-transparent flex items-center justify-center">
+            <img src="/logo.png" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-lg font-black italic text-slate-900 leading-none tracking-tighter">CONDO<span className="text-slate-600">PRO</span></h1>
+            <h1 className="text-lg font-black italic text-slate-900 leading-none tracking-tighter">Morador.app</h1>
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Parceiro</p>
           </div>
         </div>
@@ -2301,58 +2301,60 @@ export const ProfessionalNavigation = ({ activeTab, onChange, currentUser, onLog
       </header>
 
       {/* MENU OVERLAY */}
-      {menuOpen && (
-        <div className="fixed inset-0 z-[100] animate-in fade-in duration-300">
-          <div
-            className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
-            onClick={() => setMenuOpen(false)}
-          />
-          <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-bottom-10 duration-500">
-            <div className="p-6 bg-slate-50 border-b border-slate-100 mb-2">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-slate-900 flex items-center justify-center text-white shadow-lg">
-                  <UserCircle2 size={24} />
-                </div>
-                <div>
-                  <h3 className="font-black text-slate-900 uppercase tracking-tighter leading-none">{currentUser?.name || 'Profissional'}</h3>
-                  <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Menu Parceiro</p>
+      {
+        menuOpen && (
+          <div className="fixed inset-0 z-[100] animate-in fade-in duration-300">
+            <div
+              className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+              onClick={() => setMenuOpen(false)}
+            />
+            <div className="absolute bottom-32 left-1/2 -translate-x-1/2 w-[90%] max-w-[360px] bg-white rounded-[40px] shadow-2xl overflow-hidden border border-slate-100 animate-in slide-in-from-bottom-10 duration-500">
+              <div className="p-6 bg-slate-50 border-b border-slate-100 mb-2">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-slate-100 rounded-xl overflow-hidden border border-slate-200">
+                    <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" />
+                  </div>
+                  <div>
+                    <h3 className="font-black text-slate-900 uppercase tracking-tighter leading-none">{currentUser?.name || 'Profissional'}</h3>
+                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Menu Parceiro</p>
+                  </div>
                 </div>
               </div>
-            </div>
 
-            <div className="grid grid-cols-3 gap-2 p-4">
-              {navItems.map(item => (
+              <div className="grid grid-cols-3 gap-2 p-4">
+                {navItems.map(item => (
+                  <button
+                    key={item.id}
+                    onClick={() => {
+                      onChange(item.id);
+                      setMenuOpen(false);
+                    }}
+                    className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                  >
+                    <item.icon size={20} />
+                    <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
+                  </button>
+                ))}
+              </div>
+
+              <div className="p-4 pt-2 border-t border-slate-50">
                 <button
-                  key={item.id}
                   onClick={() => {
-                    onChange(item.id);
-                    setMenuOpen(false);
+                    if (onLogout) onLogout();
+                    else {
+                      supabase.auth.signOut().then(() => window.location.reload());
+                    }
                   }}
-                  className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                  className="w-full h-14 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
                 >
-                  <item.icon size={20} />
-                  <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
+                  <LogOut size={18} />
+                  Sair da Conta
                 </button>
-              ))}
-            </div>
-
-            <div className="p-4 pt-2 border-t border-slate-50">
-              <button
-                onClick={() => {
-                  if (onLogout) onLogout();
-                  else {
-                    supabase.auth.signOut().then(() => window.location.reload());
-                  }
-                }}
-                className="w-full h-14 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
-              >
-                <LogOut size={18} />
-                Sair da Conta
-              </button>
+              </div>
             </div>
           </div>
-        </div>
-      )}
+        )
+      }
 
       {/* BOTTOM NAV */}
       <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[98%] max-w-[420px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-100 rounded-[32px] p-2 flex justify-between items-center z-50">
