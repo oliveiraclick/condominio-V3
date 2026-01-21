@@ -23,3 +23,16 @@ body {
   min-width: 320px;
   min-height: 100vh;
 }
+
+/* SAFE AREA UTILITIES FOR MOBILE */
+.pt-safe {
+  padding-top: env(safe-area-inset-top, 20px);
+}
+
+.pt-safe-offset {
+  padding-top: calc(env(safe-area-inset-top, 20px) + 1rem);
+}
+
+.pb-safe {
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}

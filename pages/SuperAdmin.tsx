@@ -2,6 +2,7 @@
 import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, Search, ArrowLeft, Trash2, Bell, BookOpen, Star, Palette, X, Edit, Phone, MapPin, Grid, Layers, Menu, Briefcase, CheckCircle2, UserCheck, MessageCircle, Image as ImageIcon, Key, Lock, CircleAlert, FileText, ChevronDown, ChevronUp, Package, ShoppingBag, Zap, Calendar, User, Sparkles, UserCircle2, LogOut } from 'lucide-react';
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
+import { maskPhone } from '../utils/masks';
 
 // --- SHARED STYLES ---
 const PAGE_CONTAINER = "p-6 space-y-6 pt-12 animate-in slide-in-from-right-8 pb-32";
@@ -518,7 +519,7 @@ const ProfessionalsView = () => {
                 <Input
                   placeholder="Ex: 11999999999"
                   value={editingPro.phone || ''}
-                  onChange={e => setEditingPro({ ...editingPro, phone: e.target.value })}
+                  onChange={e => setEditingPro({ ...editingPro, phone: maskPhone(e.target.value) })}
                   className="h-14"
                 />
               </div>
@@ -608,20 +609,35 @@ const UsersView = () => {
 
   const [selectedUser, setSelectedUser] = useState<any>(null);
 
-  useEffect(() => { loadUsers(); }, []);
+  useEffect(() => {
+    const delayDebounceFn = setTimeout(() => {
+      loadUsers();
+    }, 500);
+
+    return () => clearTimeout(delayDebounceFn);
+  }, [search]);
 
   const loadUsers = async () => {
     setLoading(true);
-    const { data } = await supabase.from('profiles').select('*').eq('role', 'resident').order('created_at', { ascending: false });
+    let query = supabase.from('profiles').select('*').eq('role', 'resident').order('created_at', { ascending: false });
+
+    if (search.trim()) {
+      // Server-side search for Name OR Email OR Unit
+      // Note: 'or' expects syntax like "column.oper.value,column.oper.value"
+      // We use ilike for case-insensitive search
+      const term = `%${search.trim()}%`;
+      query = query.or(`name.ilike.${term},email.ilike.${term},unit.ilike.${term}`);
+    } else {
+      query = query.limit(50); // Limit to 50 recent if no search
+    }
+
+    const { data } = await query;
     if (data) setUsers(data);
     setLoading(false);
   };
 
-  const filteredUsers = users.filter(u =>
-    u.name?.toLowerCase().includes(search.toLowerCase()) ||
-    u.email?.toLowerCase().includes(search.toLowerCase()) ||
-    u.unit?.toLowerCase().includes(search.toLowerCase())
-  );
+  // Client-side filter removed in favor of Server-side
+  const filteredUsers = users;
 
   return (
     <div className={PAGE_CONTAINER}>

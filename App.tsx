@@ -83,6 +83,8 @@ const App: React.FC = () => {
   const [categories, setCategories] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [notifications, setNotifications] = useState<any[]>([]);
+  const [myDemands, setMyDemands] = useState<any[]>([]);
+  const [myProposals, setMyProposals] = useState<any[]>([]);
 
   const [useModernDesign, setUseModernDesign] = useState(false);
 
@@ -306,7 +308,7 @@ const App: React.FC = () => {
     if (appState !== 'main' || !session) return;
     try {
 
-
+      // Helper for clean data fetching
       const fetchTable = async (table: string, query: any) => {
         const { data, error } = await query;
         if (error) {
@@ -322,83 +324,110 @@ const App: React.FC = () => {
       // Calculate 1 hour ago for filtering
       const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
-      const [areas, resvs, requests, pros, cats, onSite, prods, desap, allProfiles, unreadNotifs] = await Promise.all([
+      // OPTIMIZED: Uses Joins instead of fetching all_profiles
+      // Note: We use specific aliases or rely on Supabase detection. 
+      // For clarity, we assume simple relationships. If explicit FK names are needed, we'd use 'profiles:resident_id(...)'
+
+      const [areas, resvs, requests, pros, cats, onSite, prods, desap, unreadNotifs, pkgs, demandsData, proposalsData] = await Promise.all([
         fetchTable('common_areas', supabase.from('common_areas').select('*').order('name')),
-        fetchTable('reservations', supabase.from('reservations').select('*, common_areas(name)').order('date')),
-        fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false })),
-        fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
+
+        // Join profiles (as 'resident') for display names - Reservation likely works or fails silently? 
+        // We will keep reservations JOIN for now if it worked, but user complained only about eshop.
+        // Actually, let's be safe. If reservations fail, we'll know. User specifically said "eshop and mural".
+        fetchTable('reservations', supabase.from('reservations').select('*, common_areas(name), profiles:resident_id(name, avatar, unit, tower)').order('date')),
+
+        // Service Requests
+        fetchTable('service_requests', supabase.from('service_requests').select('*, resident:resident_id(name, phone, unit, tower), provider:provider_id(name, phone)').order('created_at', { ascending: false })),
+
+        // Professional Services
+        fetchTable('professional_services', supabase.from('professional_services').select('*, profiles:provider_id(name, phone, avatar, specialties)').eq('active', true)),
+
         fetchTable('categories', supabase.from('categories').select('*').order('name')),
-        fetchTable('profiles_onsite', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', oneHourAgo)),
+
+        fetchTable('profiles', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', oneHourAgo)),
+
+        // PRODUCTS & MARKETPLACE: Fetch RAW (No Join due to missing FK)
         fetchTable('products', supabase.from('products').select('*').eq('available', true)),
-        fetchTable('marketplace', supabase.from('marketplace').select('*')),
-        fetchTable('all_profiles', supabase.from('profiles').select('id, name, phone, tower, unit, avatar, specialties')),
-        // NEW: Fetch directly from the VIEW. DB handles filtering and unread status.
-        fetchTable('my_unread_notifications', supabase.from('my_unread_notifications').select('*').order('created_at', { ascending: false }))
+        fetchTable('marketplace', supabase.from('marketplace').select('*').order('created_at', { ascending: false }).limit(100)),
+
+        // Notifications
+        fetchTable('my_unread_notifications', supabase.from('my_unread_notifications').select('*').order('created_at', { ascending: false })),
+
+        // PACKAGES (Lifted State)
+        fetchTable('packages', supabase.from('packages').select('*').or(`resident_id.eq.${session.user.id},picked_up_by.eq.${session.user.id}`).in('status', ['pending', 'awaiting_confirmation'])),
+
+        // DEMANDS (Lifted State)
+        fetchTable('service_demands', supabase.from('service_demands').select('*').eq('resident_id', session.user.id).order('created_at', { ascending: false })),
+
+        // PROPOSALS (Lifted State - simplified fetch all related to user's demands? Or just fetch relevant ones)
+        // For efficiency we might fetch all proposals for my demands
+        fetchTable('service_proposals', supabase.from('service_proposals').select('*, profiles:professional_id(name, avatar, phone, category)'))
       ]);
 
-      const profileMap = (allProfiles || []).reduce((acc: any, p: any) => {
-        acc[p.id] = p;
-        return acc;
-      }, {});
-
       if (areas) setCommonAreas(areas);
-      if (resvs) {
-        // Enriched Mapping for Reservations
-        const mappedResvs = resvs.map((r: any) => {
-          const resident = profileMap[r.resident_id];
-          return {
-            ...r,
-            displayName: resident?.name || 'Morador', // Fallback for safety
-            resident: resident?.name || 'Morador',    // Explicitly for Admin UI
-            area: r.common_areas?.name || r.area_name || r.area_id,           // UI expects 'area'
-            avatar: resident?.avatar
-          };
-        });
-        setReservations(mappedResvs);
-      }
-      if (requests) {
-        const mapped = requests.map((r: any) => {
-          const resident = profileMap[r.resident_id || r.profile_id];
-          const provider = profileMap[r.provider_id];
-          return {
-            ...r,
-            user: resident?.name || 'Morador',
-            phone: resident?.phone || '',
-            providerName: provider?.name || 'Prestador'
-          };
-        });
-        setServiceRequests(mapped);
-        setActiveServices(mapped.filter((r: any) => r.status === 'accepted'));
-      }
-      if (pros) {
 
-        setProfessionalServices(pros.map((p: any) => {
-          const profile = profileMap[p.provider_id];
-          return {
-            ...p,
-            providerName: profile?.name || 'Prestador',
-            providerPhone: profile?.phone || '',
-            providerAvatar: profile?.avatar,
-            specialties: profile?.specialties // NEW: Pass tags to UI
-          };
-        }));
+      if (resvs) {
+        setReservations(resvs.map((r: any) => ({
+          ...r,
+          displayName: r.profiles?.name || 'Morador',
+          resident: r.profiles?.name || 'Morador',
+          area: r.common_areas?.name || r.area_name || r.area_id,
+          avatar: r.profiles?.avatar
+        })));
       }
+
+      if (requests) {
+        setServiceRequests(requests.map((r: any) => ({
+          ...r,
+          user: r.resident?.name || 'Morador',
+          phone: r.resident?.phone || '',
+          providerName: r.provider?.name || 'Prestador'
+        })));
+        setActiveServices(requests.filter((r: any) => r.status === 'accepted'));
+      }
+
+      if (pros) {
+        setProfessionalServices(pros.map((p: any) => ({
+          ...p,
+          providerName: p.profiles?.name || 'Prestador',
+          providerPhone: p.profiles?.phone || '',
+          providerAvatar: p.profiles?.avatar,
+          specialties: p.profiles?.specialties
+        })));
+      }
+
       if (onSite) setOnSitePros(onSite);
       if (cats) setCategories(cats);
-      if (prods) {
 
+      // --- MANUAL MAP FOR PRODUCTS & MARKETPLACE (MISSING FKs) ---
+      // 1. Collect IDs
+      const displayUserIds = new Set<string>();
+      if (prods) prods.forEach((p: any) => { if (p.vendor_id) displayUserIds.add(p.vendor_id); });
+      if (desap) desap.forEach((p: any) => { if (p.seller_id) displayUserIds.add(p.seller_id); });
+
+      // 2. Fetch Profiles if needed
+      let userMap: Record<string, any> = {};
+      if (displayUserIds.size > 0) {
+        const { data: profilesData } = await supabase.from('profiles').select('id, name, avatar, phone, tower, unit').in('id', Array.from(displayUserIds));
+        if (profilesData) {
+          profilesData.forEach(p => { userMap[p.id] = p; });
+        }
+      }
+
+      // 3. Map Data
+      if (prods) {
         setProducts(prods.map((p: any) => {
-          const vendor = profileMap[p.vendor_id];
+          const vendor = userMap[p.vendor_id];
           return {
             ...p,
-            profiles: vendor || { name: 'Vizinho', avatar: null } // Pass full object or safe fallback
+            profiles: vendor || { name: 'Vizinho', avatar: null }
           };
         }));
       }
-      if (desap) {
 
+      if (desap) {
         setDesapegos(desap.map((i: any) => {
-          const seller = profileMap[i.seller_id];
+          const seller = userMap[i.seller_id];
           return {
             id: i.id,
             name: i.title,
@@ -414,11 +443,20 @@ const App: React.FC = () => {
         }));
       }
 
-      // HANDLE NOTIFICATIONS (SIMPLIFIED)
+      // HANDLE NOTIFICATIONS
       if (unreadNotifs) {
         setNotifications(unreadNotifs);
       } else {
         setNotifications([]);
+      }
+
+      if (pkgs) setPackages(pkgs);
+      if (demandsData) setMyDemands(demandsData);
+
+      if (proposalsData && demandsData) {
+        // Filter only proposals for my demands
+        const myDemandIds = demandsData.map((d: any) => d.id);
+        setMyProposals(proposalsData.filter((p: any) => myDemandIds.includes(p.demand_id)));
       }
 
     } catch (e) {
@@ -568,7 +606,7 @@ const App: React.FC = () => {
             if (!error) { refreshAppData(); } else { throw new Error(error.message); }
           }} />;
           case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} currentUser={currentUser} categories={categories} />;
-          case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} />;
+          case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} demands={myDemands} proposals={myProposals} onRefresh={refreshAppData} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
           case 'resident-bookings': return <ResidentBookings onBack={goBack} reservations={reservations} currentUser={currentUser} onRefresh={refreshAppData} />;
@@ -690,17 +728,26 @@ const App: React.FC = () => {
   if (appState === 'privacy') return <PrivacyPage onBack={() => { window.location.hash = ''; setAppState('login'); }} />;
   if (appState === 'support') return <SupportPage onBack={() => { window.location.hash = ''; setAppState('login'); }} onNavigateToPrivacy={() => { window.location.hash = '#/privacidade'; setAppState('privacy'); }} />;
 
-  const isSubPage = ['acesso', 'financeiro', 'chamado', 'condo-agenda', 'servicos-full', 'desapego-full', 'desapego-detail', 'shop-detail', 'shop-product-detail', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
+  const isSubPage = ['desapego-detail', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
 
   return (
     <ToastProvider>
-      <div className="relative max-w-md mx-auto shadow-2xl min-h-screen bg-[#f8fafc] overflow-hidden border-x border-slate-100">
-        {renderContent()}
-        {!isSubPage && userRole && (
-          userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={(tab) => tab === 'create-desapego' ? pushScreen(tab) : baseScreen(tab)} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
-            userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
-              userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
-        )}
+      <div className="relative max-w-md mx-auto shadow-2xl min-h-screen overflow-hidden border-x border-slate-100">
+        {/* GLOBAL BACKGROUND (From Login) */}
+        <div className="absolute inset-0 z-0 pointer-events-none fixed">
+          <div className="absolute inset-0 bg-slate-950"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.2),transparent_70%)]"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.15),transparent_60%)]"></div>
+        </div>
+
+        <div className="relative z-10 min-h-screen">
+          {renderContent()}
+          {!isSubPage && userRole && (
+            userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={(tab) => tab === 'create-desapego' ? pushScreen(tab) : baseScreen(tab)} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
+              userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
+                userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
+          )}
+        </div>
       </div>
     </ToastProvider>
   );

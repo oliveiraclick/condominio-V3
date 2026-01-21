@@ -4,12 +4,42 @@ import { X, CheckCircle2 } from 'lucide-react';
 import { Button } from './ui';
 import { Scanner } from '@yudiel/react-qr-scanner';
 
+import { Camera } from '@capacitor/camera';
+
 export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any }> = ({ isOpen, onClose, currentUser }) => {
     const [scannedData, setScannedData] = useState<string | null>(null);
     const [isProcessing, setIsProcessing] = useState(false);
     const [success, setSuccess] = useState(false);
+    const [permissionGranted, setPermissionGranted] = useState(false);
+
+    useEffect(() => {
+        if (isOpen) {
+            const checkPermission = async () => {
+                try {
+                    const status = await Camera.checkPermissions();
+                    if (status.camera === 'granted') {
+                        setPermissionGranted(true);
+                    } else {
+                        const request = await Camera.requestPermissions({ permissions: ['camera'] });
+                        if (request.camera === 'granted' || request.camera === 'limited') {
+                            setPermissionGranted(true);
+                        } else {
+                            alert('Precisamos da permissão da câmera para ler o QR Code.');
+                            onClose();
+                        }
+                    }
+                } catch (e) {
+                    console.error("Erro ao verificar permissão nativa:", e);
+                    // Fallback para web/navegador
+                    setPermissionGranted(true);
+                }
+            };
+            checkPermission();
+        }
+    }, [isOpen]);
 
     if (!isOpen) return null;
+    if (!permissionGranted) return <div className="fixed inset-0 bg-black z-50 flex items-center justify-center text-white">Verificando permissões...</div>;
 
     const handleScan = async (text: string) => {
         if (text && !isProcessing && !success) {
@@ -17,45 +47,14 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
             setScannedData(text);
 
             try {
-                // 1. Verify if package exists and if user is authorized (Owner or Neighbor)
-                const { data: pkg, error: fetchError } = await supabase
-                    .from('packages')
-                    .select('*')
-                    .eq('qr_code', text)
-                    .single();
+                // Use Secure RPC to handle pickup (Handles RLS and Authorization internally)
+                const { data, error } = await supabase.rpc('pickup_package', { qr_text: text });
 
-                if (fetchError || !pkg) throw new Error('Encomenda não encontrada ou QR Code inválido.');
-                if (pkg.status === 'delivered') throw new Error('Esta encomenda já foi retirada.');
+                if (error) throw new Error(error.message);
 
-                // Check authorization
-                let isAuthorized = pkg.resident_id === currentUser.id;
-
-                if (!isAuthorized) {
-                    const { data: auth } = await supabase
-                        .from('package_authorizations')
-                        .select('id')
-                        .eq('grantor_id', pkg.resident_id)
-                        .eq('grantee_id', currentUser.id)
-                        .eq('status', 'active')
-                        .maybeSingle();
-
-                    if (auth) isAuthorized = true;
+                if (data && !data.success) {
+                    throw new Error(data.message);
                 }
-
-                if (!isAuthorized) throw new Error('Você não tem autorização para retirar esta encomenda.');
-
-                // 2. Perform Digital Handshake (Update package with user info)
-                const { error: updateError } = await supabase
-                    .from('packages')
-                    .update({
-                        status: 'delivered',
-                        picked_up_by: currentUser.id,
-                        picked_up_at: new Date().toISOString(),
-                        receiver_phone: currentUser.phone || 'Não informado' // Digital Signature
-                    })
-                    .eq('id', pkg.id);
-
-                if (updateError) throw updateError;
 
                 setSuccess(true);
                 // Play success sound logic here if available or vibration
@@ -100,6 +99,8 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
                         <div className="w-full max-w-sm aspect-square relative rounded-[40px] overflow-hidden border-4 border-white/20 shadow-2xl">
                             <Scanner
                                 onScan={(result) => result?.[0]?.rawValue && handleScan(result[0].rawValue)}
+                                onError={(error: any) => alert(`Erro na câmera: ${error?.message || 'Permissão negada ou dispositivo não suportado.'}`)}
+                                constraints={{ facingMode: 'environment' }}
                                 styles={{ container: { width: '100%', height: '100%' } }}
                                 components={{ finder: false }}
                             />

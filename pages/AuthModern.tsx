@@ -1,6 +1,8 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { Sparkles, ArrowRight, User, Mail, Lock, Building, Smartphone, CheckCircle, ArrowLeft } from 'lucide-react';
 import { supabase } from '../supabase';
+import { maskCPF, maskPhone, maskCNPJ } from '../utils/masks';
+import { validateCPF, validateCNPJ } from '../utils/validators';
 
 // --- SPLASH SCREEN MODERN ---
 export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
@@ -145,11 +147,15 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
 export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack: () => void }> = ({ onFinish, onBack }) => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        name: '', email: '', password: '', phone: '', unit: '', tower: ''
+        name: '', email: '', password: '', phone: '', unit: '', tower: '', cpf: ''
     });
     const [loading, setLoading] = useState(false);
 
     const handleRegister = async () => {
+        if (!validateCPF(formData.cpf)) {
+            alert('CPF inválido.');
+            return;
+        }
         setLoading(true);
         try {
             const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -164,6 +170,7 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
                     name: formData.name,
                     email: formData.email,
                     phone: formData.phone,
+                    cpf: formData.cpf,
                     unit: formData.unit,
                     tower: formData.tower,
                     role: 'resident',
@@ -203,7 +210,8 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
                         <p className="text-slate-400 mb-8">Vamos começar pelos seus dados básicos.</p>
                         <div className="space-y-4">
                             <InputModern icon={User} label="Nome Completo" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} />
-                            <InputModern icon={Smartphone} label="Celular" value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} />
+                            <InputModern icon={Smartphone} label="Celular" value={formData.phone} onChange={v => setFormData({ ...formData, phone: maskPhone(v) })} />
+                            <InputModern icon={User} label="CPF" value={formData.cpf} onChange={v => setFormData({ ...formData, cpf: maskCPF(v) })} />
                         </div>
                     </div>
                 )}
@@ -249,11 +257,19 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
 export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; onBack: () => void }> = ({ onFinish, onBack }) => {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
-        name: '', email: '', password: '', phone: '', category: 'Outros'
+        name: '', email: '', password: '', phone: '', category: 'Outros',
+        cpf: '', cnpj: '', docType: 'cpf' as 'cpf' | 'cnpj'
     });
     const [loading, setLoading] = useState(false);
 
     const handleRegister = async () => {
+        if (formData.docType === 'cpf' && !validateCPF(formData.cpf)) {
+            alert('CPF inválido.'); return;
+        }
+        if (formData.docType === 'cnpj' && !validateCNPJ(formData.cnpj)) {
+            alert('CNPJ inválido.'); return;
+        }
+
         setLoading(true);
         try {
             const { data, error } = await supabase.auth.signUp({ email: formData.email, password: formData.password });
@@ -261,6 +277,8 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
             if (data.user) {
                 await supabase.from('profiles').insert([{
                     id: data.user.id, name: formData.name, email: formData.email, phone: formData.phone,
+                    cpf: formData.docType === 'cpf' ? formData.cpf : null,
+                    cnpj: formData.docType === 'cnpj' ? formData.cnpj : null,
                     role: 'professional', category: formData.category, is_on_site: false, condominium_id: '00000000-0000-0000-0000-000000000000'
                 }]);
                 onFinish();
@@ -289,7 +307,22 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
                         <p className="text-slate-400 mb-8">Cadastre-se para oferecer serviços.</p>
                         <div className="space-y-4">
                             <InputModern icon={User} label="Nome Profissional" value={formData.name} onChange={v => setFormData({ ...formData, name: v })} />
-                            <InputModern icon={Smartphone} label="Celular" value={formData.phone} onChange={v => setFormData({ ...formData, phone: v })} />
+                            <InputModern icon={Smartphone} label="Celular" value={formData.phone} onChange={v => setFormData({ ...formData, phone: maskPhone(v) })} />
+
+                            <div className="flex gap-4 px-1">
+                                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
+                                    <input type="radio" checked={formData.docType === 'cpf'} onChange={() => setFormData({ ...formData, docType: 'cpf' })} /> CPF
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer text-sm text-slate-300">
+                                    <input type="radio" checked={formData.docType === 'cnpj'} onChange={() => setFormData({ ...formData, docType: 'cnpj' })} /> CNPJ
+                                </label>
+                            </div>
+
+                            {formData.docType === 'cpf' ? (
+                                <InputModern icon={User} label="CPF" value={formData.cpf} onChange={v => setFormData({ ...formData, cpf: maskCPF(v) })} />
+                            ) : (
+                                <InputModern icon={Building} label="CNPJ" value={formData.cnpj} onChange={v => setFormData({ ...formData, cnpj: maskCNPJ(v) })} />
+                            )}
                             <div className="group bg-transparent border-b border-white/20 p-4">
                                 <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">Categoria</label>
                                 <select value={formData.category} onChange={e => setFormData({ ...formData, category: e.target.value })} className="bg-transparent border-none outline-none w-full text-lg text-white [&>option]:text-black">

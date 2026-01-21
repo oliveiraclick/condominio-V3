@@ -15,6 +15,7 @@ import {
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
   Building2, Camera as CameraIcon, Download, Scan, Handshake, BadgeCheck, Menu
 } from 'lucide-react';
+import { maskPhone } from '../utils/masks';
 import { QRCodeSVG } from 'qrcode.react';
 import { PackageScanner } from '../components/PackageScanner';
 import { CommunicationHub } from './CommunicationHub';
@@ -53,7 +54,7 @@ export const FloatingBackButton: React.FC<{ onClick: () => void; visible?: boole
 
 export const SectionHeader: React.FC<{ title: string; onAction?: () => void; actionLabel?: string }> = ({ title, onAction, actionLabel }) => (
   <div className="flex justify-between items-end mb-6 px-1">
-    <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">{title}</h3>
+    <h3 className="text-xl font-bold text-white tracking-tight leading-none">{title}</h3>
     {actionLabel && (
       <button onClick={onAction} className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all">
         {actionLabel}
@@ -87,8 +88,6 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
     setLoading(false);
   };
 
-
-
   const markAsRead = async (id: string) => {
     // Optimistic UI Update
     setNotifications(prev => prev.filter(n => n.id !== id));
@@ -98,84 +97,53 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
       notification_id: id,
       user_id: currentUser.id
     });
-
-    if (error) {
-      console.error('Erro ao marcar como lido:', error);
-      // alert('Erro ao salvar leitura: ' + error.message); // Silent fail is better for UX if View works
-    } else {
-      if (onUpdate) onUpdate(); // Trigger parent refresh (badge update)
-    }
+    if (!error && onUpdate) onUpdate();
   };
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex items-end justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-md bg-white rounded-t-[40px] shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-24" style={{ maxHeight: 'calc(100vh - 120px)' }}>
-        {/* Header */}
-        <div className="p-6 pb-4 border-b border-slate-100 sticky top-0 bg-white rounded-t-[40px] z-10">
-          <div className="flex items-center justify-between">
-            <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Notifica��es</h2>
-            <button onClick={onClose} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all">
-              <X size={20} className="text-slate-600" />
-            </button>
-          </div>
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">
-            {notifications.length} mensagens
-          </p>
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
+      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm pointer-events-auto transition-opacity" onClick={onClose}></div>
+      <div className="w-full max-w-sm bg-slate-900 border border-white/10 rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl transform transition-transform pointer-events-auto max-h-[85vh] flex flex-col animate-in slide-in-from-bottom">
+        <div className="w-12 h-1.5 bg-white/10 rounded-full mx-auto mb-6 shrink-0"></div>
+        <div className="flex items-center justify-between mb-6 shrink-0">
+          <h3 className="text-xl font-black text-white uppercase">Notificações</h3>
+          <button onClick={onClose} className="w-8 h-8 bg-white/5 rounded-full flex items-center justify-center text-slate-400 hover:bg-white/10 transition-colors"><XCircle size={20} /></button>
         </div>
 
-        {/* Content with smooth scroll */}
-        <div
-          className="overflow-y-auto p-6 space-y-4"
-          style={{
-            maxHeight: 'calc(100vh - 280px)',
-            scrollbarWidth: 'none',
-            msOverflowStyle: 'none',
-            WebkitOverflowScrolling: 'touch'
-          }}
-        >
-          <style>{`
-            .overflow-y-auto::-webkit-scrollbar {
-              display: none;
-            }
-          `}</style>
+        <div className="space-y-4 overflow-y-auto min-h-0 pb-6">
           {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-            </div>
+            <div className="text-center py-8 text-slate-500 text-xs">Carregando...</div>
           ) : notifications.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Bell size={24} className="text-slate-300" />
-              </div>
-              <p className="text-slate-400 font-bold text-sm">Nenhuma notifica��o</p>
-              <p className="text-slate-300 text-xs mt-1">Voc� est� em dia!</p>
+            <div className="text-center py-12 space-y-4 opacity-50">
+              <Bell size={48} className="mx-auto text-slate-600" />
+              <p className="text-sm font-bold text-slate-500">Tudo limpo por aqui!</p>
             </div>
           ) : (
-            notifications.map((notif) => (
-              <div key={notif.id} className="bg-slate-50 p-5 rounded-[28px] border border-slate-100 space-y-3 animate-in slide-in-from-bottom-2 relative group">
-                <div className="flex justify-between items-start gap-3">
-                  <h4 className="font-black text-slate-900 text-base italic tracking-tight flex-1">{notif.title}</h4>
-                  <Badge className={`text-[8px] uppercase px-2 py-1 ${notif.target_role === 'all' ? 'bg-brand-100 text-brand-600' :
-                    notif.target_role === 'resident' ? 'bg-blue-100 text-blue-600' :
-                      'bg-emerald-100 text-emerald-600'
+            notifications.map(n => (
+              <div key={n.id} className="bg-white/5 p-4 rounded-2xl border border-white/5 relative group">
+                <div className="flex gap-3">
+                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${n.type === 'package' ? 'bg-amber-100 text-amber-600' :
+                    n.type === 'access' ? 'bg-emerald-100 text-emerald-600' :
+                      n.type === 'notice' ? 'bg-blue-100 text-blue-600' :
+                        'bg-brand-100 text-brand-600'
                     }`}>
-                    {notif.target_role === 'all' ? 'Geral' : notif.target_role === 'resident' ? 'Moradores' : 'Profissionais'}
-                  </Badge>
-                </div>
-                <p className="text-sm text-slate-600 leading-relaxed">{notif.body}</p>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-widest">
-                    <Clock size={12} />
-                    {new Date(notif.created_at).toLocaleDateString('pt-BR')} �s {new Date(notif.created_at).toLocaleTimeString('pt-BR').slice(0, 5)}
+                    {n.type === 'package' ? <Package size={20} /> :
+                      n.type === 'access' ? <Key size={20} /> :
+                        n.type === 'notice' ? <Megaphone size={20} /> :
+                          <Bell size={20} />
+                    }
                   </div>
-                  <button
-                    onClick={() => markAsRead(notif.id)}
-                    className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 active:scale-95 transition-all opacity-0 group-hover:opacity-100"
-                  >
-                    Marcar Lido
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-white text-sm leading-tight mb-1">{n.title}</h4>
+                    <p className="text-xs text-slate-400 leading-relaxed mb-2">{n.message}</p>
+                    <p className="text-[10px] text-slate-500 font-medium">
+                      {new Date(n.created_at).toLocaleDateString('pt-BR')} às {new Date(n.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <button onClick={() => markAsRead(n.id)} className="absolute top-2 right-2 p-2 text-slate-600 hover:text-brand-400 transition-colors">
+                    <CheckCircle2 size={16} />
                   </button>
                 </div>
               </div>
@@ -228,7 +196,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
         .neq('id', currentUser.id); // Cannot authorize self
 
       if (!neighbors || neighbors.length === 0) {
-        alert('Morador n�o encontrado neste endere�o.');
+        alert('Morador não encontrado neste endereço.');
         setLoading(false);
         return;
       }
@@ -243,7 +211,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
       // 2. Check overlap
       const exists = authorizations.find(a => a.grantee_id === neighbor.id);
       if (exists) {
-        alert(`O morador ${neighbor.name} (Rua ${neighbor.tower} - ${neighbor.unit}) j� est� autorizado.`);
+        alert(`O morador ${neighbor.name} (Rua ${neighbor.tower} - ${neighbor.unit}) já está autorizado.`);
         setLoading(false);
         return;
       }
@@ -277,14 +245,14 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
 
   return (
     <div className="fixed inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-md bg-white rounded-t-[40px] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom-8">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-t-[40px] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom-8">
         <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-black italic text-slate-900">Vizinhos Autorizados</h3>
-          <button onClick={onClose}><XCircle size={32} className="text-slate-300" /></button>
+          <h3 className="text-xl font-black italic text-white">Vizinhos Autorizados</h3>
+          <button onClick={onClose}><XCircle size={32} className="text-slate-500 hover:text-slate-300 transition-colors" /></button>
         </div>
 
-        <div className="bg-slate-50 p-6 rounded-[32px] mb-8 space-y-4">
+        <div className="bg-white/5 p-6 rounded-[32px] mb-8 space-y-4 border border-white/5">
           <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest">Adicionar Novo</h4>
 
           <div className="flex gap-2 items-end">
@@ -293,7 +261,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
                 placeholder="Rua (Ex: 1)"
                 value={manualEntry.tower}
                 onChange={e => setManualEntry({ ...manualEntry, tower: e.target.value })}
-                className="h-12 bg-white border-slate-200"
+                className="h-12 bg-white/5 border-white/10 text-white placeholder-slate-500 backdrop-blur-sm"
               />
             </div>
             <div className="space-y-2 flex-1">
@@ -301,7 +269,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
                 placeholder="Casa (Ex: 460)"
                 value={manualEntry.unit}
                 onChange={e => setManualEntry({ ...manualEntry, unit: e.target.value })}
-                className="h-12 bg-white border-slate-200"
+                className="h-12 bg-white/5 border-white/10 text-white placeholder-slate-500 backdrop-blur-sm"
               />
             </div>
             <Button onClick={authorizeByAddress} disabled={loading} className="h-12 w-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-emerald-200 shadow-lg active:scale-95 transition-all">
@@ -311,19 +279,19 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autoriza��es Ativas</h4>
+          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
           {authorizations.length === 0 ? (
-            <div className="text-center py-8 text-slate-300">
-              <p className="text-xs italic">Ningu�m autorizado.</p>
+            <div className="text-center py-8 text-slate-500">
+              <p className="text-xs italic">Ninguém autorizado.</p>
             </div>
           ) : (
             authorizations.map(auth => (
-              <div key={auth.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
+              <div key={auth.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl shadow-sm">
                 <div>
-                  <h5 className="font-bold text-slate-900 text-sm">{auth.grantee?.name}</h5>
+                  <h5 className="font-bold text-white text-sm">{auth.grantee?.name}</h5>
                   <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">RUA {auth.grantee?.tower}, {auth.grantee?.unit}</p>
                 </div>
-                <button onClick={() => revokeAuthorization(auth.id)} className="text-rose-500 bg-rose-50 p-2 rounded-xl active:scale-95">
+                <button onClick={() => revokeAuthorization(auth.id)} className="text-rose-400 bg-rose-500/10 p-2 rounded-xl active:scale-95 hover:bg-rose-500/20 transition-colors">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -342,40 +310,40 @@ export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; cu
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-900/90 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-sm bg-white rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 mx-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-32 bg-brand-600"></div>
+      <div className="absolute inset-0 bg-slate-950/80 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative w-full max-w-xs sm:max-w-sm bg-slate-900 border border-white/10 rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 mx-6 overflow-hidden">
+        <div className="absolute top-0 left-0 right-0 h-28 bg-brand-600"></div>
         <div className="relative flex flex-col items-center">
-          <button onClick={onClose} className="absolute top-4 right-4 z-50 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform">
+          <button onClick={onClose} className="absolute top-0 right-0 z-50 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform backdrop-blur-sm">
             <X size={16} strokeWidth={3} />
           </button>
 
-          <div className="w-24 h-24 rounded-[32px] p-1 bg-white shadow-xl mb-4 mt-8">
-            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[28px] object-cover bg-slate-100" />
+          <div className="w-20 h-20 rounded-[28px] p-1 bg-slate-900 shadow-xl mb-3 mt-6 ring-4 ring-slate-900 z-10">
+            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[24px] object-cover bg-slate-800" />
           </div>
-          <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter text-center">{currentUser?.name}</h2>
-          <p className="text-xs font-bold text-slate-400 uppercase tracking-widest mb-8">
+          <h2 className="text-xl font-black text-white italic tracking-tighter text-center leading-none">{currentUser?.name}</h2>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6 mt-1">
             {currentUser?.unit?.toString().toUpperCase().includes('RUA')
               ? `${currentUser.unit}, ${currentUser.tower}`
-              : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
+              : `RUA ${currentUser?.tower || '', currentUser?.unit || ''}`
             }
           </p>
 
-          <div className="p-6 bg-white border-4 border-slate-900 rounded-[32px] shadow-sm mb-6">
-            <QRCodeSVG value={qrValue} size={200} />
+          <div className="p-4 bg-white rounded-[24px] shadow-sm mb-6">
+            <QRCodeSVG value={qrValue} size={160} />
           </div>
 
-          <p className="text-center text-slate-400 text-xs max-w-[200px] leading-relaxed mb-6">
-            Apresente este c�digo na portaria para retirar suas encomendas com seguran�a.
+          <p className="text-center text-slate-400 text-[10px] max-w-[200px] leading-relaxed mb-4">
+            Apresente este código na portaria para retirar suas encomendas com segurança.
           </p>
 
-          <Button onClick={onOpenAuth} className="bg-slate-100 text-slate-900 hover:bg-slate-200 h-12 rounded-xl text-xs font-black uppercase tracking-widest w-full mb-4">
+          <Button onClick={onOpenAuth} className="bg-white/10 text-white hover:bg-white/20 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest w-full mb-2 border border-white/5 shadow-lg">
             <Users size={16} className="mr-2" />
             Autorizar Vizinho
           </Button>
 
-          <button onClick={onClose} className="hover:bg-slate-50 p-2 rounded-full transition-colors">
-            <XCircle size={32} className="text-slate-300" />
+          <button onClick={onClose} className="hover:bg-white/5 p-2 rounded-full transition-colors mt-1">
+            <XCircle size={24} className="text-slate-500" />
           </button>
         </div>
       </div>
@@ -406,24 +374,24 @@ export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; 
 
   return (
     <div className="fixed inset-0 z-50 flex items-end justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-md bg-white rounded-t-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-12">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
+      <div className="relative w-full max-w-md bg-slate-900 border border-white/10 rounded-t-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-12">
         <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Publicar no Mural</h2>
-          <button onClick={onClose} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all">
-            <X size={20} className="text-slate-600" />
+          <h2 className="text-2xl font-black italic text-white tracking-tighter">Publicar no Mural</h2>
+          <button onClick={onClose} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-white/10">
+            <X size={20} className="text-slate-400" />
           </button>
         </div>
 
         <div className="space-y-6">
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">O que voc� precisa?</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">O que você precisa?</label>
             <div className="grid grid-cols-2 gap-2">
               {categories.map(cat => (
                 <button
                   key={cat}
                   onClick={() => setCategory(cat)}
-                  className={`py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all border ${category === cat ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-50 text-slate-400 border-slate-100'}`}
+                  className={`py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all border ${category === cat ? 'bg-brand-600 text-white border-brand-600' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10'}`}
                 >
                   {cat}
                 </button>
@@ -432,16 +400,16 @@ export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; 
           </div>
 
           <div>
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">D� mais detalhes</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Dê mais detalhes</label>
             <textarea
-              className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-500/20"
-              placeholder="Ex: Preciso consertar uma torneira na cozinha amanh� de manh�..."
+              className="w-full bg-white/5 border border-white/10 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-500 text-white placeholder-slate-500"
+              placeholder="Ex: Preciso consertar uma torneira na cozinha amanhã de manhã..."
               value={description}
               onChange={(e) => setDescription(e.target.value)}
             />
           </div>
 
-          <Button fullWidth className="bg-slate-950 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs" onClick={handleSubmit} loading={loading}>
+          <Button fullWidth className="bg-white text-slate-900 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-slate-200 transition-colors" onClick={handleSubmit} loading={loading}>
             Publicar Agora
           </Button>
         </div>
@@ -454,25 +422,25 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
   return (
     <Card
       onClick={onClick}
-      className={`p-0 overflow-hidden border-none shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group transition-all cursor-pointer active:scale-[0.98]`}
+      className={`p-0 overflow-hidden border border-white/10 shadow-xl shadow-slate-900/60 rounded-[40px] bg-white/5 backdrop-blur-3xl group transition-all cursor-pointer active:scale-[0.98]`}
     >
       <div className="relative h-72 p-5">
         <img src={item.img} className="w-full h-full object-cover rounded-[32px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
         <div className="absolute top-10 left-10">
           <span className="bg-emerald-500 text-white font-black px-4 py-2 text-[10px] uppercase rounded-xl shadow-lg tracking-widest">{item.status}</span>
         </div>
-        <div className="absolute bottom-10 right-10 bg-white/90 backdrop-blur-md px-5 py-3 rounded-[20px] shadow-xl border border-white/20">
-          <p className="text-lg font-black text-slate-950 tracking-tighter">{item.price}</p>
+        <div className="absolute bottom-10 right-10 bg-slate-950/80 backdrop-blur-md px-5 py-3 rounded-[20px] shadow-xl border border-white/20">
+          <p className="text-lg font-black text-white tracking-tighter">{item.price}</p>
         </div>
       </div>
       <div className="p-8 pt-2">
-        <h4 className="font-black text-xl text-slate-950 mb-2 tracking-tighter italic truncate">{item.name}</h4>
+        <h4 className="font-black text-xl text-white mb-2 tracking-tighter italic truncate">{item.name}</h4>
         <div className="flex items-center gap-3 mb-6">
-          <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-100 shadow-sm">
+          <div className="w-8 h-8 rounded-full overflow-hidden border border-white/10 shadow-sm bg-white/10">
             <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt="User" />
           </div>
           <div>
-            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-brand-500">
+            <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none">{item.user} <span className="text-brand-400">
               {item.unit && item.unit.toUpperCase().includes('CASA')
                 ? `, Rua ${item.tower}, ${item.unit.replace(/casa/i, '').trim()}`
                 : item.tower ? `, ${item.tower} - ${item.unit}` : ''}
@@ -503,13 +471,13 @@ export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
       <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-sm bg-white rounded-[32px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 mx-4">
+      <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-[32px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 mx-4">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-amber-100 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-amber-500/20">
+          <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-amber-500/20 border border-amber-500/20">
             <Star size={32} fill="currentColor" />
           </div>
-          <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Avaliar Servi�o</h3>
-          <p className="text-sm text-slate-500">Como foi o atendimento de <span className="font-bold text-slate-900">{proName}</span>?</p>
+          <h3 className="text-2xl font-black text-white italic tracking-tighter">Avaliar Serviço</h3>
+          <p className="text-sm text-slate-400">Como foi o atendimento de <span className="font-bold text-white">{proName}</span>?</p>
 
           <div className="flex justify-center gap-2 py-4">
             {[1, 2, 3, 4, 5].map((s) => (
@@ -520,16 +488,16 @@ export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
           </div>
 
           <textarea
-            placeholder="Deixe um coment�rio (opcional)..."
+            placeholder="Deixe um comentário (opcional)..."
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            className="w-full h-24 bg-slate-50 rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-amber-400 transition-all font-medium"
+            className="w-full h-24 bg-white/5 border border-white/10 rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-amber-400 transition-all font-medium text-white placeholder-slate-500"
           />
 
           <Button onClick={() => onSubmit(rating, comment)} fullWidth className="h-14 bg-amber-400 text-amber-950 font-black uppercase tracking-widest shadow-lg shadow-amber-400/30 hover:bg-amber-500 hover:text-white">
-            Enviar Avalia��o
+            Enviar Avaliação
           </Button>
-          <button onClick={onClose} className="text-xs font-bold text-slate-400 uppercase tracking-widest hover:text-slate-600">Cancelar</button>
+          <button onClick={onClose} className="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-white transition-colors">Cancelar</button>
         </div>
       </div>
     </div>
@@ -575,13 +543,13 @@ export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () =>
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-sm bg-white rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
+      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose}></div>
+      <div className="relative w-full max-w-sm bg-slate-900 border border-white/10 rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
 
         {/* HEADER: Avatar & Info */}
         <div className="flex flex-col items-center shrink-0">
           {/* Avatar - Smaller & Focused */}
-          <div className="w-24 h-24 bg-slate-100 rounded-[24px] overflow-hidden shadow-md border-4 border-white relative z-10 mb-3">
+          <div className="w-24 h-24 bg-white/10 rounded-[24px] overflow-hidden shadow-md border-4 border-white/10 relative z-10 mb-3">
             <img
               src={professional.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${professional.name}`}
               className="w-full h-full object-cover object-top"
@@ -589,10 +557,10 @@ export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () =>
           </div>
 
           <div className="text-center space-y-1 w-full">
-            <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter leading-none">
+            <h2 className="text-2xl font-black text-white italic tracking-tighter leading-none">
               {professional.name}
             </h2>
-            <span className="bg-emerald-100 text-emerald-700 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-200 inline-block">
+            <span className="bg-emerald-500/10 text-emerald-400 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 inline-block">
               {professional.category || 'Prestador'}
             </span>
           </div>
@@ -600,7 +568,7 @@ export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () =>
           {/* BIG STARS */}
           <div className="flex items-center justify-center gap-1 py-4">
             {[1, 2, 3, 4, 5].map(s => (
-              <Star key={s} size={24} fill={rating && s <= Math.round(rating) ? "#fbbf24" : "none"} className={rating && s <= Math.round(rating) ? "text-amber-400" : "text-slate-200"} strokeWidth={3} />
+              <Star key={s} size={24} fill={rating && s <= Math.round(rating) ? "#fbbf24" : "none"} className={rating && s <= Math.round(rating) ? "text-amber-400" : "text-white/20"} strokeWidth={3} />
             ))}
           </div>
           <p className="text-xs font-bold text-slate-400 -mt-2 mb-4">
@@ -611,33 +579,33 @@ export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () =>
         {/* SCROLLABLE CONTENT: Description & Reviews */}
         <div className="flex-1 overflow-y-auto space-y-6 pr-2 -mr-2 min-h-0">
           {/* Description */}
-          <div className="bg-slate-50 rounded-2xl p-4">
+          <div className="bg-white/5 rounded-2xl p-4 border border-white/5">
             <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Sobre</h4>
-            <p className="text-sm text-slate-600 leading-relaxed">
+            <p className="text-sm text-slate-300 leading-relaxed">
               {professional.description || 'Este profissional ainda não adicionou uma descrição detalhada.'}
             </p>
           </div>
 
           {/* Reviews List */}
           <div>
-            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 sticky top-0 bg-white py-2 z-10">
+            <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 sticky top-0 bg-slate-900 py-2 z-10">
               O que dizem os vizinhos
             </h4>
             <div className="space-y-3">
               {reviews.length === 0 ? (
-                <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma avaliação ainda.</p>
+                <p className="text-xs text-slate-500 italic text-center py-4">Nenhuma avaliação ainda.</p>
               ) : (
                 reviews.map((rev) => (
-                  <div key={rev.id} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
+                  <div key={rev.id} className="bg-white/5 border border-white/5 rounded-2xl p-3 shadow-sm">
                     <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-slate-900">{rev.reviewer?.name || 'Vizinho'}</span>
+                      <span className="text-xs font-bold text-white">{rev.reviewer?.name || 'Vizinho'}</span>
                       <div className="flex text-amber-400">
                         {[1, 2, 3, 4, 5].map(s => (
-                          <Star key={s} size={10} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "" : "text-slate-200"} />
+                          <Star key={s} size={10} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "" : "text-white/20"} />
                         ))}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">{rev.comment || 'Sem comentário.'}</p>
+                    <p className="text-xs text-slate-400 leading-relaxed">{rev.comment || 'Sem comentário.'}</p>
                   </div>
                 ))
               )}
@@ -664,7 +632,7 @@ export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () =>
             <span className="font-black uppercase tracking-widest text-xs">Chamar no WhatsApp</span>
           </button>
 
-          <button onClick={onClose} className="h-10 text-slate-400 font-bold uppercase tracking-widest text-xs hover:bg-slate-50 rounded-xl">
+          <button onClick={onClose} className="h-10 text-slate-400 font-bold uppercase tracking-widest text-xs hover:bg-white/5 rounded-xl transition-colors">
             Fechar
           </button>
         </div>
@@ -723,61 +691,46 @@ export const ResidentHome: React.FC<{
     }
   }, [desapegos.length]); // Depend only on length to avoid reset on index change
 
+  // OPTIMIZATION: Removed redundant fetch. Now uses 'packages' prop from App.tsx.
+  // Real-time subscription kept for instant updates (Handshake)
   useEffect(() => {
     if (!currentUser?.id) return;
 
-    // 1. Initial Check
-    const checkPackages = async () => {
-      const { data } = await supabase
-        .from('packages')
-        .select('*')
-        .or(`resident_id.eq.${currentUser.id},picked_up_by.eq.${currentUser.id}`)
-        .in('status', ['pending', 'awaiting_confirmation']);
-
-      if (data && data.length > 0) {
-        setShowPackageAlert(true);
-        // If there's any package awaiting handshake, show modal immediately
-        if (data.some(p => p.status === 'awaiting_confirmation')) {
-          setShowPackageModal(true);
-        } else {
-          // Normal pending: show modal only once per session
-          const hasSeenModal = sessionStorage.getItem('hasSeenPackageModal');
-          if (!hasSeenModal) {
-            setShowPackageModal(true);
-            sessionStorage.setItem('hasSeenPackageModal', 'true');
-          }
-        }
+    // Check prop for Alert
+    const pending = packages.filter(p => p.status === 'pending' || p.status === 'awaiting_confirmation');
+    if (pending.length > 0) {
+      setShowPackageAlert(true);
+      if (pending.some(p => p.status === 'awaiting_confirmation')) {
+        setShowPackageModal(true);
       } else {
-        setShowPackageAlert(false);
+        const hasSeenModal = sessionStorage.getItem('hasSeenPackageModal');
+        if (!hasSeenModal) {
+          setShowPackageModal(true);
+          sessionStorage.setItem('hasSeenPackageModal', 'true');
+        }
       }
-    };
+    } else {
+      setShowPackageAlert(false);
+    }
 
-    checkPackages();
-
-    // 2. Real-time Subscription for Handshake
+    // Real-time Subscription (Optional: could also be lifted, but keeping here for focused UI update)
     const channel = supabase
-      .channel('resident-packages')
+      .channel('resident-packages-home')
       .on('postgres_changes', {
-        event: 'UPDATE',
-        schema: 'public',
-        table: 'packages'
+        event: 'UPDATE', schema: 'public', table: 'packages'
       }, (payload) => {
-        // Handle Handshake confirmation UI
         const isMine = payload.new.resident_id === currentUser.id || payload.new.picked_up_by === currentUser.id;
-
         if (isMine && payload.new.status === 'awaiting_confirmation') {
           setShowPackageModal(true);
           setShowPackageAlert(true);
         }
-
-        if (isMine) checkPackages();
+        // Ideally we should call onRefresh() to update App state
+        if (isMine && onClearNotifications) onClearNotifications();
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [currentUser]);
+    return () => { supabase.removeChannel(channel); };
+  }, [currentUser, packages]); // Added packages dependency
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -829,21 +782,21 @@ export const ResidentHome: React.FC<{
       // Mark request as reviewed in DB
       await supabase.from('service_requests').update({ reviewed: true }).eq('id', selectedRequestToReview.id);
 
-      alert('Avalia��o enviada com sucesso! Obrigado.');
+      alert('Avaliação enviada com sucesso! Obrigado.');
       setReviewModalOpen(false);
       // Refresh local data if possible, or wait for subscription
       if (typeof window !== 'undefined' && (window as any).refreshAppData) {
         (window as any).refreshAppData();
       }
     } else {
-      alert('Erro ao enviar avalia��o: ' + error.message);
+      alert('Erro ao enviar avaliação: ' + error.message);
     }
   };
 
   const featuredProduct = products.length > 0 ? products[products.length - 1] : null;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32 relative w-full overflow-x-hidden">
+    <div className="min-h-screen bg-transparent pb-32 relative w-full overflow-x-hidden">
       {/* HEADER: ON-SITE BANNER REMOVED AS REQUESTED */}
 
       {/* PACKAGE ALERT BANNER (Persistent Strip) */}
@@ -855,7 +808,7 @@ export const ResidentHome: React.FC<{
             </div>
             <div className="text-left">
               <p className="text-[10px] font-black uppercase tracking-widest text-amber-900 leading-none mb-0.5">
-                {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Aperto de M�o!' : 'Encomendas'}
+                {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Aperto de Mão!' : 'Encomendas'}
               </p>
               <p className="text-xs font-bold text-amber-950">
                 {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Responda na portaria agora' : 'Aguardando retirada'}
@@ -954,7 +907,7 @@ export const ResidentHome: React.FC<{
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
                   </Button>
                   <button onClick={() => setShowPackageModal(false)} className="py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none hover:text-slate-600 transition-colors">
-                    N�o estou com ele
+                    Não estou com ele
                   </button>
                 </div>
               </div>
@@ -975,7 +928,7 @@ export const ResidentHome: React.FC<{
                     Suas Encomendas<br /><span className="text-amber-500">Chegaram!</span>
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4 leading-relaxed">
-                    Voc� tem {localPackages.length} {localPackages.length === 1 ? 'volume' : 'volumes'} prontos para retirada<br />na portaria principal.
+                    Você tem {localPackages.length} {localPackages.length === 1 ? 'volume' : 'volumes'} prontos para retirada<br />na portaria principal.
                   </p>
                 </div>
 
@@ -1114,7 +1067,7 @@ export const ResidentHome: React.FC<{
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
               <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Prestadores no Condomínio</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-widest">Prestadores no Condomínio</h3>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-4 no-scrollbar">
               {onSitePros.map((pro, i) => (
@@ -1123,21 +1076,21 @@ export const ResidentHome: React.FC<{
                   onClick={() => {
                     setSelectedPro(pro); // OPEN MODAL
                   }}
-                  className="min-w-[140px] bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex flex-col items-center gap-3 cursor-pointer hover:shadow-md transition-all active:scale-95"
+                  className="min-w-[140px] bg-white/5 backdrop-blur-xl p-4 rounded-[24px] border border-white/10 shadow-lg flex flex-col items-center gap-3 cursor-pointer hover:bg-white/10 transition-all active:scale-95"
                 >
-                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-slate-100 relative">
+                  <div className="w-16 h-16 rounded-2xl overflow-hidden bg-white/10 relative">
                     <img
                       src={pro.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.name}`}
                       className="w-full h-full object-cover"
                     />
-                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-white"></div>
+                    <div className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 rounded-full border-2 border-slate-900"></div>
                   </div>
 
                   <div className="text-center">
                     <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
                       {pro.category || 'Prestador'}
                     </p>
-                    <h4 className="font-black text-slate-900 text-xs leading-tight line-clamp-1">
+                    <h4 className="font-black text-white text-xs leading-tight line-clamp-1">
                       {pro.name || 'Prestador'}
                     </h4>
                   </div>
@@ -1176,15 +1129,15 @@ export const ResidentHome: React.FC<{
           <div className="animate-in slide-in-from-left-4 duration-500">
             <div className="flex items-center gap-2 mb-4">
               <Star size={16} className="text-amber-500 fill-amber-500 animate-pulse" />
-              <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Avalie seu Atendimento</h3>
+              <h3 className="text-sm font-black text-white uppercase tracking-widest">Avalie seu Atendimento</h3>
             </div>
             <div className="space-y-4">
               {completedRequests.map((req, i) => (
-                <div key={i} className="bg-white p-5 rounded-[24px] border border-amber-100 shadow-lg shadow-amber-500/10 flex items-center justify-between">
+                <div key={i} className="bg-white/5 backdrop-blur-xl p-5 rounded-[24px] border border-white/10 shadow-lg shadow-amber-500/5 flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Concluído em {new Date(req.created_at).toLocaleDateString('pt-BR')}</p>
-                    <h4 className="font-black text-slate-900 text-sm mt-1">{req.title}</h4>
-                    <p className="text-xs text-slate-500">Com {req.providerName || 'Prestador'}</p>
+                    <h4 className="font-black text-white text-sm mt-1">{req.title}</h4>
+                    <p className="text-xs text-slate-400">Com {req.providerName || 'Prestador'}</p>
                   </div>
                   <Button onClick={() => { setSelectedRequestToReview(req); setReviewModalOpen(true); }} className="px-5 py-2 bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-colors">
                     Avaliar
@@ -1200,7 +1153,7 @@ export const ResidentHome: React.FC<{
         {/* ATALHOS RÁPIDOS (COM ABAS) */}
         <div className="space-y-6">
           {/* Tabs */}
-          <div className="flex p-1 bg-slate-100/80 rounded-2xl">
+          <div className="flex p-1 bg-white/5 backdrop-blur-md border border-white/10 rounded-2xl">
             <button
               onClick={() => setActiveSection('prestadores')}
               className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeSection === 'prestadores' ? 'bg-white text-brand-600 shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
@@ -1222,16 +1175,16 @@ export const ResidentHome: React.FC<{
                 <SectionHeader title="Gestão Condomínio" actionLabel="Ver Todos" onAction={() => onNavigate('home')} />
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-brand-600', bg: 'bg-brand-50' },
-                    { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-600', bg: 'bg-amber-50' },
-                    { icon: <CreditCard size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                    { icon: <FileText size={20} />, label: 'Documentos', target: 'financeiro', color: 'text-blue-600', bg: 'bg-blue-50' }, // Financeiro handles documents usually or there is a docs page
-                    { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                    { icon: <Scan size={20} />, label: 'Retirar Encomenda', target: 'scanner-encomenda', color: 'text-slate-100', bg: 'bg-slate-900 transition-colors group-hover:bg-slate-800' },
+                    { icon: <Key size={20} />, label: 'Acessos', target: 'acesso', color: 'text-brand-400', bg: 'bg-brand-500/20' },
+                    { icon: <CalendarDays size={20} />, label: 'Reservas', target: 'condo-agenda', color: 'text-amber-400', bg: 'bg-amber-500/20' },
+                    { icon: <CreditCard size={20} />, label: 'Financeiro', target: 'financeiro', color: 'text-emerald-400', bg: 'bg-emerald-500/20' },
+                    { icon: <FileText size={20} />, label: 'Documentos', target: 'financeiro', color: 'text-blue-400', bg: 'bg-blue-500/20' }, // Financeiro handles documents usually or there is a docs page
+                    { icon: <MessageSquare size={20} />, label: 'Fale com Cond.', target: 'chamado', color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+                    { icon: <Scan size={20} />, label: 'Retirar Encomenda', target: 'scanner-encomenda', color: 'text-slate-100', bg: 'bg-slate-800 transition-colors group-hover:bg-slate-700' },
                   ].map((act, i) => (
-                    <button key={i} onClick={() => onNavigate(act.target)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all group">
+                    <button key={i} onClick={() => onNavigate(act.target)} className="bg-white/5 backdrop-blur-md p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-lg border border-white/10 active:scale-95 transition-all group hover:bg-white/10">
                       <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
-                      <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
+                      <span className="text-[9px] font-black text-slate-300 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
                     </button>
                   ))}
                 </div>
@@ -1241,19 +1194,19 @@ export const ResidentHome: React.FC<{
                 <SectionHeader title="Prestadores" actionLabel="Ver Todos" onAction={() => onSelectCategory('Todos')} />
                 <div className="grid grid-cols-4 gap-3">
                   {[
-                    { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-600', bg: 'bg-green-50' },
-                    { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-600', bg: 'bg-yellow-50' },
-                    { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-600', bg: 'bg-cyan-50' },
-                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'Manutenção', color: 'text-indigo-600', bg: 'bg-indigo-50' },
+                    { icon: <Leaf size={20} />, label: 'Jardim', category: 'Jardinagem', color: 'text-green-400', bg: 'bg-green-500/20' },
+                    { icon: <Zap size={20} />, label: 'Eletricista', category: 'Eletricista', color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+                    { icon: <Droplets size={20} />, label: 'Limpeza', category: 'Limpeza', color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+                    { icon: <Wrench size={20} />, label: 'Reparos', category: 'Manutenção', color: 'text-indigo-400', bg: 'bg-indigo-500/20' },
                   ].map((act, i) => {
                     // Check if category exists in DB (case-insensitive or exact)
                     const dbCat = categories.find(c => c.name.toLowerCase() === act.category.toLowerCase());
                     const finalCategory = dbCat ? dbCat.name : act.category;
 
                     return (
-                      <button key={i} onClick={() => onSelectCategory(finalCategory)} className="bg-white p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-sm border border-slate-50 active:scale-95 transition-all">
+                      <button key={i} onClick={() => onSelectCategory(finalCategory)} className="bg-white/5 backdrop-blur-md p-3 py-4 rounded-[24px] flex flex-col items-center gap-2 shadow-lg border border-white/10 active:scale-95 transition-all hover:bg-white/10">
                         <div className={`${act.color} ${act.bg} w-10 h-10 rounded-xl flex items-center justify-center`}>{act.icon}</div>
-                        <span className="text-[9px] font-black text-slate-600 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
+                        <span className="text-[9px] font-black text-slate-300 uppercase text-center tracking-tight leading-none line-clamp-2">{act.label}</span>
                       </button>
                     );
                   })}
@@ -1273,20 +1226,20 @@ export const ResidentHome: React.FC<{
                 <div
                   key={i}
                   onClick={() => onSelectProduct && onSelectProduct(item)}
-                  className="min-w-[45%] bg-white p-4 rounded-[32px] shadow-sm border border-slate-50 flex flex-col gap-3 active:scale-95 transition-all cursor-pointer relative"
+                  className="min-w-[45%] bg-white/5 backdrop-blur-xl p-4 rounded-[32px] shadow-lg border border-white/10 flex flex-col gap-3 active:scale-95 transition-all cursor-pointer relative hover:bg-white/10"
                 >
-                  <div className="w-full h-32 rounded-2xl bg-orange-50 text-orange-500 overflow-hidden relative flex items-center justify-center">
+                  <div className="w-full h-32 rounded-2xl bg-white/5 overflow-hidden relative flex items-center justify-center border border-white/5">
                     {item.image_url ? (
                       <img src={item.image_url} className="w-full h-full object-cover" />
                     ) : (
-                      <Store size={24} />
+                      <Store size={24} className="text-white/20" />
                     )}
-                    <div className="absolute top-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-lg">
-                      <p className="text-[10px] font-black italic text-slate-900">{typeof item.price === 'number' ? `R$ ${item.price}` : item.price}</p>
+                    <div className="absolute top-2 right-2 bg-slate-950/80 backdrop-blur px-2 py-1 rounded-lg border border-white/10">
+                      <p className="text-[10px] font-black italic text-white">{typeof item.price === 'number' ? `R$ ${item.price}` : item.price}</p>
                     </div>
                   </div>
                   <div>
-                    <h4 className="font-black text-slate-900 text-sm italic tracking-tight line-clamp-1">{item.title}</h4>
+                    <h4 className="font-black text-white text-sm italic tracking-tight line-clamp-1">{item.title}</h4>
                     <p className="text-[10px] text-slate-400 mt-0.5 line-clamp-1">por {item.profiles?.name?.split(' ')[0] || 'Vizinho'}</p>
                   </div>
                   <div className="absolute top-4 left-4">
@@ -1298,19 +1251,19 @@ export const ResidentHome: React.FC<{
           ) : (
             <div
               onClick={() => onNavigate('shop-detail')}
-              className="bg-white p-6 rounded-[36px] shadow-sm border border-slate-50 flex items-center gap-6 active:scale-95 transition-all cursor-pointer"
+              className="bg-white/5 backdrop-blur-xl p-6 rounded-[36px] shadow-lg border border-white/10 flex items-center gap-6 active:scale-95 transition-all cursor-pointer hover:bg-white/10"
             >
-              <div className="w-20 h-20 rounded-2xl bg-orange-50 text-orange-500 overflow-hidden relative flex items-center justify-center">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-orange-400/20 to-orange-500/20 text-orange-400 overflow-hidden relative flex items-center justify-center border border-white/5">
                 <Store size={32} />
               </div>
               <div className="flex-1">
                 <div className="flex justify-between items-start">
-                  <h4 className="font-black text-slate-900 text-xl italic tracking-tight line-clamp-1">
+                  <h4 className="font-black text-white text-xl italic tracking-tight line-clamp-1">
                     Marketplace
                   </h4>
                 </div>
                 <p className="text-xs text-slate-400 mt-1 font-medium line-clamp-2">
-                  Encontre produtos e servi�os dos seus vizinhos e com�rcio local.
+                  Encontre produtos e serviços dos seus vizinhos e comércio local.
                 </p>
               </div>
               <div className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white shrink-0">
@@ -1335,14 +1288,14 @@ export const ResidentHome: React.FC<{
             {desapegos.length > 1 && (
               <>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === 0 ? desapegos.length - 1 : prev - 1); }}
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === 0 ? desapegos.length - 1 : prev - 1); }}
+                  className="absolute -left-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur shadow-xl rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-30 border border-slate-200"
                 >
                   <ChevronLeft size={24} />
                 </button>
                 <button
-                  onClick={(e) => { e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === desapegos.length - 1 ? 0 : prev + 1); }}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/90 backdrop-blur shadow-lg rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-10"
+                  onClick={(e) => { e.preventDefault(); e.stopPropagation(); setCurrentDesapegoIndex(prev => prev === desapegos.length - 1 ? 0 : prev + 1); }}
+                  className="absolute -right-2 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/90 backdrop-blur shadow-xl rounded-full flex items-center justify-center text-slate-900 active:scale-90 transition-all z-30 border border-slate-200"
                 >
                   <ChevronRight size={24} />
                 </button>
@@ -1353,7 +1306,7 @@ export const ResidentHome: React.FC<{
             {desapegos.length > 1 && (
               <div className="flex justify-center gap-2 mt-6">
                 {desapegos.map((_, idx) => (
-                  <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-brand-600' : 'w-2 bg-slate-200'}`} />
+                  <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-brand-500' : 'w-2 bg-white/20'}`} />
                 ))}
               </div>
             )}
@@ -1435,16 +1388,16 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
   };
 
   return (
-    <div className="min-h-screen bg-white pb-32">
+    <div className="min-h-screen bg-transparent pb-32">
       <div className="h-64 bg-brand-600 relative flex items-end px-10 pb-10 pt-20">
         <div className="absolute inset-0 bg-gradient-to-br from-brand-600 to-indigo-700"></div>
         <div className="relative z-10 flex items-center gap-6">
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
-            <div className="w-24 h-24 rounded-[30px] border-4 border-white bg-white overflow-hidden shadow-2xl relative">
+            <div className="w-24 h-24 rounded-[30px] border-4 border-white/20 bg-white/10 overflow-hidden shadow-2xl relative backdrop-blur-md">
               <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover" />
               {uploading && <div className="absolute inset-0 bg-black/50 flex items-center justify-center"><div className="w-6 h-6 border-2 border-white border-t-transparent rounded-full animate-spin"></div></div>}
             </div>
-            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg text-brand-600 border border-slate-50">
+            <div className="absolute -bottom-2 -right-2 w-10 h-10 bg-white/10 backdrop-blur rounded-full flex items-center justify-center shadow-lg text-white border border-white/20">
               <Camera size={20} />
             </div>
             <input
@@ -1466,20 +1419,20 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
       <div className="p-10 space-y-4">
         {[
           { icon: <User size={20} />, label: 'Dados Pessoais', desc: 'Edite seu perfil e contatos', onClick: () => onNavigate('personal-data') },
-          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configura��es de visibilidade', onClick: () => onNavigate('privacy') },
-          { icon: <LogOut size={20} />, label: 'Encerrar Sess�o', color: 'text-rose-500', bg: 'bg-rose-50', onClick: handleLogout },
+          { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade', onClick: () => onNavigate('privacy') },
+          { icon: <LogOut size={20} />, label: 'Encerrar Sessão', color: 'text-rose-400', bg: 'bg-rose-500/10', onClick: handleLogout },
         ].map((item, i) => (
-          <button key={i} onClick={item.onClick} className="w-full p-6 bg-slate-50 rounded-[30px] flex items-center justify-between group transition-all hover:bg-brand-50">
+          <button key={i} onClick={item.onClick} className="w-full p-6 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[30px] flex items-center justify-between group transition-all hover:bg-white/10">
             <div className="flex items-center gap-5">
-              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg || 'bg-white shadow-sm'} ${item.color || 'text-slate-400'}`}>
+              <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg || 'bg-white/10 shadow-sm'} ${item.color || 'text-slate-300'}`}>
                 {item.icon}
               </div>
               <div className="text-left">
-                <h4 className={`font-bold ${item.color || 'text-slate-900'}`}>{item.label}</h4>
+                <h4 className={`font-bold ${item.color || 'text-white'}`}>{item.label}</h4>
                 <p className="text-[10px] text-slate-400 uppercase font-medium">{item.desc}</p>
               </div>
             </div>
-            <ChevronRight size={18} className="text-slate-200" />
+            <ChevronRight size={18} className="text-slate-500" />
           </button>
         ))}
       </div>
@@ -1502,19 +1455,19 @@ export const Marketplace: React.FC<{
   ];
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-transparent pb-32">
       <FloatingBackButton onClick={() => onNavigate('home')} />
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100"><ArrowLeft size={20} className="text-slate-900" /></button>
+      <header className="p-6 pt-safe-offset flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-sm">
+        <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-white/10"><ArrowLeft size={20} className="text-white" /></button>
         <div className="flex-1 flex items-center justify-between">
-          <h2 className="text-2xl font-black italic tracking-tighter uppercase">e-Shop</h2>
-          <ShoppingBag className="text-brand-600" size={24} />
+          <h2 className="text-2xl font-black italic tracking-tighter uppercase text-white">e-Shop</h2>
+          <ShoppingBag className="text-brand-400" size={24} />
         </div>
       </header>
       <div className="p-6 space-y-10">
         <div className="relative group" onClick={() => onNavigate('shop-detail')}>
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input readOnly placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border-none shadow-2xl shadow-slate-100 cursor-pointer pointer-events-none" />
+          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-400 transition-colors" size={20} />
+          <Input readOnly placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border border-white/10 bg-white/10 text-white placeholder:text-slate-500 shadow-xl shadow-slate-900/20 cursor-pointer pointer-events-none" />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -1522,16 +1475,16 @@ export const Marketplace: React.FC<{
             <button
               key={cat.id || idx}
               onClick={() => onSelectCategory(cat.name)}
-              className={`${cat.bg || 'bg-slate-50'} p-8 rounded-[40px] flex flex-col gap-4 text-left group active:scale-95 transition-all border-2 border-transparent hover:border-white hover:shadow-xl relative overflow-hidden`}
+              className={`${cat.bg ? 'bg-white/5' : 'bg-white/5'} p-8 rounded-[40px] flex flex-col gap-4 text-left group active:scale-95 transition-all border border-white/10 hover:border-white/20 hover:bg-white/10 relative overflow-hidden backdrop-blur-md`}
             >
               {cat.icon_url ? (
                 <img src={cat.icon_url} className="w-8 h-8 object-contain group-hover:scale-110 transition-transform" />
               ) : (
-                <div className={`${cat.color || 'text-slate-600'} group-hover:scale-110 transition-transform`}>
+                <div className={`${cat.color?.replace('text-slate-600', 'text-slate-300') || 'text-slate-300'} group-hover:scale-110 transition-transform`}>
                   {cat.icon || <Package size={28} />}
                 </div>
               )}
-              <h4 className={`font-black italic text-lg tracking-tight leading-none ${cat.color || 'text-slate-900'}`}>{cat.name}</h4>
+              <h4 className={`font-black italic text-lg tracking-tight leading-none ${cat.color ? 'text-white' : 'text-white'}`}>{cat.name}</h4>
             </button>
           ))}
         </div>
@@ -1541,16 +1494,16 @@ export const Marketplace: React.FC<{
             <SectionHeader title="Destaques e-Shop" />
             <div className="space-y-4">
               {products.map((item, i) => (
-                <div key={i} className="bg-white p-4 rounded-[32px] flex items-center gap-4 shadow-sm border border-slate-50">
-                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-slate-100 flex-shrink-0">
+                <div key={i} className="bg-white/5 backdrop-blur-xl p-4 rounded-[32px] flex items-center gap-4 shadow-lg border border-white/10 hover:bg-white/10 transition-colors">
+                  <div className="w-20 h-20 rounded-2xl overflow-hidden bg-white/10 flex-shrink-0 border border-white/10">
                     <img src={item.image_url || item.img} className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-900 italic truncate">{item.title || item.name}</h4>
+                    <h4 className="font-bold text-white italic truncate">{item.title || item.name}</h4>
                     <p className="text-[10px] text-slate-400 uppercase font-black tracking-widest">{typeof item.price === 'number' ? `R$ ${item.price.toFixed(2)}` : item.price}</p>
-                    <p className="text-[10px] text-slate-400 uppercase mt-1 truncate">Vendedor: {item.profiles?.name || item.user || 'e-Shop'}</p>
+                    <p className="text-[10px] text-slate-500 uppercase mt-1 truncate">Vendedor: {item.profiles?.name || item.user || 'e-Shop'}</p>
                   </div>
-                  <button className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white flex-shrink-0">
+                  <button className="w-10 h-10 bg-slate-950 rounded-full flex items-center justify-center text-white flex-shrink-0 border border-white/10">
                     <ChevronRight size={18} />
                   </button>
                 </div>
@@ -1588,14 +1541,14 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
   // CATEGORY DEFINITIONS (Icons & Colors)
   const categoryConfig: any = {
-    'Jardinagem': { icon: <Leaf size={24} />, color: 'text-green-600', bg: 'bg-green-50' },
-    'Eletricista': { icon: <Zap size={24} />, color: 'text-yellow-600', bg: 'bg-yellow-50' },
-    'Limpeza': { icon: <Droplets size={24} />, color: 'text-cyan-600', bg: 'bg-cyan-50' },
-    'Pintor': { icon: <Paintbrush size={24} />, color: 'text-pink-600', bg: 'bg-pink-50' },
-    'Manutenção': { icon: <Wrench size={24} />, color: 'text-blue-600', bg: 'bg-blue-50' },
-    'Tecnologia': { icon: <Monitor size={24} />, color: 'text-brand-600', bg: 'bg-brand-50' },
-    'Beleza': { icon: <Scissors size={24} />, color: 'text-rose-600', bg: 'bg-rose-50' },
-    'Outros': { icon: <Briefcase size={24} />, color: 'text-slate-600', bg: 'bg-slate-50' },
+    'Jardinagem': { icon: <Leaf size={24} />, color: 'text-green-400', bg: 'bg-green-500/20' },
+    'Eletricista': { icon: <Zap size={24} />, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
+    'Limpeza': { icon: <Droplets size={24} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
+    'Pintor': { icon: <Paintbrush size={24} />, color: 'text-pink-400', bg: 'bg-pink-500/20' },
+    'Manutenção': { icon: <Wrench size={24} />, color: 'text-blue-400', bg: 'bg-blue-500/20' },
+    'Tecnologia': { icon: <Monitor size={24} />, color: 'text-brand-400', bg: 'bg-brand-500/20' },
+    'Beleza': { icon: <Scissors size={24} />, color: 'text-rose-400', bg: 'bg-rose-500/20' },
+    'Outros': { icon: <Briefcase size={24} />, color: 'text-slate-400', bg: 'bg-slate-500/20' },
   };
 
   const getCatConfig = (cat: string) => categoryConfig[cat] || categoryConfig['Outros'];
@@ -1660,7 +1613,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           professional_id: proId,
           resident_id: currentUser.id,
           source: 'whatsapp_click',
-          metadata: { origin: 'servicos_full', category: activeCategory }
+          metadata: { origin: 'serviços_full', category: activeCategory }
         }]);
       }
       window.open(`https://wa.me/55${cleanPhone}`, '_blank');
@@ -1673,14 +1626,14 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   const showCategoryGrid = activeCategory === 'Todos' && !searchTerm;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-10">
+    <div className="min-h-screen bg-transparent pb-32">
       <FloatingBackButton onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} />
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-100">
-          <ArrowLeft size={20} className="text-slate-600" />
+      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-sm">
+        <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-white/10">
+          <ArrowLeft size={20} className="text-white" />
         </button>
         <div className="flex-1">
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
+          <h2 className="text-xl font-black italic uppercase tracking-tighter text-white leading-none">
             {activeCategory === 'Todos' ? 'Prestadores' : activeCategory}
           </h2>
         </div>
@@ -1689,12 +1642,12 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       <div className="p-6 space-y-6">
         {/* SEARCH BAR */}
         <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-600 transition-colors" size={20} />
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-400 transition-colors" size={20} />
           <Input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder={activeCategory === 'Todos' ? "Busque por serviço (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
-            className="pl-12 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-brand-600 focus:ring-1 focus:ring-brand-600 transition-all"
+            className="pl-12 h-14 bg-white/5 border border-white/10 rounded-2xl shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-white placeholder-slate-500"
           />
         </div>
 
@@ -1709,13 +1662,13 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                 <button
                   key={cat}
                   onClick={() => setActiveCategory(cat)}
-                  className="bg-white p-6 rounded-[32px] border border-slate-50 shadow-sm flex flex-col items-center gap-4 active:scale-95 transition-all hover:border-brand-200 group"
+                  className="bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-lg flex flex-col items-center gap-4 active:scale-95 transition-all hover:bg-white/10 group backdrop-blur-md"
                 >
-                  <div className={`w-16 h-16 ${conf.bg} ${conf.color} rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform`}>
+                  <div className={`w-16 h-16 ${conf.bg?.replace('bg-', 'bg-') || 'bg-white/10'} ${conf.color?.replace('text-', 'text-') || 'text-white'} rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform`}>
                     {conf.icon}
                   </div>
                   <div className="text-center">
-                    <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight">{cat}</h4>
+                    <h4 className="font-black text-white text-sm uppercase tracking-tight">{cat}</h4>
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{count} Profissionais</p>
                   </div>
                 </button>
@@ -1731,7 +1684,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
             {filteredPros.length > 0 ? filteredPros.map(pro => (
               <Card
                 key={pro.id}
-                className="p-0 border-none shadow-xl shadow-slate-200/50 rounded-[40px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all active:scale-[0.98]"
+                className="p-0 border border-white/10 shadow-xl shadow-slate-900/50 rounded-[40px] bg-white/5 overflow-hidden group cursor-pointer hover:bg-white/10 transition-all active:scale-[0.98] backdrop-blur-md"
                 onClick={() => handleProClick(pro)}
               >
                 <div className="p-6 pb-0 flex items-start gap-5">
@@ -1762,10 +1715,10 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   </div>
                 </div>
 
-                <div className="mt-6 p-6 bg-slate-50/50 border-t border-slate-100 flex items-center gap-3">
+                <div className="mt-6 p-6 bg-slate-950/30 border-t border-white/5 flex items-center gap-3">
                   <div className="flex-1">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Aproximado</p>
-                    <p className="font-black text-slate-900 text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
+                    <p className="font-black text-white text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
                   </div>
                   <div className="flex gap-2">
                     <button
@@ -1817,13 +1770,13 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       {selectedPro && (
         <div className="fixed inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200">
           <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedPro(null)}></div>
-          <div className="relative w-full max-w-md bg-white rounded-t-[40px] shadow-2xl animate-in slide-in-from-bottom-10 duration-300 overflow-hidden max-h-[90vh] overflow-y-auto">
+          <div className="relative w-full max-w-md bg-slate-950/90 backdrop-blur-2xl rounded-t-[40px] shadow-2xl animate-in slide-in-from-bottom-10 duration-300 overflow-hidden max-h-[90vh] overflow-y-auto border border-white/10">
             <div className="h-48 relative">
               <div className="absolute inset-0 bg-brand-600"></div>
               {selectedPro.photos?.[0] && <img src={selectedPro.photos[0]} className="w-full h-full object-cover opacity-50" />}
               <button
                 onClick={() => setSelectedPro(null)}
-                className="absolute top-6 right-6 w-10 h-10 bg-white/20 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-white/40 transition-colors z-20"
+                className="absolute top-6 right-6 w-10 h-10 bg-black/40 backdrop-blur-md text-white rounded-full flex items-center justify-center hover:bg-black/60 transition-colors z-20 border border-white/10"
               >
                 <X size={20} />
               </button>
@@ -1839,37 +1792,37 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
+                  <h2 className="text-2xl font-black italic text-white tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge className="bg-brand-100 text-brand-700">{selectedPro.category}</Badge>
-                    {selectedPro.is_on_site && <Badge className="bg-emerald-100 text-emerald-700 animate-pulse">No Condomínio!</Badge>}
+                    <Badge className="bg-brand-500/20 text-brand-300 border border-brand-500/30">{selectedPro.category}</Badge>
+                    {selectedPro.is_on_site && <Badge className="bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 animate-pulse">No Condomínio!</Badge>}
                   </div>
                 </div>
                 <div className="text-right">
                   <div className="flex items-center gap-1 justify-end">
                     <Star size={16} className="text-amber-400 fill-amber-400" />
-                    <span className="text-lg font-black text-slate-900">{selectedPro.rating || '4.8'}</span>
+                    <span className="text-lg font-black text-white">{selectedPro.rating || '4.8'}</span>
                   </div>
                   <span className="text-xs text-slate-400 font-bold uppercase tracking-widest">Avaliações</span>
                 </div>
               </div>
 
               <div className="space-y-6">
-                <div className="bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <div className="bg-white/5 p-6 rounded-3xl border border-white/10">
                   <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-2">Sobre o Profissional</h4>
-                  <p className="text-slate-600 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomínio.'}</p>
+                  <p className="text-slate-300 leading-relaxed font-medium">{selectedPro.description || 'Profissional verificado do condomínio.'}</p>
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                    <Clock size={20} className="text-brand-500 mb-2" />
+                  <div className="bg-white/5 p-5 rounded-3xl border border-white/10">
+                    <Clock size={20} className="text-brand-400 mb-2" />
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horário</p>
-                    <p className="font-bold text-slate-700">Seg - Sex, 08h-18h</p>
+                    <p className="font-bold text-slate-300">Seg - Sex, 08h-18h</p>
                   </div>
-                  <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                    <MapPin size={20} className="text-brand-500 mb-2" />
+                  <div className="bg-white/5 p-5 rounded-3xl border border-white/10">
+                    <MapPin size={20} className="text-brand-400 mb-2" />
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atende</p>
-                    <p className="font-bold text-slate-700">Todas as Torres</p>
+                    <p className="font-bold text-slate-300">Todas as Torres</p>
                   </div>
                 </div>
 
@@ -1894,24 +1847,30 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 };
 
 export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; currentUser?: any; onDelete?: (id: string) => void; onSelect?: (item: any) => void }> = ({ onBack, desapegos, currentUser, onDelete, onSelect }) => (
-  <div className="min-h-screen bg-slate-50 pb-32">
+  <div className="min-h-screen bg-slate-950 pb-32">
     <FloatingBackButton onClick={onBack} />
-    <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-      <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90"><ArrowLeft size={20} /></button>
-      <h2 className="text-xl font-black italic uppercase">Desapego</h2>
+    <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-50 backdrop-blur-md">
+      <button onClick={onBack} className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center active:scale-95 transition-all hover:bg-white/10 text-white shadow-sm border border-white/5"><ArrowLeft size={24} /></button>
+      <h2 className="text-xl font-black italic uppercase text-white">Mural do Desapego</h2>
     </header>
-    <div className="p-6 space-y-10">
-      {desapegos.map(item => (
-        <div key={item.id}>
-          <DesapegoCard item={item} onClick={() => onSelect && onSelect(item)} />
+    <div className="p-6 space-y-8">
+      {desapegos.length === 0 ? (
+        <div className="text-center py-20 opacity-50">
+          <p className="text-slate-400 font-bold">Nenhum item anunciado.</p>
         </div>
-      ))}
+      ) : (
+        desapegos.map(item => (
+          <div key={item.id}>
+            <DesapegoCard item={item} onClick={() => onSelect && onSelect(item)} />
+          </div>
+        ))
+      )}
     </div>
   </div>
 );
 
 export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; currentUser?: any; onDelete?: (id: string) => void }> = ({ onBack, item, currentUser, onDelete }) => {
-  if (!item) return <div className="p-10">Item não encontrado. <button onClick={onBack}>Voltar</button></div>;
+  if (!item) return <div className="p-10 text-white">Item não encontrado. <button onClick={onBack}>Voltar</button></div>;
 
   const isOwner = currentUser?.name === item.user;
 
@@ -1932,31 +1891,31 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32 animate-in fade-in duration-300">
-      <div className="h-96 relative bg-slate-200">
-        <img src={item.img} className="w-full h-full object-cover" alt={item.name} />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-slate-50/90"></div>
-        <button onClick={onBack} className="absolute top-24 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/20"><ArrowLeft /></button>
+    <div className="min-h-screen bg-transparent pb-32 animate-in fade-in duration-300">
+      <div className="h-96 relative bg-slate-900">
+        <img src={item.img} className="w-full h-full object-cover opacity-80" alt={item.name} />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-slate-900/90"></div>
+        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/10 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-95 shadow-lg border border-white/10 z-50"><ArrowLeft /></button>
 
         <div className="absolute bottom-8 left-6 right-6">
           <span className="bg-emerald-500 text-white px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest shadow-lg mb-3 inline-block">{item.status}</span>
         </div>
       </div>
 
-      <div className="px-6 -mt-6 relative z-10 w-full rounded-t-[40px] bg-slate-50">
+      <div className="px-6 -mt-6 relative z-10 w-full rounded-t-[40px] bg-slate-950/80 backdrop-blur-3xl border-t border-white/10">
         <div className="flex justify-between items-start mb-4 pt-6">
-          <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter leading-none max-w-[70%]">{item.name}</h2>
-          <div className="bg-white px-4 py-2 rounded-2xl shadow-sm border border-slate-100">
-            <p className="font-black text-slate-900 text-lg tracking-tight">{item.price}</p>
+          <h2 className="text-3xl font-black text-white italic tracking-tighter leading-none max-w-[70%]">{item.name}</h2>
+          <div className="bg-white/10 px-4 py-2 rounded-2xl shadow-sm border border-white/10">
+            <p className="font-black text-white text-lg tracking-tight">{item.price}</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4 py-6 border-y border-slate-200/50 mb-6">
-          <div className="w-12 h-12 rounded-full bg-indigo-100 overflow-hidden border-2 border-white shadow-sm">
+        <div className="flex items-center gap-4 py-6 border-y border-white/10 mb-6">
+          <div className="w-12 h-12 rounded-full bg-white/10 overflow-hidden border border-white/10 shadow-sm">
             <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt={item.user} />
           </div>
           <div>
-            <p className="text-xs text-slate-900 font-bold">Vendido por {item.user}</p>
+            <p className="text-xs text-white font-bold">Vendido por {item.user}</p>
             <p className="text-[10px] text-slate-400 font-medium">
               {item.unit && item.unit.toUpperCase().includes('CASA')
                 ? `Rua ${item.tower}, ${item.unit.replace(/casa/i, '').trim()}`
@@ -1964,25 +1923,25 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
             </p>
           </div>
           {!isOwner && (
-            <button onClick={handleInterest} className="ml-auto w-10 h-10 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center active:scale-90 transition-all border border-emerald-100">
+            <button onClick={handleInterest} className="ml-auto w-10 h-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center active:scale-90 transition-all border border-emerald-500/30">
               <MessageSquare size={18} />
             </button>
           )}
         </div>
 
         <div className="space-y-4">
-          <h3 className="font-bold text-slate-900">Sobre o produto</h3>
-          <p className="text-sm text-slate-500 leading-relaxed">{item.desc || 'Sem descrição detalhada.'}</p>
+          <h3 className="font-bold text-white">Sobre o produto</h3>
+          <p className="text-sm text-slate-400 leading-relaxed">{item.desc || 'Sem descrição detalhada.'}</p>
         </div>
       </div>
 
-      <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-50">
+      <div className="fixed bottom-0 left-0 right-0 p-6 bg-slate-950/80 backdrop-blur-xl border-t border-white/5 z-50">
         {isOwner ? (
-          <Button fullWidth onClick={handleDelete} className="bg-rose-50 text-rose-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-rose-100">
+          <Button fullWidth onClick={handleDelete} className="bg-rose-500/10 text-rose-400 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-rose-500/20 border border-rose-500/20">
             <Trash2 size={18} className="mr-2" /> Remover Anúncio
           </Button>
         ) : (
-          <Button fullWidth onClick={handleInterest} className="bg-emerald-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs shadow-lg shadow-emerald-500/30">
+          <Button fullWidth onClick={handleInterest} className="bg-emerald-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs shadow-lg shadow-emerald-500/30 text-white">
             <MessageSquare size={18} className="mr-2" /> Tenho Interesse
           </Button>
         )}
@@ -2021,27 +1980,27 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
   };
 
   return (
-    <div className="min-h-screen bg-white pb-10">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white/80 backdrop-blur-md sticky top-0 z-40">
-        <button onClick={onBack} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shadow-sm"><ArrowLeft size={24} className="text-slate-900" /></button>
-        <h2 className="text-2xl font-black italic uppercase tracking-tighter">Novo Desapego</h2>
+    <div className="min-h-screen bg-transparent pb-10">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-50 backdrop-blur-md">
+        <button onClick={onBack} className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center shadow-sm hover:bg-white/10 transition-all active:scale-95 text-white border border-white/5"><ArrowLeft size={24} /></button>
+        <h2 className="text-xl font-black italic uppercase tracking-tighter text-white">Novo Desapego</h2>
       </header>
 
       <div className="p-8 space-y-10 animate-in slide-in-from-bottom-8 duration-500">
         {/* Foto do Item */}
         <div
           onClick={() => fileInputRef.current?.click()}
-          className={`w-full h-80 rounded-[48px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 cursor-pointer overflow-hidden ${image ? 'border-brand-500 bg-slate-50' : 'border-slate-200 bg-slate-50/50 hover:border-brand-300'}`}
+          className={`w-full h-80 rounded-[48px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 cursor-pointer overflow-hidden ${image ? 'border-brand-500 bg-white/5' : 'border-white/10 bg-white/5 hover:border-brand-400'}`}
         >
           {image ? (
             <img src={image} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Preview" />
           ) : (
             <>
-              <div className="w-16 h-16 bg-white rounded-[24px] flex items-center justify-center shadow-xl text-brand-500">
+              <div className="w-16 h-16 bg-white/10 rounded-[24px] flex items-center justify-center shadow-xl text-brand-400 border border-white/10">
                 <Camera size={28} />
               </div>
               <div className="text-center">
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-950">Adicionar Fotos</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-white">Adicionar Fotos</p>
                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Clique para upload</p>
               </div>
             </>
@@ -2063,13 +2022,13 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
         <div className="space-y-6">
           <div className="space-y-3">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Nome do Produto</label>
-            <Input placeholder="Ex: Mesa de Jantar Madeira" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-16 rounded-3xl" />
+            <Input placeholder="Ex: Mesa de Jantar Madeira" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-16 rounded-3xl bg-white/5 border-white/10 text-white placeholder-slate-500" />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Valor</label>
-              <Input placeholder="Ex: 450,00" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-16 rounded-3xl" />
+              <Input placeholder="Ex: 450,00" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-16 rounded-3xl bg-white/5 border-white/10 text-white placeholder-slate-500" />
             </div>
             <div className="space-y-3 text-right">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mr-4">Status</label>
@@ -2078,7 +2037,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
                   <button
                     key={s}
                     onClick={() => setForm({ ...form, status: s })}
-                    className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${form.status === s ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20' : 'bg-slate-50 text-slate-400'}`}
+                    className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${form.status === s ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20' : 'bg-white/5 text-slate-400 border border-white/5'}`}
                   >
                     {s}
                   </button>
@@ -2093,7 +2052,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
               placeholder="Conte mais sobre o estado do item, tempo de uso e motivo do desapego..."
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
-              className="w-full h-44 bg-slate-50 border border-slate-100 rounded-[32px] p-6 text-slate-800 placeholder-slate-400 outline-none focus:ring-2 focus:ring-brand-600 transition-all font-medium text-sm leading-relaxed"
+              className="w-full h-44 bg-white/5 border border-white/10 rounded-[32px] p-6 text-white placeholder-slate-500 outline-none focus:ring-2 focus:ring-brand-600 transition-all font-medium text-sm leading-relaxed"
             />
           </div>
         </div>
@@ -2103,26 +2062,51 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
             fullWidth
             onClick={handlePublish}
             disabled={!form.name || !form.price || isSubmitting}
-            className={`h-20 rounded-[32px] text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all ${!form.name || !form.price || isSubmitting ? 'bg-slate-200 text-slate-400 cursor-not-allowed shadow-none' : 'bg-slate-950 text-white shadow-slate-950/20 active:scale-[0.98]'}`}
+            className={`h-20 rounded-[32px] text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all ${!form.name || !form.price || isSubmitting ? 'bg-white/10 text-slate-500 cursor-not-allowed shadow-none' : 'bg-white text-slate-900 shadow-white/10 active:scale-[0.98]'}`}
           >
             {isSubmitting ? 'Publicando...' : 'Publicar Desapego'}
           </Button>
-          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu anúncio ficará visível para todo o condomínio</p>
+          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-white/5 py-3 rounded-full border border-white/5 mx-10">Seu anúncio ficará visível para todo o condomínio</p>
         </div>
       </div>
     </div>
   );
 };
 
-export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAddAccess?: (a: any) => void; currentUser?: any }> = ({ onBack, accessList = [], onAddAccess, currentUser }) => {
-  const [form, setForm] = useState({ name: '', type: 'Visita', date: new Date().toISOString().split('T')[0] });
+export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAddAccess?: (access: any) => void; currentUser: any }> = ({ onBack, accessList = [], onAddAccess, currentUser }) => {
+  const [activeTab, setActiveTab] = useState<'visita' | 'encomenda'>('visita');
   const [authorizations, setAuthorizations] = useState<any[]>([]);
+  const [form, setForm] = useState({ name: '', type: 'Visita', date: '' });
+
+  // Neighbor Search State
+  const [neighborSearch, setNeighborSearch] = useState('');
+  const [foundNeighbors, setFoundNeighbors] = useState<any[]>([]);
+  const [selectedNeighbor, setSelectedNeighbor] = useState<any>(null);
 
   useEffect(() => {
     if (currentUser?.id) {
       loadAuthorizations();
     }
   }, [currentUser]);
+
+  // Search Neighbors Effect
+  useEffect(() => {
+    if (neighborSearch.length > 2) {
+      const search = async () => {
+        const { data } = await supabase.from('profiles')
+          .select('id, name, unit, tower')
+          .eq('role', 'resident')
+          .neq('id', currentUser.id) // Exclude self
+          .or(`name.ilike.%${neighborSearch}%,unit.ilike.%${neighborSearch}%`)
+          .limit(5);
+        if (data) setFoundNeighbors(data);
+      };
+      const timeout = setTimeout(search, 500);
+      return () => clearTimeout(timeout);
+    } else {
+      setFoundNeighbors([]);
+    }
+  }, [neighborSearch, currentUser]);
 
   const loadAuthorizations = async () => {
     const { data } = await supabase
@@ -2135,12 +2119,13 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
   };
 
   const revokeAuthorization = async (id: string) => {
+    if (!confirm('Revogar autorização?')) return;
     await supabase.from('package_authorizations').update({ status: 'revoked' }).eq('id', id);
     loadAuthorizations();
   };
 
-  const handleAuthorize = () => {
-    if (!form.name || !form.date) return;
+  const handleAuthorizeVisitor = () => {
+    if (!form.name || !form.date) { alert('Preencha nome e data'); return; }
     if (onAddAccess) {
       onAddAccess({
         id: Date.now().toString(),
@@ -2153,68 +2138,166 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
         unit: currentUser?.unit || '---',
         avatar: currentUser?.avatar
       });
-      alert('Acesso autorizado com sucesso!');
+      alert('Acesso de visitante autorizado!');
       setForm({ name: '', type: 'Visita', date: '' });
     }
   };
 
-  const myAccess = accessList.filter(a => a.residentId === (currentUser?.id || '1'));
+  const handleAuthorizeNeighbor = async () => {
+    if (!selectedNeighbor) { alert('Selecione um vizinho'); return; }
+
+    const { error } = await supabase.from('package_authorizations').insert([{
+      grantor_id: currentUser.id,
+      grantee_id: selectedNeighbor.id,
+      status: 'active'
+    }]);
+
+    if (!error) {
+      alert(`Autorização concedida para ${selectedNeighbor.name}!`);
+      setSelectedNeighbor(null);
+      setNeighborSearch('');
+      loadAuthorizations();
+    } else {
+      alert('Erro ao autorizar: ' + error.message);
+    }
+  };
+
+  const myVisitorAccess = accessList.filter(a => a.residentId === (currentUser?.id || '1'));
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-transform"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Controle de Acesso</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 transition-transform hover:bg-white/10"><ArrowLeft size={20} className="text-white" /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Controle de Acesso</h2>
       </header>
-      <div className="p-6 space-y-8">
-        <Card className="p-8 border-none shadow-xl rounded-[40px] bg-white space-y-6">
-          <h3 className="text-lg font-black italic text-slate-900">Novo Acesso</h3>
-          <Input placeholder="Nome do Visitante / Prestador" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
-          <div className="grid grid-cols-2 gap-4">
-            <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>Visita</option>
-              <option>Serviço</option>
-              <option>Delivery</option>
-            </select>
-            <Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="h-14" />
-          </div>
-          <Button fullWidth onClick={handleAuthorize} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Autorizar Entrada</Button>
-        </Card>
 
-        <div className="space-y-4">
-          <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
-          {authorizations.length === 0 ? (
-            <div className="text-center py-8 text-slate-300">
-              <p className="text-xs italic">Ninguém autorizado.</p>
-            </div>
-          ) : (
-            authorizations.map(auth => (
-              <div key={auth.id} className="flex items-center justify-between p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
-                <div>
-                  <h5 className="font-bold text-slate-900 text-sm">{auth.grantee?.name}</h5>
-                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">RUA {auth.grantee?.tower}, {auth.grantee?.unit}</p>
-                </div>
-                <button onClick={() => revokeAuthorization(auth.id)} className="text-rose-500 bg-rose-50 p-2 rounded-xl active:scale-95">
-                  <Trash2 size={16} />
-                </button>
-              </div>
-            ))
-          )}
+      <div className="p-6 space-y-6">
+        {/* TABS */}
+        <div className="flex p-1 bg-white/5 border border-white/10 rounded-2xl">
+          <button onClick={() => setActiveTab('visita')} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'visita' ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
+            Visitantes
+          </button>
+          <button onClick={() => setActiveTab('encomenda')} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'encomenda' ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
+            Encomendas
+          </button>
         </div>
+
+        {activeTab === 'visita' ? (
+          <div className="space-y-8 animate-in slide-in-from-left-4 duration-300">
+            <Card className="p-8 border border-white/10 shadow-xl rounded-[40px] bg-white/5 space-y-6 backdrop-blur-3xl">
+              <h3 className="text-lg font-black italic text-white flex items-center gap-2"><Key className="text-brand-400" size={20} /> Novo Visitante</h3>
+              <Input placeholder="Nome do Visitante / Prestador" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14 bg-white/5 border-white/10 text-white placeholder-slate-500" />
+              <div className="grid grid-cols-2 gap-4">
+                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="h-14 bg-white/5 rounded-2xl px-4 font-bold text-white outline-none border border-white/10">
+                  <option className="bg-slate-900">Visita</option>
+                  <option className="bg-slate-900">Serviço</option>
+                  <option className="bg-slate-900">Delivery</option>
+                </select>
+                <Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="h-14 bg-white/5 border-white/10 text-white" />
+              </div>
+              <Button fullWidth onClick={handleAuthorizeVisitor} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-brand-500 transition-colors">Autorizar Entrada</Button>
+            </Card>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2">Histórico de Visitantes</h4>
+              {myVisitorAccess.length === 0 ? <p className="text-center text-slate-500 text-xs italic py-4">Nenhum acesso registrado.</p> : (
+                myVisitorAccess.map((acc: any, i) => (
+                  <div key={i} className="flex justify-between items-center p-4 bg-white/5 border border-white/10 rounded-2xl">
+                    <div>
+                      <p className="font-bold text-white text-sm">{acc.name}</p>
+                      <p className="text-[10px] text-slate-400 uppercase">{acc.type} • {acc.date}</p>
+                    </div>
+                    <Badge color="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">AUTORIZADO</Badge>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
+            <Card className="p-8 border border-white/10 shadow-xl rounded-[40px] bg-white/5 space-y-6 backdrop-blur-3xl relative overflow-visible">
+              <h3 className="text-lg font-black italic text-white flex items-center gap-2"><Package className="text-amber-400" size={20} /> Autorizar Vizinho</h3>
+              <p className="text-xs text-slate-400 leading-relaxed">Permita que um vizinho retire suas encomendas na portaria ou lockers.</p>
+
+              <div className="relative">
+                <Input
+                  placeholder="Buscar vizinho (Nome ou Unidade)..."
+                  value={neighborSearch}
+                  onChange={e => setNeighborSearch(e.target.value)}
+                  className="h-14 bg-white/5 border-white/10 text-white placeholder-slate-500"
+                />
+
+                {/* SUGGESTIONS */}
+                {foundNeighbors.length > 0 && (
+                  <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 border border-white/20 rounded-2xl shadow-2xl z-50 overflow-hidden">
+                    {foundNeighbors.map(nb => (
+                      <button key={nb.id} onClick={() => { setSelectedNeighbor(nb); setNeighborSearch(nb.name); setFoundNeighbors([]); }} className="w-full text-left p-4 hover:bg-white/10 border-b border-white/5 last:border-none flex justify-between items-center group">
+                        <div>
+                          <p className="font-bold text-white group-hover:text-brand-400 transition-colors">{nb.name}</p>
+                          <p className="text-[10px] text-slate-400 uppercase">UNID: {nb.unit} • {nb.tower}</p>
+                        </div>
+                        <Plus size={16} className="text-slate-500 group-hover:text-brand-400" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {selectedNeighbor && (
+                <div className="bg-brand-500/10 border border-brand-500/20 p-4 rounded-2xl flex items-center gap-3">
+                  <div className="w-10 h-10 bg-brand-500 rounded-full flex items-center justify-center text-white font-black">{selectedNeighbor.name[0]}</div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Selecionado: {selectedNeighbor.name}</p>
+                    <p className="text-[10px] text-brand-300 uppercase">Confirmar autorização?</p>
+                  </div>
+                </div>
+              )}
+
+              <Button fullWidth onClick={handleAuthorizeNeighbor} disabled={!selectedNeighbor} className="bg-amber-500 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-amber-400 transition-colors text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed">Conceder Acesso</Button>
+            </Card>
+
+            <div className="space-y-4">
+              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2">Vizinhos Autorizados</h4>
+              {authorizations.length === 0 ? (
+                <div className="text-center py-8 text-slate-500">
+                  <p className="text-xs italic">Nenhum vizinho autorizado.</p>
+                </div>
+              ) : (
+                authorizations.map(auth => (
+                  <div key={auth.id} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl shadow-sm">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-gradient-to-br from-amber-500 to-orange-500 rounded-full flex items-center justify-center text-white font-black shadow-lg shadow-amber-500/20">
+                        {auth.grantee?.name?.[0]}
+                      </div>
+                      <div>
+                        <h5 className="font-bold text-white text-sm">{auth.grantee?.name}</h5>
+                        <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">CASA {auth.grantee?.unit}</p>
+                      </div>
+                    </div>
+                    <button onClick={() => revokeAuthorization(auth.id)} className="text-rose-400 bg-rose-500/10 w-10 h-10 rounded-xl active:scale-95 hover:bg-rose-500/20 transition-colors flex items-center justify-center">
+                      <Trash2 size={18} />
+                    </button>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
 };
+
 
 export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> = ({ onBack, invoices = [] }) => {
   const pending = invoices.find(i => i.status === 'Pendente');
   const paid = invoices.filter(i => i.status === 'Pago');
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-50 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Boleto Digital</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 transition-all hover:bg-white/10"><ArrowLeft size={20} className="text-white" /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Boleto Digital</h2>
       </header>
       <div className="p-6 space-y-8 animate-in slide-in-from-right-4">
         {pending ? (
@@ -2238,11 +2321,11 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
 
         <div className="space-y-4">
           <SectionHeader title="Histórico" />
-          {paid.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-4">Nenhum histórico disponível.</p> : paid.map((inv) => (
-            <div key={inv.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm">
+          {paid.length === 0 ? <p className="text-center text-slate-500 font-bold italic py-4">Nenhum histórico disponível.</p> : paid.map((inv) => (
+            <div key={inv.id} className="bg-white/5 p-6 rounded-[32px] border border-white/10 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-emerald-50 text-emerald-500 rounded-2xl flex items-center justify-center"><Check size={24} /></div>
-                <div><h5 className="font-bold text-slate-900">{inv.title}</h5><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pago em {new Date(inv.dueDate).toLocaleDateString('pt-BR')}</p></div>
+                <div className="w-12 h-12 bg-emerald-500/20 text-emerald-400 rounded-2xl flex items-center justify-center"><Check size={24} /></div>
+                <div><h5 className="font-bold text-white">{inv.title}</h5><p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">Pago em {new Date(inv.dueDate).toLocaleDateString('pt-BR')}</p></div>
               </div>
               <span className="font-bold text-slate-400">R$ {inv.value}</span>
             </div>
@@ -2279,59 +2362,59 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
   const myRequests = serviceRequests.filter(req => req.unit === (currentUser?.unit || '402-B'));
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Atendimento</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 transition-all hover:bg-white/10"><ArrowLeft size={20} className="text-white" /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Atendimento</h2>
       </header>
 
       <div className="p-6 space-y-8">
         {!isNew ? (
           <>
-            <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl shadow-slate-900/20 text-center relative overflow-hidden">
+            <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl shadow-slate-900/40 text-center relative overflow-hidden border border-white/5">
               <div className="relative z-10">
                 <MessageSquare className="mx-auto text-brand-400 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
                 <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
-                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
+                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-brand-500">Abrir Chamado</Button>
               </div>
             </div>
 
             <div className="space-y-4">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Meus Chamados</h4>
-              {myRequests.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-8">Nenhum chamado aberto.</p> : myRequests.map((req) => (
-                <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
+              {myRequests.length === 0 ? <p className="text-center text-slate-500 font-bold italic py-8">Nenhum chamado aberto.</p> : myRequests.map((req) => (
+                <div key={req.id} className="bg-white/5 p-6 rounded-[32px] border border-white/10 space-y-3 shadow-md">
                   <div className="flex justify-between items-start">
-                    <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                    <h5 className="font-bold text-white italic">{req.title}</h5>
+                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'}>{req.status}</Badge>
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
-                  <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} – {req.date}</p>
+                  <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{req.description}</p>
+                  <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest">{req.category} – {req.date}</p>
                 </div>
               ))}
             </div>
           </>
         ) : (
-          <Card className="p-8 border-none shadow-xl rounded-[40px] bg-white space-y-6 animate-in slide-in-from-bottom-4">
+          <Card className="p-8 border border-white/10 shadow-xl rounded-[40px] bg-white/5 space-y-6 animate-in slide-in-from-bottom-4 backdrop-blur-3xl">
             <div className="flex items-center gap-3 mb-2">
-              <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
-              <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
+              <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-white/5 rounded-lg flex items-center justify-center hover:bg-white/10 text-white"><ArrowLeft size={16} /></button>
+              <h3 className="text-lg font-black italic text-white">Novo Chamado</h3>
             </div>
-            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
-            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>Manutenção</option>
-              <option>Limpeza</option>
-              <option>Segurança</option>
-              <option>Sugestão</option>
-              <option>Reclamação</option>
+            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14 bg-white/5 border-white/10 text-white placeholder-slate-500" />
+            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-white/5 rounded-2xl px-4 font-bold text-white outline-none border border-white/10">
+              <option className="bg-slate-900">Manutenção</option>
+              <option className="bg-slate-900">Limpeza</option>
+              <option className="bg-slate-900">Segurança</option>
+              <option className="bg-slate-900">Sugestão</option>
+              <option className="bg-slate-900">Reclamação</option>
             </select>
             <textarea
               placeholder="Descreva a situação..."
-              className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
+              className="w-full h-32 bg-white/5 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-all resize-none text-white placeholder-slate-500"
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
             />
-            <Button fullWidth onClick={handleOpen} className="bg-slate-950 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar para Adm</Button>
+            <Button fullWidth onClick={handleOpen} className="bg-white text-slate-900 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-slate-200 transition-colors">Enviar para Adm</Button>
           </Card>
         )}
       </div>
@@ -2415,52 +2498,48 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
   );
 };
 
-export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any }> = ({ onBack, currentUser }) => {
-  const [demands, setDemands] = useState<any[]>([]);
-  const [proposals, setProposals] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any; demands?: any[]; proposals?: any[]; onRefresh?: () => void }> = ({ onBack, currentUser, demands = [], proposals = [], onRefresh }) => {
+  // Uses lifted state (demands/proposals) to avoid fetch on mount
+  const [selectedDemand, setSelectedDemand] = useState<any>(null);
 
-  useEffect(() => {
-    loadData();
-  }, [currentUser]);
+  // Derive proposals for selected demand
+  const activeProposals = useMemo(() => {
+    if (!selectedDemand) return [];
+    return proposals.filter(p => p.demand_id === selectedDemand.id);
+  }, [selectedDemand, proposals]);
 
-  const loadData = async () => {
-    if (!currentUser?.id) return;
-    setLoading(true);
-
-    // Fetch demands
-    const { data: demandsData } = await supabase
-      .from('service_demands')
-      .select('*')
-      .eq('resident_id', currentUser.id)
-      .order('created_at', { ascending: false });
-
-    if (demandsData) setDemands(demandsData);
-
-    // Fetch proposals for all these demands
-    if (demandsData && demandsData.length > 0) {
-      const demandIds = demandsData.map(d => d.id);
-      const { data: proposalsData } = await supabase
-        .from('service_proposals')
-        .select('*, profiles:professional_id(name, avatar, phone, category)')
-        .in('demand_id', demandIds)
-        .order('created_at', { ascending: false });
-
-      if (proposalsData) setProposals(proposalsData);
+  const handleCloseDemand = async (id: string) => {
+    if (!confirm('Deseja encerrar esta demanda?')) return;
+    const { error } = await supabase.from('service_demands').update({ status: 'closed' }).eq('id', id);
+    if (!error) {
+      alert('Demanda encerrada!');
+      if (onRefresh) onRefresh();
     }
-
-    setLoading(false);
   };
 
   const handleAcceptProposal = async (proposal: any) => {
-    setLoading(true);
-    // 1. Update proposal status
-    const { error: pError } = await supabase.from('service_proposals').update({ status: 'accepted' }).eq('id', proposal.id);
-    // 2. Update demand status
-    await supabase.from('service_demands').update({ status: 'closed' }).eq('id', proposal.demand_id);
+    if (!confirm(`Aceitar proposta de ${proposal.profiles?.name}?`)) return;
 
-    if (!pError) {
-      // 3. Registrar Lead (CRM)
+    // 1. Create Service Request (Accepted)
+    const { error } = await supabase.from('service_requests').insert([{
+      resident_id: currentUser.id,
+      provider_id: proposal.professional_id,
+      category: proposal.profiles?.category || 'Serviço',
+      title: 'Proposta Aceita via Mural',
+      description: `Proposta aceita no valor de R$ ${proposal.price}. Mensagem: ${proposal.message}`,
+      status: 'accepted',
+      unit: currentUser?.unit,
+      location: `${currentUser?.tower} - ${currentUser?.unit}`
+    }]);
+
+    if (!error) {
+      // 2. Update Demand to Closed (or maintain open?) - Usually close it
+      await supabase.from('service_demands').update({ status: 'closed' }).eq('id', proposal.demand_id);
+
+      // 3. Update proposal status
+      await supabase.from('service_proposals').update({ status: 'accepted' }).eq('id', proposal.id);
+
+      // 4. Registrar Lead (CRM)
       await supabase.from('professional_leads').insert([{
         professional_id: proposal.professional_id,
         resident_id: currentUser.id,
@@ -2468,87 +2547,96 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
         metadata: { origin: 'auction_acceptance', demand_id: proposal.demand_id }
       }]);
 
-      // 4. Open WhatsApp
+      // 5. Open WhatsApp
       const cleanPhone = proposal.profiles?.phone?.replace(/\D/g, '');
       if (cleanPhone) {
         const message = encodeURIComponent(`Olá ${proposal.profiles.name}, aceitei sua proposta no Mural para o serviço de *${proposal.profiles.category}*!`);
         window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
       }
-      loadData();
+
+      alert('Proposta aceita! O profissional entrará em contato.');
+      if (onRefresh) onRefresh();
+    } else {
+      alert('Erro: ' + error.message);
     }
-    setLoading(false);
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Minhas Demandas</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 text-white hover:bg-white/10"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Minhas Demandas</h2>
       </header>
 
       <div className="p-6 space-y-6">
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-          </div>
-        ) : demands.length === 0 ? (
-          <div className="text-center py-20 bg-white rounded-[40px] border border-slate-100 shadow-sm px-8">
-            <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4">
-              <Megaphone size={32} className="text-slate-200" />
-            </div>
-            <p className="text-slate-400 font-bold text-sm uppercase tracking-widest leading-relaxed">Você ainda não publicou nenhuma necessidade.</p>
-            <p className="text-slate-300 text-[10px] mt-2">Publique no Mural para receber propostas de profissionais!</p>
+        {demands.length === 0 ? (
+          <div className="bg-white/5 rounded-[32px] p-8 text-center border border-white/10">
+            <Megaphone size={48} className="text-slate-600 mx-auto mb-4 opacity-50" />
+            <h3 className="text-white font-bold text-lg">Nenhuma demanda ativa</h3>
+            <p className="text-slate-400 text-sm mt-2">Publique no Mural para receber propostas.</p>
           </div>
         ) : (
-          <div className="space-y-6">
-            {demands.map(demand => {
-              const demandProposals = proposals.filter(p => p.demand_id === demand.id);
-              return (
-                <div key={demand.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <span className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-2 py-0.5 rounded-full">{demand.category}</span>
-                      <h4 className="font-black text-slate-900 italic text-lg mt-2">{demand.description}</h4>
-                    </div>
-                    <Badge color={demand.status === 'open' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-400'}>{demand.status === 'open' ? 'Ativo' : 'Finalizado'}</Badge>
+          demands.map(demand => {
+            const demandProposals = proposals.filter(p => p.demand_id === demand.id);
+            return (
+              <div key={demand.id} className="bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-sm space-y-4">
+                <div className="flex justify-between items-start">
+                  <Badge color={demand.status === 'open' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700 text-slate-400'}>
+                    {demand.status === 'open' ? 'Aberta' : 'Encerrada'}
+                  </Badge>
+                  {demand.status === 'open' && (
+                    <button onClick={() => handleCloseDemand(demand.id)} className="text-xs text-rose-400 font-bold hover:underline">
+                      Encerrar
+                    </button>
+                  )}
+                </div>
+
+                <div>
+                  <h4 className="font-black text-white italic text-lg decoration-slice">{demand.category}</h4>
+                  <p className="text-sm text-slate-300 mt-1 line-clamp-2">{demand.description}</p>
+                  <p className="text-[10px] text-slate-500 font-bold uppercase mt-2">
+                    {new Date(demand.created_at).toLocaleDateString('pt-BR')}
+                  </p>
+                </div>
+
+                {/* Proposals Section */}
+                <div className="pt-4 border-t border-white/5">
+                  <div className="flex items-center justify-between mb-3">
+                    <h5 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+                      <MessageCircle size={14} />
+                      Propostas ({demandProposals.length})
+                    </h5>
                   </div>
 
                   {demandProposals.length > 0 ? (
-                    <div className="space-y-3 pt-4 border-t border-slate-50">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">{demandProposals.length} Propostas Recebidas</p>
+                    <div className="space-y-3">
                       {demandProposals.map(prop => (
-                        <div key={prop.id} className="bg-slate-50 p-4 rounded-2xl flex items-center gap-4">
-                          <div className="w-10 h-10 rounded-xl overflow-hidden bg-white shrink-0 shadow-sm leading-none">
-                            <img src={prop.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${prop.profiles?.name}`} className="w-full h-full object-cover" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <h5 className="font-bold text-slate-900 text-sm italic">{prop.profiles?.name}</h5>
-                                <p className="text-[9px] font-medium text-slate-500 line-clamp-1">{prop.message}</p>
+                        <div key={prop.id} className="bg-slate-900/50 p-4 rounded-2xl border border-white/5">
+                          <div className="flex justify-between items-start mb-2">
+                            <div className="flex items-center gap-2">
+                              <div className="w-8 h-8 rounded-full bg-slate-700 overflow-hidden">
+                                {prop.profiles?.avatar ? <img src={prop.profiles.avatar} className="w-full h-full object-cover" /> : <User size={16} className="m-auto text-slate-400" />}
                               </div>
-                              <div className="text-right">
-                                {prop.price && <p className="text-xs font-black text-slate-900">R$ {prop.price}</p>}
-                                <button
-                                  onClick={() => handleAcceptProposal(prop)}
-                                  disabled={demand.status !== 'open'}
-                                  className={`mt-1 h-8 rounded-lg px-3 text-[9px] font-black uppercase tracking-widest transition-all ${prop.status === 'accepted' ? 'bg-emerald-500 text-white' : demand.status === 'open' ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20 active:scale-95' : 'bg-slate-200 text-slate-400 opacity-50'}`}
-                                >
-                                  {prop.status === 'accepted' ? 'Aceito' : 'Aceitar'}
-                                </button>
+                              <div>
+                                <p className="text-xs font-bold text-white">{prop.profiles?.name}</p>
+                                <p className="text-[10px] text-brand-400 font-black">R$ {prop.price}</p>
                               </div>
                             </div>
+                            <Button onClick={() => handleAcceptProposal(prop)} className="h-8 px-3 text-[10px] bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">
+                              Aceitar
+                            </Button>
                           </div>
+                          <p className="text-xs text-slate-300 italic">"{prop.message}"</p>
                         </div>
                       ))}
                     </div>
                   ) : (
-                    <p className="text-[10px] font-bold text-slate-300 italic text-center py-2">Aguardando propostas...</p>
+                    <p className="text-xs text-slate-500 italic">Nenhuma proposta ainda.</p>
                   )}
                 </div>
-              );
-            })}
-          </div>
+              </div>
+            )
+          })
         )}
       </div>
     </div>
@@ -2670,15 +2758,15 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
     : filteredAreas;
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-12 flex items-center justify-between bg-white border-b border-slate-100 sticky top-0 z-40">
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-12 flex items-center justify-between bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
         <div className="flex items-center gap-4">
-          <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-95 transition-all"><ArrowLeft size={20} /></button>
-          <h2 className="text-xl font-black italic uppercase">Reservas</h2>
+          <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 transition-all text-white hover:bg-white/10"><ArrowLeft size={20} /></button>
+          <h2 className="text-xl font-black italic uppercase text-white">Reservas</h2>
         </div>
         <button
           onClick={() => onNavigate?.('resident-bookings')}
-          className="flex items-center gap-2 bg-brand-50 text-brand-600 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all"
+          className="flex items-center gap-2 bg-brand-500/10 text-brand-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all border border-brand-500/20"
         >
           <Calendar size={14} />
           Meus Agendamentos
@@ -2691,11 +2779,11 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
             <SectionHeader title="O que você quer agendar?" />
             <div className="grid grid-cols-2 gap-4">
               {categories.map(cat => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)} className="aspect-square bg-white rounded-[40px] border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 active:scale-95 transition-all hover:border-brand-200 group">
-                  <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
+                <button key={cat} onClick={() => setSelectedCategory(cat)} className="aspect-square bg-white/5 rounded-[40px] border border-white/10 shadow-sm flex flex-col items-center justify-center gap-4 active:scale-95 transition-all hover:border-brand-500/30 group">
+                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-brand-500/10 group-hover:text-brand-400 transition-colors border border-white/5">
                     {cat === 'Quiosques' ? <Flame size={32} /> : cat === 'Esportes' ? <Trophy size={32} /> : <PartyPopper size={32} />}
                   </div>
-                  <span className="font-black italic text-slate-900 text-sm uppercase tracking-tighter">{cat}</span>
+                  <span className="font-black italic text-white text-sm uppercase tracking-tighter">{cat}</span>
                 </button>
               ))}
             </div>
@@ -2703,36 +2791,36 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
         ) : !selectedArea ? (
           <div className="space-y-8 animate-in slide-in-from-right-4">
             <div>
-              <h3 className="text-2xl font-black italic text-slate-900 tracking-tighter mb-2">{selectedCategory}</h3>
+              <h3 className="text-2xl font-black italic text-white tracking-tighter mb-2">{selectedCategory}</h3>
               <p className="text-sm text-slate-400 font-medium">Selecione uma data para ver o que temos livre.</p>
             </div>
 
-            <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-3">
+            <div className="bg-white/5 p-6 rounded-[32px] shadow-sm border border-white/10 space-y-3">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Data Pretendida</label>
-              <Input type="date" value={date} onChange={e => handleDateFilter(e.target.value)} className="h-14 font-bold text-slate-900" />
+              <Input type="date" value={date} onChange={e => handleDateFilter(e.target.value)} className="h-14 font-bold text-white bg-white/5 border-white/10" />
             </div>
 
             {date && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between px-2">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Dispon�veis em {new Date(date).toLocaleDateString('pt-BR')}</h4>
-                  <span className="text-[10px] font-bold bg-emerald-100 text-emerald-700 px-2 py-1 rounded-full">{availableAreas.length} op��es</span>
+                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Disponíveis em {new Date(date).toLocaleDateString('pt-BR')}</h4>
+                  <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/20">{availableAreas.length} opções</span>
                 </div>
 
                 {availableAreas.length === 0 ? (
                   <div className="text-center py-12 opacity-50">
-                    <CalendarDays size={48} className="mx-auto mb-4 text-slate-300" />
-                    <p className="font-bold italic text-slate-400">Poxa! Tudo ocupado hoje.</p>
+                    <CalendarDays size={48} className="mx-auto mb-4 text-slate-500" />
+                    <p className="font-bold italic text-slate-500">Poxa! Tudo ocupado hoje.</p>
                   </div>
                 ) : (
                   availableAreas.map(area => (
-                    <div key={area.id} onClick={() => setSelectedArea(area)} className="w-full h-56 bg-white rounded-[32px] overflow-hidden shadow-lg relative cursor-pointer group active:scale-95 transition-all">
-                      {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="w-full h-full bg-slate-100 flex items-center justify-center"><ImageIcon size={48} className="text-slate-300" /></div>}
-                      <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/80 to-transparent">
+                    <div key={area.id} onClick={() => setSelectedArea(area)} className="w-full h-56 bg-white/5 rounded-[32px] overflow-hidden shadow-lg relative cursor-pointer group active:scale-95 transition-all border border-white/10">
+                      {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center"><ImageIcon size={48} className="text-slate-600" /></div>}
+                      <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
                         <h4 className="text-xl font-black italic text-white tracking-tight">{area.name}</h4>
                         <div className="flex items-center gap-4 mt-2">
-                          <span className="text-[10px] font-bold text-white/80 uppercase bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">R$ {area.price}</span>
-                          <span className="text-[10px] font-bold text-white/80 uppercase bg-white/20 backdrop-blur-md px-3 py-1 rounded-full">{area.hours}</span>
+                          <span className="text-[10px] font-bold text-white/80 uppercase bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">R$ {area.price}</span>
+                          <span className="text-[10px] font-bold text-white/80 uppercase bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">{area.hours}</span>
                         </div>
                       </div>
                     </div>
@@ -2743,33 +2831,33 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
           </div>
         ) : (
           <div className="space-y-6 animate-in slide-in-from-right-4">
-            <div className="w-full h-72 bg-slate-100 rounded-[40px] overflow-hidden shadow-2xl relative">
+            <div className="w-full h-72 bg-slate-800 rounded-[40px] overflow-hidden shadow-2xl relative border border-white/5">
               {selectedArea.photos?.[0] ? <img src={selectedArea.photos[0]} className="w-full h-full object-cover" /> : null}
-              <div className="absolute top-6 right-6 bg-white/90 backdrop-blur-xl px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest shadow-sm">
+              <div className="absolute top-6 right-6 bg-black/60 backdrop-blur-xl px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest shadow-sm text-white border border-white/10">
                 {date.split('-').reverse().join('/')}
               </div>
             </div>
 
-            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm space-y-6">
+            <div className="bg-white/5 p-8 rounded-[40px] border border-white/10 shadow-sm space-y-6 backdrop-blur-sm">
               <div>
-                <h3 className="text-3xl font-black italic text-slate-900 tracking-tight leading-none mb-2">{selectedArea.name}</h3>
-                <p className="text-slate-500 font-medium leading-relaxed">{selectedArea.desc}</p>
+                <h3 className="text-3xl font-black italic text-white tracking-tight leading-none mb-2">{selectedArea.name}</h3>
+                <p className="text-slate-400 font-medium leading-relaxed">{selectedArea.desc}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-3xl">
-                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor</div><div className="text-lg font-black text-slate-900">R$ {selectedArea.price}</div></div>
-                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Hor�rio</div><div className="text-lg font-black text-slate-900">{selectedArea.hours}</div></div>
-                <div className="col-span-2 border-t border-slate-200/50 pt-4 mt-2">
+              <div className="grid grid-cols-2 gap-4 bg-white/5 p-6 rounded-3xl border border-white/5">
+                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor</div><div className="text-lg font-black text-white">R$ {selectedArea.price}</div></div>
+                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Horário</div><div className="text-lg font-black text-white">{selectedArea.hours}</div></div>
+                <div className="col-span-2 border-t border-white/5 pt-4 mt-2">
                   <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Itens Inclusos</div>
                   <div className="space-y-2">
                     {selectedArea.inventory ? selectedArea.inventory.split(',').map((item: string, i: number) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center min-w-[20px]">
-                          <Check size={12} className="text-emerald-600 font-bold" />
+                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center min-w-[20px]">
+                          <Check size={12} className="text-emerald-400 font-bold" />
                         </div>
-                        <span className="text-sm font-bold text-slate-600 italic">{item.trim()}</span>
+                        <span className="text-sm font-bold text-slate-300 italic">{item.trim()}</span>
                       </div>
-                    )) : <p className="text-sm text-slate-400 italic">Nenhum item informado.</p>}
+                    )) : <p className="text-sm text-slate-500 italic">Nenhum item informado.</p>}
                   </div>
                 </div>
               </div>
@@ -2777,7 +2865,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
               {/* Hourly Selection for Sports Areas */}
               {selectedArea.category === 'Esportes' && (
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escolha o Hor�rio</label>
+                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escolha o Horário</label>
                   <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
                     {hourlySlots.map(slot => {
                       const available = isHourAvailable(slot.start);
@@ -2786,18 +2874,18 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                           key={slot.start}
                           onClick={() => available && setSelectedHour(slot.start)}
                           disabled={!available}
-                          className={`p-3 rounded-xl border-2 transition-all text-center ${selectedHour === slot.start
-                            ? 'border-brand-600 bg-brand-50'
+                          className={`p-3 rounded-xl border transition-all text-center ${selectedHour === slot.start
+                            ? 'border-brand-500 bg-brand-500/20 shadow-[0_0_15px_rgba(234,88,12,0.3)]'
                             : available
-                              ? 'border-slate-200 bg-white hover:border-brand-200 active:scale-95'
-                              : 'border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed'
+                              ? 'border-white/10 bg-white/5 hover:bg-white/10 active:scale-95'
+                              : 'border-white/5 bg-slate-900/50 opacity-40 cursor-not-allowed'
                             }`}
                         >
-                          <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-brand-600' : available ? 'text-slate-900' : 'text-slate-400'}`}>
+                          <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-brand-400' : available ? 'text-white' : 'text-slate-500'}`}>
                             {slot.start}
                           </div>
-                          <div className="text-[8px] text-slate-400 font-bold mt-0.5">
-                            {available ? '? Livre' : '? Ocupado'}
+                          <div className="text-[8px] text-slate-500 font-bold mt-0.5">
+                            {available ? '● Livre' : '● Ocupado'}
                           </div>
                         </button>
                       );
@@ -2806,7 +2894,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                 </div>
               )}
 
-              <Button fullWidth onClick={handleReserve} disabled={loading} className="bg-brand-600 h-16 rounded-[28px] uppercase tracking-[0.2em] font-black text-xs shadow-xl shadow-brand-600/30">
+              <Button fullWidth onClick={handleReserve} disabled={loading} className="bg-brand-600 h-16 rounded-[28px] uppercase tracking-[0.2em] font-black text-xs shadow-xl shadow-brand-600/30 hover:bg-brand-500 transition-all">
                 {loading ? 'Confirmando...' : 'Confirmar Reserva'}
               </Button>
             </div>
@@ -2834,35 +2922,35 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Meus Agendamentos</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-white/10 text-white"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Meus Agendamentos</h2>
       </header>
       <div className="p-6 space-y-6 animate-in slide-in-from-right-4">
         {myReservations.length > 0 ? myReservations.map((r) => (
-          <Card key={r.id} className="p-8 border-none shadow-xl rounded-[44px] bg-white relative overflow-hidden group">
-            <div className="absolute top-4 right-4 w-24 h-24 opacity-10">
-              <img src="/logo.png" className="w-full h-full object-contain" />
+          <Card key={r.id} className="p-8 border border-white/10 shadow-xl rounded-[44px] bg-white/5 relative overflow-hidden group">
+            <div className="absolute top-4 right-4 w-24 h-24 opacity-5">
+              <img src="/logo.png" className="w-full h-full object-contain filter invert" />
             </div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Local da Reserva</p>
-            <h4 className="text-2xl font-black italic tracking-tight">{r.area}</h4>
+            <h4 className="text-2xl font-black italic tracking-tight text-white">{r.area}</h4>
             <div className="mt-6 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data</p>
-                <p className="font-bold text-slate-900">{new Date(r.date).toLocaleDateString('pt-BR')}</p>
+                <p className="font-bold text-white">{new Date(r.date).toLocaleDateString('pt-BR')}</p>
                 {r.start_time && (
-                  <p className="text-[10px] text-brand-600 font-bold uppercase mt-1">
+                  <p className="text-[10px] text-brand-400 font-bold uppercase mt-1">
                     {r.start_time.slice(0, 5)} - {r.end_time?.slice(0, 5)}
                   </p>
                 )}
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge color={r.status === 'cancelled' ? "bg-rose-50 text-rose-600" : "bg-emerald-50 text-emerald-600"}>
+                <Badge color={r.status === 'cancelled' ? "bg-rose-500/20 text-rose-500 border border-rose-500/20" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"}>
                   {r.status === 'cancelled' ? 'CANCELADA' : 'CONFIRMADA'}
                 </Badge>
                 {r.status !== 'cancelled' && (
-                  <button onClick={() => handleCancel(r.id)} className="text-[9px] font-black text-rose-500 uppercase tracking-widest underline decoration-2 underline-offset-4">
+                  <button onClick={() => handleCancel(r.id)} className="text-[9px] font-black text-rose-400 uppercase tracking-widest underline decoration-2 underline-offset-4 hover:text-rose-300">
                     Cancelar
                   </button>
                 )}
@@ -2871,8 +2959,8 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
           </Card>
         )) : (
           <div className="py-24 text-center space-y-4">
-            <Calendar className="mx-auto text-slate-100" size={80} />
-            <p className="text-slate-300 font-black italic uppercase tracking-widest text-[10px]">Nenhuma reserva agendada.</p>
+            <Calendar className="mx-auto text-slate-700" size={80} />
+            <p className="text-slate-500 font-black italic uppercase tracking-widest text-[10px]">Nenhuma reserva agendada.</p>
           </div>
         )}
       </div>
@@ -2882,25 +2970,25 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
 
 
 export const AssembliesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => (
-  <div className="min-h-screen bg-[#fcfcfd] pb-32">
-    <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-      <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90"><ArrowLeft size={20} /></button>
-      <h2 className="text-xl font-black italic uppercase">Assembleias</h2>
+  <div className="min-h-screen bg-slate-950 pb-32">
+    <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+      <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 text-white hover:bg-white/10"><ArrowLeft size={20} /></button>
+      <h2 className="text-xl font-black italic uppercase text-white">Assembleias</h2>
     </header>
     <div className="p-6 space-y-6">
-      <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm space-y-4">
+      <div className="bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-sm space-y-4">
         <div className="flex justify-between items-start">
-          <div className="w-14 h-14 bg-brand-50 text-brand-600 rounded-2xl flex items-center justify-center"><Users size={28} /></div>
-          <Badge color="bg-emerald-50 text-emerald-600">Aberta</Badge>
+          <div className="w-14 h-14 bg-brand-500/10 text-brand-400 rounded-2xl flex items-center justify-center border border-brand-500/20"><Users size={28} /></div>
+          <Badge color="bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">Aberta</Badge>
         </div>
         <div>
-          <h4 className="font-black text-slate-900 italic text-lg decoration-slice">AGO: Previs�o Or�ament�ria 2026</h4>
+          <h4 className="font-black text-white italic text-lg decoration-slice">AGO: Previs�o Or�ament�ria 2026</h4>
           <p className="text-xs text-slate-400 font-bold uppercase mt-1">15/01/2026 � 19:30</p>
         </div>
-        <Button fullWidth className="rounded-[24px] bg-slate-950 text-[10px] font-black uppercase tracking-widest">Ver Pauta e Votar</Button>
+        <Button fullWidth className="rounded-[24px] bg-slate-800 text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-slate-700 transition-colors">Ver Pauta e Votar</Button>
       </div>
       <div className="text-center py-10">
-        <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest">Hist�rico de Atas dispon�vel no portal web.</p>
+        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Hist�rico de Atas dispon�vel no portal web.</p>
       </div>
     </div>
   </div>
@@ -2924,31 +3012,31 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
   });
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
+    <div className="min-h-screen bg-slate-950 pb-32">
       <FloatingBackButton onClick={onBack} />
       <div className="h-64 relative bg-brand-600 overflow-hidden">
         {activeCategoryData?.image_url ? (
           <div className="absolute inset-0 bg-cover bg-center animate-in fade-in duration-700" style={{ backgroundImage: `url(${activeCategoryData.image_url})` }}>
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]"></div>
+            <div className="absolute inset-0 bg-gradient-to-b from-black/20 via-black/40 to-slate-950/90 backdrop-blur-[1px]"></div>
           </div>
         ) : (
           <div className="absolute inset-0 opacity-20" style={{ backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)', backgroundSize: '24px 24px' }}></div>
         )}
 
-        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 z-20"><ArrowLeft /></button>
+        <button onClick={onBack} className="absolute top-12 left-6 w-12 h-12 bg-black/40 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 z-20 border border-white/10 hover:bg-black/60"><ArrowLeft /></button>
         <div className="absolute bottom-12 left-8 right-8 text-white z-10">
           <h2 className="text-4xl font-black italic tracking-tighter leading-none mb-2">{selectedCategory === 'Todos' ? 'e-Shop' : selectedCategory}</h2>
-          <p className="font-medium opacity-80 text-brand-100">Encontre de tudo no seu condom�nio.</p>
+          <p className="font-medium opacity-80 text-brand-100">Encontre de tudo no seu condomínio.</p>
         </div>
       </div>
 
       <div className="px-6 -mt-8 relative z-20 mb-6">
-        <div className="bg-white p-4 rounded-3xl shadow-xl shadow-slate-200/50 flex items-center gap-3">
+        <div className="bg-white/10 p-4 rounded-3xl shadow-xl shadow-black/20 flex items-center gap-3 border border-white/10 backdrop-blur-xl">
           <Search className="text-slate-400" size={20} />
           <input
             type="text"
-            placeholder="Buscar produtos e servi�os..."
-            className="flex-1 outline-none text-slate-700 font-bold placeholder:text-slate-300 placeholder:font-medium"
+            placeholder="Buscar produtos e serviços..."
+            className="flex-1 outline-none text-white font-bold placeholder:text-slate-400 placeholder:font-medium bg-transparent"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
@@ -2961,7 +3049,7 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
             <button
               key={t}
               onClick={() => onSelectCategory && onSelectCategory(t)}
-              className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all ${selectedCategory === t ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' : 'bg-white text-slate-400'}`}
+              className={`px-5 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest whitespace-nowrap transition-all border ${selectedCategory === t ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30 border-brand-500' : 'bg-white/5 text-slate-400 border-white/5 hover:bg-white/10'}`}
             >
               {t}
             </button>
@@ -2970,37 +3058,37 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 
         <div className="space-y-4">
           <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-2">
-            {searchTerm ? `Resultados: ${filteredProducts.length}` : `Dispon�veis (${filteredProducts.length})`}
+            {searchTerm ? `Resultados: ${filteredProducts.length}` : `Disponíveis (${filteredProducts.length})`}
           </h4>
 
           {filteredProducts.length > 0 ? filteredProducts.map(p => (
             <div
               key={p.id}
               onClick={() => onSelectProduct && onSelectProduct(p)}
-              className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm active:scale-[0.98] transition-all flex gap-4 cursor-pointer"
+              className="bg-white/5 p-4 rounded-[32px] border border-white/10 shadow-sm active:scale-[0.98] transition-all flex gap-4 cursor-pointer hover:bg-white/10"
             >
-              <div className="w-24 h-24 bg-slate-100 rounded-2xl overflow-hidden relative group shrink-0">
+              <div className="w-24 h-24 bg-white/5 rounded-2xl overflow-hidden relative group shrink-0 border border-white/5">
                 {p.image_url ? (
                   <img src={p.image_url} className="w-full h-full object-cover" />
                 ) : (
-                  <div className="w-full h-full flex items-center justify-center text-slate-300"><Store size={24} /></div>
+                  <div className="w-full h-full flex items-center justify-center text-slate-600"><Store size={24} /></div>
                 )}
               </div>
               <div className="flex-1 py-1 min-w-0">
                 <div className="flex justify-between items-start gap-2">
-                  <h5 className="font-black text-slate-900 italic text-lg leading-tight line-clamp-2">{p.title}</h5>
+                  <h5 className="font-black text-white italic text-lg leading-tight line-clamp-2">{p.title}</h5>
                 </div>
 
                 <div className="flex items-center gap-2 mt-2">
-                  <span className="text-[9px] font-bold text-brand-600 bg-brand-50 px-2.5 py-1 rounded-lg">
+                  <span className="text-[9px] font-bold text-brand-400 bg-brand-500/10 px-2.5 py-1 rounded-lg border border-brand-500/20">
                     {p.category}
                   </span>
-                  {p.profiles?.name && <span className="text-[9px] font-bold text-slate-400">por {p.profiles.name.split(' ')[0]}</span>}
+                  {p.profiles?.name && <span className="text-[9px] font-bold text-slate-500">por {p.profiles.name.split(' ')[0]}</span>}
                 </div>
 
                 <div className="flex justify-between items-end mt-3">
-                  <p className="text-emerald-600 font-black text-lg tracking-tight">R$ {typeof p.price === 'number' ? p.price.toFixed(2) : p.price}</p>
-                  <button className="w-8 h-8 bg-slate-950 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all">
+                  <p className="text-emerald-400 font-black text-lg tracking-tight">R$ {typeof p.price === 'number' ? p.price.toFixed(2) : p.price}</p>
+                  <button className="w-8 h-8 bg-white/10 text-white rounded-full flex items-center justify-center shadow-lg active:scale-90 transition-all hover:bg-white/20">
                     <ChevronRight size={14} />
                   </button>
                 </div>
@@ -3008,8 +3096,8 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
             </div>
           )) : (
             <div className="text-center py-10 flex flex-col items-center">
-              <div className="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 text-slate-300"><Search size={24} /></div>
-              <p className="text-slate-400 font-bold text-sm">Nenhum produto encontrado.</p>
+              <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4 text-slate-600 border border-white/5"><Search size={24} /></div>
+              <p className="text-slate-500 font-bold text-sm">Nenhum produto encontrado.</p>
             </div>
           )}
         </div>
@@ -3022,75 +3110,65 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({ item, onBack }) => {
   const handleContact = () => {
     // Basic WhatsApp link generation
-    // Ideally we would look up the vendor's phone number if it wasn't in the item
-    // But for MVP we assume item might have it or we use a generic placeholder if missing
-    // Actually, App.tsx fetchProducts includes profiles(phone) join? checking... yes.
-    /*
-      App.tsx:
-      const {data} = await supabase.from('products').select('*, profiles(name)')...
-              Wait, did I request phone in App.tsx?
-              Let's check App.tsx first. If not, I'll need to update App.tsx fetch.
-              For now, I'll render the component assuming phone might be there or not.
-              */
     const phone = item.profiles?.phone || '';
     if (phone) {
       const cleanPhone = phone.replace(/\D/g, '');
-      const message = encodeURIComponent(`Ol�, vi seu an�ncio do *${item.title}* no app do condom�nio e tenho interesse!`);
+      const message = encodeURIComponent(`Olá, vi seu anúncio do *${item.title}* no app do condomínio e tenho interesse!`);
       window.open(`https://wa.me/55${cleanPhone}?text=${message}`, '_blank');
     } else {
-      alert('Telefone do vendedor n�o dispon�vel.');
+      alert('Telefone do vendedor não disponível.');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      <div className="h-[45vh] relative bg-white rounded-b-[48px] shadow-2xl overflow-hidden group">
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <div className="h-[50vh] relative bg-slate-900 rounded-b-[48px] shadow-2xl shadow-black/50 overflow-hidden group border-b border-white/5 mt-20">
         {item.image_url ? (
           <img src={item.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center bg-slate-100 text-slate-300">
+          <div className="w-full h-full flex items-center justify-center bg-slate-900 text-slate-700">
             <Store size={64} />
           </div>
         )}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/30 to-transparent opacity-60"></div>
-        <button onClick={onBack} className="absolute top-24 left-6 w-12 h-12 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg"><ArrowLeft /></button>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 opacity-90"></div>
+        <button onClick={onBack} className="fixed top-24 left-6 w-12 h-12 bg-black/40 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/10 hover:bg-black/60 transition-all z-[100]"><ArrowLeft /></button>
       </div>
 
-      <div className="px-8 -mt-10 relative z-10">
-        <div className="bg-white p-6 rounded-[40px] shadow-xl shadow-slate-200/50">
-          <div className="flex justify-between items-start mb-2">
-            <span className="px-3 py-1 bg-brand-50 text-brand-600 rounded-lg text-[10px] font-black uppercase tracking-widest">{item.category}</span>
+      <div className="px-6 -mt-16 relative z-10">
+        <div className="bg-slate-900/90 backdrop-blur-xl p-8 rounded-[40px] shadow-2xl shadow-black/50 border border-white/10">
+          <div className="flex justify-between items-start mb-4">
+            <span className="px-3 py-1 bg-white/10 text-white rounded-lg text-[10px] font-black uppercase tracking-widest border border-white/5">{item.category}</span>
             <span className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">{new Date(item.created_at).toLocaleDateString()}</span>
           </div>
-          <h2 className="text-3xl font-black text-slate-900 italic tracking-tighter leading-none mb-4">{item.title}</h2>
+          <h2 className="text-3xl font-black text-white italic tracking-tighter leading-none mb-6">{item.title}</h2>
 
-          <div className="flex items-center gap-3 pb-6 border-b border-slate-50 mb-6">
-            <div className="w-10 h-10 rounded-full bg-slate-100 overflow-hidden">
+          <div className="flex items-center gap-4 pb-6 border-b border-white/5 mb-6">
+            <div className="w-12 h-12 rounded-full bg-slate-800 overflow-hidden border border-white/10">
               <img src={`https://picsum.photos/seed/${item.vendor_id}/100`} className="w-full h-full object-cover" />
             </div>
             <div>
-              <p className="text-xs text-slate-900 font-bold">Vendido por {item.profiles?.name || 'Vendedor Parceiro'}</p>
+              <p className="text-sm text-white font-bold">Vendido por {item.profiles?.name || 'Vendedor Parceiro'}</p>
               {item.profiles?.unit ? (
-                <p className="text-[10px] text-slate-400 font-medium">Residente � {item.profiles.tower || ''} {item.profiles.unit}</p>
+                <p className="text-[10px] text-slate-400 font-medium font-bold uppercase tracking-wide">Residente • {item.profiles.tower || ''} {item.profiles.unit}</p>
               ) : (
-                <p className="text-[10px] text-emerald-600 font-bold uppercase tracking-widest">Loja Verificada</p>
+                <p className="text-[10px] text-emerald-400 font-bold uppercase tracking-widest">Loja Verificada</p>
               )}
             </div>
           </div>
 
-          <h3 className="text-sm font-black text-slate-900 uppercase tracking-wide mb-2">Sobre este item</h3>
-          <p className="text-slate-500 leading-relaxed text-sm font-medium mb-8">
-            {item.description || "Sem descri��o detalhada."}
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-3">Sobre este item</h3>
+          <p className="text-slate-300 leading-relaxed text-sm font-medium mb-10">
+            {item.description || "Sem descrição detalhada."}
           </p>
 
           <div className="flex items-center justify-between gap-6">
             <div>
-              <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-1">Valor Total</p>
-              <p className="text-3xl font-black text-emerald-600 tracking-tighter">R$ {typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
+              <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Valor Total</p>
+              <p className="text-3xl font-black text-emerald-400 tracking-tighter">R$ {typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
             </div>
             <button
               onClick={handleContact}
-              className="flex-1 bg-brand-600 text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand-500/30 active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="flex-1 bg-brand-600 text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand-600/40 active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-brand-500 border border-white/10"
             >
               <MessageCircle size={18} />
               Tenho Interesse
@@ -3188,18 +3266,18 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
   const isHorizontal = selectedCondoData?.type === 'horizontal';
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Dados Pessoais</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-transform hover:bg-white/10 text-white"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Dados Pessoais</h2>
       </header>
       <div className="p-6 space-y-8">
         <div className="flex flex-col items-center">
-          <div className="w-32 h-32 rounded-[40px] border-4 border-white shadow-xl overflow-hidden mb-4 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+          <div className="w-32 h-32 rounded-[40px] border-4 border-white/10 shadow-xl overflow-hidden mb-4 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
-            {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
+            {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
           </div>
-          <button onClick={() => fileInputRef.current?.click()} className="text-brand-600 font-bold text-xs uppercase bg-brand-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-brand-400 font-bold text-xs uppercase bg-brand-500/10 px-4 py-2 rounded-lg active:scale-95 transition-transform hover:bg-brand-500/20" disabled={uploading}>
             {uploading ? 'Enviando...' : 'Alterar Foto'}
           </button>
           <input
@@ -3211,17 +3289,17 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
           />
         </div>
 
-        <div className="space-y-6 bg-white p-8 rounded-[40px] shadow-sm">
+        <div className="space-y-6 bg-white/5 p-8 rounded-[40px] shadow-sm border border-white/10">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome Completo</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
+            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
           </div>
 
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Condomínio</label>
             <select
               disabled
-              className="w-full h-14 bg-slate-100/50 text-slate-400 rounded-2xl px-4 font-bold border-none outline-none appearance-none"
+              className="w-full h-14 bg-slate-900/50 text-slate-500 rounded-2xl px-4 font-bold border border-white/5 outline-none appearance-none"
             >
               <option>{selectedCondoData?.name || 'Carregando...'}</option>
             </select>
@@ -3230,24 +3308,24 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
-              <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium" />
+              <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
             </div>
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
-              <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium" />
+              <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
             </div>
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
-            <Input value={formData.email} readOnly className="h-14 font-medium bg-slate-50 text-slate-400" />
+            <Input value={formData.email} readOnly className="h-14 font-medium bg-slate-900/50 text-slate-500 border-white/5" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">WhatsApp</label>
-            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
+            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
           </div>
         </div>
 
-        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase tracking-widest shadow-xl shadow-slate-900/20">
+        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-indigo-600 text-white font-black uppercase tracking-widest shadow-xl shadow-indigo-600/30 hover:bg-indigo-500">
           {loading ? 'Salvando...' : 'Salvar Alterações'}
         </Button>
 
@@ -3268,7 +3346,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
               }
             }
           }}
-          className="w-full h-14 mt-4 bg-rose-50 text-rose-600 rounded-[28px] flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
+          className="w-full h-14 mt-4 bg-rose-500/10 text-rose-500 rounded-[28px] flex items-center justify-center gap-2 font-black uppercase tracking-widest text-[11px] hover:bg-rose-500/20 transition-all active:scale-95 border border-rose-500/20"
         >
           <Trash2 size={18} />
           Excluir Minha Conta
@@ -3280,36 +3358,36 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
 
 export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center active:scale-90 transition-transform"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase">Privacidade</h2>
+    <div className="min-h-screen bg-slate-950 pb-32">
+      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-transform hover:bg-white/10 text-white"><ArrowLeft size={20} /></button>
+        <h2 className="text-xl font-black italic uppercase text-white">Privacidade</h2>
       </header>
       <div className="p-6 space-y-6">
-        <div className="bg-white p-8 rounded-[40px] shadow-sm space-y-8">
+        <div className="bg-white/5 p-8 rounded-[40px] shadow-sm space-y-8 border border-white/10">
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-slate-900">Perfil P�blico</h4>
+              <h4 className="font-bold text-white">Perfil Público</h4>
               <p className="text-xs text-slate-400 max-w-[200px] mt-1">Permitir que outros moradores vejam seu nome e unidade</p>
             </div>
             <div className="w-14 h-8 bg-emerald-500 rounded-full p-1 flex justify-end cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-slate-900">Notifica��es Push</h4>
+              <h4 className="font-bold text-white">Notificações Push</h4>
               <p className="text-xs text-slate-400 max-w-[200px] mt-1">Receber avisos de encomendas e visitantes</p>
             </div>
             <div className="w-14 h-8 bg-emerald-500 rounded-full p-1 flex justify-end cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
           </div>
           <div className="flex items-center justify-between">
             <div>
-              <h4 className="font-bold text-slate-900">Mostrar Telefone</h4>
+              <h4 className="font-bold text-white">Mostrar Telefone</h4>
               <p className="text-xs text-slate-400 max-w-[200px] mt-1">Permitir que prestadores vejam seu contato</p>
             </div>
-            <div className="w-14 h-8 bg-slate-200 rounded-full p-1 flex justify-start cursor-pointer"><div className="w-6 h-6 bg-white rounded-full shadow-sm"></div></div>
+            <div className="w-14 h-8 bg-slate-700 rounded-full p-1 flex justify-start cursor-pointer"><div className="w-6 h-6 bg-white/50 rounded-full shadow-sm"></div></div>
           </div>
         </div>
-        <p className="text-center text-[10px] text-slate-400 uppercase font-bold tracking-widest px-10">Qualquer mudan�a pode levar alguns minutos para refletir no sistema.</p>
+        <p className="text-center text-[10px] text-slate-500 uppercase font-bold tracking-widest px-10">Qualquer mudança pode levar alguns minutos para refletir no sistema.</p>
       </div>
     </div>
   );
@@ -3319,6 +3397,14 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 // --- NAVIGATION WITH HAMBURGER MENU ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void; currentUser?: any; onLogout?: () => void }> = ({ activeTab, onChange, currentUser, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [condoName, setCondoName] = useState<string>('');
+
+  useEffect(() => {
+    if (currentUser?.condominium_id) {
+      supabase.from('condominiums').select('name').eq('id', currentUser.condominium_id).single()
+        .then(({ data }) => { if (data) setCondoName(data.name); });
+    }
+  }, [currentUser?.condominium_id]);
 
   // Full list of navigation items
   const navItems = [
@@ -3340,8 +3426,8 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
             <img src="/logo.png" alt="Logo" className="w-full h-full object-contain" />
           </div>
           <div>
-            <h1 className="text-lg font-black text-slate-900 leading-none tracking-tighter">Morador.app</h1>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Painel Morador</p>
+            <h1 className="text-lg font-black text-slate-900 leading-none tracking-tighter">Condomínio</h1>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{condoName || 'Carregando...'}</p>
           </div>
         </div>
         <button
@@ -3407,17 +3493,17 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
       )}
 
       {/* BOTTOM NAV */}
-      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[98%] max-w-[420px] bg-white shadow-2xl shadow-slate-900/10 border border-slate-100 rounded-[32px] p-2 flex justify-between items-center z-50">
+      <div className="fixed bottom-4 left-1/2 -translate-x-1/2 w-[98%] max-w-[420px] bg-slate-950/80 backdrop-blur-2xl shadow-2xl shadow-black/50 border border-white/10 rounded-[32px] p-2 flex justify-between items-center z-50">
 
         {/* Priority Items (Left Side) - Home & Booking */}
         {navItems.filter(i => i.isPriority && !i.isAction).slice(0, 2).map(item => (
           <button
             key={item.id}
             onClick={() => { onChange(item.id); setMenuOpen(false); }}
-            className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-brand-50 text-brand-600' : 'text-slate-300 hover:bg-slate-50'}`}
+            className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-brand-500/20 text-brand-400' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
           >
             <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'text-brand-600' : 'text-slate-300'}`}>
+            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'text-brand-400' : 'text-slate-500'}`}>
               {item.label}
             </span>
           </button>
@@ -3427,7 +3513,7 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
         {navItems.find(i => i.isAction) && (
           <button
             onClick={() => { onChange('create-desapego'); setMenuOpen(false); }}
-            className="mb-8 w-16 h-16 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-brand-500/40 border-[4px] border-[#fcfcfd] active:scale-95 transition-transform"
+            className="mb-8 w-16 h-16 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-brand-600/40 border-[4px] border-slate-900 active:scale-95 transition-transform"
           >
             <Plus size={28} />
           </button>
@@ -3436,10 +3522,10 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
         {/* Menu Trigger (Right Side) */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-50'}`}
+          className={`relative min-w-[64px] h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-500 text-white shadow-lg' : 'text-slate-500 hover:text-slate-200 hover:bg-white/5'}`}
         >
           <Menu size={24} strokeWidth={menuOpen ? 2.5 : 2} />
-          <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${menuOpen ? 'text-white' : 'text-slate-300'}`}>
+          <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${menuOpen ? 'text-white' : 'text-slate-500'}`}>
             Menu
           </span>
         </button>

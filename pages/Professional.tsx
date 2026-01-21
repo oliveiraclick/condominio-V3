@@ -9,6 +9,8 @@ import {
   LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown, Menu, Building2, Trash2
 } from 'lucide-react';
 import { supabase } from '../supabase';
+import { maskCPF, maskPhone } from '../utils/masks';
+import { validateCPF } from '../utils/validators';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 
 // --- NOTIFICATIONS MODAL ---
@@ -174,6 +176,11 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
       alert('Por favor, preencha o CPF e o Nome da Empresa.');
       return;
     }
+
+    if (!validateCPF(formData.cpf)) {
+      alert('CPF inválido. Por favor, verifique o número.');
+      return;
+    }
     setLoading(true);
     const { error } = await supabase.from('profiles').update(formData).eq('id', userId);
     if (!error) {
@@ -201,7 +208,7 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
           <p className="text-xs text-slate-500 mt-2">Para cadastrar serviços ou produtos, precisamos de alguns dados adicionais.</p>
         </div>
         <div className="space-y-4">
-          <Input placeholder="Seu CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="h-14" />
+          <Input placeholder="Seu CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-14" />
           <Input placeholder="Nome da Empresa / Fantasia" value={formData.company_name} onChange={e => setFormData({ ...formData, company_name: e.target.value })} className="h-14" />
           <Input placeholder="Endereço Comercial" value={formData.company_address} onChange={e => setFormData({ ...formData, company_address: e.target.value })} className="h-14" />
 
@@ -681,7 +688,7 @@ export const ProfessionalDashboard: React.FC<{
       <div className="p-6">
         {/* Header */}
         {/* Status Dashboard Header */}
-        <div className="flex justify-between items-center mb-6 pt-4">
+        <div className="flex justify-between items-center mb-6 pt-12 pt-safe-offset">
           <div className="flex items-center gap-4">
             <div className="w-16 h-16 rounded-[24px] bg-white border-2 border-slate-100 shadow-xl overflow-hidden p-1">
               <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full object-cover rounded-[18px]" alt="Pro" />

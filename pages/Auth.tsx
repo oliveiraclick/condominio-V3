@@ -8,6 +8,8 @@ import {
 } from 'lucide-react';
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
+import { maskCPF, maskPhone, maskCNPJ } from '../utils/masks';
+import { validateCPF, validateCNPJ } from '../utils/validators';
 
 // --- UTILITÁRIOS DE VALIDAÇÃO ---
 const translateError = (error: any): string => {
@@ -438,6 +440,13 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
   const handleFinish = async () => {
     setLoading(true);
     setError(null);
+
+    if (!validateCPF(formData.cpf)) {
+      setError('CPF inválido. Verifique o número digitado.');
+      setLoading(false);
+      return;
+    }
+
     try {
       let userId = '';
       let sessionExists = false;
@@ -532,8 +541,8 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
             <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-16 rounded-3xl px-6" />
             <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-16 rounded-3xl px-6" />
             <div className="grid grid-cols-2 gap-4">
-              <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: e.target.value })} className="h-16 rounded-3xl px-6" />
-              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-16 rounded-3xl px-6" />
+              <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-16 rounded-3xl px-6" />
+              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-16 rounded-3xl px-6" />
             </div>
           </div>
         )}
@@ -616,7 +625,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
   const [step, setStep] = useState(1);
   const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', phone: '', cpf: '', category: 'Manutenção',
+    name: '', email: '', password: '', phone: '', cpf: '', cnpj: '', docType: 'cpf' as 'cpf' | 'cnpj', category: 'Manutenção',
     company_name: '', company_address: '',
     docs: { rg: false, cpf: false, license: false }
   });
@@ -634,6 +643,19 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
   const handleFinish = async () => {
     setLoading(true);
     setError(null);
+
+    // Validation
+    if (formData.docType === 'cpf' && !validateCPF(formData.cpf)) {
+      setError('CPF inválido.');
+      setLoading(false);
+      return;
+    }
+    if (formData.docType === 'cnpj' && !validateCNPJ(formData.cnpj)) {
+      setError('CNPJ inválido.');
+      setLoading(false);
+      return;
+    }
+
     try {
       let userId = '';
       let sessionExists = false;
@@ -655,7 +677,9 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
 
       if (userId && sessionExists) {
         const { error: profileError } = await supabase.from('profiles').upsert({
-          id: userId, name: formData.name, email: formData.email, phone: formData.phone, cpf: formData.cpf,
+          id: userId, name: formData.name, email: formData.email, phone: formData.phone,
+          cpf: formData.docType === 'cpf' ? formData.cpf : null,
+          cnpj: formData.docType === 'cnpj' ? formData.cnpj : null,
           category: formData.category, role: UserRole.PROFESSIONAL,
           company_name: formData.company_name, company_address: formData.company_address,
           // CRITICAL: Set 60 Days Free Trial
@@ -708,11 +732,27 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         {step === 1 && (
           <div className="space-y-8 animate-in slide-in-from-right-4 pb-8">
 
-            {/* Seção 1: Dados Pessoais */}
             <div className="space-y-4">
               <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">1. Dados Pessoais</h3>
               <Input placeholder="Nome Completo do Responsável" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
-              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
+              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium" />
+
+              <div className="flex gap-4 mb-2">
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="docType" checked={formData.docType === 'cpf'} onChange={() => setFormData({ ...formData, docType: 'cpf' })} className="accent-brand-600" />
+                  <span className="text-xs font-bold text-slate-600">Pessoa Física (CPF)</span>
+                </label>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <input type="radio" name="docType" checked={formData.docType === 'cnpj'} onChange={() => setFormData({ ...formData, docType: 'cnpj' })} className="accent-brand-600" />
+                  <span className="text-xs font-bold text-slate-600">Empresa (CNPJ)</span>
+                </label>
+              </div>
+
+              {formData.docType === 'cpf' ? (
+                <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-14 font-medium" />
+              ) : (
+                <Input placeholder="CNPJ" value={formData.cnpj} onChange={e => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })} className="h-14 font-medium" />
+              )}
             </div>
 
             {/* Seção 2: Acesso */}
