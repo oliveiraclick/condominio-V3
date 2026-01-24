@@ -4,7 +4,7 @@ import {
   Mail, Lock, ArrowLeft, Building2,
   UserCircle, ShieldCheck, User, IdCard, Phone as PhoneIcon,
   MapPin, Heart, Baby, Plus, Trash2, Camera, FileText, Check,
-  Zap, GraduationCap, Briefcase, LogOut
+  Zap, GraduationCap, Briefcase, LogOut, CircleAlert
 } from 'lucide-react';
 import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
@@ -53,14 +53,15 @@ export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) =
   }, [onFinish]);
 
   return (
-    <div className="fixed inset-0 bg-white flex flex-col items-center justify-center p-8 z-50">
-      <div className="w-40 h-40 bg-white rounded-[40px] flex items-center justify-center mb-8 animate-pulse shadow-2xl shadow-brand-100">
-        <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-6" />
+    <div className="fixed inset-0 bg-slate-50 flex flex-col items-center justify-center p-8 z-50">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.15),transparent_70%)]"></div>
+      <div className="w-40 h-40 bg-white/80 backdrop-blur-xl border border-white/60 rounded-[40px] flex items-center justify-center mb-8 animate-pulse shadow-2xl shadow-emerald-500/20 relative z-10">
+        <img src="/logo.png" alt="Morador Logo" className="w-full h-full object-contain p-6 drop-shadow-sm" />
       </div>
-      <h1 className="text-4xl font-black italic text-slate-950 mb-2 tracking-tighter uppercase">APP MORADOR</h1>
-      <p className="text-brand-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12">Conecte-se. Clicou, Achou.</p>
-      <div className="w-full max-w-xs bg-slate-100 h-1.5 rounded-full overflow-hidden">
-        <div className="bg-brand-600 h-full transition-all duration-300" style={{ width: `${progress}%` }} />
+      <h1 className="text-4xl font-black italic text-slate-900 mb-2 tracking-tighter uppercase relative z-10">APP MORADOR</h1>
+      <p className="text-emerald-600 font-black uppercase text-[10px] tracking-[0.4em] mb-12 relative z-10">Conecte-se. Clicou, Achou.</p>
+      <div className="w-full max-w-xs bg-slate-200 h-1.5 rounded-full overflow-hidden relative z-10">
+        <div className="bg-emerald-500 h-full transition-all duration-300 shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${progress}%` }} />
       </div>
     </div>
   );
@@ -90,36 +91,38 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
   if (sent) {
     return (
-      <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
-        <div className="bg-white p-8 rounded-[40px] shadow-xl text-center">
-          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6">
+      <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(16,185,129,0.1),transparent_50%)]"></div>
+        <div className="bg-white/70 backdrop-blur-2xl border border-white/60 p-8 rounded-[40px] shadow-xl text-center relative z-10">
+          <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg shadow-emerald-500/10 border border-emerald-500/20">
             <Check size={32} />
           </div>
-          <h2 className="text-xl font-black text-slate-900 mb-2">E-mail Enviado!</h2>
-          <p className="text-slate-500 text-sm mb-6">Verifique sua caixa de entrada (e spam) para redefinir sua senha.</p>
-          <p className="text-center text-slate-500 text-xs mt-8">Versão 1.5.3 Beta</p>
-          <Button fullWidth onClick={onBack} className="h-14 bg-slate-900 text-white font-bold uppercase rounded-xl">Voltar ao Login</Button>
+          <h2 className="text-xl font-black text-slate-800 mb-2">E-mail Enviado!</h2>
+          <p className="text-slate-600 text-sm mb-6">Verifique sua caixa de entrada (e spam) para redefinir sua senha.</p>
+          <p className="text-center text-slate-400 text-xs mt-8">Versão 3.0 Pro</p>
+          <Button fullWidth onClick={onBack} className="h-14 bg-white/50 text-slate-600 font-bold uppercase rounded-xl hover:bg-white/80 transition-all border border-slate-200">Voltar ao Login</Button>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500">
-      <header className="mb-8">
-        <button onClick={onBack} className="w-10 h-10 bg-white rounded-xl shadow-sm text-slate-400 flex items-center justify-center mb-6 active:scale-95 transition-transform"><ArrowLeft size={20} /></button>
-        <h2 className="text-3xl font-black italic text-slate-900 uppercase">Recuperar Senha</h2>
-        <p className="text-slate-500 font-medium">Digite seu e-mail para receber as instruções.</p>
+    <div className="min-h-screen bg-slate-50 p-8 flex flex-col justify-center animate-in fade-in duration-500 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_0%_100%,rgba(59,130,246,0.1),transparent_50%)]"></div>
+      <header className="mb-8 relative z-10">
+        <button onClick={onBack} className="w-10 h-10 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-600 flex items-center justify-center mb-6 active:scale-95 transition-transform hover:bg-slate-50"><ArrowLeft size={20} /></button>
+        <h2 className="text-3xl font-black italic text-slate-900 uppercase tracking-tight">Recuperar Senha</h2>
+        <p className="text-slate-500 font-medium text-sm mt-2">Digite seu e-mail para receber as instruções.</p>
       </header>
 
-      <div className="bg-white p-6 rounded-[32px] shadow-sm space-y-4 mb-6">
+      <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-6 rounded-[32px] shadow-xl space-y-4 mb-6 relative z-10">
         <div className="relative group">
-          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input placeholder="Seu e-mail cadastrado" className="pl-12 h-14 bg-slate-50 border-none" value={email} onChange={e => setEmail(e.target.value)} />
+          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-emerald-500 transition-colors" size={20} />
+          <Input placeholder="Seu e-mail cadastrado" className="pl-12 h-14 bg-white border-slate-100 text-slate-900 placeholder-slate-400 rounded-2xl focus:border-emerald-500/50 focus:bg-white transition-all shadow-sm" value={email} onChange={e => setEmail(e.target.value)} />
         </div>
       </div>
 
-      <Button fullWidth onClick={handleReset} disabled={loading} className="h-16 bg-brand-600 text-white font-black uppercase tracking-widest shadow-xl shadow-brand-200">
+      <Button fullWidth onClick={handleReset} disabled={loading} className="h-16 bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-widest shadow-xl shadow-emerald-500/20 rounded-2xl relative z-10 border-none">
         {loading ? 'Enviando...' : 'Enviar Link'}
       </Button>
     </div>
@@ -185,34 +188,34 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
   }
 
   return (
-    <div className="min-h-screen relative overflow-hidden flex flex-col justify-center p-6">
+    <div className="min-h-screen relative overflow-hidden flex flex-col justify-center p-6 bg-slate-50">
       {/* PREMIUM BACKGROUND */}
       <div className="absolute inset-0 z-0">
-        <div className="absolute inset-0 bg-slate-950"></div>
-        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.2),transparent_70%)]"></div>
-        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.15),transparent_60%)]"></div>
+        <div className="absolute inset-0 bg-slate-50"></div>
+        <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.1),transparent_70%)]"></div>
+        <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.1),transparent_60%)]"></div>
       </div>
 
       {/* GLASS CARD */}
       <div className="relative z-10 w-full max-w-sm mx-auto animate-in fade-in zoom-in-95 duration-700">
         {/* LOGO HEADER */}
         <div className="text-center mb-8">
-          <div className="w-24 h-24 bg-white/5 backdrop-blur-xl border border-white/10 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-2xl shadow-emerald-500/10 rotate-3 transform hover:rotate-6 transition-transform duration-500">
-            <img src="/logo.png" alt="Logo" className="w-[85%] h-[85%] object-contain drop-shadow-lg" />
+          <div className="w-24 h-24 bg-white/70 backdrop-blur-xl border border-white/60 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-xl shadow-emerald-500/10 rotate-3 transform hover:rotate-6 transition-transform duration-500">
+            <img src="/logo.png" alt="Logo" className="w-[85%] h-[85%] object-contain drop-shadow-sm" />
           </div>
-          <h2 className="text-3xl font-black italic tracking-tighter text-white uppercase drop-shadow-sm">
-            App <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Morador</span>
+          <h2 className="text-3xl font-black italic tracking-tighter text-slate-900 uppercase drop-shadow-sm">
+            App <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-600 to-cyan-600">Morador</span>
           </h2>
-          <p className="text-slate-400 text-xs font-bold uppercase tracking-[0.3em] mt-2">Conecte-se. Clicou, Achou.</p>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-[0.3em] mt-2">Conecte-se. Clicou, Achou.</p>
         </div>
 
         {/* LOGIN FORM - GLASS */}
-        <div className="bg-white/5 backdrop-blur-2xl border border-white/10 p-2 rounded-[40px] shadow-2xl overflow-hidden">
-          <div className="bg-slate-950/40 p-6 rounded-[32px] border border-white/5 space-y-4">
+        <div className="bg-white/60 backdrop-blur-2xl border border-white/50 p-2 rounded-[40px] shadow-xl overflow-hidden">
+          <div className="bg-white/50 p-6 rounded-[32px] border border-white space-y-4 shadow-inner">
 
             {/* ERROR ALERT */}
             {error && (
-              <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl text-[10px] font-black uppercase tracking-wide flex items-center gap-3 animate-shake">
+              <div className="p-4 bg-rose-50 border border-rose-100 text-rose-600 rounded-2xl text-[10px] font-black uppercase tracking-wide flex items-center gap-3 animate-shake">
                 <ShieldCheck size={16} />
                 {error}
               </div>
@@ -220,16 +223,16 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
             {/* EMAIL INPUT */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">E-mail</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-3">E-mail</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-focus-within:text-emerald-400 group-focus-within:bg-emerald-400/10 transition-all duration-300">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-focus-within:text-emerald-600 group-focus-within:bg-emerald-50 transition-all duration-300">
                   <Mail size={18} />
                 </div>
                 <Input
                   type="email"
                   autoComplete="email"
                   placeholder="seu@email.com"
-                  className="pl-16 h-14 bg-white/5 border-white/5 text-white placeholder:text-slate-600 rounded-2xl focus:bg-white/10 focus:border-emerald-500/30 font-medium transition-all"
+                  className="pl-16 h-14 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl focus:bg-white focus:border-emerald-500/50 font-medium transition-all shadow-sm"
                   value={email}
                   onChange={e => setEmail(e.target.value)}
                 />
@@ -238,16 +241,16 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
             {/* PASSWORD INPUT */}
             <div className="space-y-1.5">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-3">Senha</label>
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-3">Senha</label>
               <div className="relative group">
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-slate-400 group-focus-within:text-emerald-400 group-focus-within:bg-emerald-400/10 transition-all duration-300">
+                <div className="absolute left-4 top-1/2 -translate-y-1/2 w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-400 group-focus-within:text-emerald-600 group-focus-within:bg-emerald-50 transition-all duration-300">
                   <Lock size={18} />
                 </div>
                 <Input
                   type="password"
                   autoComplete="current-password"
                   placeholder="••••••••"
-                  className="pl-16 h-14 bg-white/5 border-white/5 text-white placeholder:text-slate-600 rounded-2xl focus:bg-white/10 focus:border-emerald-500/30 font-medium transition-all"
+                  className="pl-16 h-14 bg-white border-slate-200 text-slate-900 placeholder:text-slate-400 rounded-2xl focus:bg-white focus:border-emerald-500/50 font-medium transition-all shadow-sm"
                   value={password}
                   onChange={e => setPassword(e.target.value)}
                 />
@@ -257,15 +260,15 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
             {/* ACTIONS: REMEMBER ME & FORGOT PASSWORD */}
             <div className="flex items-center justify-between px-1 pt-2">
               <label className="flex items-center gap-3 cursor-pointer group select-none opacity-80 hover:opacity-100 transition-opacity">
-                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${rememberMe ? 'bg-emerald-500 border-emerald-500' : 'bg-transparent border-slate-600 group-hover:border-slate-400'}`}>
+                <div className={`w-5 h-5 rounded-lg border-2 flex items-center justify-center transition-all duration-300 ${rememberMe ? 'bg-emerald-500 border-emerald-500' : 'bg-transparent border-slate-300 group-hover:border-slate-400'}`}>
                   {rememberMe && <Check size={12} className="text-white" strokeWidth={4} />}
                 </div>
                 <input type="checkbox" className="hidden" checked={rememberMe} onChange={e => setRememberMe(e.target.checked)} />
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Lembrar</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Lembrar</span>
               </label>
               <button
                 onClick={() => setView('forgot')}
-                className="text-[10px] font-black text-emerald-400 uppercase tracking-wider hover:text-emerald-300 transition-colors"
+                className="text-[10px] font-black text-emerald-600 uppercase tracking-wider hover:text-emerald-500 transition-colors"
               >
                 Esqueceu?
               </button>
@@ -277,7 +280,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
                 fullWidth
                 onClick={handleSignIn}
                 disabled={loading}
-                className="h-16 bg-gradient-to-r from-emerald-500 to-emerald-600 hover:from-emerald-400 hover:to-emerald-500 text-white font-black uppercase tracking-[0.2em] italic shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-xs rounded-2xl border-none"
+                className="h-16 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-black uppercase tracking-[0.2em] italic shadow-lg shadow-emerald-500/20 active:scale-95 transition-all text-xs rounded-2xl border-none"
               >
                 {loading ? (
                   <div className="flex items-center gap-2">
@@ -289,7 +292,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
               <button
                 onClick={onRegister}
-                className="w-full h-14 rounded-2xl border border-white/10 text-slate-300 font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 hover:text-white hover:border-white/20 transition-all"
+                className="w-full h-14 rounded-2xl border border-slate-200 text-slate-500 font-bold uppercase tracking-widest text-[10px] hover:bg-slate-50 hover:text-emerald-600 hover:border-emerald-200 transition-all bg-white"
               >
                 Criar Nova Conta
               </button>
@@ -518,53 +521,55 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] flex flex-col">
-      <header className="p-8 pt-12 flex items-center gap-4 bg-white border-b border-slate-50">
-        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center shadow-sm active:scale-90 transition-transform">
-          <ArrowLeft size={24} />
+    <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.05),transparent_70%)]"></div>
+
+      <header className="p-8 pt-12 flex items-center gap-4 border-b border-slate-200 relative z-10">
+        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-12 h-12 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-transform hover:bg-slate-50">
+          <ArrowLeft size={24} className="text-slate-600" />
         </button>
         <div>
-          <h2 className="text-2xl font-black text-slate-950 italic uppercase tracking-tighter leading-none">Cadastro</h2>
+          <h2 className="text-2xl font-black text-slate-800 italic uppercase tracking-tighter leading-none">Cadastro</h2>
           <div className="flex gap-1 mt-2">
-            {[1, 2, 3, 4].map(i => <div key={i} className={`h-1 rounded-full transition-all ${step >= i ? 'w-6 bg-brand-600' : 'w-2 bg-slate-100'}`} />)}
+            {[1, 2, 3, 4].map(i => <div key={i} className={`h-1.5 rounded-full transition-all ${step >= i ? 'w-6 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'w-2 bg-slate-200'}`} />)}
           </div>
         </div>
       </header>
 
-      <div className="px-8 flex-1 overflow-y-auto pt-8 pb-32 no-scrollbar">
-        {error && <div className="mb-6 p-5 bg-rose-50 text-rose-600 rounded-3xl text-xs font-bold italic border border-rose-100">{error}</div>}
+      <div className="px-8 flex-1 overflow-y-auto pt-8 pb-32 no-scrollbar relative z-10">
+        {error && <div className="mb-6 p-5 bg-rose-50 text-rose-600 rounded-3xl text-xs font-bold italic border border-rose-100 flex items-center gap-2"><CircleAlert size={16} />{error}</div>}
 
         {step === 1 && (
           <div className="space-y-6 animate-in slide-in-from-right-4">
-            <h3 className="text-xl font-black italic text-slate-900 uppercase">1. Dados Pessoais</h3>
-            <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-16 rounded-3xl px-6" />
-            <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-16 rounded-3xl px-6" />
-            <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-16 rounded-3xl px-6" />
+            <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tight">1. Dados Pessoais</h3>
+            <Input placeholder="Nome Completo" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
+            <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
+            <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
             <div className="grid grid-cols-2 gap-4">
-              <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-16 rounded-3xl px-6" />
-              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-16 rounded-3xl px-6" />
+              <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
+              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
             </div>
           </div>
         )}
 
         {step === 2 && (
           <div className="space-y-6 animate-in slide-in-from-right-4">
-            <h3 className="text-xl font-black italic text-slate-900 uppercase">2. Localização</h3>
+            <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tight">2. Localização</h3>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">Escolha seu Condomínio</label>
-              <select value={formData.condo} onChange={e => setFormData({ ...formData, condo: e.target.value })} className="w-full h-16 bg-white rounded-3xl px-6 font-bold shadow-sm border-none outline-none focus:ring-2 focus:ring-brand-100">
-                <option value="">Selecione na lista...</option>
-                {condos.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+              <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-4">Escolha seu Condomínio</label>
+              <select value={formData.condo} onChange={e => setFormData({ ...formData, condo: e.target.value })} className="w-full h-16 bg-white text-slate-900 rounded-3xl px-6 font-bold shadow-sm border border-slate-200 outline-none focus:ring-2 focus:ring-emerald-500/50 appearance-none">
+                <option value="" className="text-slate-400">Selecione na lista...</option>
+                {condos.map(c => <option key={c.id} value={c.id} className="text-slate-900">{c.name}</option>)}
               </select>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
-                <Input placeholder="Ex: 402" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-16 rounded-3xl px-6" />
+                <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-4">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
+                <Input placeholder="Ex: 402" value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
-                <Input placeholder="Ex: Torre A" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-16 rounded-3xl px-6" />
+                <label className="text-[10px] font-black text-emerald-600 uppercase tracking-widest ml-4">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
+                <Input placeholder="Ex: Torre A" value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-16 rounded-3xl px-6 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
               </div>
             </div>
           </div>
@@ -572,19 +577,19 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
 
         {step === 3 && (
           <div className="space-y-8 animate-in slide-in-from-right-4">
-            <h3 className="text-xl font-black italic text-slate-900 uppercase">3. Dependentes</h3>
-            <Button onClick={() => setFormData({ ...formData, dependents: [...formData.dependents, { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' }] })} className="bg-brand-50 text-brand-600 text-[10px] font-black uppercase tracking-widest h-12 rounded-2xl w-full border-none">
+            <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tight">3. Dependentes</h3>
+            <Button onClick={() => setFormData({ ...formData, dependents: [...formData.dependents, { id: Math.random().toString(), name: '', kinship: 'Filho(a)', birthDate: '' }] })} className="bg-emerald-50 border-emerald-200/50 text-emerald-600 text-[10px] font-black uppercase tracking-widest h-12 rounded-2xl w-full border hover:bg-emerald-100 transition-all shadow-sm">
               <Plus size={16} className="mr-2" /> Adicionar Dependente
             </Button>
             <div className="space-y-4">
               {formData.dependents.map(dep => (
-                <div key={dep.id} className="bg-white p-6 rounded-[32px] shadow-sm space-y-4 border border-slate-50 relative animate-in zoom-in-95">
-                  <button onClick={() => setFormData({ ...formData, dependents: formData.dependents.filter(d => d.id !== dep.id) })} className="absolute top-4 right-4 text-rose-300 hover:text-rose-500"><Trash2 size={18} /></button>
-                  <Input placeholder="Nome Completo" value={dep.name} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, name: e.target.value } : d) })} className="h-12 border-slate-100 rounded-2xl" />
+                <div key={dep.id} className="bg-white p-6 rounded-[32px] shadow-sm space-y-4 border border-slate-100 relative animate-in zoom-in-95">
+                  <button onClick={() => setFormData({ ...formData, dependents: formData.dependents.filter(d => d.id !== dep.id) })} className="absolute top-4 right-4 text-rose-400 hover:text-rose-600"><Trash2 size={18} /></button>
+                  <Input placeholder="Nome Completo" value={dep.name} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, name: e.target.value } : d) })} className="h-12 border-slate-100 bg-slate-50 text-slate-900 rounded-2xl placeholder-slate-400" />
                   <div className="grid grid-cols-2 gap-3">
-                    <Input type="date" value={dep.birthDate} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, birthDate: e.target.value } : d) })} className="h-12 border-slate-100 rounded-2xl" />
-                    <select className="bg-slate-50 rounded-2xl px-4 text-xs font-bold border-none" value={dep.kinship} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, kinship: e.target.value as any } : d) })}>
-                      <option>Filho(a)</option><option>Cônjuge</option><option>Outro</option>
+                    <Input type="date" value={dep.birthDate} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, birthDate: e.target.value } : d) })} className="h-12 border-slate-100 bg-slate-50 text-slate-900 rounded-2xl" />
+                    <select className="bg-slate-50 border border-slate-100 text-slate-900 rounded-2xl px-4 text-xs font-bold outline-none" value={dep.kinship} onChange={e => setFormData({ ...formData, dependents: formData.dependents.map(d => d.id === dep.id ? { ...d, kinship: e.target.value as any } : d) })}>
+                      <option className="text-slate-900">Filho(a)</option><option className="text-slate-900">Cônjuge</option><option className="text-slate-900">Outro</option>
                     </select>
                   </div>
                 </div>
@@ -595,11 +600,11 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
 
         {step === 4 && (
           <div className="space-y-6 animate-in slide-in-from-right-4">
-            <h3 className="text-xl font-black italic text-slate-900 uppercase">4. Validação</h3>
-            <p className="text-sm text-slate-400 font-medium italic">Opcional: Anexe documentos para acelerar sua aprovação.</p>
+            <h3 className="text-xl font-black italic text-slate-900 uppercase tracking-tight">4. Validação</h3>
+            <p className="text-sm text-slate-500 font-medium italic">Opcional: Anexe documentos para acelerar sua aprovação.</p>
             <div className="grid grid-cols-1 gap-4">
               {[{ k: 'rg', l: 'RG / CNH' }, { k: 'res', l: 'Comprovante' }].map(d => (
-                <button key={d.k} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [d.k === 'rg' ? 'rg' : 'residence']: true } })} className={`h-24 rounded-[32px] border-2 border-dashed flex items-center justify-center gap-4 transition-all ${formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? 'bg-emerald-50 border-emerald-300 text-emerald-600' : 'bg-white border-slate-200 text-slate-300 hover:border-brand-300'}`}>
+                <button key={d.k} onClick={() => setFormData({ ...formData, docs: { ...formData.docs, [d.k === 'rg' ? 'rg' : 'residence']: true } })} className={`h-24 rounded-[32px] border-2 border-dashed flex items-center justify-center gap-4 transition-all ${formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? 'bg-emerald-50 border-emerald-300 text-emerald-600 shadow-sm' : 'bg-slate-50 border-slate-200 text-slate-400 hover:border-slate-300 hover:text-slate-600'}`}>
                   {formData.docs[d.k === 'rg' ? 'rg' : 'residence'] ? <Check size={28} /> : <Camera size={28} />}
                   <span className="font-black uppercase text-[10px] tracking-widest">{d.l}</span>
                 </button>
@@ -609,8 +614,8 @@ export const ResidentRegistration: React.FC<{ onFinish: (data: any) => void; onB
         )}
       </div>
 
-      <footer className="p-8 bg-white border-t border-slate-50 fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40">
-        <Button fullWidth onClick={step === 4 ? handleFinish : () => setStep(step + 1)} disabled={loading} className="h-16 rounded-3xl bg-slate-950 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 active:scale-95 transition-all">
+      <footer className="p-8 bg-white/80 backdrop-blur-xl border-t border-slate-100 fixed bottom-0 left-0 right-0 max-w-md mx-auto z-40">
+        <Button fullWidth onClick={step === 4 ? handleFinish : () => setStep(step + 1)} disabled={loading} className="h-16 rounded-3xl bg-slate-900 text-white font-black uppercase tracking-[0.2em] italic shadow-2xl shadow-slate-900/20 hover:bg-slate-800 active:scale-95 transition-all">
           {loading ? 'Processando...' : step === 4 ? 'Finalizar Cadastro' : 'Próxima Etapa'}
         </Button>
       </footer>
@@ -716,57 +721,59 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
   );
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-24 flex flex-col">
-      <header className="p-6 pt-12 flex items-center gap-4">
-        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center shadow-sm">
-          <ArrowLeft size={20} />
+    <div className="min-h-screen bg-slate-50 pb-24 flex flex-col relative overflow-hidden">
+      <div className="absolute inset-0 bg-[radial-gradient(circle_at_100%_0%,rgba(16,185,129,0.05),transparent_60%)]"></div>
+
+      <header className="p-6 pt-12 flex items-center gap-4 relative z-10 border-b border-slate-200">
+        <button onClick={step === 1 ? onBack : () => setStep(step - 1)} className="w-10 h-10 bg-white border border-slate-200 rounded-xl flex items-center justify-center shadow-lg hover:bg-slate-50 transition-colors">
+          <ArrowLeft size={20} className="text-slate-600" />
         </button>
-        <h2 className="text-xl font-black text-slate-900 italic uppercase">Cadastro Profissional</h2>
+        <h2 className="text-xl font-black text-slate-800 italic uppercase tracking-tight">Cadastro Profissional</h2>
       </header>
-      <div className="px-6 flex-1 overflow-y-auto">
-        {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic">{error}</div>}
+      <div className="px-6 flex-1 overflow-y-auto relative z-10">
+        {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic border border-rose-100">{error}</div>}
         <div className="mb-6 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><Briefcase size={20} /></div>
-          <div><h4 className="font-black text-emerald-900 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4><p className="text-emerald-700 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p></div>
+          <div><h4 className="font-black text-emerald-700 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4><p className="text-emerald-600/80 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p></div>
         </div>
         {step === 1 && (
           <div className="space-y-8 animate-in slide-in-from-right-4 pb-8">
 
             <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">1. Dados Pessoais</h3>
-              <Input placeholder="Nome Completo do Responsável" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
-              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium" />
+              <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">1. Dados Pessoais</h3>
+              <Input placeholder="Nome Completo do Responsável" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
+              <Input placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
 
               <div className="flex gap-4 mb-2">
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="docType" checked={formData.docType === 'cpf'} onChange={() => setFormData({ ...formData, docType: 'cpf' })} className="accent-brand-600" />
-                  <span className="text-xs font-bold text-slate-600">Pessoa Física (CPF)</span>
+                  <input type="radio" name="docType" checked={formData.docType === 'cpf'} onChange={() => setFormData({ ...formData, docType: 'cpf' })} className="accent-emerald-500" />
+                  <span className="text-xs font-bold text-slate-500">Pessoa Física (CPF)</span>
                 </label>
                 <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="radio" name="docType" checked={formData.docType === 'cnpj'} onChange={() => setFormData({ ...formData, docType: 'cnpj' })} className="accent-brand-600" />
-                  <span className="text-xs font-bold text-slate-600">Empresa (CNPJ)</span>
+                  <input type="radio" name="docType" checked={formData.docType === 'cnpj'} onChange={() => setFormData({ ...formData, docType: 'cnpj' })} className="accent-emerald-500" />
+                  <span className="text-xs font-bold text-slate-500">Empresa (CNPJ)</span>
                 </label>
               </div>
 
               {formData.docType === 'cpf' ? (
-                <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-14 font-medium" />
+                <Input placeholder="CPF" value={formData.cpf} onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })} className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
               ) : (
-                <Input placeholder="CNPJ" value={formData.cnpj} onChange={e => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })} className="h-14 font-medium" />
+                <Input placeholder="CNPJ" value={formData.cnpj} onChange={e => setFormData({ ...formData, cnpj: maskCNPJ(e.target.value) })} className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
               )}
             </div>
 
             {/* Seção 2: Acesso */}
             <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">2. Dados de Acesso</h3>
-              <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-14 font-medium" />
-              <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-14 font-medium" />
+              <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">2. Dados de Acesso</h3>
+              <Input placeholder="Seu melhor e-mail" value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
+              <Input type="password" placeholder="Crie uma senha segura" value={formData.password} onChange={e => setFormData({ ...formData, password: e.target.value })} className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm" />
             </div>
 
             {/* Seção 3: Profissional */}
             <div className="space-y-4">
-              <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest border-b border-slate-100 pb-2 mb-4">3. Perfil Profissional</h3>
+              <h3 className="text-sm font-black text-slate-500 uppercase tracking-widest border-b border-slate-200 pb-2 mb-4">3. Perfil Profissional</h3>
               <div className="space-y-2 relative">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Categoria de Serviço</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Categoria de Serviço</label>
                 <div className="relative">
                   <Input
                     placeholder="Ex: Eletricista, Encanador..."
@@ -777,14 +784,14 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
                     }}
                     onFocus={() => setShowSuggestions(true)}
                     onBlur={handleCategoryBlur}
-                    className="h-14 font-medium"
+                    className="h-14 font-medium bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50 shadow-sm"
                   />
                   {showSuggestions && (
                     <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-2xl shadow-xl border border-slate-100 max-h-48 overflow-y-auto z-50">
                       {filteredCategories.length > 0 ? filteredCategories.map(c => (
                         <button
                           key={c.id}
-                          className="w-full text-left px-4 py-3 hover:bg-brand-50 text-slate-700 font-medium text-sm transition-colors border-b border-slate-50 last:border-none"
+                          className="w-full text-left px-4 py-3 hover:bg-slate-50 text-slate-600 font-medium text-sm transition-colors border-b border-slate-100 last:border-none"
                           onClick={() => {
                             setFormData({ ...formData, category: c.name });
                             setShowSuggestions(false);
@@ -793,7 +800,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
                           {c.name}
                         </button>
                       )) : (
-                        <div className="px-4 py-3 text-xs text-slate-400 font-medium italic">
+                        <div className="px-4 py-3 text-xs text-slate-500 font-medium italic">
                           Nova categoria: "{formData.category}"
                         </div>
                       )}

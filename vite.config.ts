@@ -17,6 +17,9 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: '.',
+        filename: 'sw.ts',
         registerType: 'autoUpdate',
         includeAssets: ['logo.png', 'icon.png'],
         manifest: {

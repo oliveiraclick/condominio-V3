@@ -20,7 +20,7 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 
 export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white/80 backdrop-blur-xl border-t border-slate-100 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
+  <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
     {[
       { id: 'dashboard', icon: <LayoutDashboard size={24} />, label: 'Início' },
       { id: 'residents', icon: <Users size={24} />, label: 'Moradores' },
@@ -30,7 +30,7 @@ export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: stri
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-brand-600 scale-110' : 'text-slate-300'}`}
+        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-brand-600 scale-110 drop-shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
       >
         {item.icon}
         <span className="text-[10px] font-bold uppercase">{item.label}</span>
@@ -40,14 +40,14 @@ export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: stri
 );
 
 const AdminHeader: React.FC<{ title: string; onBack?: () => void; rightElement?: React.ReactNode }> = ({ title, onBack, rightElement }) => (
-  <header className="p-6 pt-12 bg-white border-b border-slate-50 flex items-center justify-between sticky top-0 z-50 shadow-sm">
+  <header className="p-6 pt-12 bg-white/90 backdrop-blur-md border-b border-slate-200 flex items-center justify-between sticky top-0 z-50 shadow-sm">
     <div className="flex items-center gap-4">
       {onBack && (
-        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center text-slate-900">
+        <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200">
           <ArrowLeft size={20} />
         </button>
       )}
-      <h2 className="text-xl font-black text-slate-950 italic uppercase tracking-tighter">{title}</h2>
+      <h2 className="text-xl font-black text-slate-900 italic uppercase tracking-tighter">{title}</h2>
     </div>
     {rightElement}
   </header>
@@ -55,9 +55,9 @@ const AdminHeader: React.FC<{ title: string; onBack?: () => void; rightElement?:
 
 const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () => void }> = ({ title, action, onAction }) => (
   <div className="flex justify-between items-end mb-6 px-1">
-    <h3 className="text-xl font-bold text-slate-900 tracking-tight leading-none">{title}</h3>
+    <h3 className="text-xl font-bold text-slate-800 tracking-tight leading-none">{title}</h3>
     {action && (
-      <button onClick={onAction} className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all">
+      <button onClick={onAction} className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all hover:bg-brand-100 border border-brand-100 shadow-sm">
         {action}
       </button>
     )}
@@ -119,27 +119,27 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
     {
       title: 'Operações Diárias',
       items: [
-        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-brand-600', bg: 'bg-brand-50' },
-        { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-600', bg: 'bg-blue-50' },
-        { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-brand-400', bg: 'bg-brand-500/10' },
+        { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
       ]
     },
     {
       title: 'Gestão & Comunidade',
       items: [
-        { id: 'residents', icon: <Users size={24} />, label: 'Moradores', desc: 'Base de condôminos', target: 'admin-residents', color: 'text-indigo-600', bg: 'bg-indigo-50' },
-        { id: 'finance', icon: <Wallet size={24} />, label: 'Financeiro', desc: 'Cobranças e taxas', target: 'admin-finance', color: 'text-slate-600', bg: 'bg-slate-50' },
-        { id: 'notices', icon: <Megaphone size={24} />, label: 'Mural de Avisos', desc: 'Comunicados gerais', target: 'admin-notices', color: 'text-amber-600', bg: 'bg-amber-50' },
-        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-brand-600', bg: 'bg-brand-50' },
-        { id: 'categories', icon: <Layers size={24} />, label: 'Categorias', desc: 'Serviços e áreas', target: 'admin-categories', color: 'text-pink-600', bg: 'bg-pink-50' },
+        { id: 'residents', icon: <Users size={24} />, label: 'Moradores', desc: 'Base de condôminos', target: 'admin-residents', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
+        { id: 'finance', icon: <Wallet size={24} />, label: 'Financeiro', desc: 'Cobranças e taxas', target: 'admin-finance', color: 'text-slate-400', bg: 'bg-slate-500/10' },
+        { id: 'notices', icon: <Megaphone size={24} />, label: 'Mural de Avisos', desc: 'Comunicados gerais', target: 'admin-notices', color: 'text-amber-400', bg: 'bg-amber-500/10' },
+        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-brand-400', bg: 'bg-brand-500/10' },
+        { id: 'categories', icon: <Layers size={24} />, label: 'Categorias', desc: 'Serviços e áreas', target: 'admin-categories', color: 'text-pink-400', bg: 'bg-pink-500/10' },
       ]
     }
   ];
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32 font-sans">
+    <div className="min-h-screen bg-slate-50 pb-32 font-sans selection:bg-brand-500/30 text-slate-900">
       {/* Hero Section */}
-      <div className="bg-white pt-12 pb-8 px-8 rounded-b-[40px] shadow-sm mb-8 relative overflow-hidden">
+      <div className="bg-gradient-to-br from-brand-600 to-brand-700 pt-12 pb-8 px-8 rounded-b-[40px] shadow-2xl mb-8 relative overflow-hidden border-b border-brand-500">
         {/* WATERMARK SYMBOL */}
         {(onNavigate as any).currentUser?.symbol_url && (
           <div
@@ -148,30 +148,30 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
           >
             <img
               src={(onNavigate as any).currentUser.symbol_url}
-              className="w-full h-full object-contain grayscale opacity-20"
+              className="w-full h-full object-contain grayscale opacity-20 invert"
               alt="Background Branding"
             />
           </div>
         )}
         <div className="relative z-10 flex justify-between items-start">
           <div>
-            <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter">Painel Admin</h2>
-            <p className="text-slate-500 font-medium text-sm mt-1">Gestão Completa do Condomínio</p>
+            <h2 className="text-3xl font-black italic text-white tracking-tighter">Painel Admin</h2>
+            <p className="text-brand-100 font-medium text-sm mt-1">Gestão Completa do Condomínio</p>
           </div>
-          <div className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center">
-            <Building2 className="text-slate-400" size={24} />
+          <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center border border-white/10 backdrop-blur-md">
+            <Building2 className="text-white" size={24} />
           </div>
         </div>
 
         {/* Quick Stats */}
         <div className="grid grid-cols-3 gap-3 mt-8">
           {stats.map((stat, i) => (
-            <div key={i} className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
+            <div key={i} className="bg-white/10 p-4 rounded-2xl border border-white/10 backdrop-blur-md group hover:bg-white/20 transition-all">
               <div className="flex items-center gap-2 mb-2">
-                <div className={`w-2 h-2 rounded-full ${stat.color}`}></div>
-                <span className="text-[9px] font-black uppercase text-slate-400 tracking-widest">{stat.label}</span>
+                <div className={`w-2 h-2 rounded-full bg-white`}></div>
+                <span className="text-[9px] font-black uppercase text-white/70 tracking-widest">{stat.label}</span>
               </div>
-              <p className="text-xl font-black text-slate-900">{stat.value}</p>
+              <p className="text-xl font-black text-white">{stat.value}</p>
             </div>
           ))}
         </div>
@@ -186,9 +186,9 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
                 <button
                   key={item.id}
                   onClick={() => onNavigate(item.target)}
-                  className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-50 flex flex-col gap-3 group active:scale-95 transition-all hover:border-brand-100 hover:shadow-md text-left relative overflow-hidden"
+                  className="bg-white p-5 rounded-[24px] shadow-sm border border-slate-100 flex flex-col gap-3 group active:scale-95 transition-all hover:bg-slate-50 hover:shadow-md text-left relative overflow-hidden"
                 >
-                  <div className={`w-12 h-12 ${item.bg} ${item.color} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                  <div className={`w-12 h-12 ${item.bg.replace('/10', '/20')} ${item.color.replace('text-', 'text-')} rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform`}>
                     {item.icon}
                   </div>
                   <div>
@@ -196,7 +196,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
                     <p className="text-[10px] text-slate-400 font-medium leading-tight mt-0.5">{item.desc}</p>
                   </div>
                   <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <ChevronRight size={16} className="text-slate-300" />
+                    <ChevronRight size={16} className="text-slate-400" />
                   </div>
                 </button>
               ))}
@@ -205,31 +205,31 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
         ))}
 
         {/* System & Logout */}
-        <div className="space-y-4 pt-4 border-t border-slate-200/50">
+        <div className="space-y-4 pt-4 border-t border-slate-200">
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => onNavigate('profile')}
-              className="bg-slate-900 p-5 rounded-[24px] shadow-lg flex items-center gap-4 group active:scale-95 transition-all"
+              className="bg-white p-5 rounded-[24px] shadow-sm flex items-center gap-4 group active:scale-95 transition-all border border-slate-100 hover:bg-slate-50"
             >
-              <div className="w-10 h-10 bg-white/10 rounded-full flex items-center justify-center text-white">
+              <div className="w-10 h-10 bg-slate-100 rounded-full flex items-center justify-center text-slate-600">
                 <UserCircle2 size={20} />
               </div>
               <div className="text-left">
-                <h4 className="font-black text-white text-sm">Meu Perfil</h4>
+                <h4 className="font-black text-slate-900 text-sm">Meu Perfil</h4>
                 <p className="text-[9px] text-slate-400 uppercase tracking-widest">Configurações</p>
               </div>
             </button>
 
             <button
               onClick={onLogout}
-              className="bg-rose-50 p-5 rounded-[24px] border border-rose-100 flex items-center gap-4 group active:scale-95 transition-all hover:bg-rose-500"
+              className="bg-rose-50 p-5 rounded-[24px] border border-rose-100 flex items-center gap-4 group active:scale-95 transition-all hover:bg-rose-100"
             >
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm">
+              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm border border-rose-100">
                 <LogOut size={20} />
               </div>
-              <div className="text-left group-hover:text-white">
-                <h4 className="font-black text-rose-950 text-sm group-hover:text-white">Sair</h4>
-                <p className="text-[9px] text-rose-400 uppercase tracking-widest group-hover:text-rose-100">Encerrar</p>
+              <div className="text-left group-hover:text-rose-600">
+                <h4 className="font-black text-rose-500 text-sm group-hover:text-rose-600">Sair</h4>
+                <p className="text-[9px] text-rose-400 uppercase tracking-widest group-hover:text-rose-500">Encerrar</p>
               </div>
             </button>
           </div>
@@ -350,9 +350,9 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
   const sportsAreas = commonAreas.filter(a => a.category === 'Esportes');
 
   const renderAreaCard = (area: any) => (
-    <div key={area.id} onClick={() => startEdit(area)} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm group cursor-pointer hover:border-brand-200 transition-all">
+    <div key={area.id} onClick={() => startEdit(area)} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-lg shadow-slate-200/50 group cursor-pointer hover:bg-slate-50 transition-all">
       <div className="flex items-center gap-4">
-        <div className="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden relative">
+        <div className="w-16 h-16 bg-slate-50 rounded-2xl overflow-hidden relative border border-slate-100 text-slate-400 flex items-center justify-center">
           {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-300"><ImageIcon size={24} /></div>}
         </div>
         <div>
@@ -360,10 +360,10 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
           <p className="text-[10px] font-bold text-slate-400 uppercase mt-1 tracking-widest truncate max-w-[200px]">
             {area.reservation_type === 'hourly' ? 'POR HORA' : 'DIA INTEIRO'} • {area.hours} • R$ {area.price}
           </p>
-          <p className="text-[9px] text-slate-300 truncate max-w-[200px] mt-0.5">{area.inventory}</p>
+          <p className="text-[9px] text-slate-500 truncate max-w-[200px] mt-0.5">{area.inventory}</p>
         </div>
       </div>
-      <button onClick={(e) => { e.stopPropagation(); handleDelete(area.id); }} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all active:scale-90 hover:bg-rose-100">
+      <button onClick={(e) => { e.stopPropagation(); handleDelete(area.id); }} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all active:scale-90 hover:bg-rose-100 border border-slate-100">
         <Trash2 size={18} />
       </button>
     </div>
@@ -373,18 +373,18 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
     <div className="space-y-6 animate-in fade-in duration-300">
       <div className="flex justify-between items-center px-2">
         <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Configuração de Espaços</h4>
-        <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet' }); }} className="text-[10px] font-black text-brand-600 uppercase bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all flex items-center gap-1">
+        <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', desc: '', price: '', hours: '', inventory: '', photo: '', category: 'Gourmet', reservation_type: 'full_day', available_start_time: '06:00:00', available_end_time: '22:00:00' }); }} className="text-[10px] font-black text-brand-600 uppercase bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all flex items-center gap-1 border border-brand-100">
           <Plus size={14} /> Novo Espaço
         </button>
       </div>
 
       {isAdding && (
-        <Card className="p-8 space-y-4 border-2 border-dashed border-brand-200 bg-brand-50/30 rounded-[40px] animate-in slide-in-from-top-4">
+        <Card className="p-8 space-y-4 border border-slate-200 bg-white rounded-[40px] animate-in slide-in-from-top-4 shadow-2xl relative z-20">
           <h3 className="text-lg font-black italic text-slate-900">{editingId ? 'Editar Espaço' : 'Novo Espaço'}</h3>
 
           <div
             onClick={() => fileInputRef.current?.click()}
-            className="h-40 bg-white/50 rounded-3xl border-2 border-dashed border-brand-300 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white hover:border-brand-500 transition-all overflow-hidden relative"
+            className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:bg-white hover:border-brand-500 transition-all overflow-hidden relative"
           >
             {imageFile ? (
               <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" />
@@ -410,59 +410,59 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
             />
           </div>
 
-          <Input placeholder="Nome da Área (Ex: Salão de Festas)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
-          <Input placeholder="URL da Foto (Opcional se enviou arquivo)" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="h-14" />
+          <Input placeholder="Nome da Área (Ex: Salão de Festas)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
+          <Input placeholder="URL da Foto (Opcional se enviou arquivo)" value={form.photo} onChange={e => setForm({ ...form, photo: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-900 uppercase">Categoria</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase">Categoria</label>
             <select
-              className="w-full h-14 bg-white rounded-2xl px-4 font-bold text-slate-700 outline-none border border-brand-100"
+              className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 outline-none border border-slate-200 focus:border-brand-500 focus:bg-white"
               value={form.category}
               onChange={e => setForm({ ...form, category: e.target.value })}
             >
-              <option value="Gourmet">Gourmet & Festas</option>
-              <option value="Esportes">Esportes & Lazer</option>
+              <option value="Gourmet" className="bg-white">Gourmet & Festas</option>
+              <option value="Esportes" className="bg-white">Esportes & Lazer</option>
             </select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-900 uppercase">Tipo de Reserva</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase">Tipo de Reserva</label>
               <select
-                className="w-full h-14 bg-white rounded-2xl px-4 font-bold text-slate-700 outline-none border border-brand-100"
+                className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 outline-none border border-slate-200 focus:border-brand-500 focus:bg-white"
                 value={form.reservation_type}
                 onChange={e => setForm({ ...form, reservation_type: e.target.value })}
               >
-                <option value="full_day">Dia Inteiro</option>
-                <option value="hourly">Por Hora</option>
+                <option value="full_day" className="bg-white">Dia Inteiro</option>
+                <option value="hourly" className="bg-white">Por Hora</option>
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-900 uppercase">Preço (R$ 0,00)</label>
-              <Input placeholder="Preço (R$ 0,00)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-14" />
+              <label className="text-[10px] font-black text-slate-400 uppercase">Preço (R$ 0,00)</label>
+              <Input placeholder="Preço (R$ 0,00)" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
             </div>
           </div>
 
           {form.reservation_type === 'hourly' && (
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-900 uppercase">Abre às</label>
-                <Input type="time" value={form.available_start_time} onChange={e => setForm({ ...form, available_start_time: e.target.value })} className="h-14" />
+                <label className="text-[10px] font-black text-slate-400 uppercase">Abre às</label>
+                <Input type="time" value={form.available_start_time} onChange={e => setForm({ ...form, available_start_time: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
               </div>
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-900 uppercase">Fecha às</label>
-                <Input type="time" value={form.available_end_time} onChange={e => setForm({ ...form, available_end_time: e.target.value })} className="h-14" />
+                <label className="text-[10px] font-black text-slate-400 uppercase">Fecha às</label>
+                <Input type="time" value={form.available_end_time} onChange={e => setForm({ ...form, available_end_time: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
               </div>
             </div>
           )}
 
-          <Input placeholder="Horário Texto (Ex: 08h - 22h)" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} className="h-14" />
-          <Input placeholder="Inventário (Ex: 50 cadeiras, 1 freezer)" value={form.inventory} onChange={e => setForm({ ...form, inventory: e.target.value })} className="h-14" />
-          <Input placeholder="Descrição / Regras" value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} className="h-14" />
+          <Input placeholder="Horário Texto (Ex: 08h - 22h)" value={form.hours} onChange={e => setForm({ ...form, hours: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
+          <Input placeholder="Inventário (Ex: 50 cadeiras, 1 freezer)" value={form.inventory} onChange={e => setForm({ ...form, inventory: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
+          <Input placeholder="Descrição / Regras" value={form.desc} onChange={e => setForm({ ...form, desc: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
 
           <div className="flex gap-3 pt-2">
-            <Button fullWidth variant="secondary" onClick={() => { setIsAdding(false); setEditingId(null); }}>Cancelar</Button>
-            <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950">
+            <Button fullWidth variant="secondary" onClick={() => { setIsAdding(false); setEditingId(null); }} className="bg-slate-50 text-slate-400 hover:text-slate-600 border-slate-200">Cancelar</Button>
+            <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-brand-600 text-white hover:bg-brand-500 shadow-lg shadow-brand-500/20">
               {uploading ? 'Enviando...' : 'Salvar'}
             </Button>
           </div>
@@ -472,20 +472,20 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
       <div className="space-y-8">
         {gourmetAreas.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-black text-slate-900 italic text-lg flex items-center gap-2"><PartyPopper size={20} className="text-brand-500" /> Gourmet & Festas</h3>
+            <h3 className="font-black text-slate-800 italic text-lg flex items-center gap-2"><PartyPopper size={20} className="text-brand-500" /> Gourmet & Festas</h3>
             {gourmetAreas.map(renderAreaCard)}
           </div>
         )}
 
         {sportsAreas.length > 0 && (
           <div className="space-y-4">
-            <h3 className="font-black text-slate-900 italic text-lg flex items-center gap-2"><Dumbbell size={20} className="text-emerald-500" /> Esportes & Lazer</h3>
+            <h3 className="font-black text-slate-800 italic text-lg flex items-center gap-2"><Dumbbell size={20} className="text-emerald-500" /> Esportes & Lazer</h3>
             {sportsAreas.map(renderAreaCard)}
           </div>
         )}
 
-        {gourmetAreas.length === 0 && sportsAreas.length === 0 && (
-          <div className="text-center py-10 text-slate-400 font-bold italic">Nenhuma área cadastrada.</div>
+        {gourmetAreas.length === 0 && sportsAreas.length === 0 && !isAdding && (
+          <div className="text-center py-10 text-slate-500 font-bold italic">Nenhuma área cadastrada.</div>
         )}
       </div>
     </div>
@@ -561,34 +561,34 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
             {/* Category Selection */}
             {!selectedCategory ? (
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => setSelectedCategory('Gourmet')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:border-brand-500 hover:bg-brand-50 transition-all active:scale-95">
-                  <div className="w-16 h-16 bg-brand-100 text-brand-600 rounded-full flex items-center justify-center">
+                <button onClick={() => setSelectedCategory('Gourmet')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center gap-4 hover:border-brand-500 hover:shadow-2xl transition-all active:scale-95 group">
+                  <div className="w-16 h-16 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center border border-brand-100 group-hover:scale-110 transition-transform">
                     <PartyPopper size={32} />
                   </div>
-                  <span className="font-black text-slate-700 uppercase tracking-widest text-xs">Gourmet & Festas</span>
+                  <span className="font-black text-slate-900 uppercase tracking-widest text-xs">Gourmet & Festas</span>
                 </button>
-                <button onClick={() => setSelectedCategory('Esportes')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:border-emerald-500 hover:bg-emerald-50 transition-all active:scale-95">
-                  <div className="w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center">
+                <button onClick={() => setSelectedCategory('Esportes')} className="h-40 bg-white rounded-[32px] border-2 border-slate-100 shadow-xl shadow-slate-200/50 flex flex-col items-center justify-center gap-4 hover:border-emerald-500 hover:shadow-2xl transition-all active:scale-95 group">
+                  <div className="w-16 h-16 bg-emerald-50 text-emerald-600 rounded-full flex items-center justify-center border border-emerald-100 group-hover:scale-110 transition-transform">
                     <Dumbbell size={32} />
                   </div>
-                  <span className="font-black text-slate-700 uppercase tracking-widest text-xs">Esportes & Lazer</span>
+                  <span className="font-black text-slate-900 uppercase tracking-widest text-xs">Esportes & Lazer</span>
                 </button>
               </div>
             ) : (
               <div className="space-y-6">
                 <div className="flex items-center gap-2 mb-4">
-                  <button onClick={() => setSelectedCategory(null)} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-500">
+                  <button onClick={() => setSelectedCategory(null)} className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 transition-colors border border-slate-200 shadow-sm">
                     <ChevronRight className="rotate-180" size={20} />
                   </button>
                   <h3 className="text-lg font-black italic text-slate-900">{selectedCategory}</h3>
                 </div>
 
                 {/* Date Picker */}
-                <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100">
+                <div className="bg-white p-6 rounded-[32px] shadow-lg border border-slate-100 backdrop-blur-sm">
                   <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2 block">Selecione uma Data</label>
                   <input
                     type="date"
-                    className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 outline-none border border-slate-200"
+                    className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-900 outline-none border border-slate-200 focus:border-brand-500"
                     value={selectedDate}
                     onChange={(e) => setSelectedDate(e.target.value)}
                   />
@@ -601,18 +601,18 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
                     {filteredAreas.map(area => {
                       const reservation = checkAvailability(area.name);
                       return (
-                        <div key={area.id} className={`p-4 rounded-2xl border flex items-center justify-between ${reservation ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
+                        <div key={area.id} className={`p-4 rounded-2xl border flex items-center justify-between shadow-lg backdrop-blur-sm ${reservation ? 'bg-rose-50 border-rose-100' : 'bg-emerald-50 border-emerald-100'}`}>
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white/50">
-                              {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={16} className="text-slate-300" /></div>}
+                            <div className="w-10 h-10 rounded-xl overflow-hidden bg-white border border-slate-100">
+                              {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center"><ImageIcon size={16} className="text-slate-400" /></div>}
                             </div>
                             <div>
                               <p className="font-bold text-slate-900 text-sm">{area.name}</p>
                               {reservation && <p className="text-[10px] font-bold text-rose-500 uppercase">Reservado: {reservation.resident} (Casa {reservation.unit})</p>}
-                              {!reservation && <p className="text-[10px] font-bold text-emerald-600 uppercase">Disponível</p>}
+                              {!reservation && <p className="text-[10px] font-bold text-emerald-500 uppercase">Disponível</p>}
                             </div>
                           </div>
-                          {reservation ? <X size={20} className="text-rose-400" /> : <CheckCheck size={20} className="text-emerald-500" />}
+                          {reservation ? <X size={20} className="text-rose-500" /> : <CheckCheck size={20} className="text-emerald-500" />}
                         </div>
                       );
                     })}
@@ -626,57 +626,59 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
 
         {view === 'list' && (
           <>
-            <div className="bg-slate-900 p-8 rounded-[40px] text-white shadow-2xl shadow-slate-900/20">
-              <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 mb-4">Status do Condomínio</h3>
-              <div className="flex items-end justify-between">
-                <div>
-                  <p className="text-4xl font-black italic tracking-tighter">{reservations.length}</p>
-                  <p className="text-[10px] font-black uppercase tracking-widest mt-1">Reservas Ativas</p>
+            <div className="bg-gradient-to-br from-brand-600 to-brand-700 p-8 rounded-[40px] text-white shadow-2xl relative overflow-hidden border border-brand-500">
+              <div className="relative z-10">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] opacity-50 mb-4 text-white">Status do Condomínio</h3>
+                <div className="flex items-end justify-between">
+                  <div>
+                    <p className="text-4xl font-black italic tracking-tighter text-white">{reservations.length}</p>
+                    <p className="text-[10px] font-black uppercase tracking-widest mt-1 text-brand-100">Reservas Ativas</p>
+                  </div>
+                  <CalendarDays className="text-white opacity-20" size={64} />
                 </div>
-                <CalendarDays className="text-brand-500 opacity-20" size={64} />
               </div>
             </div>
 
             <div className="space-y-6">
               <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2">Agenda Confirmada</h4>
               {reservations.length > 0 ? reservations.map((r) => (
-                <Card key={r.id} className="p-8 border-none shadow-2xl shadow-slate-200/50 rounded-[48px] space-y-6 animate-in slide-in-from-bottom-4">
+                <Card key={r.id} className="p-8 border border-slate-100 shadow-lg shadow-slate-200/50 rounded-[48px] space-y-6 animate-in slide-in-from-bottom-4 bg-white backdrop-blur-sm">
                   <div className="flex justify-between items-start">
                     <div className="flex items-center gap-5">
-                      <div className="w-16 h-16 bg-blue-50 text-blue-500 rounded-[24px] flex items-center justify-center shadow-sm">
+                      <div className="w-16 h-16 bg-blue-50 text-blue-600 rounded-[24px] flex items-center justify-center shadow-sm border border-blue-100">
                         <PartyPopper size={32} />
                       </div>
                       <div>
-                        <h5 className="text-xl font-black text-slate-950 italic tracking-tight">{r.area}</h5>
+                        <h5 className="text-xl font-black text-slate-900 italic tracking-tight">{r.area}</h5>
                         <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mt-1">
                           Morador: <span className="text-slate-900">{r.resident}</span>
                         </p>
-                        <p className="text-[9px] font-black text-brand-500 uppercase tracking-widest leading-none mt-1">Casa {r.unit}</p>
+                        <p className="text-[9px] font-black text-brand-600 uppercase tracking-widest leading-none mt-1">Casa {r.unit}</p>
                       </div>
                     </div>
-                    <Badge color="bg-emerald-50 text-emerald-600">ATIVO</Badge>
+                    <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100">ATIVO</Badge>
                   </div>
 
-                  <div className="bg-slate-50 p-6 rounded-3xl flex items-center justify-between">
+                  <div className="bg-slate-50 p-6 rounded-3xl flex items-center justify-between border border-slate-100">
                     <div>
                       <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Data Agendada</p>
                       <p className="font-black text-slate-900 italic text-lg">{new Date(r.date).toLocaleDateString('pt-BR')}</p>
                     </div>
-                    <Clock className="text-slate-200" size={32} />
+                    <Clock className="text-slate-400" size={32} />
                   </div>
 
                   <Button
                     fullWidth
                     variant="outline"
                     onClick={() => handleCancel(r.id)}
-                    className="py-5 border-rose-100 text-rose-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-3xl active:scale-95 transition-all"
+                    className="py-5 border-rose-100 text-rose-500 text-[10px] font-black uppercase tracking-[0.2em] rounded-3xl active:scale-95 transition-all hover:bg-rose-50"
                   >
                     Remover Reserva
                   </Button>
                 </Card>
               )) : (
                 <div className="py-24 text-center">
-                  <CalendarDays className="mx-auto text-slate-100 mb-6" size={80} />
+                  <CalendarDays className="mx-auto text-slate-200 mb-6" size={80} />
                   <p className="text-slate-400 font-black italic uppercase tracking-widest text-[10px]">Sem reservas no momento.</p>
                 </div>
               )}
@@ -1047,7 +1049,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="ENCOMENDAS" onBack={onBack} />
       <div className="p-6 space-y-6">
 
@@ -1075,7 +1077,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         {/* MANAGE ALL BUTTON */}
         <button
           onClick={() => setIsViewingAll(true)}
-          className="w-full py-4 bg-white border border-slate-100 rounded-full text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
+          className="w-full py-4 bg-white border border-slate-200 rounded-full text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] hover:bg-slate-50 transition-all active:scale-[0.98] shadow-sm flex items-center justify-center gap-2"
         >
           <ListFilter size={14} /> Ver Todas / Gerenciar
         </button>
@@ -1110,25 +1112,25 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         {/* CONFIRMATION MODAL */}
         {scannedResident && (
           <div className="fixed inset-0 z-50 flex items-center justify-center p-4 animate-in fade-in bg-slate-950/60 backdrop-blur-xl">
-            <Card className="w-full max-w-sm p-8 rounded-[48px] space-y-6 shadow-2xl border border-white/20 bg-white/95 backdrop-blur-md relative overflow-hidden">
+            <Card className="w-full max-w-sm p-8 rounded-[48px] space-y-6 shadow-2xl border border-white/20 bg-slate-900/95 backdrop-blur-md relative overflow-hidden">
               <div className="absolute top-0 left-0 w-full h-2 bg-emerald-500"></div>
               <div className="text-center">
-                <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-[28px] flex items-center justify-center mx-auto mb-4 shadow-inner border border-emerald-100">
+                <div className="w-20 h-20 bg-emerald-500/10 text-emerald-500 rounded-[28px] flex items-center justify-center mx-auto mb-4 shadow-inner border border-emerald-500/20">
                   <CheckCircle2 size={40} className="stroke-[2.5]" />
                 </div>
-                <h3 className="text-2xl font-black text-slate-900 uppercase italic tracking-tighter">Volumes Identificados</h3>
-                <div className="mt-4 bg-slate-50 p-6 rounded-[32px] border border-slate-100 shadow-inner">
-                  <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Morador: <strong className="text-slate-900 block text-sm mt-1">{scannedResident.name}</strong></p>
+                <h3 className="text-2xl font-black text-white uppercase italic tracking-tighter">Volumes Identificados</h3>
+                <div className="mt-4 bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-inner">
+                  <p className="mb-4 text-center text-[10px] font-black uppercase tracking-widest text-slate-400">Morador: <strong className="text-white block text-sm mt-1">{scannedResident.name}</strong></p>
 
                   <div className="space-y-3">
                     {pendingDeliveryList.map(p => (
-                      <div key={p.id} className="flex gap-4 bg-white p-4 rounded-2xl border border-slate-50 shadow-sm relative overflow-hidden group">
-                        <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500/5 rounded-bl-[20px] transition-transform group-hover:scale-150"></div>
-                        <div className="w-10 h-10 bg-amber-50 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-sm">
+                      <div key={p.id} className="flex gap-4 bg-slate-900 p-4 rounded-2xl border border-white/10 shadow-sm relative overflow-hidden group">
+                        <div className="absolute top-0 right-0 w-8 h-8 bg-amber-500/10 rounded-bl-[20px] transition-transform group-hover:scale-150"></div>
+                        <div className="w-10 h-10 bg-amber-500/10 text-amber-500 rounded-xl flex items-center justify-center shrink-0 shadow-sm border border-amber-500/10">
                           <Package size={20} />
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-black text-slate-900 text-xs italic tracking-tight truncate">{p.description || 'Encomenda'}</p>
+                        <div className="flex-1 min-w-0 text-left">
+                          <p className="font-black text-white text-xs italic tracking-tight truncate">{p.description || 'Encomenda'}</p>
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-tighter">UNID: {p.unit}</p>
                         </div>
                       </div>
@@ -1145,7 +1147,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                   <Scan size={22} className="group-hover:rotate-12 transition-transform" />
                   <span className="relative z-10">Bipar Pacotes</span>
                 </Button>
-                <button onClick={() => setScannedResident(null)} className="py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest text-center hover:text-slate-600">Fechar</button>
+                <button onClick={() => setScannedResident(null)} className="py-3 text-[10px] font-black text-slate-500 uppercase tracking-widest text-center hover:text-white transition-colors">Fechar</button>
               </div>
             </Card>
           </div>
@@ -1154,20 +1156,20 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         {/* PACKAGE HANDSHAKE SCANNER */}
         {isScanningPackageHandshake && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/95">
-            <div className="w-full max-w-sm bg-white rounded-[40px] overflow-hidden relative p-8">
+            <div className="w-full max-w-sm bg-slate-900 rounded-[40px] overflow-hidden relative p-8 border border-white/10">
               <div className="text-center mb-6">
-                <h3 className="text-xl font-black italic text-slate-900 uppercase">Handshake de Pacote</h3>
+                <h3 className="text-xl font-black italic text-white uppercase">Handshake de Pacote</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Bipa o QR Code da encomenda agora</p>
               </div>
 
-              <div className="rounded-3xl overflow-hidden border-4 border-slate-100 shadow-2xl aspect-square relative">
+              <div className="rounded-3xl overflow-hidden border-4 border-white/10 shadow-2xl aspect-square relative">
                 <Scanner onScan={(r) => r[0] && handleScanPackageHandshake(r[0].rawValue)} />
-                <div className="absolute inset-0 border-[40px] border-black/20 pointer-events-none"></div>
+                <div className="absolute inset-0 border-[40px] border-black/50 pointer-events-none"></div>
               </div>
 
               <button
                 onClick={() => setIsScanningPackageHandshake(false)}
-                className="w-full mt-6 py-4 bg-slate-100 text-slate-500 rounded-2xl font-black uppercase tracking-widest text-xs"
+                className="w-full mt-6 py-4 bg-white/10 text-slate-400 rounded-2xl font-black uppercase tracking-widest text-xs hover:bg-white/20 hover:text-white transition-all"
               >
                 Cancelar
               </button>
@@ -1177,16 +1179,16 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
         {isRegistering && (
           <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-            <div className="absolute inset-0 bg-slate-950/40 backdrop-blur-xl transition-all" onClick={closeRegistration}></div>
-            <Card className="relative w-full max-w-lg p-8 space-y-6 border border-white/20 shadow-2xl rounded-[40px] bg-white/80 backdrop-blur-md animate-in zoom-in-95 duration-300">
+            <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-xl transition-all" onClick={closeRegistration}></div>
+            <Card className="relative w-full max-w-lg p-8 space-y-6 border border-slate-100 shadow-2xl rounded-[40px] bg-white animate-in zoom-in-95 duration-300">
               <div className="flex justify-between items-center mb-2">
                 <div>
                   <h3 className="text-2xl font-black italic text-slate-900 tracking-tight uppercase">
                     {editingPackage ? 'Editar' : 'Registrar'} Encomenda
                   </h3>
-                  <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Nova entrada no sistema</p>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Nova entrada no sistema</p>
                 </div>
-                <button onClick={closeRegistration} className="w-12 h-12 bg-white/50 hover:bg-white rounded-2xl flex items-center justify-center shadow-sm transition-all active:scale-90 border border-slate-100">
+                <button onClick={closeRegistration} className="w-12 h-12 bg-slate-50 hover:bg-slate-100 rounded-2xl flex items-center justify-center shadow-sm transition-all active:scale-90 border border-slate-100">
                   <X size={20} className="text-slate-400" />
                 </button>
               </div>
@@ -1206,17 +1208,17 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                       setSelectedResident(null);
                       setIsUnidentified(false);
                     }}
-                    className="h-16 rounded-2xl bg-white/50 border-slate-100 focus:border-brand-500 transition-all font-bold text-slate-700"
+                    className="h-16 rounded-2xl bg-slate-50 border-slate-200 focus:border-brand-500 transition-all font-bold text-slate-900 placeholder-slate-400"
                   />
                   {searchName && !selectedResident && (
-                    <div className="absolute top-full left-0 right-0 bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl mt-2 max-h-48 overflow-y-auto z-50 animate-in slide-in-from-top-2">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-2xl rounded-3xl mt-2 max-h-48 overflow-y-auto z-50 animate-in slide-in-from-top-2">
                       {residentsList.filter(r => (r.name?.toLowerCase() || '').includes(searchName.toLowerCase())).map(r => (
                         <button key={r.id} onClick={() => {
                           setSelectedResident(r);
                           setSearchName(r.name);
                           setSearchUnit(r.unit);
                           setFormData({ ...formData, resident_name: '' });
-                        }} className="w-full px-6 py-4 hover:bg-brand-50/50 text-left border-b border-slate-50 last:border-none group">
+                        }} className="w-full px-6 py-4 hover:bg-slate-50 text-left border-b border-slate-100 last:border-none group">
                           <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{r.name}</p>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rua {r.tower || '---'}, {r.unit}</p>
                         </button>
@@ -1238,10 +1240,10 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                       setSelectedResident(null);
                       setIsUnidentified(false);
                     }}
-                    className="h-16 rounded-2xl bg-white/50 border-slate-100 focus:border-brand-500 transition-all font-bold text-slate-700"
+                    className="h-16 rounded-2xl bg-slate-50 border-slate-200 focus:border-brand-500 transition-all font-bold text-slate-900 placeholder-slate-400"
                   />
                   {searchUnit && !selectedResident && (
-                    <div className="absolute top-full left-0 right-0 bg-white/90 backdrop-blur-xl border border-white/20 shadow-2xl rounded-3xl mt-2 max-h-48 overflow-y-auto z-50 animate-in slide-in-from-top-2">
+                    <div className="absolute top-full left-0 right-0 bg-white border border-slate-100 shadow-2xl rounded-3xl mt-2 max-h-48 overflow-y-auto z-50 animate-in slide-in-from-top-2">
                       {residentsList.filter(r =>
                         (r.unit || '').toLowerCase().includes(searchUnit.toLowerCase()) ||
                         (r.tower || '').toLowerCase().includes(searchUnit.toLowerCase())
@@ -1250,7 +1252,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                           setSelectedResident(r);
                           setSearchName(r.name);
                           setSearchUnit(r.unit);
-                        }} className="w-full px-6 py-4 hover:bg-brand-50/50 text-left border-b border-slate-50 last:border-none group">
+                        }} className="w-full px-6 py-4 hover:bg-slate-50 text-left border-b border-slate-100 last:border-none group">
                           <p className="font-bold text-slate-900 group-hover:text-brand-600 transition-colors">{r.name}</p>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Rua {r.tower || '---'}, {r.unit}</p>
                         </button>
@@ -1268,12 +1270,12 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                       setSearchUnit('');
                       setFormData({ ...formData, resident_name: 'Não Identificado' });
                     }}
-                    className={`flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${isUnidentified ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 border border-slate-100 hover:border-slate-200'}`}
+                    className={`flex-1 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all shadow-sm ${isUnidentified ? 'bg-slate-900 text-white' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}
                   >
                     Não Identificado
                   </button>
                   {selectedResident && (
-                    <div className="flex-1 h-14 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl flex items-center justify-center gap-3 animate-pulse">
+                    <div className="flex-1 h-14 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center justify-center gap-3 animate-pulse">
                       <div className="w-2.5 h-2.5 bg-emerald-500 rounded-full shadow-[0_0_12px_rgba(16,185,129,0.5)]"></div>
                       <span className="text-[10px] font-black text-emerald-600 uppercase tracking-widest">Morador Identificado</span>
                     </div>
@@ -1288,7 +1290,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                     placeholder="Ex: Caixa Amazon, Encomenda iFood"
                     value={formData.desc}
                     onChange={e => setFormData({ ...formData, desc: e.target.value })}
-                    className="h-16 rounded-2xl bg-white/50 border-slate-100 focus:border-brand-500 transition-all font-bold text-slate-700"
+                    className="h-16 rounded-2xl bg-slate-50 border-slate-200 focus:border-brand-500 transition-all font-bold text-slate-900 placeholder-slate-400"
                   />
                 </div>
               </div>
@@ -1312,16 +1314,16 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
         {/* QR LINKAGE MODAL */}
         {isLinkingQR && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-950/60 backdrop-blur-2xl animate-in fade-in duration-300">
-            <div className="w-full max-w-sm bg-white/90 backdrop-blur-md rounded-[48px] overflow-hidden relative p-10 border border-white/20 shadow-2xl scale-in-center">
+            <div className="w-full max-w-sm bg-slate-900/90 backdrop-blur-md rounded-[48px] overflow-hidden relative p-10 border border-white/20 shadow-2xl scale-in-center">
               <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-brand-500/10 text-brand-600 rounded-3xl flex items-center justify-center mx-auto mb-4 animate-bounce duration-[2000ms]">
+                <div className="w-16 h-16 bg-brand-500/10 text-brand-500 rounded-3xl flex items-center justify-center mx-auto mb-4 animate-bounce duration-[2000ms] border border-brand-500/20">
                   <QrCode size={32} />
                 </div>
-                <h3 className="text-2xl font-black italic text-slate-900 tracking-tight uppercase">Bipe agora</h3>
+                <h3 className="text-2xl font-black italic text-white tracking-tight uppercase">Bipe agora</h3>
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2 px-4 leading-relaxed">Aponte a câmera para o QR Code da etiqueta afixada na encomenda</p>
               </div>
 
-              <div className="rounded-[40px] overflow-hidden border-8 border-white shadow-inner aspect-square relative bg-slate-100 group">
+              <div className="rounded-[40px] overflow-hidden border-8 border-white/10 shadow-inner aspect-square relative bg-slate-900 group">
                 <Scanner onScan={(r) => r[0] && handleRegister(r[0].rawValue)} />
                 <div className="absolute inset-0 border-[60px] border-black/30 pointer-events-none transition-all group-hover:border-black/20"></div>
                 <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
@@ -1345,7 +1347,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
               <button
                 onClick={() => setIsLinkingQR(false)}
-                className="w-full mt-8 py-5 bg-slate-100 hover:bg-slate-200 text-slate-500 rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-sm transition-all active:scale-95"
+                className="w-full mt-8 py-5 bg-white/5 hover:bg-white/10 text-slate-400 hover:text-white rounded-3xl font-black uppercase tracking-widest text-[10px] shadow-sm transition-all active:scale-95 border border-white/5"
               >
                 Cancelar
               </button>
@@ -1358,10 +1360,10 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           <div className="flex gap-5 overflow-x-auto pb-6 snap-x no-scrollbar -mx-2 px-2">
             {pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).length === 0 ? (
               <div className="min-w-full bg-slate-50 p-12 rounded-[40px] border border-dashed border-slate-200 text-center shadow-inner">
-                <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100 opacity-50">
-                  <Package className="text-slate-200" size={32} />
+                <div className="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-200">
+                  <Package className="text-slate-400" size={32} />
                 </div>
-                <p className="text-xs text-slate-400 font-black italic uppercase tracking-widest leading-relaxed">Pátio Limpo!<br />Nada pendente agora.</p>
+                <p className="text-xs text-slate-500 font-black italic uppercase tracking-widest leading-relaxed">Pátio Limpo!<br />Nada pendente agora.</p>
               </div>
             ) : (
               pkgList
@@ -1369,7 +1371,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
                 .slice(0, 5)
                 .map(p => (
-                  <div key={p.id} className="min-w-[80%] snap-center bg-gradient-to-br from-white to-slate-50 p-5 rounded-[32px] border border-white shadow-lg shadow-slate-200/40 relative overflow-hidden group active:scale-[0.98] transition-all">
+                  <div key={p.id} className="min-w-[80%] snap-center bg-white p-5 rounded-[32px] border border-slate-100 shadow-xl shadow-slate-200/50 relative overflow-hidden group active:scale-[0.98] transition-all">
                     {/* Premium Reflective Background */}
                     <div className={`absolute top-0 right-0 w-32 h-32 ${p.status === 'awaiting_confirmation' ? 'bg-emerald-500/10' : 'bg-amber-500/10'} rounded-bl-[80px] blur-2xl group-hover:scale-125 transition-transform duration-700`} />
 
@@ -1377,13 +1379,13 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                       {p.status === 'awaiting_confirmation' && (
                         <Badge className="bg-emerald-500 text-white border-0 shadow-lg shadow-emerald-500/20 text-[8px] px-3 py-1 font-black animate-pulse">EM HANDSHAKE</Badge>
                       )}
-                      <Badge className={`${p.status === 'awaiting_confirmation' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'} text-[8px] px-3 py-1 font-black`}>
+                      <Badge className={`${p.status === 'awaiting_confirmation' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} text-[8px] px-3 py-1 font-black shaodw-sm border-0`}>
                         {p.status === 'awaiting_confirmation' ? 'CONFIRMAÇÃO' : 'PENDENTE'}
                       </Badge>
                     </div>
 
                     <div className="flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-[20px] ${p.status === 'awaiting_confirmation' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} flex items-center justify-center shadow-inner relative shrink-0`}>
+                      <div className={`w-12 h-12 rounded-[20px] ${p.status === 'awaiting_confirmation' ? 'bg-emerald-50 text-emerald-600' : 'bg-amber-50 text-amber-600'} flex items-center justify-center shadow-sm relative shrink-0 border border-slate-100`}>
                         <Package size={24} />
                       </div>
                       <div className="flex-1 space-y-2 pt-1 min-w-0">
@@ -1392,7 +1394,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                         </h4>
                         <div className="flex flex-col gap-1">
                           <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest flex items-center gap-1">
-                            <User size={10} className="text-slate-300" /> {p.resident_name || 'Desconhecido'}
+                            <User size={10} className="text-slate-400" /> {p.resident_name || 'Desconhecido'}
                           </p>
                           <p className="text-[10px] text-slate-500 font-black uppercase tracking-tighter truncate leading-none">
                             {p.description || 'Sem descrição'}
@@ -1403,16 +1405,16 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
 
                     <div className="mt-4 flex items-center justify-between border-t border-slate-100 pt-3">
                       <div className="flex gap-2">
-                        <button onClick={() => startEdit(p)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-100 hover:bg-brand-50 transition-all shadow-sm active:scale-90">
+                        <button onClick={() => startEdit(p)} className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-all shadow-sm active:scale-90">
                           <Edit3 size={18} />
                         </button>
-                        <button onClick={() => setGeneratedQR(p.qr_code)} className="w-10 h-10 bg-white border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-100 hover:bg-brand-50 transition-all shadow-sm active:scale-90">
+                        <button onClick={() => setGeneratedQR(p.qr_code)} className="w-10 h-10 bg-slate-50 border border-slate-100 rounded-xl flex items-center justify-center text-slate-400 hover:text-brand-600 hover:border-brand-200 hover:bg-brand-50 transition-all shadow-sm active:scale-90">
                           <QrCode size={18} />
                         </button>
                       </div>
                       <button onClick={() => {
                         // Action to deliver or show details
-                      }} className="text-[10px] font-black text-slate-900 uppercase tracking-widest flex items-center gap-2 group-hover:translate-x-1 transition-transform">
+                      }} className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 group-hover:text-brand-600 transition-colors">
                         Opções <ChevronRight size={14} />
                       </button>
                     </div>
@@ -1422,12 +1424,12 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
           </div>
         </div>
 
-        <div className="space-y-4 pt-4 border-t border-slate-100 animate-in slide-in-from-bottom-4 duration-700">
+        <div className="space-y-4 pt-4 border-t border-slate-200 animate-in slide-in-from-bottom-4 duration-700">
           <SectionHeader title="Logística Finalizada" actionLabel="Últimos 7 dias" />
           <div className="space-y-3">
             {pkgList.filter(p => p.status === 'delivered').length === 0 ? (
-              <div className="bg-slate-50/50 p-10 rounded-[40px] border border-slate-100 text-center shadow-inner">
-                <p className="text-[10px] text-slate-300 font-black uppercase tracking-widest leading-relaxed">Nenhuma movimentação<br />registrada recentemente</p>
+              <div className="bg-slate-50 p-10 rounded-[40px] border border-slate-200 text-center shadow-inner">
+                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest leading-relaxed">Nenhuma movimentação<br />registrada recentemente</p>
               </div>
             ) : (
               pkgList
@@ -1435,9 +1437,9 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                 .sort((a, b) => new Date(b.picked_up_at || 0).getTime() - new Date(a.picked_up_at || 0).getTime())
                 .slice(0, 5) // Show only latest 5 on dashboard
                 .map(p => (
-                  <div key={p.id} className="bg-white p-4 rounded-[24px] border border-slate-50 shadow-sm flex items-center gap-3 group hover:shadow-md transition-all active:scale-[0.99] relative overflow-hidden">
+                  <div key={p.id} className="bg-white p-4 rounded-[24px] border border-slate-100 shadow-sm flex items-center gap-3 group hover:bg-slate-50 transition-all active:scale-[0.99] relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-12 h-12 bg-emerald-500/5 rounded-bl-full"></div>
-                    <div className="w-11 h-11 rounded-[16px] bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-inner shrink-0 group-hover:rotate-6 transition-transform">
+                    <div className="w-11 h-11 rounded-[16px] bg-emerald-50 text-emerald-500 flex items-center justify-center shadow-sm shrink-0 group-hover:rotate-6 transition-transform border border-emerald-100">
                       <CheckCircle2 size={22} className="stroke-[3]" />
                     </div>
                     <div className="flex-1 min-w-0">
@@ -1446,7 +1448,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                           {p.unit}, {p.profiles?.tower || '---'}
                         </h4>
                         <div className="flex items-center gap-2">
-                          <span className="text-[8px] font-black text-emerald-500 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 uppercase shrink-0">
+                          <span className="text-[8px] font-black text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md border border-emerald-100 uppercase shrink-0">
                             ENTREGUE
                           </span>
                         </div>
@@ -1456,12 +1458,12 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                         {p.description || 'Encomenda'}
                       </p>
 
-                      <div className="flex items-center justify-between mt-3 text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-slate-50 pt-2">
+                      <div className="flex items-center justify-between mt-3 text-[9px] font-black uppercase tracking-widest text-slate-400 border-t border-slate-100 pt-2">
                         <div className="flex items-center gap-2">
                           <span className="flex items-center gap-1 opacity-70"><Calendar size={9} /> {new Date(p.picked_up_at).toLocaleDateString('pt-BR')}</span>
                         </div>
-                        <div className="flex items-center gap-1 text-slate-500 bg-slate-50 px-2 py-0.5 rounded-md">
-                          <User size={9} className="text-brand-500" />
+                        <div className="flex items-center gap-1 text-slate-400 bg-slate-50 px-2 py-0.5 rounded-md">
+                          <User size={9} className="text-slate-400" />
                           <span className="truncate max-w-[70px]">{p.profiles?.name || 'Morador'}</span>
                         </div>
                       </div>
@@ -1472,23 +1474,22 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
             )}
           </div>
         </div>
-
       </div>
 
       {/* MANAGE ALL PACKAGES MODAL/VIEW - PREMIUM OVERHAUL */}
       {isViewingAll && (
-        <div className="fixed inset-0 z-50 bg-[#f8fafc] overflow-y-auto animate-in slide-in-from-bottom-6 duration-500">
+        <div className="fixed inset-0 z-50 bg-slate-50 overflow-y-auto animate-in slide-in-from-bottom-6 duration-500">
           {/* Header Area with Glass Background */}
-          <div className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-100 p-6 flex items-center gap-6">
+          <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-xl border-b border-slate-200 p-6 flex items-center gap-6">
             <button
               onClick={() => setIsViewingAll(false)}
-              className="w-12 h-12 bg-white border border-slate-100 rounded-2xl flex items-center justify-center shadow-sm active:scale-90 transition-all"
+              className="w-12 h-12 bg-white border border-slate-200 rounded-2xl flex items-center justify-center shadow-sm active:scale-90 transition-all hover:bg-slate-100 text-slate-500"
             >
               <ArrowLeft size={20} className="text-slate-900" />
             </button>
             <div className="flex-1">
               <h1 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Gestão de Logística</h1>
-              <p className="text-[10px] font-bold text-brand-500 uppercase tracking-[0.2em]">Fluxo Completo de Encomendas</p>
+              <p className="text-[10px] font-bold text-brand-600 uppercase tracking-[0.2em]">Fluxo Completo de Encomendas</p>
             </div>
           </div>
 
@@ -1497,25 +1498,25 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
             <div className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative group md:col-span-2">
-                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
+                  <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-500 transition-colors" size={20} />
                   <input
                     placeholder="Buscar morador, unidade..."
-                    className="w-full h-16 pl-14 bg-white border border-slate-100 rounded-[28px] font-bold text-slate-700 placeholder:text-slate-300 shadow-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all placeholder:font-medium placeholder:italic"
+                    className="w-full h-16 pl-14 bg-white/5 border border-white/10 rounded-[28px] font-bold text-white placeholder:text-slate-500 shadow-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all placeholder:font-medium placeholder:italic"
                     onChange={(e) => setSearchName(e.target.value)}
                   />
                 </div>
                 <div className="relative group">
-                  <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-300 group-focus-within:text-brand-500 transition-colors" size={20} />
+                  <Calendar className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-brand-500 transition-colors" size={20} />
                   <input
                     type="date"
-                    className="w-full h-16 pl-14 bg-white border border-slate-100 rounded-[28px] font-black text-slate-700 uppercase tracking-tighter shadow-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all"
+                    className="w-full h-16 pl-14 bg-white/5 border border-white/10 rounded-[28px] font-black text-white uppercase tracking-tighter shadow-sm focus:ring-4 focus:ring-brand-500/10 outline-none transition-all"
                     onChange={(e) => setSearchDate(e.target.value)}
                   />
                 </div>
               </div>
 
               {/* Status Toggles */}
-              <div className="flex gap-2 bg-slate-100/50 p-1.5 rounded-[32px] border border-slate-100/80">
+              <div className="flex gap-2 bg-white/5 p-1.5 rounded-[32px] border border-white/10">
                 {[
                   { id: 'all', label: 'TUDO' },
                   { id: 'pending', label: 'A ENTREGAR' },
@@ -1525,8 +1526,8 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                     key={s.id}
                     onClick={() => setSearchStatus(s.id as any)}
                     className={`flex-1 py-3.5 rounded-[24px] text-[10px] font-black uppercase tracking-widest transition-all ${searchStatus === s.id
-                      ? 'bg-white text-brand-600 shadow-sm'
-                      : 'text-slate-400 hover:text-slate-600'
+                      ? 'bg-slate-900 text-brand-400 shadow-lg border border-white/5'
+                      : 'text-slate-500 hover:text-white'
                       }`}
                   >
                     {s.label}
@@ -1536,15 +1537,15 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
             </div>
 
             <div className="space-y-4">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.3em] px-2 flex items-center gap-3">
-                <span className="w-8 h-[1px] bg-slate-100"></span>
+              <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] px-2 flex items-center gap-3">
+                <span className="w-8 h-[1px] bg-white/10"></span>
                 Resultados Localizados
               </p>
 
               <div className="space-y-3">
                 {pkgList.length === 0 ? (
-                  <div className="bg-white p-20 rounded-[48px] border border-slate-50 text-center shadow-sm">
-                    <p className="text-sm text-slate-300 font-black italic uppercase tracking-widest">Nenhum registro</p>
+                  <div className="bg-white/5 p-20 rounded-[48px] border border-white/10 text-center shadow-sm">
+                    <p className="text-sm text-slate-500 font-black italic uppercase tracking-widest">Nenhum registro</p>
                   </div>
                 ) : (
                   pkgList
@@ -1562,36 +1563,36 @@ export const AdminPackages: React.FC<{ onBack: () => void; packages?: any[]; set
                       return matchesName && matchesStatus && matchesDate;
                     })
                     .map(p => (
-                      <div key={p.id} className="bg-white p-4 rounded-[28px] border border-slate-50 shadow-sm hover:shadow-md transition-all group relative overflow-hidden flex items-center gap-4">
+                      <div key={p.id} className="bg-white/5 p-4 rounded-[28px] border border-white/10 shadow-sm hover:bg-white/10 transition-all group relative overflow-hidden flex items-center gap-4 backdrop-blur-sm">
                         <div className={`absolute top-0 left-0 w-1.5 h-full ${p.status === 'delivered' ? 'bg-emerald-500' :
                           p.status === 'awaiting_confirmation' ? 'bg-brand-500' : 'bg-amber-400'
                           }`} />
 
-                        <div className={`w-12 h-12 rounded-[20px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform ${p.status === 'delivered' ? 'bg-emerald-50 text-emerald-500' : 'bg-slate-50 text-slate-400'
+                        <div className={`w-12 h-12 rounded-[20px] flex items-center justify-center shrink-0 shadow-inner group-hover:scale-105 transition-transform ${p.status === 'delivered' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-white/10 text-slate-400'
                           }`}>
                           {p.status === 'delivered' ? <CheckCircle2 size={24} /> : <Package size={24} />}
                         </div>
 
                         <div className="flex-1 min-w-0">
                           <div className="flex justify-between items-start mb-0.5">
-                            <h4 className="font-black text-slate-900 text-sm italic uppercase tracking-tighter leading-none truncate pr-2">
+                            <h4 className="font-black text-white text-sm italic uppercase tracking-tighter leading-none truncate pr-2">
                               {p.unit}, {p.profiles?.tower || '---'}
                             </h4>
-                            <Badge className={`text-[8px] font-black uppercase tracking-widest py-0.5 px-2 ${p.status === 'delivered' ? 'bg-emerald-500 text-white' :
-                              p.status === 'awaiting_confirmation' ? 'bg-brand-500 text-white' : 'bg-amber-100 text-amber-600'
+                            <Badge className={`text-[8px] font-black uppercase tracking-widest py-0.5 px-2 border-none ${p.status === 'delivered' ? 'bg-emerald-500 text-white' :
+                              p.status === 'awaiting_confirmation' ? 'bg-brand-500 text-white' : 'bg-amber-500/20 text-amber-500'
                               }`}>
                               {p.status === 'delivered' ? 'ENTREGUE' : p.status === 'awaiting_confirmation' ? 'HANDSHAKE' : 'PENDENTE'}
                             </Badge>
                           </div>
                           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 truncate">{p.resident_name || 'Desconhecido'}</p>
-                          <div className="flex items-center gap-3 text-[9px] font-black text-slate-300 uppercase tracking-tighter">
+                          <div className="flex items-center gap-3 text-[9px] font-black text-slate-500 uppercase tracking-tighter">
                             <span className="flex items-center gap-1"><Calendar size={9} /> {new Date(p.created_at).toLocaleDateString()}</span>
                             {p.status === 'delivered' && <span className="text-emerald-500 font-black">RETIRADO EM {new Date(p.picked_up_at).toLocaleDateString()}</span>}
                           </div>
                         </div>
 
                         <div className="flex gap-2">
-                          <button onClick={() => startEdit(p)} className="w-10 h-10 bg-slate-50 hover:bg-brand-50 text-slate-400 hover:text-brand-600 rounded-xl flex items-center justify-center transition-all">
+                          <button onClick={() => startEdit(p)} className="w-10 h-10 bg-white/5 hover:bg-brand-500/20 text-slate-400 hover:text-brand-400 rounded-xl flex items-center justify-center transition-all border border-white/5">
                             <Edit3 size={16} />
                           </button>
                         </div>
@@ -1612,25 +1613,26 @@ export const AdminConciergeChat: React.FC<{ onBack: () => void }> = ({ onBack })
   const [messages, setMessages] = useState([{ id: 1, sender: 'resident', text: 'Olá, gostaria de confirmar se meu pacote chegou.', time: '14:20' }]);
   const [inputText, setInputText] = useState('');
   return (
-    <div className="min-h-screen bg-[#f8fafc] flex flex-col pb-24">
+    <div className="min-h-screen bg-slate-50 flex flex-col pb-24">
       <AdminHeader title="Alex Ferreira" onBack={onBack} />
       <div className="flex-1 overflow-y-auto p-6 space-y-6 flex flex-col no-scrollbar">
         {messages.map((msg) => (
           <div key={msg.id} className={`flex flex-col gap-1 max-w-[85%] ${msg.sender === 'admin' ? 'ml-auto items-end' : 'items-start'}`}>
-            <div className={`p-5 rounded-[28px] text-sm font-medium tracking-tight shadow-sm leading-relaxed ${msg.sender === 'admin' ? 'bg-[#050b18] text-white rounded-tr-none italic' : 'bg-white text-slate-800 border border-slate-50 rounded-tl-none'}`}>{msg.text}</div>
-            <span className="text-[9px] font-black text-slate-300 uppercase px-2">{msg.time}</span>
+            <div className={`p-5 rounded-[28px] text-sm font-medium tracking-tight shadow-sm leading-relaxed ${msg.sender === 'admin' ? 'bg-slate-900 text-white rounded-tr-none italic border border-white/10' : 'bg-white/10 text-white border border-white/5 rounded-tl-none'}`}>{msg.text}</div>
+            <span className="text-[9px] font-black text-slate-500 uppercase px-2">{msg.time}</span>
           </div>
         ))}
       </div>
-      <div className="p-6 bg-white border-t border-slate-50 flex items-center gap-3">
-        <input placeholder="Resposta..." value={inputText} onChange={(e) => setInputText(e.target.value)} className="flex-1 h-14 bg-slate-50 rounded-2xl px-6 font-bold italic" />
-        <button onClick={() => { if (inputText) { setMessages([...messages, { id: Date.now(), sender: 'admin', text: inputText, time: 'Agora' }]); setInputText(''); } }} className="w-14 h-14 bg-[#050b18] text-white rounded-full flex items-center justify-center"><Send /></button>
+      <div className="p-6 bg-slate-50 border-t border-slate-200 flex items-center gap-3">
+        <input placeholder="Resposta..." value={inputText} onChange={(e) => setInputText(e.target.value)} className="flex-1 h-14 bg-white/5 rounded-2xl px-6 font-bold italic text-white placeholder-slate-500 border border-white/5 focus:border-brand-500 outline-none transition-all" />
+        <button onClick={() => { if (inputText) { setMessages([...messages, { id: Date.now(), sender: 'admin', text: inputText, time: 'Agora' }]); setInputText(''); } }} className="w-14 h-14 bg-slate-100 text-slate-900 rounded-full flex items-center justify-center"><Send /></button>
       </div>
     </div>
   );
 };
 
 
+// --- INCIDENTES ---
 export const AdminIncidents: React.FC<{ onBack: () => void; serviceRequests?: any[]; onUpdateRequest?: (id: number, status: string) => void }> = ({ onBack, serviceRequests = [], onUpdateRequest }) => {
   const [filter, setFilter] = useState('Todos');
   const filtered = filter === 'Todos' ? serviceRequests : serviceRequests.filter(req => req.status === filter);
@@ -1641,15 +1643,15 @@ export const AdminIncidents: React.FC<{ onBack: () => void; serviceRequests?: an
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="OCORRÊNCIAS" onBack={onBack} />
       <div className="p-6 space-y-8">
         <div className="grid grid-cols-2 gap-4">
-          <div className="bg-rose-50 p-6 rounded-[32px] border border-rose-100">
+          <div className="bg-rose-500/10 p-6 rounded-[32px] border border-rose-500/20 shadow-lg shadow-rose-900/20">
             <h4 className="text-4xl font-black text-rose-500 italic tracking-tighter">{stats.open}</h4>
             <p className="text-[10px] font-black text-rose-400 uppercase tracking-widest mt-1">Status Aberto</p>
           </div>
-          <div className="bg-blue-50 p-6 rounded-[32px] border border-blue-100">
+          <div className="bg-blue-500/10 p-6 rounded-[32px] border border-blue-500/20 shadow-lg shadow-blue-900/20">
             <h4 className="text-4xl font-black text-blue-500 italic tracking-tighter">{stats.progress}</h4>
             <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest mt-1">Em Análise</p>
           </div>
@@ -1657,30 +1659,30 @@ export const AdminIncidents: React.FC<{ onBack: () => void; serviceRequests?: an
 
         <div className="flex gap-2 overflow-x-auto pb-2 no-scrollbar">
           {['Todos', 'Aberto', 'Em Análise', 'Concluído'].map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`px-6 py-3 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${filter === f ? 'bg-slate-900 text-white' : 'bg-white text-slate-400 border border-slate-100'}`}>
+            <button key={f} onClick={() => setFilter(f)} className={`px-6 py-3 rounded-xl font-bold text-xs whitespace-nowrap transition-all ${filter === f ? 'bg-slate-100 text-slate-950' : 'bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10'}`}>
               {f}
             </button>
           ))}
         </div>
 
         <div className="space-y-4">
-          {filtered.length === 0 ? <p className="text-center text-slate-300 font-bold italic py-8">Nenhum chamado encontrado.</p> : filtered.map((req) => (
-            <Card key={req.id} className="p-6 border-none shadow-lg rounded-[32px] bg-white space-y-4 animate-in slide-in-from-bottom-4">
+          {filtered.length === 0 ? <p className="text-center text-slate-500 font-bold italic py-8">Nenhum chamado encontrado.</p> : filtered.map((req) => (
+            <Card key={req.id} className="p-6 border-white/10 shadow-lg rounded-[32px] bg-white/5 space-y-4 animate-in slide-in-from-bottom-4 backdrop-blur-sm">
               <div className="flex justify-between items-start">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center font-bold text-slate-400 text-lg italic uppercase">{req.resident.charAt(0)}</div>
-                  <div><h5 className="font-bold text-slate-900 italic leading-none">{req.title}</h5><p className="text-[9px] font-black text-slate-300 uppercase tracking-widest mt-1">Apt {req.unit}</p></div>
+                  <div className="w-10 h-10 bg-white/10 rounded-xl flex items-center justify-center font-bold text-slate-400 text-lg italic uppercase border border-white/5">{req.resident.charAt(0)}</div>
+                  <div><h5 className="font-bold text-white italic leading-none">{req.title}</h5><p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1">Apt {req.unit}</p></div>
                 </div>
-                <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600'}>{req.status}</Badge>
+                <Badge className={`border-none ${req.status === 'Concluído' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-white/10 text-slate-400'}`}>{req.status}</Badge>
               </div>
-              <p className="text-xs text-slate-500 font-medium leading-relaxed bg-slate-50 p-4 rounded-2xl">{req.description}</p>
+              <p className="text-xs text-slate-400 font-medium leading-relaxed bg-black/20 p-4 rounded-2xl border border-white/5">{req.description}</p>
 
               {req.status !== 'Concluído' && (
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   {req.status === 'Aberto' && (
-                    <Button fullWidth onClick={() => onUpdateRequest && onUpdateRequest(req.id, 'Em Análise')} className="bg-blue-50 text-blue-600 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest">Analisar</Button>
+                    <Button fullWidth onClick={() => onUpdateRequest && onUpdateRequest(req.id, 'Em Análise')} className="bg-blue-500/10 hover:bg-blue-500/20 text-blue-400 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest border border-blue-500/20">Analisar</Button>
                   )}
-                  <Button fullWidth onClick={() => onUpdateRequest && onUpdateRequest(req.id, 'Concluído')} className="bg-emerald-50 text-emerald-600 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest col-span-2">Concluir</Button>
+                  <Button fullWidth onClick={() => onUpdateRequest && onUpdateRequest(req.id, 'Concluído')} className="bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 h-10 rounded-xl text-[10px] font-black uppercase tracking-widest col-span-2 border border-emerald-500/20">Concluir</Button>
                 </div>
               )}
             </Card>
@@ -1690,7 +1692,7 @@ export const AdminIncidents: React.FC<{ onBack: () => void; serviceRequests?: an
     </div>
   );
 };
-export const AdminGarage: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-[#fcfcfd]"><AdminHeader title="GARAGEM" onBack={onBack} /><div className="p-8 text-center text-slate-400 text-xs font-black uppercase tracking-widest py-32">Mapa de vagas em manutenção.</div></div>;
+export const AdminGarage: React.FC<{ onBack: () => void }> = ({ onBack }) => <div className="min-h-screen bg-slate-50"><AdminHeader title="GARAGEM" onBack={onBack} /><div className="p-8 text-center text-slate-500 text-xs font-black uppercase tracking-widest py-32">Mapa de vagas em manutenção.</div></div>;
 
 // --- CATEGORIAS (COM SUB-CATEGORIAS) ---
 export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; onRefresh: () => void }> = ({ onBack, categories, onRefresh }) => {
@@ -1791,84 +1793,84 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="CATEGORIAS" onBack={onBack} />
       <div className="p-6 space-y-6">
         {!isAdding && (
-          <Button fullWidth onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: 'product', parent_id: '' }); }} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2">
+          <Button fullWidth onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: 'product', parent_id: '' }); }} className="h-16 rounded-[24px] bg-slate-100 text-slate-950 flex items-center gap-2 hover:bg-white transition-colors">
             <Plus size={20} /> Nova Categoria
           </Button>
         )}
 
         {isAdding && (
-          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
-            <h3 className="text-lg font-black italic text-slate-900">{editingId ? 'Editar Categoria' : 'Nova Categoria'}</h3>
+          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-white/20 shadow-2xl rounded-[40px] bg-slate-900/90 backdrop-blur-md">
+            <h3 className="text-lg font-black italic text-white">{editingId ? 'Editar Categoria' : 'Nova Categoria'}</h3>
 
             {/* PREVIEW/UPLOAD */}
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="h-32 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-400 overflow-hidden relative"
+              className="h-32 bg-white/5 rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-500/50 overflow-hidden relative transition-all"
             >
               {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> :
-                form.image ? <img src={form.image} className="w-full h-full object-cover opacity-50" /> : <ImageIcon className="text-slate-300" size={32} />}
+                form.image ? <img src={form.image} className="w-full h-full object-cover opacity-50" /> : <ImageIcon className="text-slate-500" size={32} />}
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => { if (e.target.files?.[0]) setImageFile(e.target.files[0]); }} />
             </div>
 
-            <Input placeholder="Nome (Ex: Manutenção ou Piscina)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14" />
+            <Input placeholder="Nome (Ex: Manutenção ou Piscina)" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14 bg-white/5 border-white/10 text-white placeholder-slate-500 focus:border-brand-500" />
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Tipo</label>
-                <select value={form.type} disabled={!!form.parent_id} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full h-14 bg-white rounded-3xl px-4 font-bold border border-slate-100 text-xs text-slate-700 outline-none">
-                  <option value="product">Produto</option>
-                  <option value="service">Serviço</option>
+                <select value={form.type} disabled={!!form.parent_id} onChange={e => setForm({ ...form, type: e.target.value })} className="w-full h-14 bg-white/5 rounded-3xl px-4 font-bold border border-white/10 text-xs text-white outline-none focus:border-brand-500">
+                  <option value="product" className="bg-slate-900 text-white">Produto</option>
+                  <option value="service" className="bg-slate-900 text-white">Serviço</option>
                 </select>
               </div>
 
               <div className="space-y-2">
                 <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Categoria Pai (Opcional)</label>
-                <select value={form.parent_id} onChange={e => setForm({ ...form, parent_id: e.target.value })} className="w-full h-14 bg-white rounded-3xl px-4 font-bold border border-slate-100 text-xs text-slate-600 outline-none">
-                  <option value="">Nenhuma (Raiz)</option>
-                  {parentCategories.map(p => <option key={p.id} value={p.id}>{p.name} ({p.type === 'service' ? 'Serviço' : 'Produto'})</option>)}
+                <select value={form.parent_id} onChange={e => setForm({ ...form, parent_id: e.target.value })} className="w-full h-14 bg-white/5 rounded-3xl px-4 font-bold border border-white/10 text-xs text-white outline-none focus:border-brand-500">
+                  <option value="" className="bg-slate-900 text-white">Nenhuma (Raiz)</option>
+                  {parentCategories.map(p => <option key={p.id} value={p.id} className="bg-slate-900 text-white">{p.name} ({p.type === 'service' ? 'Serviço' : 'Produto'})</option>)}
                 </select>
               </div>
             </div>
 
             <div className="flex gap-3">
-              <Button fullWidth variant="secondary" onClick={() => { setIsAdding(false); setEditingId(null); }}>Cancelar</Button>
-              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950 text-[10px] uppercase font-black">{uploading ? '...' : (editingId ? 'Atualizar' : 'Salvar')}</Button>
+              <Button fullWidth variant="secondary" onClick={() => { setIsAdding(false); setEditingId(null); }} className="bg-white/5 hover:bg-white/10 text-white border-white/5">Cancelar</Button>
+              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-brand-600 hover:bg-brand-700 text-[10px] uppercase font-black text-white">{uploading ? '...' : (editingId ? 'Atualizar' : 'Salvar')}</Button>
             </div>
           </Card>
         )}
 
         <div className="space-y-6">
           {parentCategories.map(parent => (
-            <div key={parent.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group overflow-hidden">
+            <div key={parent.id} className="bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-sm relative group overflow-hidden backdrop-blur-sm">
               {/* PARENT HEADER */}
               <div className="flex items-center gap-4 mb-4">
-                <div className="w-16 h-16 bg-slate-100 rounded-2xl overflow-hidden cursor-pointer" onClick={() => handleEdit(parent)}>
-                  <img src={parent.image_url || `https://ui-avatars.com/api/?name=${parent.name}&background=random`} className="w-full h-full object-cover" />
+                <div className="w-16 h-16 bg-white/10 rounded-2xl overflow-hidden cursor-pointer border border-white/5" onClick={() => handleEdit(parent)}>
+                  <img src={parent.image_url || `https://ui-avatars.com/api/?name=${parent.name}&background=random`} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
                 </div>
                 <div className="cursor-pointer" onClick={() => handleEdit(parent)}>
-                  <h4 className="font-black text-slate-900 text-xl italic">{parent.name}</h4>
+                  <h4 className="font-black text-white text-xl italic">{parent.name}</h4>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{parent.type === 'service' ? 'Serviços' : 'Marketplace'}</p>
                 </div>
                 <div className="ml-auto flex gap-2">
-                  <button onClick={() => handleEdit(parent)} className="w-10 h-10 bg-slate-50 text-slate-500 rounded-xl flex items-center justify-center active:scale-95"><Settings size={18} /></button>
-                  <button onClick={() => handleDelete(parent.id)} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center active:scale-95"><Trash2 size={18} /></button>
+                  <button onClick={() => handleEdit(parent)} className="w-10 h-10 bg-white/5 text-slate-400 rounded-xl flex items-center justify-center active:scale-95 hover:bg-white/10 hover:text-white transition-all border border-white/5"><Settings size={18} /></button>
+                  <button onClick={() => handleDelete(parent.id)} className="w-10 h-10 bg-rose-500/10 text-rose-500 rounded-xl flex items-center justify-center active:scale-95 hover:bg-rose-500/20 transition-all border border-rose-500/10"><Trash2 size={18} /></button>
                 </div>
               </div>
 
               {/* SUB CATEGORIES CHIPS */}
               <div className="flex flex-wrap gap-2">
                 {getChildren(parent.id).map(child => (
-                  <div key={child.id} className="pl-3 pr-2 py-1.5 bg-slate-50 border border-slate-100 rounded-xl flex items-center gap-2 group/child">
-                    <span className="text-xs font-bold text-slate-600 cursor-pointer hover:text-brand-600" onClick={() => handleEdit(child)}>{child.name}</span>
-                    <button onClick={() => handleEdit(child)} className="w-5 h-5 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center opacity-0 group-hover/child:opacity-100 transition-opacity"><Settings size={10} /></button>
-                    <button onClick={() => handleDelete(child.id)} className="w-5 h-5 bg-rose-200 text-rose-600 rounded-full flex items-center justify-center opacity-50 group-hover/child:opacity-100"><X size={12} strokeWidth={3} /></button>
+                  <div key={child.id} className="pl-3 pr-2 py-1.5 bg-white/5 border border-white/10 rounded-xl flex items-center gap-2 group/child hover:bg-white/10 transition-colors">
+                    <span className="text-xs font-bold text-slate-300 cursor-pointer hover:text-brand-400 transition-colors" onClick={() => handleEdit(child)}>{child.name}</span>
+                    <button onClick={() => handleEdit(child)} className="w-5 h-5 bg-white/10 text-slate-400 rounded-full flex items-center justify-center opacity-0 group-hover/child:opacity-100 transition-opacity hover:bg-brand-500 hover:text-white"><Settings size={10} /></button>
+                    <button onClick={() => handleDelete(child.id)} className="w-5 h-5 bg-rose-500/20 text-rose-500 rounded-full flex items-center justify-center opacity-50 group-hover/child:opacity-100 hover:bg-rose-500 hover:text-white transition-all"><X size={12} strokeWidth={3} /></button>
                   </div>
                 ))}
-                <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: parent.type, parent_id: parent.id }); }} className="px-4 py-1.5 bg-brand-50 text-brand-600 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 border border-brand-100 hover:bg-brand-100 transition-colors">
+                <button onClick={() => { setIsAdding(true); setEditingId(null); setForm({ name: '', image: '', type: parent.type, parent_id: parent.id }); }} className="px-4 py-1.5 bg-brand-500/10 text-brand-400 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center gap-1 active:scale-95 border border-brand-500/20 hover:bg-brand-500/20 transition-colors">
                   <Plus size={12} /> Add Sub
                 </button>
               </div>
@@ -1938,41 +1940,41 @@ export const AdminProfile: React.FC<{
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fafc] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="Meu Perfil" />
 
       <div className="p-8">
-        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 mb-6 flex flex-col items-center">
+        <div className="bg-white/5 p-8 rounded-[40px] shadow-sm border border-white/10 mb-6 flex flex-col items-center backdrop-blur-sm">
           <div
-            className="w-32 h-32 rounded-[40px] border-4 border-slate-50 shadow-xl overflow-hidden mb-4 relative group cursor-pointer"
+            className="w-32 h-32 rounded-[40px] border-4 border-white/10 shadow-xl overflow-hidden mb-4 relative group cursor-pointer"
             onClick={() => fileInputRef.current?.click()}
           >
             <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
-            {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/30"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
+            {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/60"><div className="w-8 h-8 border-4 border-brand-500 border-t-transparent rounded-full animate-spin"></div></div>}
           </div>
-          <button onClick={() => fileInputRef.current?.click()} className="text-brand-600 font-bold text-xs uppercase bg-brand-50 px-4 py-2 rounded-lg active:scale-95 transition-transform" disabled={uploading}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-brand-400 font-bold text-xs uppercase bg-brand-500/10 px-4 py-2 rounded-lg active:scale-95 transition-transform hover:bg-brand-500/20" disabled={uploading}>
             {uploading ? 'Enviando...' : 'Alterar Foto'}
           </button>
           <input type="file" ref={fileInputRef} onChange={handleAvatarUpload} className="hidden" accept="image/*" />
         </div>
 
-        <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-4 mb-8">
+        <div className="bg-white/5 p-8 rounded-[40px] shadow-sm border border-white/10 space-y-4 mb-8 backdrop-blur-sm">
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium" />
+            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white focus:border-brand-500" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Telefone</label>
-            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium" />
+            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white focus:border-brand-500" />
           </div>
           <div className="space-y-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
-            <Input value={currentUser?.email} readOnly className="h-14 font-medium bg-slate-50 text-slate-400" />
+            <Input value={currentUser?.email} readOnly className="h-14 font-medium bg-white/5 text-slate-500 border-white/5" />
           </div>
         </div>
 
         <div className="space-y-4">
-          <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-slate-900 text-white font-black uppercase text-xs tracking-widest rounded-[24px]">
+          <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-white text-slate-950 font-black uppercase text-xs tracking-widest rounded-[24px] hover:bg-slate-200">
             {loading ? 'Salvando...' : 'Salvar Alterações'}
           </Button>
           <Button
@@ -1984,7 +1986,7 @@ export const AdminProfile: React.FC<{
                 window.location.href = '/';
               }
             }}
-            className="w-full border-rose-100 text-rose-500 h-16 bg-white rounded-[24px]"
+            className="w-full border-rose-500/20 text-rose-500 h-16 bg-rose-500/10 rounded-[24px] hover:bg-rose-500/20"
           >
             Sair da Conta
           </Button>
@@ -2063,52 +2065,52 @@ export const AdminBanners: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="BANNERS APP" onBack={onBack} />
       <div className="p-6 space-y-6">
 
         {!isAdding && (
-          <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2">
+          <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-100 text-slate-950 flex items-center gap-2 hover:bg-white transition-colors">
             <Plus size={20} /> Novo Banner
           </Button>
         )}
 
         {isAdding && (
-          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
-            <h3 className="text-lg font-black italic text-slate-900">Novo Banner</h3>
+          <Card className="p-8 space-y-6 animate-in slide-in-from-top-4 border-white/20 shadow-2xl rounded-[40px] bg-slate-900/95 backdrop-blur-md">
+            <h3 className="text-lg font-black italic text-white">Novo Banner</h3>
 
             <div
               onClick={() => fileInputRef.current?.click()}
-              className="h-40 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-400 overflow-hidden relative"
+              className="h-40 bg-white/5 rounded-3xl border-2 border-dashed border-white/10 flex flex-col items-center justify-center gap-2 cursor-pointer hover:border-brand-500/50 overflow-hidden relative transition-all"
             >
-              {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> : <div className="text-center"><ImageIcon className="mx-auto text-slate-300 mb-2" size={32} /><p className="text-[10px] font-bold text-slate-400 uppercase">Clique para upload</p></div>}
+              {imageFile ? <img src={URL.createObjectURL(imageFile)} className="w-full h-full object-cover" /> : <div className="text-center"><ImageIcon className="mx-auto text-slate-500 mb-2" size={32} /><p className="text-[10px] font-bold text-slate-400 uppercase">Clique para upload</p></div>}
               <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={e => { if (e.target.files?.[0]) setImageFile(e.target.files[0]); }} />
             </div>
 
-            <Input placeholder="Título (Opcional)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
-            <Input placeholder="Link (Opcional)" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} className="h-14" />
+            <Input placeholder="Título (Opcional)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14 bg-white/5 border-white/10 text-white focus:border-brand-500" />
+            <Input placeholder="Link (Opcional)" value={form.link} onChange={e => setForm({ ...form, link: e.target.value })} className="h-14 bg-white/5 border-white/10 text-white focus:border-brand-500" />
 
             <div className="flex gap-3">
-              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
-              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-slate-950 text-[10px] uppercase font-black">{uploading ? 'Enviando...' : 'Salvar'}</Button>
+              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)} className="bg-white/5 border-white/5 text-white hover:bg-white/10">Cancelar</Button>
+              <Button fullWidth onClick={handleSave} disabled={uploading} className="bg-brand-600 hover:bg-brand-700 text-[10px] uppercase font-black text-white">{uploading ? 'Enviando...' : 'Salvar'}</Button>
             </div>
           </Card>
         )}
 
         <div className="space-y-4">
-          <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Banners Ativos</h3>
-          {banners.length === 0 && <p className="text-slate-400 text-xs font-bold italic text-center py-8">Nenhum banner cadastrado.</p>}
+          <h3 className="font-bold text-white uppercase text-xs tracking-widest ml-2">Banners Ativos</h3>
+          {banners.length === 0 && <p className="text-slate-500 text-xs font-bold italic text-center py-8">Nenhum banner cadastrado.</p>}
           {banners.map(banner => (
-            <div key={banner.id} className="bg-white p-4 rounded-[32px] border border-slate-100 shadow-sm relative group overflow-hidden">
+            <div key={banner.id} className="bg-white/5 p-4 rounded-[32px] border border-white/10 shadow-sm relative group overflow-hidden backdrop-blur-sm">
               <div className="h-32 rounded-2xl overflow-hidden mb-3 relative">
-                <img src={banner.image_url} className="w-full h-full object-cover" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-4">
+                <img src={banner.image_url} className="w-full h-full object-cover opacity-80 group-hover:opacity-100 transition-opacity" />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex items-end p-4">
                   <h4 className="text-white font-bold italic">{banner.title}</h4>
                 </div>
               </div>
               <div className="flex items-center justify-between px-2">
-                <span className="text-[10px] uppercase font-black text-slate-400">{banner.active ? 'Ativo' : 'Inativo'}</span>
-                <button onClick={() => handleDelete(banner.id)} className="w-10 h-10 bg-rose-50 text-rose-500 rounded-xl flex items-center justify-center active:scale-95 hover:bg-rose-100 transition-colors">
+                <span className="text-[10px] uppercase font-black text-emerald-400">{banner.active ? 'Ativo' : 'Inativo'}</span>
+                <button onClick={() => handleDelete(banner.id)} className="w-10 h-10 bg-rose-500/10 text-rose-500 rounded-xl flex items-center justify-center active:scale-95 hover:bg-rose-500/20 transition-colors border border-rose-500/10">
                   <Trash2 size={18} />
                 </button>
               </div>
@@ -2155,7 +2157,17 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (error) {
       alert('Erro: ' + error.message);
     } else {
-      alert('Aviso publicado com sucesso!');
+      // TRIGGER BROADCAST PUSH
+      supabase.functions.invoke('push', {
+        body: {
+          title: form.title,
+          body: form.body,
+          target_role: form.targetRole, // all, resident, professional
+          icon: '/icon.png'
+        }
+      }).catch(err => console.error('Broadcast Error:', err));
+
+      alert('Aviso publicado e notificações enviadas!');
       setIsAdding(false);
       setForm({ title: '', body: '', isUrgent: false, targetRole: 'all' });
       loadNotices();
@@ -2169,19 +2181,19 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   };
 
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="Mural de Avisos" onBack={onBack} />
       <div className="p-6 space-y-6">
 
         {!isAdding && (
-          <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-950 flex items-center gap-2">
+          <Button fullWidth onClick={() => setIsAdding(true)} className="h-16 rounded-[24px] bg-slate-100 text-slate-950 flex items-center gap-2 hover:bg-white transition-colors">
             <Plus size={20} /> Novo Comunicado
           </Button>
         )}
 
         {isAdding && (
-          <Card className="p-8 space-y-4 animate-in slide-in-from-top-4 border-none shadow-2xl rounded-[40px]">
-            <h3 className="text-lg font-black italic text-slate-900">Novo Comunicado Geral</h3>
+          <Card className="p-8 space-y-4 animate-in slide-in-from-top-4 border-white/20 shadow-2xl rounded-[40px] bg-slate-900/95 backdrop-blur-md">
+            <h3 className="text-lg font-black italic text-white">Novo Comunicado Geral</h3>
 
             <div className="space-y-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Destinatários</label>
@@ -2195,8 +2207,8 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
                     key={role.id}
                     onClick={() => setForm({ ...form, targetRole: role.id })}
                     className={`flex-1 py-3 rounded-2xl text-xs font-black uppercase tracking-wider transition-all border-2 ${form.targetRole === role.id
-                      ? 'bg-slate-900 text-white border-slate-900'
-                      : 'bg-white text-slate-400 border-slate-100 hover:border-slate-200'
+                      ? 'bg-slate-100 text-slate-950 border-slate-100'
+                      : 'bg-white/5 text-slate-400 border-white/5 hover:border-white/10'
                       }`}
                   >
                     {role.label}
@@ -2209,17 +2221,17 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
               placeholder="Título do Aviso"
               value={form.title}
               onChange={e => setForm({ ...form, title: e.target.value })}
-              className="h-14 bg-slate-50 border-transparent focus:bg-white"
+              className="h-14 bg-white/5 border-transparent focus:bg-white/10 text-white placeholder-slate-500"
             />
             <textarea
               placeholder="Digite a mensagem..."
-              className="w-full h-32 bg-slate-50 border-none rounded-3xl p-5 text-sm resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-slate-700 focus:bg-white"
+              className="w-full h-32 bg-white/5 border-none rounded-3xl p-5 text-sm resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-white placeholder-slate-500 focus:bg-white/10"
               value={form.body}
               onChange={e => setForm({ ...form, body: e.target.value })}
             />
             <div className="flex gap-3 pt-2">
-              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)}>Cancelar</Button>
-              <Button fullWidth onClick={handleSend} disabled={loading} className="bg-brand-600 text-white font-black uppercase text-xs tracking-widest">
+              <Button fullWidth variant="secondary" onClick={() => setIsAdding(false)} className="bg-white/5 border-white/5 text-white hover:bg-white/10">Cancelar</Button>
+              <Button fullWidth onClick={handleSend} disabled={loading} className="bg-brand-600 hover:bg-brand-700 text-white font-black uppercase text-xs tracking-widest">
                 {loading ? 'Enviando...' : 'Publicar'}
               </Button>
             </div>
@@ -2228,18 +2240,18 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
         <div className="space-y-4">
           <h3 className="font-bold text-slate-900 uppercase text-xs tracking-widest ml-2">Histórico de Avisos</h3>
-          {notices.length === 0 && <p className="text-slate-400 text-xs font-bold italic text-center py-8">Nenhum aviso publicado.</p>}
+          {notices.length === 0 && <p className="text-slate-500 text-xs font-bold italic text-center py-8">Nenhum aviso publicado.</p>}
 
           {notices.map(notice => (
-            <div key={notice.id} className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm relative group">
+            <div key={notice.id} className="bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-sm relative group backdrop-blur-sm">
               <div className="flex justify-between items-start mb-2">
-                <h4 className="text-lg font-black italic text-slate-900">{notice.title}</h4>
-                <button onClick={() => handleDelete(notice.id)} className="text-slate-300 hover:text-rose-500 transition-colors">
+                <h4 className="text-lg font-black italic text-white">{notice.title}</h4>
+                <button onClick={() => handleDelete(notice.id)} className="text-slate-500 hover:text-rose-500 transition-colors">
                   <Trash2 size={18} />
                 </button>
               </div>
-              <p className="text-slate-600 font-medium text-sm leading-relaxed mb-4">{notice.body}</p>
-              <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-400 tracking-widest">
+              <p className="text-slate-400 font-medium text-sm leading-relaxed mb-4">{notice.body}</p>
+              <div className="flex items-center gap-2 text-[10px] font-bold uppercase text-slate-500 tracking-widest">
                 <Clock size={12} />
                 {new Date(notice.created_at).toLocaleDateString('pt-BR')} às {new Date(notice.created_at).toLocaleTimeString('pt-BR').slice(0, 5)}
               </div>
@@ -2254,14 +2266,14 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 // --- FINANCEIRO (PLACEHOLDER) ---
 export const AdminFinance: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   return (
-    <div className="min-h-screen bg-[#fcfcfd] pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <AdminHeader title="Financeiro" onBack={onBack} />
       <div className="p-10 flex flex-col items-center justify-center text-center space-y-6 opacity-60">
-        <div className="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mb-4">
-          <Wallet className="text-slate-400" size={48} />
+        <div className="w-24 h-24 bg-white/5 rounded-full flex items-center justify-center mb-4 border border-white/10">
+          <Wallet className="text-slate-500" size={48} />
         </div>
-        <h3 className="text-2xl font-black italic text-slate-900">Em Breve</h3>
-        <p className="text-slate-500 font-medium max-w-xs mx-auto">
+        <h3 className="text-2xl font-black italic text-white">Em Breve</h3>
+        <p className="text-slate-400 font-medium max-w-xs mx-auto">
           O módulo financeiro administrativo está sendo preparado com relatórios avançados e gestão de cobranças.
         </p>
       </div>

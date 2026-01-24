@@ -339,8 +339,8 @@ const App: React.FC = () => {
         // Service Requests
         fetchTable('service_requests', supabase.from('service_requests').select('*, resident:resident_id(name, phone, unit, tower), provider:provider_id(name, phone)').order('created_at', { ascending: false })),
 
-        // Professional Services
-        fetchTable('professional_services', supabase.from('professional_services').select('*, profiles:provider_id(name, phone, avatar, specialties)').eq('active', true)),
+        // Professional Services (FETCH RAW, JOIN MANUALLY)
+        fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
 
         fetchTable('categories', supabase.from('categories').select('*').order('name')),
 
@@ -386,14 +386,32 @@ const App: React.FC = () => {
         setActiveServices(requests.filter((r: any) => r.status === 'accepted'));
       }
 
+      // --- MANUAL MAP FOR PROFESSIONAL SERVICES ---
+      // 1. Collect IDs
+      const proIds = new Set<string>();
+      if (pros) pros.forEach((p: any) => { if (p.provider_id) proIds.add(p.provider_id); });
+
+      // 2. Fetch Profiles
+      let proMap: Record<string, any> = {};
+      if (proIds.size > 0) {
+        const { data: profilesData } = await supabase.from('profiles').select('id, name, phone, avatar, specialties').in('id', Array.from(proIds));
+        if (profilesData) {
+          profilesData.forEach(p => { proMap[p.id] = p; });
+        }
+      }
+
+      // 3. Map Data
       if (pros) {
-        setProfessionalServices(pros.map((p: any) => ({
-          ...p,
-          providerName: p.profiles?.name || 'Prestador',
-          providerPhone: p.profiles?.phone || '',
-          providerAvatar: p.profiles?.avatar,
-          specialties: p.profiles?.specialties
-        })));
+        setProfessionalServices(pros.map((p: any) => {
+          const profile = proMap[p.provider_id];
+          return {
+            ...p,
+            providerName: profile?.name || 'Prestador',
+            providerPhone: profile?.phone || '',
+            providerAvatar: profile?.avatar,
+            specialties: profile?.specialties
+          };
+        }));
       }
 
       if (onSite) setOnSitePros(onSite);
@@ -559,6 +577,18 @@ const App: React.FC = () => {
     }]);
     if (!error) {
       alert('Demanda publicada no Mural! Profissionais serão notificados.');
+
+      // TRIGGER NOTIFICATION
+      // Modelo: "Novo pedido de [Categoria]: [Nome] busca..."
+      supabase.functions.invoke('push', {
+        body: {
+          title: `Nova Demanda: ${category}`,
+          body: `${currentUser?.name || 'Um morador'} busca profissional: ${description.substring(0, 60)}${description.length > 60 ? '...' : ''}`,
+          target_role: 'professional',
+          icon: '/icon.png' // You can customize this if you have category icons
+        }
+      }).catch(err => console.error('Push Trigger Error:', err));
+
       refreshAppData();
     } else {
       alert('Erro ao publicar: ' + error.message);
@@ -581,7 +611,7 @@ const App: React.FC = () => {
       if (userRole === UserRole.RESIDENT) {
         switch (activeTab) {
           case 'resident':
-          case 'home': return <ResidentHome onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} setPackages={setPackages} desapegos={desapegos} currentUser={currentUser} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} categories={categories} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} />;
+          case 'home': return <ResidentModern currentUser={currentUser} onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} desapegos={desapegos} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} />;
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
@@ -735,9 +765,9 @@ const App: React.FC = () => {
       <div className="relative max-w-md mx-auto shadow-2xl min-h-screen overflow-hidden border-x border-slate-100">
         {/* GLOBAL BACKGROUND (From Login) */}
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
-          <div className="absolute inset-0 bg-slate-950"></div>
-          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.2),transparent_70%)]"></div>
-          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.15),transparent_60%)]"></div>
+          <div className="absolute inset-0 bg-slate-50"></div>
+          <div className="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.05),transparent_70%)]"></div>
+          <div className="absolute bottom-0 right-0 w-full h-full bg-[radial-gradient(circle_at_100%_100%,rgba(59,130,246,0.05),transparent_60%)]"></div>
         </div>
 
         <div className="relative z-10 min-h-screen">
