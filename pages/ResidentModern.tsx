@@ -1,9 +1,9 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import {
     LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
-    Bell, Search, MapPin, ChevronRight, Star, Key, Zap, CreditCard,
+    Bell, Search, MapPin, Star, Key, Zap, CreditCard,
     MessageSquare, Sparkles, Package, Leaf, Droplets, Wrench, Monitor, Scissors, Briefcase,
-    BookOpen, Utensils, QrCode, Megaphone
+    BookOpen, Utensils, QrCode, Megaphone, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import { Card } from '../components/ui';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
@@ -71,6 +71,20 @@ export const ResidentModern: React.FC<{
         const [digitalIdOpen, setDigitalIdOpen] = useState(false);
         const [authModalOpen, setAuthModalOpen] = useState(false);
         const [notifsOpen, setNotifsOpen] = useState(false);
+        const categoryScrollRef = useRef<HTMLDivElement>(null);
+        const onSiteScrollRef = useRef<HTMLDivElement>(null);
+        const eShopScrollRef = useRef<HTMLDivElement>(null);
+        const desapegoScrollRef = useRef<HTMLDivElement>(null);
+
+        const handleScroll = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
+            if (ref.current) {
+                const scrollAmount = 240;
+                ref.current.scrollBy({
+                    left: direction === 'left' ? -scrollAmount : scrollAmount,
+                    behavior: 'smooth'
+                });
+            }
+        };
 
         // Derived State
         const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0;
@@ -137,8 +151,22 @@ export const ResidentModern: React.FC<{
 
                 <main className="p-6 space-y-8">
                     {/* 2. CATEGORIES CAROUSEL */}
-                    <section>
-                        <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+                    <section className="relative group/nav">
+                        {/* Navigation Arrows */}
+                        <button
+                            onClick={() => handleScroll(categoryScrollRef, 'left')}
+                            className="absolute -left-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                        >
+                            <ChevronLeft size={20} />
+                        </button>
+                        <button
+                            onClick={() => handleScroll(categoryScrollRef, 'right')}
+                            className="absolute -right-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                        >
+                            <ChevronRight size={20} />
+                        </button>
+
+                        <div ref={categoryScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
                             <ServiceCategoryItem icon={<Droplets size={24} />} iconClassName="text-cyan-500" label="Encanador" onClick={() => onSelectCategory('Encanador')} />
                             <ServiceCategoryItem icon={<Zap size={24} />} iconClassName="text-yellow-500" label="Eletricista" onClick={() => onSelectCategory('Eletricista')} />
                             <ServiceCategoryItem icon={<Sparkles size={24} />} iconClassName="text-emerald-500" label="Limpeza" onClick={() => onSelectCategory('Limpeza')} />
@@ -195,7 +223,7 @@ export const ResidentModern: React.FC<{
 
                     {/* On-Site Pros (Reformas e Reparos highlight) */}
                     {onSitePros.length > 0 && (
-                        <section>
+                        <section className="relative group/nav">
                             <div className="flex justify-between items-center mb-4 px-1">
                                 <div className="flex items-center gap-2">
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
@@ -203,7 +231,22 @@ export const ResidentModern: React.FC<{
                                 </div>
                                 <button onClick={() => onSelectCategory('Todos')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                             </div>
-                            <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+
+                            {/* Navigation Arrows */}
+                            <button
+                                onClick={() => handleScroll(onSiteScrollRef, 'left')}
+                                className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleScroll(onSiteScrollRef, 'right')}
+                                className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+
+                            <div ref={onSiteScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
                                 {onSitePros.map((pro, i) => (
                                     <ServiceCard
                                         key={i}
@@ -219,12 +262,27 @@ export const ResidentModern: React.FC<{
 
                     {/* Marketplace Destaques */}
                     {products && products.length > 0 && (
-                        <section>
+                        <section className="relative group/nav">
                             <div className="flex justify-between items-center mb-4 px-1">
                                 <h3 className="font-bold text-lg text-slate-800 tracking-tight">Vitrine e-Shop</h3>
                                 <button onClick={() => onNavigate('shop-detail')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                             </div>
-                            <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+
+                            {/* Navigation Arrows */}
+                            <button
+                                onClick={() => handleScroll(eShopScrollRef, 'left')}
+                                className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleScroll(eShopScrollRef, 'right')}
+                                className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
+
+                            <div ref={eShopScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
                                 {products.slice(0, 5).map((prod, i) => (
                                     <ServiceCard
                                         key={i}
@@ -239,23 +297,40 @@ export const ResidentModern: React.FC<{
                     )}
 
                     {/* Mural do Desapego (Replacing Serviços Domésticos) */}
-                    <section>
+                    <section className="relative group/nav">
                         <div className="flex justify-between items-center mb-4 px-1">
                             <h3 className="font-bold text-lg text-slate-800 tracking-tight">Mural do Desapego</h3>
                             <button onClick={() => onNavigate('desapegos-all')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                         </div>
+
                         {desapegos.length > 0 ? (
-                            <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                {desapegos.map((item, i) => (
-                                    <ServiceCard
-                                        key={i}
-                                        title={item.name || item.title}
-                                        subtitle={item.price}
-                                        image={item.img || item.image_url}
-                                        onClick={() => onSelectDesapego && onSelectDesapego(item)}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                {/* Navigation Arrows */}
+                                <button
+                                    onClick={() => handleScroll(desapegoScrollRef, 'left')}
+                                    className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button
+                                    onClick={() => handleScroll(desapegoScrollRef, 'right')}
+                                    className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
+
+                                <div ref={desapegoScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+                                    {desapegos.map((item, i) => (
+                                        <ServiceCard
+                                            key={i}
+                                            title={item.name || item.title}
+                                            subtitle={item.price}
+                                            image={item.img || item.image_url}
+                                            onClick={() => onSelectDesapego && onSelectDesapego(item)}
+                                        />
+                                    ))}
+                                </div>
+                            </>
                         ) : (
                             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 text-center">
                                 <p className="text-slate-400 text-sm">Nenhum desapego anunciado ainda.</p>
