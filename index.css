@@ -15,7 +15,59 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  --primary: #7c3aed;
+  /* DYNAMIC BRANDING VARIABLES */
+  --brand-primary: #3b82f6;
+  --brand-secondary: #06b6d4;
+  --brand-contrast: #ffffff;
+  --brand-50: color-mix(in srgb, var(--brand-primary), white 95%);
+  --brand-100: color-mix(in srgb, var(--brand-primary), white 90%);
+  --brand-200: color-mix(in srgb, var(--brand-primary), white 80%);
+  --brand-500: var(--brand-primary);
+  --brand-600: color-mix(in srgb, var(--brand-primary), black 10%);
+  --brand-700: color-mix(in srgb, var(--brand-primary), black 20%);
+  --brand-glow: color-mix(in srgb, var(--brand-primary), transparent 80%);
+}
+
+/* UTILITY CLASSES FOR DYNAMIC BRANDING */
+.bg-brand-primary {
+  background-color: var(--brand-primary);
+}
+
+.text-brand-primary {
+  color: var(--brand-primary);
+}
+
+.border-brand-primary {
+  border-color: var(--brand-primary);
+}
+
+.text-brand-contrast {
+  color: var(--brand-contrast);
+}
+
+.icon-brand-contrast {
+  color: var(--brand-contrast);
+  stroke: var(--brand-contrast);
+}
+
+.bg-brand-50 {
+  background-color: var(--brand-50);
+}
+
+.text-brand-600 {
+  color: var(--brand-600);
+}
+
+.bg-brand-gradient {
+  background: linear-gradient(135deg, var(--brand-primary), var(--brand-secondary));
+}
+
+.bg-brand-gradient-horizontal {
+  background: linear-gradient(to right, var(--brand-primary), var(--brand-secondary));
+}
+
+.shadow-brand-glow {
+  box-shadow: 0 20px 40px -15px var(--brand-glow);
 }
 
 body {

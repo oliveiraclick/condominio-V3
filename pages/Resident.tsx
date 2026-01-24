@@ -10,7 +10,7 @@ import {
   QrCode, Unlock, History, AlertCircle, FileText, Copy, CheckCircle2,
   Settings, LogOut, ShieldCheck, Wallet, HelpCircle, UserCheck,
   CalendarDays, Check, HardHat, Hammer, UserPlus, Briefcase, ListFilter, PartyPopper,
-  Trophy, Target, Dumbbell, GlassWater, Waves, Store, Heart, Navigation,
+  Trophy, Target, Dumbbell, GlassWater, Waves, Store, Heart, Navigation, Activity,
   MessageSquare, Send, Paperclip, Mic, MoreVertical, CheckCheck, Award, Quote, Camera, MessageCircle,
   Image as ImageIcon, X, Clock, MapPinned, Trash2, Share2, UserCircle2, Flame,
   Building2, Camera as CameraIcon, Download, Scan, Handshake, BadgeCheck, Menu
@@ -312,38 +312,38 @@ export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; cu
     <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
       <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
       <div className="relative w-full max-w-xs sm:max-w-sm bg-white border border-slate-200 rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 mx-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-28 bg-brand-600"></div>
+        <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg"></div>
         <div className="relative flex flex-col items-center">
-          <button onClick={onClose} className="absolute top-0 right-0 z-50 w-8 h-8 bg-black/20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform backdrop-blur-sm hover:bg-black/30">
+          <button onClick={onClose} className="absolute top-0 right-0 z-50 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform backdrop-blur-sm hover:bg-white/30 border border-white/20">
             <X size={16} strokeWidth={3} />
           </button>
 
           <div className="w-20 h-20 rounded-[28px] p-1 bg-white shadow-xl mb-3 mt-6 ring-4 ring-white z-10">
             <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[24px] object-cover bg-slate-50" />
           </div>
-          <h2 className="text-xl font-black text-slate-900 italic tracking-tighter text-center leading-none">{currentUser?.name}</h2>
+          <h2 className="text-xl font-black text-slate-900 italic tracking-tighter text-center leading-none uppercase">{currentUser?.name}</h2>
           <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 mt-1">
             {currentUser?.unit?.toString().toUpperCase().includes('RUA')
               ? `${currentUser.unit}, ${currentUser.tower}`
-              : `RUA ${currentUser?.tower || '', currentUser?.unit || ''}`
+              : `Rua: ${currentUser?.unit || ''} - Torre: ${currentUser?.tower || ''}`
             }
           </p>
 
-          <div className="p-4 bg-white rounded-[24px] shadow-sm mb-6 border border-slate-100">
+          <div className="p-4 bg-white rounded-[24px] shadow-sm mb-6 border border-slate-100 ring-4 ring-slate-50">
             <QRCodeSVG value={qrValue} size={160} />
           </div>
 
-          <p className="text-center text-slate-500 text-[10px] max-w-[200px] leading-relaxed mb-4">
+          <p className="text-center text-slate-500 text-[10px] max-w-[200px] leading-relaxed mb-4 font-medium italic">
             Apresente este código na portaria para retirar suas encomendas com segurança.
           </p>
 
-          <Button onClick={onOpenAuth} className="bg-brand-600 text-white hover:bg-brand-700 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest w-full mb-2 shadow-lg shadow-brand-600/20 active:scale-95 transition-all">
+          <Button onClick={onOpenAuth} className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest w-full mb-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all border-none">
             <Users size={16} className="mr-2" />
             Autorizar Vizinho
           </Button>
 
           <button onClick={onClose} className="hover:bg-slate-100 p-2 rounded-full transition-colors mt-1">
-            <XCircle size={24} className="text-slate-400" />
+            <XCircle size={24} className="text-slate-200" />
           </button>
         </div>
       </div>
@@ -915,7 +915,7 @@ export const ResidentHome: React.FC<{
               /* NORMAL PENDING MODE - UNBOXING */
               <div className="space-y-8 py-2">
                 <div className="relative flex justify-center">
-                  <div className="w-24 h-24 bg-gradient-to-br from-amber-50 to-orange-50 rounded-[40px] flex items-center justify-center text-amber-500 shadow-xl border border-white relative z-10 transform -rotate-6">
+                  <div className="w-24 h-24 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-[40px] flex items-center justify-center text-blue-500 shadow-xl border border-white relative z-10 transform -rotate-6">
                     <Package size={48} />
                   </div>
                   <div className="absolute -top-2 -right-2 w-10 h-10 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg border-4 border-white z-20 font-black italic text-xs animate-bounce">
@@ -925,7 +925,7 @@ export const ResidentHome: React.FC<{
 
                 <div className="text-center">
                   <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter uppercase leading-none">
-                    Suas Encomendas<br /><span className="text-amber-500">Chegaram!</span>
+                    Suas Encomendas<br /><span className="text-blue-500">Chegaram!</span>
                   </h3>
                   <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-4 leading-relaxed">
                     Você tem {localPackages.length} {localPackages.length === 1 ? 'volume' : 'volumes'} prontos para retirada<br />na portaria principal.
@@ -936,7 +936,7 @@ export const ResidentHome: React.FC<{
                   <Button
                     fullWidth
                     onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }}
-                    className="h-16 bg-slate-950 hover:bg-black text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-2xl relative overflow-hidden group transition-all active:scale-95"
+                    className="h-16 bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90 text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-xl shadow-blue-500/20 relative overflow-hidden group transition-all active:scale-95 border-none"
                   >
                     <span className="relative z-10 flex items-center gap-3 justify-center">
                       <QrCode size={22} /> Gerar meu QR de Coleta
@@ -1306,7 +1306,7 @@ export const ResidentHome: React.FC<{
             {desapegos.length > 1 && (
               <div className="flex justify-center gap-2 mt-6">
                 {desapegos.map((_, idx) => (
-                  <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-brand-500' : 'w-2 bg-white/20'}`} />
+                  <div key={idx} className={`h-2 rounded-full transition-all duration-300 ${idx === currentDesapegoIndex ? 'w-6 bg-brand-primary' : 'w-2 bg-brand-100/50'}`} />
                 ))}
               </div>
             )}
@@ -1317,7 +1317,7 @@ export const ResidentHome: React.FC<{
         <div className="pb-12">
           <Card
             onClick={() => setFeedbackOpen(true)}
-            className="p-8 border-none bg-gradient-to-br from-brand-600 to-brand-700 text-white rounded-[40px] shadow-2xl shadow-brand-600/30 relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
+            className="p-8 bg-brand-gradient text-brand-contrast rounded-[48px] shadow-2xl shadow-brand-glow border-none relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
           >
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/30 transition-all duration-700"></div>
 
@@ -1389,8 +1389,8 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <div className="h-64 bg-brand-600 relative flex items-end px-10 pb-10 pt-20">
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-600 to-indigo-700"></div>
+      <div className="h-64 bg-brand-gradient-horizontal relative flex items-end px-10 pb-10 pt-20">
+        <div className="absolute inset-0 bg-brand-gradient-horizontal"></div>
         <div className="relative z-10 flex items-center gap-6">
           <div className="relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             <div className="w-24 h-24 rounded-[30px] border-4 border-white/20 bg-white/10 overflow-hidden shadow-2xl relative backdrop-blur-md">
@@ -1752,21 +1752,21 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
       </div>
 
       {/* MURAL DE DEMANDAS - MOVED HERE */}
-      <div className="mt-8 bg-gradient-to-br from-brand-600 to-brand-700 rounded-[32px] p-6 text-white shadow-xl shadow-brand-600/30 relative overflow-hidden">
+      <div className="mt-8 bg-brand-gradient-horizontal rounded-[32px] p-6 text-brand-contrast shadow-xl shadow-brand-glow relative overflow-hidden">
         <div className="relative z-10 flex items-center justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-center gap-2 mb-2">
-              <Megaphone size={14} className="text-white/80" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-white/80">Não achou?</span>
+              <Megaphone size={14} className="text-brand-contrast opacity-80" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-brand-contrast opacity-80">Não achou?</span>
             </div>
-            <h3 className="font-black text-lg italic leading-tight mb-1">Mural de Oportunidades</h3>
-            <p className="text-white/70 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
+            <h3 className="font-black text-lg italic leading-tight mb-1 text-brand-contrast">Mural de Oportunidades</h3>
+            <p className="text-brand-contrast opacity-70 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
           </div>
           <button
             onClick={() => setMuralOpen(true)}
             className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all shrink-0"
           >
-            <Plus size={24} className="text-brand-600" />
+            <Plus size={24} className="text-brand-primary" />
           </button>
         </div>
       </div>
@@ -2309,13 +2309,13 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
       </header>
       <div className="p-6 space-y-8 animate-in slide-in-from-right-4">
         {pending ? (
-          <Card className="p-10 bg-brand-600 text-white border-none shadow-2xl shadow-brand-600/30 rounded-[48px] relative overflow-hidden">
+          <Card className="p-10 bg-brand-gradient-horizontal text-brand-contrast border-none shadow-2xl shadow-brand-glow rounded-[48px] relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
             <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">{pending.title}</p>
             <h3 className="text-4xl font-black italic tracking-tighter">R$ {pending.value}</h3>
             <p className="text-[10px] font-bold mt-2 opacity-80">Vence em: {new Date(pending.dueDate).toLocaleDateString('pt-BR')}</p>
             <div className="mt-8 flex gap-3">
-              <Button variant="secondary" className="flex-1 bg-white text-brand-600 h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg" onClick={() => alert('Código copiado!')}>Copia Código</Button>
+              <Button variant="secondary" className="flex-1 bg-white text-brand-primary h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg" onClick={() => alert('Código copiado!')}>Copia Código</Button>
               <button className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center active:scale-95 transition-all hover:bg-white/30"><Download size={20} /></button>
             </div>
           </Card>
@@ -2380,12 +2380,12 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
       <div className="p-6 space-y-8">
         {!isNew ? (
           <>
-            <div className="bg-gradient-to-br from-brand-600 to-brand-700 p-8 rounded-[40px] text-white shadow-2xl shadow-brand-600/30 text-center relative overflow-hidden border border-brand-500/50">
+            <div className="bg-gradient-to-r from-blue-500 to-cyan-500 p-8 rounded-[40px] text-white shadow-2xl shadow-blue-500/20 text-center relative overflow-hidden border border-white/20">
               <div className="relative z-10">
                 <MessageSquare className="mx-auto text-white/80 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
                 <p className="text-sm font-medium text-white/70 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
-                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-white text-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-slate-50 shadow-lg">Abrir Chamado</Button>
+                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-white text-brand-primary h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-slate-50 shadow-lg">Abrir Chamado</Button>
               </div>
             </div>
 
@@ -2768,16 +2768,16 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-12 flex items-center justify-between bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+      <header className="p-6 pt-12 flex items-center justify-between bg-brand-gradient-horizontal shadow-xl shadow-brand-glow sticky top-0 z-40 rounded-b-[32px]">
         <div className="flex items-center gap-4">
-          <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 transition-all text-white hover:bg-white/10"><ArrowLeft size={20} /></button>
-          <h2 className="text-xl font-black italic uppercase text-slate-900">Reservas</h2>
+          <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all text-brand-contrast hover:bg-white/30 backdrop-blur-sm"><ArrowLeft size={20} className="stroke-brand-contrast" /></button>
+          <h2 className="text-xl font-black italic uppercase text-brand-contrast tracking-widest">Reservas</h2>
         </div>
         <button
           onClick={() => onNavigate?.('resident-bookings')}
-          className="flex items-center gap-2 bg-brand-500/10 text-brand-400 px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all border border-brand-500/20"
+          className="flex items-center gap-2 bg-white/20 text-brand-contrast px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all border border-white/20 backdrop-blur-sm hover:bg-white/30"
         >
-          <Calendar size={14} />
+          <Calendar size={14} className="stroke-brand-contrast" />
           Meus Agendamentos
         </button>
       </header>
@@ -2785,14 +2785,20 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
         {!selectedCategory ? (
           <div className="space-y-6 animate-in slide-in-from-left-4">
-            <SectionHeader title="O que você quer agendar?" />
+            <h3 className="text-xl font-black text-slate-800 tracking-tight mb-6">O que você quer agendar?</h3>
             <div className="grid grid-cols-2 gap-4">
               {categories.map(cat => (
-                <button key={cat} onClick={() => setSelectedCategory(cat)} className="aspect-square bg-white/5 rounded-[40px] border border-white/10 shadow-sm flex flex-col items-center justify-center gap-4 active:scale-95 transition-all hover:border-brand-500/30 group">
-                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center text-slate-400 group-hover:bg-brand-500/10 group-hover:text-brand-400 transition-colors border border-white/5">
-                    {cat === 'Quiosques' ? <Flame size={32} /> : cat === 'Esportes' ? <Trophy size={32} /> : <PartyPopper size={32} />}
+                <button
+                  key={cat}
+                  onClick={() => setSelectedCategory(cat)}
+                  className="bg-white aspect-square rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:scale-105 transition-all group active:scale-95"
+                >
+                  <div className="w-16 h-16 rounded-2xl bg-brand-50 text-brand-primary flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors">
+                    {cat === 'Gourmet' ? <Utensils size={32} /> :
+                      cat === 'Esportes' ? <Activity size={32} /> :
+                        <Calendar size={32} />}
                   </div>
-                  <span className="font-black italic text-white text-sm uppercase tracking-tighter">{cat}</span>
+                  <span className="font-black text-slate-700 uppercase tracking-widest text-xs">{cat}</span>
                 </button>
               ))}
             </div>
@@ -3404,13 +3410,13 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 
 // --- NAVEGA��O ---
 // --- NAVIGATION WITH HAMBURGER MENU ---
-export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void; currentUser?: any; onLogout?: () => void }> = ({ activeTab, onChange, currentUser }) => {
+export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void; currentUser?: any; onLogout?: () => void; onNotifications?: () => void }> = ({ activeTab, onChange, currentUser, onNotifications }) => {
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 py-2 pb-6 flex justify-between items-end z-50">
 
       <button
         onClick={() => onChange('home')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'home' || activeTab === 'resident' ? 'text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'home' || activeTab === 'resident' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
       >
         <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} fill={activeTab === 'home' ? "currentColor" : "none"} className={activeTab === 'home' ? "fill-brand-100" : ""} />
         <span className="text-[10px] font-bold">Home</span>
@@ -3418,7 +3424,7 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
 
       <button
         onClick={() => onChange('condo-agenda')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'condo-agenda' ? 'text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'condo-agenda' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
       >
         <CalendarDays size={24} strokeWidth={activeTab === 'condo-agenda' ? 2.5 : 2} />
         <span className="text-[10px] font-bold">Agenda</span>
@@ -3427,15 +3433,15 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
       <div className="-mt-10 relative z-10 mx-2">
         <button
           onClick={() => onChange('create-desapego')}
-          className="w-14 h-14 bg-brand-600 rounded-full flex items-center justify-center text-white shadow-xl shadow-brand-600/30 border-4 border-slate-50 active:scale-95 transition-transform"
+          className="w-14 h-14 bg-brand-gradient rounded-full flex items-center justify-center text-brand-contrast shadow-xl shadow-brand-glow border-4 border-slate-50 active:scale-95 transition-transform"
         >
-          <Plus size={32} />
+          <Plus size={32} className="stroke-brand-contrast" />
         </button>
       </div>
 
       <button
-        onClick={() => onChange('chamado')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'chamado' ? 'text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}
+        onClick={onNotifications ? onNotifications : () => onChange('chamado')}
+        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'chamado' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
       >
         <Bell size={24} strokeWidth={activeTab === 'chamado' ? 2.5 : 2} />
         <span className="text-[10px] font-bold">Avisos</span>
@@ -3443,7 +3449,7 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
 
       <button
         onClick={() => onChange('profile')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'profile' ? 'text-brand-600' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'profile' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
       >
         <User size={24} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
         <span className="text-[10px] font-bold">Perfil</span>

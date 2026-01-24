@@ -87,6 +87,7 @@ const App: React.FC = () => {
   const [myProposals, setMyProposals] = useState<any[]>([]);
 
   const [useModernDesign, setUseModernDesign] = useState(false);
+  const [notificationModalOpen, setNotificationModalOpen] = useState(false);
 
   const toggleModernDesign = () => {
     const newValue = !useModernDesign;
@@ -129,13 +130,18 @@ const App: React.FC = () => {
         });
 
         if (profile.condominium_id) {
-          supabase.from('condominiums').select('name, primary_color, logo_url, symbol_url, symbol_opacity').eq('id', profile.condominium_id).maybeSingle()
+          supabase.from('condominiums').select('name, primary_color, secondary_color, contrast_color, logo_url, symbol_url, symbol_opacity').eq('id', profile.condominium_id).maybeSingle()
             .then(({ data: condo }) => {
               if (condo) {
                 // Apply Branding
                 if (condo.primary_color) {
-                  document.documentElement.style.setProperty('--primary', condo.primary_color);
-                  // Optional: Calculate darker/lighter shades if needed, or just rely on CSS color-mix
+                  document.documentElement.style.setProperty('--brand-primary', condo.primary_color);
+                }
+                if (condo.secondary_color) {
+                  document.documentElement.style.setProperty('--brand-secondary', condo.secondary_color);
+                }
+                if (condo.contrast_color) {
+                  document.documentElement.style.setProperty('--brand-contrast', condo.contrast_color);
                 }
 
                 setCurrentUser((prev: any) => {
@@ -573,7 +579,8 @@ const App: React.FC = () => {
       description,
       status: 'open',
       unit: currentUser?.unit,
-      tower: currentUser?.tower
+      tower: currentUser?.tower,
+      condominium_id: currentUser?.condominium_id
     }]);
     if (!error) {
       alert('Demanda publicada no Mural! Profissionais serão notificados.');
@@ -611,7 +618,7 @@ const App: React.FC = () => {
       if (userRole === UserRole.RESIDENT) {
         switch (activeTab) {
           case 'resident':
-          case 'home': return <ResidentModern currentUser={currentUser} onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} desapegos={desapegos} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} />;
+          case 'home': return <ResidentModern currentUser={currentUser} onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} desapegos={desapegos} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} onNotifications={() => setNotificationModalOpen(true)} />;
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
@@ -773,7 +780,12 @@ const App: React.FC = () => {
         <div className="relative z-10 min-h-screen">
           {renderContent()}
           {!isSubPage && userRole && (
-            userRole === UserRole.RESIDENT ? <AppNavigation activeTab={activeTab} onChange={(tab) => tab === 'create-desapego' ? pushScreen(tab) : baseScreen(tab)} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
+            userRole === UserRole.RESIDENT ? (
+              <>
+                <AppNavigation activeTab={activeTab} onChange={(tab) => tab === 'create-desapego' ? pushScreen(tab) : baseScreen(tab)} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} onNotifications={() => setNotificationModalOpen(true)} />
+                <NotificationsModal isOpen={notificationModalOpen} onClose={() => setNotificationModalOpen(false)} currentUser={currentUser} onUpdate={refreshAppData} />
+              </>
+            ) :
               userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
                 userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
           )}

@@ -3,19 +3,19 @@ import {
     LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
     Bell, Search, MapPin, ChevronRight, Star, Key, Zap, CreditCard,
     MessageSquare, Sparkles, Package, Leaf, Droplets, Wrench, Monitor, Scissors, Briefcase,
-    BookOpen, Utensils, QrCode
+    BookOpen, Utensils, QrCode, Megaphone
 } from 'lucide-react';
 import { Card } from '../components/ui';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 // Imports from original Resident file to preserve functionality
-import { ProfessionalDetailModal, ReviewModal, MuralDemandModal, DigitalIDModal, AuthorizationModal, BannerCarousel } from './Resident';
+import { ProfessionalDetailModal, ReviewModal, MuralDemandModal, DigitalIDModal, AuthorizationModal, BannerCarousel, NotificationsModal } from './Resident';
 
 // New Component: Service Category Item (Square)
 const ServiceCategoryItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isNew?: boolean; className?: string; iconClassName?: string }> = ({ icon, label, onClick, isNew, className, iconClassName }) => (
     <div onClick={onClick} className="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group active:scale-95 transition-transform">
         <div className={`w-16 h-16 rounded-2xl shadow-sm border flex items-center justify-center transition-all relative group-hover:shadow-md group-hover:-translate-y-1 ${className || 'bg-white border-slate-100 text-slate-700'}`}>
             <div className={iconClassName}>{icon}</div>
-            {isNew && <span className="absolute -top-1 -right-1 w-3 h-3 bg-brand-500 rounded-full border-2 border-white"></span>}
+            {isNew && <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></span>}
         </div>
         <span className="text-[10px] font-bold text-slate-600 text-center leading-tight max-w-[80px]">{label}</span>
     </div>
@@ -60,7 +60,7 @@ export const ResidentModern: React.FC<{
 }> = ({
     currentUser, onNavigate, onSelectCategory, packages = [], desapegos = [],
     notifications = [], products = [], onSelectDesapego, onSelectProduct,
-    onSitePros = [], onPostMuralDemand, muralCategories, activeTab, onClearNotifications
+    onSitePros = [], onPostMuralDemand, muralCategories, activeTab, onClearNotifications, onNotifications
 }) => {
         const [search, setSearch] = useState('');
         const [feedbackOpen, setFeedbackOpen] = useState(false);
@@ -70,6 +70,7 @@ export const ResidentModern: React.FC<{
         const [muralOpen, setMuralOpen] = useState(false);
         const [digitalIdOpen, setDigitalIdOpen] = useState(false);
         const [authModalOpen, setAuthModalOpen] = useState(false);
+        const [notifsOpen, setNotifsOpen] = useState(false);
 
         // Derived State
         const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0;
@@ -102,7 +103,7 @@ export const ResidentModern: React.FC<{
                         </div>
                         <div className="flex items-center gap-3">
                             {hasPackages && (
-                                <button onClick={() => setDigitalIdOpen(true)} className="w-10 h-10 rounded-full bg-orange-100 flex items-center justify-center text-orange-600 active:scale-90 transition-transform relative hover:bg-orange-200">
+                                <button onClick={() => setDigitalIdOpen(true)} className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary active:scale-90 transition-transform relative hover:bg-brand-100">
                                     <Package size={20} />
                                     {pendingHandshake && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
                                 </button>
@@ -110,7 +111,7 @@ export const ResidentModern: React.FC<{
                             <button onClick={() => setDigitalIdOpen(true)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-90 transition-transform hover:bg-slate-200">
                                 <QrCode size={20} />
                             </button>
-                            <button onClick={() => onNavigate('chamado')} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 relative active:scale-90 transition-transform hover:bg-slate-200">
+                            <button onClick={onNotifications} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 relative active:scale-90 transition-transform hover:bg-slate-200">
                                 <Bell size={20} />
                                 {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />}
                             </button>
@@ -120,12 +121,12 @@ export const ResidentModern: React.FC<{
                     <div className="relative group">
                         <button
                             onClick={() => search.trim() && onSelectCategory('Todos', search.trim())}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors cursor-pointer hover:scale-110 active:scale-95"
+                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors cursor-pointer hover:scale-110 active:scale-95"
                         >
                             <Search size={20} />
                         </button>
                         <input
-                            className="w-full h-12 pl-12 pr-4 bg-slate-100 rounded-xl border-none text-slate-900 placeholder:text-slate-400 font-medium focus:ring-2 focus:ring-brand-500 transition-all outline-none"
+                            className="w-full h-12 pl-12 pr-4 bg-slate-100 rounded-xl border-none text-slate-900 placeholder:text-slate-400 font-medium focus:ring-2 focus:ring-brand-primary transition-all outline-none"
                             placeholder="O que você precisa?"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
@@ -143,10 +144,10 @@ export const ResidentModern: React.FC<{
                             <ServiceCategoryItem icon={<Sparkles size={24} />} iconClassName="text-emerald-500" label="Limpeza" onClick={() => onSelectCategory('Limpeza')} />
                             <ServiceCategoryItem icon={<Leaf size={24} />} iconClassName="text-green-500" label="Jardim" onClick={() => onSelectCategory('Jardinagem')} />
                             <ServiceCategoryItem
-                                icon={<CalendarDays size={24} />}
+                                icon={<CalendarDays size={24} className="stroke-brand-contrast" />}
                                 label="Reservas"
-                                className="bg-gradient-to-r from-blue-500 to-cyan-500 border-transparent text-white shadow-blue-500/30"
-                                iconClassName="text-white"
+                                className="bg-brand-gradient border-transparent text-brand-contrast shadow-brand-glow"
+                                iconClassName="text-brand-contrast"
                                 onClick={() => onNavigate('condo-agenda')}
                             />
                         </div>
@@ -157,18 +158,35 @@ export const ResidentModern: React.FC<{
                         <BannerCarousel />
                     </div>
 
+                    {/* NEW: MURAL DE OPORTUNIDADES BANNER */}
+                    <div onClick={() => setMuralOpen(true)} className="w-full bg-brand-gradient-horizontal rounded-3xl p-5 shadow-xl shadow-brand-glow text-brand-contrast relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between mt-2">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+                        <div className="relative z-10 flex items-center gap-4">
+                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
+                                <Megaphone size={24} className="text-brand-contrast" />
+                            </div>
+                            <div>
+                                <h4 className="font-bold text-base text-brand-contrast italic uppercase tracking-tighter leading-none mb-1">Não achou o que precisa?</h4>
+                                <p className="text-brand-contrast opacity-80 text-[10px] font-medium">Publique no Mural e receba propostas.</p>
+                            </div>
+                        </div>
+                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative z-10">
+                            <Plus size={18} className="text-brand-contrast" />
+                        </div>
+                    </div>
+
                     {/* 3. HERO BANNER (Compact Height) */}
                     <section>
-                        <div onClick={() => onNavigate('market')} className="w-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-3xl p-4 shadow-xl shadow-blue-500/20 text-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between">
+                        <div onClick={() => onNavigate('market')} className="w-full bg-brand-gradient-horizontal rounded-3xl p-4 shadow-xl shadow-brand-glow text-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between">
                             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
 
                             <div className="relative z-10">
-                                <h2 className="text-lg font-bold tracking-tight leading-none">Acessar e-Shop</h2>
-                                <p className="text-white/80 text-xs mt-1 font-medium">Ver promoções.</p>
+                                <h4 className="font-bold text-lg text-brand-contrast italic uppercase tracking-tighter leading-none mb-1">e-Shop Vizinho</h4>
+                                <p className="text-brand-contrast opacity-80 text-xs font-medium">Compre e venda no condomínio</p>
                             </div>
 
                             <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative z-10 shrink-0 ml-4">
-                                <ChevronRight size={20} />
+                                <ChevronRight size={20} className="text-brand-contrast" />
                             </div>
                         </div>
                     </section>
@@ -183,7 +201,7 @@ export const ResidentModern: React.FC<{
                                     <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
                                     <h3 className="font-bold text-lg text-slate-800 tracking-tight">No Condomínio</h3>
                                 </div>
-                                <button onClick={() => onSelectCategory('Todos')} className="text-brand-600 text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
+                                <button onClick={() => onSelectCategory('Todos')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                             </div>
                             <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
                                 {onSitePros.map((pro, i) => (
@@ -204,7 +222,7 @@ export const ResidentModern: React.FC<{
                         <section>
                             <div className="flex justify-between items-center mb-4 px-1">
                                 <h3 className="font-bold text-lg text-slate-800 tracking-tight">Vitrine e-Shop</h3>
-                                <button onClick={() => onNavigate('shop-detail')} className="text-brand-600 text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
+                                <button onClick={() => onNavigate('shop-detail')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                             </div>
                             <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
                                 {products.slice(0, 5).map((prod, i) => (
@@ -224,7 +242,7 @@ export const ResidentModern: React.FC<{
                     <section>
                         <div className="flex justify-between items-center mb-4 px-1">
                             <h3 className="font-bold text-lg text-slate-800 tracking-tight">Mural do Desapego</h3>
-                            <button onClick={() => onNavigate('desapegos-all')} className="text-brand-600 text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
+                            <button onClick={() => onNavigate('desapegos-all')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                         </div>
                         {desapegos.length > 0 ? (
                             <div className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
@@ -241,7 +259,7 @@ export const ResidentModern: React.FC<{
                         ) : (
                             <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 text-center">
                                 <p className="text-slate-400 text-sm">Nenhum desapego anunciado ainda.</p>
-                                <button onClick={() => onNavigate('create-desapego')} className="mt-2 text-brand-600 font-bold text-xs uppercase tracking-widest">Anunciar Agora</button>
+                                <button onClick={() => onNavigate('create-desapego')} className="mt-2 text-brand-primary font-bold text-xs uppercase tracking-widest">Anunciar Agora</button>
                             </div>
                         )}
                     </section>
@@ -250,19 +268,19 @@ export const ResidentModern: React.FC<{
                     <div className="pt-4">
                         <Card
                             onClick={() => setFeedbackOpen(true)}
-                            className="bg-white text-slate-900 p-6 rounded-[24px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group border border-slate-100 shadow-xl"
+                            className="bg-brand-gradient-horizontal text-brand-contrast p-6 rounded-[24px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group border-none shadow-xl shadow-brand-glow"
                         >
                             <div className="relative z-10 flex gap-4 items-center">
-                                <div className="w-12 h-12 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600 group-hover:scale-110 transition-transform">
-                                    <Sparkles size={24} />
+                                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-brand-contrast group-hover:scale-110 transition-transform">
+                                    <Sparkles size={24} className="stroke-brand-contrast" />
                                 </div>
                                 <div>
-                                    <h4 className="font-bold text-lg">Sugestões?</h4>
-                                    <p className="text-slate-500 text-xs">Ajude a melhorar o app.</p>
+                                    <h4 className="font-bold text-lg leading-none mb-1 text-brand-contrast">Sugestões?</h4>
+                                    <p className="text-brand-contrast opacity-80 text-xs font-medium">Ajude a melhorar o app.</p>
                                 </div>
                             </div>
                             {/* Decorative background element */}
-                            <div className="absolute -bottom-6 -right-6 w-24 h-24 bg-brand-500/5 rounded-full blur-xl group-hover:bg-brand-500/10 transition-all"></div>
+                            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
                         </Card>
                     </div>
 

@@ -73,7 +73,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onBack, onNavigateToPr
             <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
 
                 {/* Hero Section */}
-                <div className="bg-gradient-to-br from-brand-600 to-brand-700 p-8 rounded-[32px] shadow-2xl shadow-brand-600/30 text-white relative overflow-hidden border border-brand-500">
+                <div className="bg-brand-gradient-horizontal p-8 rounded-[32px] shadow-2xl shadow-brand-glow text-brand-contrast relative overflow-hidden border border-white/20">
                     <div className="absolute top-0 right-0 w-64 h-64 bg-white/20 rounded-full -mr-20 -mt-20 blur-3xl"></div>
                     <div className="flex items-center gap-4 mb-4 relative z-10">
                         <div className="w-16 h-16 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center border border-white/10 shadow-inner">
@@ -105,9 +105,9 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onBack, onNavigateToPr
                                     onClick={() => toggleFAQ(index)}
                                     className="w-full p-4 flex items-center justify-between text-left group"
                                 >
-                                    <span className="font-bold text-slate-700 pr-4 group-hover:text-brand-600 transition-colors">{item.question}</span>
+                                    <span className="font-bold text-slate-700 pr-4 group-hover:text-brand-primary transition-colors">{item.question}</span>
                                     {expandedFAQ === index ? (
-                                        <ChevronUp className="w-5 h-5 text-brand-600 shrink-0" />
+                                        <ChevronUp className="w-5 h-5 text-brand-primary shrink-0" />
                                     ) : (
                                         <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 group-hover:text-slate-600 transition-colors" />
                                     )}
@@ -137,7 +137,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onBack, onNavigateToPr
 
                     <a
                         href="mailto:ia.oliveira.click@gmail.com?subject=Solicitação de Suporte - App Morador"
-                        className="flex items-center justify-center gap-3 w-full h-14 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95 shadow-lg shadow-brand-600/20 group"
+                        className="flex items-center justify-center gap-3 w-full h-14 bg-brand-gradient-horizontal hover:opacity-90 text-brand-contrast rounded-2xl font-black uppercase text-xs tracking-widest transition-all active:scale-95 shadow-lg shadow-brand-glow group border-none"
                     >
                         <Mail className="w-5 h-5 group-hover:scale-110 transition-transform" />
                         ia.oliveira.click@gmail.com
@@ -162,13 +162,13 @@ export const SupportPage: React.FC<SupportPageProps> = ({ onBack, onNavigateToPr
                     <div className="space-y-3">
                         <button
                             onClick={onNavigateToPrivacy}
-                            className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl transition-all border border-slate-100 hover:border-brand-200 group active:scale-95 hover:shadow-sm"
+                            className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-white rounded-2xl transition-all border border-slate-100 hover:border-brand-100 group active:scale-95 hover:shadow-sm"
                         >
                             <div className="flex items-center gap-3">
-                                <Shield className="w-5 h-5 text-brand-500" />
-                                <span className="font-bold text-slate-700 group-hover:text-brand-600 transition-colors">Política de Privacidade</span>
+                                <Shield className="w-5 h-5 text-brand-primary" />
+                                <span className="font-bold text-slate-700 group-hover:text-brand-primary transition-colors">Política de Privacidade</span>
                             </div>
-                            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-brand-500 transition-colors" />
+                            <ExternalLink className="w-4 h-4 text-slate-400 group-hover:text-brand-primary transition-colors" />
                         </button>
 
                         <a

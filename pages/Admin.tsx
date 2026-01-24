@@ -30,7 +30,7 @@ export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: stri
       <button
         key={item.id}
         onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-brand-600 scale-110 drop-shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-blue-600 scale-110 drop-shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
       >
         {item.icon}
         <span className="text-[10px] font-bold uppercase">{item.label}</span>
@@ -57,7 +57,7 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
   <div className="flex justify-between items-end mb-6 px-1">
     <h3 className="text-xl font-bold text-slate-800 tracking-tight leading-none">{title}</h3>
     {action && (
-      <button onClick={onAction} className="text-[10px] font-black text-brand-600 uppercase tracking-widest bg-brand-50 px-4 py-2 rounded-xl active:scale-95 transition-all hover:bg-brand-100 border border-brand-100 shadow-sm">
+      <button onClick={onAction} className="text-[10px] font-black text-blue-600 uppercase tracking-widest bg-blue-50 px-4 py-2 rounded-xl active:scale-95 transition-all hover:bg-blue-100 border border-blue-100 shadow-sm">
         {action}
       </button>
     )}
@@ -119,7 +119,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
     {
       title: 'Operações Diárias',
       items: [
-        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-brand-400', bg: 'bg-brand-500/10' },
+        { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-blue-400', bg: 'bg-blue-500/10' },
         { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-400', bg: 'bg-blue-500/10' },
         { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
       ]
@@ -130,16 +130,16 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
         { id: 'residents', icon: <Users size={24} />, label: 'Moradores', desc: 'Base de condôminos', target: 'admin-residents', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
         { id: 'finance', icon: <Wallet size={24} />, label: 'Financeiro', desc: 'Cobranças e taxas', target: 'admin-finance', color: 'text-slate-400', bg: 'bg-slate-500/10' },
         { id: 'notices', icon: <Megaphone size={24} />, label: 'Mural de Avisos', desc: 'Comunicados gerais', target: 'admin-notices', color: 'text-amber-400', bg: 'bg-amber-500/10' },
-        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-brand-400', bg: 'bg-brand-500/10' },
+        { id: 'banners', icon: <ImageIcon size={24} />, label: 'Banners App', desc: 'Carrossel Home', target: 'admin-banners', color: 'text-blue-400', bg: 'bg-blue-500/10' },
         { id: 'categories', icon: <Layers size={24} />, label: 'Categorias', desc: 'Serviços e áreas', target: 'admin-categories', color: 'text-pink-400', bg: 'bg-pink-500/10' },
       ]
     }
   ];
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32 font-sans selection:bg-brand-500/30 text-slate-900">
+    <div className="min-h-screen bg-slate-50 pb-32 font-sans selection:bg-blue-500/30 text-slate-900">
       {/* Hero Section */}
-      <div className="bg-gradient-to-br from-brand-600 to-brand-700 pt-12 pb-8 px-8 rounded-b-[40px] shadow-2xl mb-8 relative overflow-hidden border-b border-brand-500">
+      <div className="bg-gradient-to-r from-blue-500 to-cyan-500 pt-12 pb-8 px-8 rounded-b-[40px] shadow-2xl mb-8 relative overflow-hidden border-b border-blue-400">
         {/* WATERMARK SYMBOL */}
         {(onNavigate as any).currentUser?.symbol_url && (
           <div

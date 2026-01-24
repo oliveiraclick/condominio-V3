@@ -19,14 +19,14 @@ export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinis
             {/* Background Effects */}
             <div className="absolute top-0 left-0 w-full h-full overflow-hidden z-0">
                 <div className={`absolute top-[-20%] left-[-20%] w-[80%] h-[80%] bg-brand-100/50 rounded-full blur-[100px] transition-all duration-[2000ms] ${mounted ? 'translate-x-10 translate-y-10 opacity-70' : 'opacity-0'}`} />
-                <div className={`absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-fuchsia-100/50 rounded-full blur-[100px] transition-all duration-[2000ms] delay-300 ${mounted ? '-translate-x-10 -translate-y-10 opacity-70' : 'opacity-0'}`} />
+                <div className={`absolute bottom-[-20%] right-[-20%] w-[80%] h-[80%] bg-brand-100/50 rounded-full blur-[100px] transition-all duration-[2000ms] delay-300 ${mounted ? '-translate-x-10 -translate-y-10 opacity-70' : 'opacity-0'}`} />
             </div>
 
             <div className="relative z-10 flex flex-col items-center">
                 <div className={`relative mb-8 transition-all duration-1000 ${mounted ? 'scale-100 opacity-100' : 'scale-50 opacity-0'}`}>
                     <div className="absolute inset-0 bg-brand-500/10 blur-xl rounded-full" />
-                    <div className="relative w-32 h-32 bg-white rounded-[32px] border border-slate-100 flex items-center justify-center shadow-2xl shadow-brand-500/20">
-                        <Building size={48} className="text-brand-600 drop-shadow-sm" />
+                    <div className="relative w-32 h-32 bg-white rounded-[32px] border border-slate-100 flex items-center justify-center shadow-2xl shadow-brand-glow">
+                        <Building size={48} className="text-brand-primary drop-shadow-sm" />
                     </div>
                     <div className="absolute -top-2 -right-2">
                         <Sparkles className="text-amber-400 animate-pulse" size={24} />
@@ -43,7 +43,7 @@ export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinis
 
             <div className="absolute bottom-12 flex flex-col items-center gap-2">
                 <div className="w-12 h-1 bg-slate-200 rounded-full overflow-hidden">
-                    <div className="h-full bg-gradient-to-r from-brand-500 to-fuchsia-500 animate-progress origin-left" style={{ animationDuration: '4s' }} />
+                    <div className="h-full bg-brand-gradient-horizontal animate-progress origin-left" style={{ animationDuration: '4s' }} />
                 </div>
                 <span className="text-[10px] text-slate-400 uppercase tracking-widest">Carregando Experiência</span>
             </div>
@@ -76,7 +76,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
             <div className="relative z-10 w-full max-w-sm">
                 <div className="text-center mb-10">
                     <div className="w-24 h-24 bg-white rounded-[32px] border border-slate-100 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-slate-200/50">
-                        <Building size={40} className="text-brand-600" />
+                        <Building size={40} className="text-brand-primary" />
                     </div>
                     <h1 className="text-3xl font-black tracking-tighter mb-2 text-slate-900">Bem-vindo</h1>
                     <p className="text-slate-500 font-medium text-sm">Acesse seu condomínio exclusivo</p>
@@ -177,7 +177,7 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
         <div className="min-h-screen bg-slate-50 flex flex-col relative overflow-hidden text-slate-900">
             {/* Background */}
             <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-brand-100/50 rounded-full blur-[100px] translate-x-1/2 -translate-y-1/4" />
-            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-indigo-100/50 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/4" />
+            <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-brand-100/50 rounded-full blur-[100px] -translate-x-1/2 translate-y-1/4" />
 
             {/* Header */}
             <div className="relative z-10 px-6 pt-12 pb-6 flex items-center justify-between">
@@ -186,7 +186,7 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
                 </button>
                 <div className="flex gap-2">
                     {[1, 2, 3].map(s => (
-                        <div key={s} className={`h-1 rounded-full transition-all duration-500 ${s <= step ? 'w-8 bg-brand-500' : 'w-2 bg-slate-200'}`} />
+                        <div key={s} className={`h-1 rounded-full transition-all duration-500 ${s <= step ? 'w-8 bg-brand-primary' : 'w-2 bg-slate-200'}`} />
                     ))}
                 </div>
             </div>
@@ -229,11 +229,11 @@ export const ResidentRegistrationModern: React.FC<{ onFinish: () => void; onBack
                 <button
                     onClick={() => { if (step < 3) setStep(step + 1); else handleRegister(); }}
                     disabled={loading}
-                    className="w-full h-14 bg-slate-900 text-white rounded-2xl flex items-center justify-between px-6 font-bold text-lg hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
+                    className="w-full h-14 bg-brand-gradient text-brand-contrast rounded-2xl flex items-center justify-between px-6 font-bold text-lg hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-brand-glow border-none"
                 >
                     <span>{step === 3 ? (loading ? 'Criando...' : 'Finalizar') : 'Continuar'}</span>
-                    <div className="w-8 h-8 bg-white/10 rounded-full flex items-center justify-center">
-                        {step === 3 ? <CheckCircle size={18} /> : <ArrowRight size={18} />}
+                    <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
+                        {step === 3 ? <CheckCircle size={18} className="stroke-brand-contrast" /> : <ArrowRight size={18} className="stroke-brand-contrast" />}
                     </div>
                 </button>
             </div>
@@ -350,10 +350,10 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
 
 // Helper Input Component (Light Mode)
 const InputModern = ({ icon: Icon, label, value, onChange, type = "text" }: any) => (
-    <div className="group bg-white border border-slate-200 rounded-xl p-4 focus-within:ring-2 focus-within:ring-brand-500/50 focus-within:border-brand-500 transition-all shadow-sm">
+    <div className="group bg-white border border-slate-200 rounded-xl p-4 focus-within:ring-2 focus-within:ring-brand-500/50 focus-within:border-brand-primary transition-all shadow-sm">
         <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">{label}</label>
         <div className="flex items-center gap-3">
-            <Icon size={18} className="text-slate-400 group-focus-within:text-brand-500 transition-colors" />
+            <Icon size={18} className="text-slate-400 group-focus-within:text-brand-primary transition-colors" />
             <input type={type} value={value} onChange={e => onChange(e.target.value)} className="bg-transparent border-none outline-none w-full text-lg placeholder-slate-300 text-slate-900 font-medium" />
         </div>
     </div>

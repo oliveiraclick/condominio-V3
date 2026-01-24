@@ -10,7 +10,7 @@ import { PushNotificationButton } from '../components/PushNotificationButton';
 const PAGE_CONTAINER = "p-6 space-y-6 pt-12 animate-in slide-in-from-right-8 pb-32 relative z-10";
 const HEADER_TITLE = "text-3xl font-black italic text-slate-900 uppercase tracking-tighter";
 const CARD_BASE = "bg-white p-5 rounded-[32px] border border-slate-100 shadow-lg backdrop-blur-sm transition-all hover:bg-slate-50";
-const GRADIENT_TEXT = "bg-gradient-to-r from-brand-600 to-fuchsia-600 bg-clip-text text-transparent";
+const GRADIENT_TEXT = "bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent";
 
 // --- MESSAGE USER MODAL ---
 const MessageUserModal: React.FC<{ isOpen: boolean; onClose: () => void; user: any }> = ({ isOpen, onClose, user }) => {
@@ -65,7 +65,7 @@ const MessageUserModal: React.FC<{ isOpen: boolean; onClose: () => void; user: a
           />
           <textarea
             placeholder="Digite sua mensagem..."
-            className="w-full h-32 bg-slate-50 border border-slate-200 rounded-3xl p-5 text-sm resize-none outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-slate-900 placeholder-slate-400 focus:bg-white"
+            className="w-full h-32 bg-slate-50 border border-slate-200 rounded-3xl p-5 text-sm resize-none outline-none focus:ring-2 focus:ring-blue-500/20 transition-all font-medium text-slate-900 placeholder-slate-400 focus:bg-white"
             value={form.body}
             onChange={e => setForm({ ...form, body: e.target.value })}
           />
@@ -119,14 +119,14 @@ const DashboardView = () => {
       </div>
 
       <div className="grid grid-cols-2 gap-4">
-        <div className="bg-gradient-to-br from-indigo-600 to-indigo-900 rounded-[40px] p-8 text-white shadow-2xl shadow-indigo-500/20 col-span-2 relative overflow-hidden group border border-white/10">
+        <div className="bg-gradient-to-r from-blue-600 to-cyan-600 rounded-[40px] p-8 text-white shadow-2xl shadow-blue-500/20 col-span-2 relative overflow-hidden group border border-white/10">
           <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-700"><DollarSign size={120} /></div>
-          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-indigo-500/30 rounded-full blur-3xl"></div>
-          <p className="text-[10px] font-bold uppercase tracking-widest text-indigo-200 mb-2 relative z-10">MRR Mensal</p>
+          <div className="absolute -bottom-10 -left-10 w-40 h-40 bg-blue-500/30 rounded-full blur-3xl"></div>
+          <p className="text-[10px] font-bold uppercase tracking-widest text-blue-200 mb-2 relative z-10">MRR Mensal</p>
           <h3 className="text-5xl font-black italic tracking-tighter relative z-10">R$ {stats.mrr.toLocaleString('pt-BR')}</h3>
         </div>
         <div className={CARD_BASE}>
-          <div className="w-10 h-10 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mb-3"><Building size={20} /></div>
+          <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center mb-3"><Building size={20} /></div>
           <p className="text-[10px] font-bold uppercase tracking-widest text-slate-500 mb-1">Condomínios</p>
           <h3 className="text-3xl font-black text-slate-900">{stats.condos}</h3>
         </div>
@@ -159,7 +159,11 @@ const DashboardView = () => {
 const CondosView = () => {
   const [condos, setCondos] = useState<any[]>([]);
   const [showNew, setShowNew] = useState(false);
-  const [newCondo, setNewCondo] = useState({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '', symbol_url: '', symbol_opacity: 15 });
+  const [newCondo, setNewCondo] = useState({
+    name: '', address: '', plan: 'basic', type: 'vertical', status: 'active',
+    primary_color: '#3b82f6', secondary_color: '#06b6d4', contrast_color: '#ffffff',
+    logo_url: '', symbol_url: '', symbol_opacity: 15
+  });
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [symbolFile, setSymbolFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
@@ -231,7 +235,11 @@ const CondosView = () => {
       setShowNew(false);
       setEditingId(null);
       loadCondos();
-      setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '', symbol_url: '', symbol_opacity: 15 });
+      setNewCondo({
+        name: '', address: '', plan: 'basic', type: 'vertical', status: 'active',
+        primary_color: '#3b82f6', secondary_color: '#06b6d4', contrast_color: '#ffffff',
+        logo_url: '', symbol_url: '', symbol_opacity: 15
+      });
       setLogoFile(null);
       setSymbolFile(null);
     } else {
@@ -248,6 +256,8 @@ const CondosView = () => {
       type: condo.type || 'vertical',
       status: condo.status || 'active',
       primary_color: condo.primary_color || '#7c3aed',
+      secondary_color: condo.secondary_color || '#06b6d4',
+      contrast_color: condo.contrast_color || '#ffffff',
       logo_url: condo.logo_url || '',
       symbol_url: condo.symbol_url || '',
       symbol_opacity: condo.symbol_opacity || 15
@@ -275,7 +285,7 @@ const CondosView = () => {
     <div className={PAGE_CONTAINER}>
       <div className="flex justify-between items-end mb-6">
         <h1 className={HEADER_TITLE}>Condos</h1>
-        <button onClick={() => { setShowNew(true); setEditingId(null); setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#7c3aed', logo_url: '', symbol_url: '', symbol_opacity: 15 }); }} className="w-12 h-12 bg-white text-slate-900 rounded-2xl flex items-center justify-center shadow-md shadow-slate-200 active:scale-90 transition-all hover:bg-slate-50 border border-slate-100"><Plus size={24} /></button>
+        <button onClick={() => { setShowNew(true); setEditingId(null); setNewCondo({ name: '', address: '', plan: 'basic', type: 'vertical', status: 'active', primary_color: '#3b82f6', logo_url: '', symbol_url: '', symbol_opacity: 15 }); }} className="w-12 h-12 bg-white text-slate-900 rounded-2xl flex items-center justify-center shadow-md shadow-slate-200 active:scale-90 transition-all hover:bg-slate-50 border border-slate-100"><Plus size={24} /></button>
       </div>
 
       {showNew && (
@@ -374,6 +384,32 @@ const CondosView = () => {
                 <span className="text-xs font-bold text-slate-400 uppercase">{newCondo.primary_color}</span>
               </div>
             </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Cor Secundária (Degradê)</label>
+              <div className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-2 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={newCondo.secondary_color}
+                  onChange={(e) => setNewCondo({ ...newCondo, secondary_color: e.target.value })}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer bg-transparent"
+                />
+                <span className="text-xs font-bold text-slate-400 uppercase">{newCondo.secondary_color}</span>
+              </div>
+            </div>
+
+            <div className="space-y-1">
+              <label className="text-[10px] font-black text-slate-400 uppercase ml-2">Cor de Contraste (Texto)</label>
+              <div className="w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-2 flex items-center gap-2">
+                <input
+                  type="color"
+                  value={newCondo.contrast_color}
+                  onChange={(e) => setNewCondo({ ...newCondo, contrast_color: e.target.value })}
+                  className="w-8 h-8 rounded-full border-none cursor-pointer bg-transparent"
+                />
+                <span className="text-xs font-bold text-slate-400 uppercase">{newCondo.contrast_color}</span>
+              </div>
+            </div>
           </div>
 
           <div className="flex gap-2 pt-2">
@@ -420,7 +456,7 @@ const CondosView = () => {
           </div>
         ))}
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -1530,7 +1566,13 @@ export const SuperAdmin = ({ onLogout, currentUser }: any) => {
 
               <div className="p-4 pt-2 border-t border-slate-100">
                 <button
-                  onClick={() => onLogout()}
+                  onClick={async () => {
+                    await onLogout();
+                    localStorage.removeItem('userRole_cache');
+                    localStorage.removeItem('userProfile_cache');
+                    window.location.href = '/';
+                    window.location.reload();
+                  }}
                   className="w-full h-14 bg-rose-50 text-rose-500 rounded-[28px] flex items-center justify-center gap-3 font-black uppercase tracking-widest text-[11px] hover:bg-rose-100 transition-all active:scale-95"
                 >
                   <LogOut size={18} />

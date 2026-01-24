@@ -26,7 +26,7 @@ export default defineConfig(({ mode }) => {
           name: 'App Morador - Condomínio',
           short_name: 'CondoConnect',
           description: 'Gestão Inteligente de Condomínios',
-          theme_color: '#7c3aed',
+          theme_color: '#3b82f6',
           icons: [
             {
               src: 'icon.png',

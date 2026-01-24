@@ -48,7 +48,7 @@ export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; 
             <div className="relative w-full max-w-md bg-white rounded-t-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-12">
                 <div className="flex items-center justify-between mb-6">
                     <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-600">
+                        <div className="w-10 h-10 bg-brand-50 rounded-xl flex items-center justify-center text-brand-primary">
                             <Sparkles size={20} />
                         </div>
                         <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Sugestões</h2>
@@ -64,7 +64,7 @@ export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; 
                             <button
                                 key={t}
                                 onClick={() => setType(t)}
-                                className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${type === t ? 'bg-brand-600 text-white' : 'bg-slate-50 text-slate-400'}`}
+                                className={`flex-1 py-3 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${type === t ? 'bg-brand-gradient text-brand-contrast shadow-md' : 'bg-slate-50 text-slate-400'}`}
                             >
                                 {t}
                             </button>
@@ -78,7 +78,7 @@ export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; 
                                 <button
                                     key={a}
                                     onClick={() => setArea(a)}
-                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border ${area === a ? 'bg-slate-900 text-white border-slate-900 shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}
+                                    className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border ${area === a ? 'bg-brand-primary text-white border-brand-primary shadow-md' : 'bg-white text-slate-400 border-slate-100'}`}
                                 >
                                     {a}
                                 </button>
@@ -89,7 +89,7 @@ export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; 
                     <div>
                         <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3 block ml-1">Sua mensagem</label>
                         <textarea
-                            className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-500/20"
+                            className="w-full bg-slate-50 border border-slate-100 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-primary/20"
                             placeholder="Explique sua ideia ou sugestão..."
                             value={content}
                             onChange={(e) => setContent(e.target.value)}
@@ -99,7 +99,7 @@ export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; 
                     <button
                         onClick={handleSubmit}
                         disabled={loading}
-                        className="w-full py-5 bg-slate-900 text-white rounded-[24px] font-black uppercase tracking-widest text-xs hover:bg-slate-800 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-slate-900/20"
+                        className="w-full py-5 bg-brand-gradient text-brand-contrast rounded-[24px] font-black uppercase tracking-widest text-xs hover:opacity-90 active:scale-[0.98] transition-all disabled:opacity-50 shadow-xl shadow-brand-glow border-none"
                     >
                         {loading ? 'Enviando...' : 'Enviar Feedback'}
                     </button>

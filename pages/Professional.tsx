@@ -89,7 +89,7 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
           `}</style>
           {loading ? (
             <div className="flex items-center justify-center py-12">
-              <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+              <div className="w-8 h-8 border-4 border-brand-primary border-t-transparent rounded-full animate-spin"></div>
             </div>
           ) : notifications.length === 0 ? (
             <div className="text-center py-12">
@@ -104,7 +104,7 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
               <div key={notif.id} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm space-y-3 animate-in slide-in-from-bottom-2 relative group hover:bg-slate-50 transition-colors">
                 <div className="flex justify-between items-start gap-3">
                   <h4 className="font-black text-slate-900 text-base italic tracking-tight flex-1">{notif.title}</h4>
-                  <Badge className={`text-[8px] uppercase px-2 py-1 ${notif.target_role === 'all' ? 'bg-brand-50 text-brand-600' :
+                  <Badge className={`text-[8px] uppercase px-2 py-1 ${notif.target_role === 'all' ? 'bg-blue-50 text-blue-600' :
                     notif.target_role === 'resident' ? 'bg-blue-50 text-blue-600' :
                       'bg-emerald-50 text-emerald-600'
                     }`}>
@@ -119,7 +119,7 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
                   </div>
                   <button
                     onClick={() => markAsRead(notif.id)}
-                    className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-emerald-100 active:scale-95 transition-all opacity-0 group-hover:opacity-100"
+                    className="text-[10px] font-black uppercase text-emerald-600 bg-emerald-50 px-3 py-1.5 rounded-lg hover:bg-brand-primary/10 active:scale-95 transition-all opacity-0 group-hover:opacity-100"
                   >
                     Marcar Lido
                   </button>
@@ -129,7 +129,7 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
           )}
         </div>
       </div>
-    </div>
+    </div >
   );
 };
 
@@ -218,11 +218,11 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
               placeholder="Fale sobre você ou sua empresa..."
               value={formData.description}
               onChange={e => setFormData({ ...formData, description: e.target.value })}
-              className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-slate-900 placeholder-slate-400 focus:bg-white"
+              className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all text-slate-900 placeholder-slate-400 focus:bg-white"
             />
           </div>
 
-          <Button fullWidth onClick={handleSave} disabled={loading} className="h-14 bg-emerald-500 text-white hover:bg-emerald-600 font-black uppercase text-xs tracking-widest mt-2 shadow-lg shadow-emerald-500/20">{loading ? 'Salvando...' : 'Salvar Perfil'}</Button>
+          <Button fullWidth onClick={handleSave} disabled={loading} className="h-14 bg-emerald-500 text-white hover:bg-emerald-600 font-black uppercase text-xs tracking-widest mt-2 shadow-lg shadow-brand-primary/20">{loading ? 'Salvando...' : 'Salvar Perfil'}</Button>
         </div>
       </div>
     </div>
@@ -275,7 +275,7 @@ const ProposalModal: React.FC<{
       <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-md" onClick={onClose}></div>
       <div className="relative w-full max-w-sm bg-white border border-slate-100 rounded-[40px] p-8 shadow-2xl animate-in zoom-in-95 duration-300">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-emerald-100 rounded-[24px] flex items-center justify-center mx-auto mb-2 shadow-sm">
+          <div className="w-16 h-16 bg-emerald-50 text-emerald-600 border border-brand-primary/10 rounded-[24px] flex items-center justify-center mx-auto mb-2 shadow-sm">
             <Megaphone size={32} />
           </div>
           <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Enviar Proposta</h3>
@@ -289,7 +289,7 @@ const ProposalModal: React.FC<{
                 placeholder="R$ 0,00"
                 value={price}
                 onChange={(e) => setPrice(e.target.value)}
-                className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-6 font-bold text-slate-900 placeholder-slate-400 focus:bg-white focus:border-emerald-500/50"
+                className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-6 font-bold text-slate-900 placeholder-slate-400 focus:bg-white focus:border-brand-primary/50"
               />
             </div>
             <div className="text-left">
@@ -298,7 +298,7 @@ const ProposalModal: React.FC<{
                 placeholder="Explique como você pode ajudar..."
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-emerald-500/50 transition-all text-slate-900 placeholder-slate-400 focus:bg-white"
+                className="w-full h-32 bg-slate-50 border border-slate-200 rounded-2xl p-6 text-sm font-medium resize-none outline-none focus:ring-2 focus:ring-brand-primary/50 transition-all text-slate-900 placeholder-slate-400 focus:bg-white"
               />
             </div>
           </div>
@@ -307,7 +307,7 @@ const ProposalModal: React.FC<{
             onClick={handleSubmit}
             disabled={loading}
             fullWidth
-            className="h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest shadow-xl shadow-emerald-500/30 active:scale-95 transition-all"
+            className="h-14 bg-brand-gradient text-brand-contrast font-black uppercase tracking-widest shadow-xl shadow-brand-glow active:scale-95 transition-all border-none"
           >
             {loading ? 'Enviando...' : 'Confirmar Proposta'}
           </Button>
@@ -382,7 +382,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
       <div className="flex items-center justify-between mb-4">
         <h3 className="font-bold text-slate-500 uppercase text-xs tracking-widest ml-1">Mural de Oportunidades</h3>
         {currentUser?.category && (
-          <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-emerald-500 text-white shadow-md shadow-emerald-500/20">
+          <span className="px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest bg-brand-primary text-brand-contrast shadow-md shadow-brand-glow">
             {currentUser.category}
           </span>
         )}
@@ -407,7 +407,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
           {demands.map((demand, index) => {
             const hasProposal = myProposals.has(demand.id);
             return (
-              <div key={demand.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className={`p-5 rounded-[24px] shadow-sm transition-all duration-300 animate-in slide-in-from-right-4 fade-in border border-slate-100 hover:border-emerald-200 hover:shadow-md ${hasProposal ? 'bg-emerald-50' : 'bg-white'}`}>
+              <div key={demand.id} style={{ animationDelay: `${index * 100}ms`, animationFillMode: 'both' }} className={`p-5 rounded-[24px] shadow-sm transition-all duration-300 animate-in slide-in-from-right-4 fade-in border border-slate-100 hover:border-brand-primary/20 hover:shadow-md ${hasProposal ? 'bg-brand-primary/5' : 'bg-white'}`}>
                 <div className="flex items-start gap-4 mb-3">
                   <div className="w-10 h-10 rounded-xl overflow-hidden bg-slate-50 shrink-0 border border-slate-100">
                     <img src={demand.profiles?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${demand.profiles?.name}`} className="w-full h-full object-cover" />
@@ -417,9 +417,9 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
                       <div>
                         <h4 className="font-black text-slate-900 text-sm italic leading-none">{demand.profiles?.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
-                          <p className="text-[9px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-50 px-2 py-0.5 rounded-full inline-block">{demand.category}</p>
+                          <p className="text-[9px] font-black text-brand-primary uppercase tracking-widest bg-brand-primary/10 px-2 py-0.5 rounded-full inline-block">{demand.category}</p>
                           {hasProposal && (
-                            <span className="text-[8px] font-black text-emerald-600 uppercase tracking-widest bg-emerald-100 px-2 py-0.5 rounded-full flex items-center gap-1">
+                            <span className="text-[8px] font-black text-brand-primary uppercase tracking-widest bg-brand-primary/5 px-2 py-0.5 rounded-full flex items-center gap-1">
                               <Check size={8} /> Enviada
                             </span>
                           )}
@@ -434,7 +434,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
                 {hasProposal ? (
                   <button
                     disabled
-                    className="w-full h-12 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest border border-emerald-100 cursor-not-allowed opacity-80"
+                    className="w-full h-12 bg-brand-primary/10 text-brand-primary rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest border border-brand-primary/5 cursor-not-allowed opacity-80"
                   >
                     <CheckCircle2 size={16} />
                     Proposta Enviada
@@ -445,7 +445,7 @@ const MuralOpportunities: React.FC<{ currentUser: any }> = ({ currentUser }) => 
                       setSelectedDemand(demand);
                       setProposalModalOpen(true);
                     }}
-                    className="w-full h-12 bg-white text-emerald-600 border-2 border-emerald-500 rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-emerald-50 transition-all active:scale-95 hover:shadow-lg"
+                    className="w-full h-12 bg-white text-brand-primary border-2 border-brand-primary rounded-2xl flex items-center justify-center gap-2 text-[10px] font-black uppercase tracking-widest hover:bg-brand-primary/5 transition-all active:scale-95 hover:shadow-lg"
                   >
                     <Zap size={16} />
                     Enviar Proposta
@@ -536,7 +536,7 @@ const LeadsCRM: React.FC<{ currentUser: any }> = ({ currentUser }) => {
                     <span className="text-[8px] font-bold text-slate-400 uppercase shrink-0">{new Date(lead.created_at).toLocaleDateString()}</span>
                   </div>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isAuction ? 'bg-emerald-100 text-emerald-600' : 'bg-emerald-50 text-emerald-500'}`}>
+                    <span className={`text-[9px] font-black uppercase tracking-widest px-2 py-0.5 rounded-full ${isAuction ? 'bg-brand-primary/10 text-emerald-600' : 'bg-emerald-50 text-emerald-500'}`}>
                       {isAuction ? 'Leilão Vencido' : 'WhatsApp Direto'}
                     </span>
                     <button
@@ -733,9 +733,6 @@ export const ProfessionalDashboard: React.FC<{
               try {
                 const { error } = await supabase.from('profiles').update({ is_on_site: newState }).eq('id', currentUser.id);
 
-                // NOTIFICAÇÃO AUTOMÁTICA (MARKETING HI-LOCAL)
-                // Gerada via Database Trigger "on_professional_online"
-
                 if (error) {
                   setIsOnSite(!newState); // Rollback on error
                   console.error('Erro ao atualizar status:', error);
@@ -745,7 +742,7 @@ export const ProfessionalDashboard: React.FC<{
                 console.error(e);
               }
             }}
-            className={`w-14 h-8 rounded-full transition-all flex items-center px-1.5 ${isOnSite ? 'bg-emerald-500' : 'bg-slate-200'}`}
+            className={`w-14 h-8 rounded-full transition-all flex items-center px-1.5 ${isOnSite ? 'bg-brand-primary' : 'bg-slate-200'}`}
           >
             <div className={`w-5 h-5 rounded-full bg-white shadow-md transition-transform ${isOnSite ? 'translate-x-6' : 'translate-x-0'}`}></div>
           </button>
@@ -858,7 +855,7 @@ export const ProfessionalDashboard: React.FC<{
               onClick={() => onNavigate?.('shop')}
               className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-lg flex flex-col items-center gap-4 active:scale-95 transition-all group hover:bg-slate-50 backdrop-blur-sm"
             >
-              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[22px] flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-emerald-100">
+              <div className="w-14 h-14 bg-emerald-50 text-emerald-600 rounded-[22px] flex items-center justify-center group-hover:bg-emerald-600 group-hover:text-white transition-colors border border-brand-primary/10">
                 <Store size={26} />
               </div>
               <div className="text-center">
@@ -1039,7 +1036,7 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
                 </div>
                 <Badge className={`text-[8px] uppercase px-2 py-1 ${request.status === 'pending' ? 'bg-amber-100 text-amber-600' :
                   request.status === 'accepted' ? 'bg-blue-100 text-blue-600' :
-                    'bg-emerald-100 text-emerald-600'
+                    'bg-brand-primary/10 text-emerald-600'
                   }`}>
                   {request.status === 'pending' ? 'Pendente' :
                     request.status === 'accepted' ? 'Aceito' : 'Concluído'}
@@ -1086,7 +1083,7 @@ export const ProfessionalAgenda = ({ currentUser, serviceRequests, onUpdateReque
                 <div className="flex gap-2 pt-2">
                   <button
                     onClick={() => handleAccept(request.id)}
-                    className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all flex items-center justify-center gap-2"
+                    className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-primary/10 active:scale-95 transition-all flex items-center justify-center gap-2"
                   >
                     <Check size={16} />
                     Aceitar
@@ -1417,7 +1414,7 @@ export const ProfessionalServices = ({ currentUser, categories = [] }: any) => {
 
                 <button
                   onClick={() => handleEdit(service)}
-                  className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-100 active:scale-95 transition-all"
+                  className="flex-1 h-10 bg-emerald-50 text-emerald-600 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-primary/10 active:scale-95 transition-all"
                 >
                   Editar
                 </button>
@@ -1625,7 +1622,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
         <div className="flex p-1.5 bg-white/5 rounded-3xl shadow-sm border border-white/10 backdrop-blur-sm">
           <button
             onClick={() => setActiveTab('receivable')}
-            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'receivable' ? 'bg-emerald-500/20 text-emerald-400 shadow-lg' : 'text-slate-500 hover:text-white'
+            className={`flex-1 py-3.5 rounded-2xl text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'receivable' ? 'bg-brand-primary/20 text-emerald-400 shadow-lg' : 'text-slate-500 hover:text-white'
               }`}
           >
             Contas a Receber
@@ -1644,7 +1641,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
           <button
             onClick={() => setShowAddForm(true)}
             className={`w-full h-14 rounded-2xl font-bold text-xs uppercase tracking-wider active:scale-95 transition-all flex items-center justify-center gap-2 ${activeTab === 'receivable'
-              ? 'bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20'
+              ? 'bg-brand-primary/10 text-emerald-400 hover:bg-brand-primary/20 border border-brand-primary/20'
               : 'bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 border border-rose-500/20'
               }`}
           >
@@ -1732,7 +1729,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
                         <h4 className="font-black text-white text-base italic tracking-tight">{item.description}</h4>
                         <p className="text-xs text-slate-400 mt-1">{item.client} • {item.location}</p>
                       </div>
-                      <Badge className={`text-[8px] uppercase px-2 py-1 ${item.status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
+                      <Badge className={`text-[8px] uppercase px-2 py-1 ${item.status === 'paid' ? 'bg-brand-primary/20 text-emerald-400' : 'bg-amber-500/20 text-amber-400'
                         }`}>
                         {item.status === 'paid' ? 'Pago' : 'Pendente'}
                       </Badge>
@@ -1746,7 +1743,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
                       {item.status !== 'paid' && (
                         <button
                           onClick={() => handleUpdateStatus(item.id, 'service_requests', 'paid')}
-                          className="h-10 px-4 bg-emerald-500/10 text-emerald-400 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-500/20 active:scale-95 transition-all"
+                          className="h-10 px-4 bg-brand-primary/10 text-emerald-400 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-primary/20 active:scale-95 transition-all"
                         >
                           Marcar como Pago
                         </button>
@@ -1776,7 +1773,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
                           Vencimento: {new Date(item.due_date).toLocaleDateString('pt-BR')}
                         </p>
                       </div>
-                      <Badge className={`text-[8px] uppercase px-2 py-1 ${item.status === 'paid' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
+                      <Badge className={`text-[8px] uppercase px-2 py-1 ${item.status === 'paid' ? 'bg-brand-primary/20 text-emerald-400' : 'bg-rose-500/20 text-rose-400'
                         }`}>
                         {item.status === 'paid' ? 'Pago' : 'Pendente'}
                       </Badge>
@@ -1790,7 +1787,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
                       {item.status !== 'paid' && (
                         <button
                           onClick={() => handleUpdateStatus(item.id, 'professional_expenses', 'paid')}
-                          className="h-10 px-4 bg-emerald-500/10 text-emerald-400 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-emerald-500/20 active:scale-95 transition-all"
+                          className="h-10 px-4 bg-brand-primary/10 text-emerald-400 rounded-xl font-bold text-xs uppercase tracking-wider hover:bg-brand-primary/20 active:scale-95 transition-all"
                         >
                           Marcar como Pago
                         </button>
@@ -1893,7 +1890,7 @@ export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout
           <select
             value={formData.category}
             onChange={e => setFormData({ ...formData, category: e.target.value })}
-            className="w-full h-14 bg-white/5 rounded-2xl px-4 font-bold text-white border-none outline-none focus:ring-2 focus:ring-emerald-500/50"
+            className="w-full h-14 bg-white/5 rounded-2xl px-4 font-bold text-white border-none outline-none focus:ring-2 focus:ring-brand-primary/50"
           >
             <option value="" className="bg-slate-900 text-slate-500">Selecione a categoria</option>
             {categories.filter((c: any) => !c.parent_id && c.type === 'service').map((parent: any) => {
@@ -2267,7 +2264,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-start justify-between gap-2">
                     <h4 className="font-black text-slate-900 text-base italic tracking-tight">{product.title}</h4>
-                    <Badge className={`text-[8px] uppercase px-2 py-1 ${product.available ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
+                    <Badge className={`text-[8px] uppercase px-2 py-1 ${product.available ? 'bg-brand-primary/10 text-emerald-600' : 'bg-slate-100 text-slate-400'}`}>
                       {product.available ? 'Disponível' : 'Indisponível'}
                     </Badge>
                   </div>
@@ -2371,7 +2368,7 @@ export const ProfessionalNavigation = ({ activeTab, onChange, currentUser, onLog
                       onChange(item.id);
                       setMenuOpen(false);
                     }}
-                    className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-slate-900 text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
+                    className={`flex flex-col items-center justify-center p-4 rounded-3xl gap-2 transition-all ${activeTab === item.id ? 'bg-brand-gradient text-white shadow-lg' : 'bg-slate-50 text-slate-400 hover:bg-slate-100 hover:text-slate-600'}`}
                   >
                     <item.icon size={20} />
                     <span className="text-[9px] font-black uppercase tracking-tight">{item.label}</span>
@@ -2406,10 +2403,10 @@ export const ProfessionalNavigation = ({ activeTab, onChange, currentUser, onLog
           <button
             key={item.id}
             onClick={() => { onChange(item.id); setMenuOpen(false); }}
-            className={`flex-1 relative h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-slate-50 text-slate-900' : 'text-slate-300 hover:bg-slate-50'}`}
+            className={`flex-1 relative h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${activeTab === item.id && !menuOpen ? 'bg-brand-50 text-brand-primary' : 'text-slate-300 hover:bg-slate-50'}`}
           >
             <item.icon size={24} strokeWidth={activeTab === item.id ? 2.5 : 2} />
-            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'text-slate-900' : 'text-slate-300'}`}>
+            <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${activeTab === item.id ? 'text-brand-primary' : 'text-slate-300'}`}>
               {item.label}
             </span>
           </button>
@@ -2418,7 +2415,7 @@ export const ProfessionalNavigation = ({ activeTab, onChange, currentUser, onLog
         {/* Menu Trigger */}
         <button
           onClick={() => setMenuOpen(!menuOpen)}
-          className={`relative w-16 h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-slate-900 text-white shadow-lg' : 'text-slate-300 hover:bg-slate-50'}`}
+          className={`relative w-16 h-14 rounded-2xl flex flex-col items-center justify-center transition-all duration-300 ${menuOpen ? 'bg-brand-gradient text-white shadow-lg' : 'text-slate-300 hover:bg-slate-50'}`}
         >
           <Menu size={24} strokeWidth={menuOpen ? 2.5 : 2} />
           <span className={`text-[8px] font-black uppercase tracking-tighter mt-1 ${menuOpen ? 'text-white' : 'text-slate-300'}`}>
