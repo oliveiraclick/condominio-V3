@@ -158,8 +158,8 @@ export const ResidentModern: React.FC<{
                         <BannerCarousel />
                     </div>
 
-                    {/* NEW: MURAL DE OPORTUNIDADES BANNER */}
-                    <div onClick={() => setMuralOpen(true)} className="w-full bg-brand-gradient-horizontal rounded-3xl p-5 shadow-xl shadow-brand-glow text-brand-contrast relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between mt-2">
+                    {/* NEW: MURAL DE OPORTUNIDADES BANNER (Oculto por solicitação) */}
+                    {/* <div onClick={() => setMuralOpen(true)} className="w-full bg-brand-gradient-horizontal rounded-3xl p-5 shadow-xl shadow-brand-glow text-brand-contrast relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between mt-2">
                         <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
                         <div className="relative z-10 flex items-center gap-4">
                             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
@@ -173,7 +173,7 @@ export const ResidentModern: React.FC<{
                         <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative z-10">
                             <Plus size={18} className="text-brand-contrast" />
                         </div>
-                    </div>
+                    </div> */}
 
                     {/* 3. HERO BANNER (Compact Height) */}
                     <section>

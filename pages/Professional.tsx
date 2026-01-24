@@ -780,10 +780,11 @@ export const ProfessionalDashboard: React.FC<{
           </div>
         </div>
 
-        {/* MURAL DE OPORTUNIDADES (NEW) */}
+        {/* MURAL DE OPORTUNIDADES (Oculto por solicitação)
         <div className="mb-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
           <MuralOpportunities currentUser={currentUser} />
         </div>
+        */}
 
         {/* GUIA DO PRESTADOR (DYNAMIC) */}
         <div className="mb-8 relative group">

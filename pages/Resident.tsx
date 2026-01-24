@@ -1751,7 +1751,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
         )}
       </div>
 
-      {/* MURAL DE DEMANDAS - MOVED HERE */}
+      {/* MURAL DE DEMANDAS - OCULTO
       <div className="mt-8 bg-brand-gradient-horizontal rounded-[32px] p-6 text-brand-contrast shadow-xl shadow-brand-glow relative overflow-hidden">
         <div className="relative z-10 flex items-center justify-between gap-4">
           <div className="flex-1">
@@ -1770,6 +1770,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           </button>
         </div>
       </div>
+      */}
 
       {/* PROFESSIONAL DETAIL MODAL */}
       {selectedPro && (
