@@ -25,6 +25,9 @@ import {
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
   AdminNavigation, AdminIncidents, AdminGarage, AdminCategories, AdminProfile, AdminBanners
 } from './pages/Admin';
+import { AdminPackageReceipt } from './pages/AdminPackageReceipt';
+import { AdminPackageProcessing } from './pages/AdminPackageProcessing';
+import { AdminPackagePickup } from './pages/AdminPackagePickup';
 import { SuperAdmin } from './pages/SuperAdmin';
 
 // IMPORTS MODO MODERNO (BETA)
@@ -267,6 +270,13 @@ const App: React.FC = () => {
       let { data: { session: initialSession } } = await supabase.auth.getSession();
       if (initialSession) {
         setSession(initialSession);
+
+        // Inicializa Push Notifications
+        // Import must be added at top, but usage here
+        import('./services/PushNotificationService').then(({ PushNotificationService }) => {
+          PushNotificationService.init();
+        });
+
         const cached = localStorage.getItem('userRole_cache');
         if (cached) {
           setUserRole(cached as UserRole);
@@ -687,7 +697,10 @@ const App: React.FC = () => {
           case 'dashboard': return <AdminDashboard onNavigate={pushScreen} onLogout={() => supabase.auth.signOut()} />;
           case 'admin-residents': return <AdminResidents onBack={goBack} />;
           case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={refreshAppData} />;
-          case 'admin-packages': return <AdminPackages onBack={goBack} />;
+          case 'admin-packages': return <AdminPackages onBack={goBack} onNavigate={pushScreen} />;
+          case 'package-receipt': return <AdminPackageReceipt onBack={goBack} currentUser={currentUser} />;
+          case 'package-processing': return <AdminPackageProcessing onBack={goBack} currentUser={currentUser} onNavigate={pushScreen} />;
+          case 'package-pickup': return <AdminPackagePickup onBack={goBack} currentUser={currentUser} />;
           case 'admin-banners': return <AdminBanners onBack={goBack} />;
           case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
           case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;

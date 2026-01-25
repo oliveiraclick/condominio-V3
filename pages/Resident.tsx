@@ -743,21 +743,14 @@ export const ResidentHome: React.FC<{
   };
 
   const handleConfirmHandshake = async (pkgId: string) => {
-    const { error } = await supabase
-      .from('packages')
-      .update({ status: 'delivered' })
-      .eq('id', pkgId);
+    const { error } = await supabase.rpc('resident_confirm_receipt', {
+      p_package_id: pkgId
+    });
 
     if (!error) {
       alert('Entrega confirmada! Obrigado.');
-      // Local state will refresh via subscription/useEffect
-      // Force immediate refresh of localPackages if possible (the subscription handles it but safety first)
-      const { data } = await supabase
-        .from('packages')
-        .select('*')
-        .or(`resident_id.eq.${currentUser.id},picked_up_by.eq.${currentUser.id}`)
-        .in('status', ['pending', 'awaiting_confirmation']);
-      if (data) setLocalPackages(data);
+      // Refresh
+      if (onClearNotifications) onClearNotifications();
     } else {
       alert('Erro ao confirmar: ' + error.message);
     }

@@ -36,3 +36,4 @@ create policy "Users can delete their own subscriptions"
 
 -- Index for performance (optional for small volume)
 create index if not exists push_subscriptions_user_id_idx on public.push_subscriptions(user_id);
+
