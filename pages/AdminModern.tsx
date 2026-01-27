@@ -90,9 +90,12 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                     {[
                         { id: 'overview', icon: LayoutGrid, label: 'Visão Geral' },
                         { id: 'admin-residents', icon: Users, label: 'Moradores' },
+                        { id: 'package-receipt', icon: Box, label: 'Receber (Lote)' },
+                        { id: 'package-processing', icon: ClipboardCheck, label: 'Triagem' },
+                        { id: 'package-pickup', icon: User, label: 'Retirada' },
                         { id: 'admin-incidents', icon: AlertTriangle, label: 'Ocorrências' },
                         { id: 'admin-reservations', icon: Calendar, label: 'Reservas' },
-                        { id: 'admin-access', icon: ShieldCheck, label: 'Portaria' },
+                        { id: 'admin-access', icon: ShieldCheck, label: 'Portaria (Acesso)' },
                         { id: 'admin-finance', icon: DollarSign, label: 'Financeiro' },
                     ].map(item => (
                         <button
