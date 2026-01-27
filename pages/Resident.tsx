@@ -22,6 +22,7 @@ import { CommunicationHub } from './CommunicationHub';
 import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
 import { CalendarPicker } from '../components/CalendarPicker';
+import { NewsTicker } from '../components/NewsTicker';
 
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 
@@ -1054,6 +1055,9 @@ export const ResidentHome: React.FC<{
       <div className="p-6 space-y-12">
         {/* CARROSSEL DE MURAL (ADVERTISING) */}
         <BannerCarousel />
+
+        {/* NEWS TICKER (PLANTÃO CONDOMÍNIO) */}
+        <NewsTicker userRole="resident" />
 
         {/* PRESTADORES NO LOCAL (NEW) */}
         {onSitePros.length > 0 && (

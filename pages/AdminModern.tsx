@@ -3,7 +3,7 @@ import { supabase } from '../supabase';
 import {
     Dumbbell, MessageSquare, Car, LogOut, LayoutGrid, Users,
     ShieldCheck, Calendar, Bell, Search, ChevronRight, TrendingUp,
-    AlertTriangle, DollarSign
+    AlertTriangle, DollarSign, Box, ClipboardCheck, User
 } from 'lucide-react';
 
 export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void }> = ({ onNavigate }) => {
