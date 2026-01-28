@@ -25,6 +25,8 @@ import { CalendarPicker } from '../components/CalendarPicker';
 import { NewsTicker } from '../components/NewsTicker';
 
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
+import { BiometricService } from '../services/BiometricService';
+import { Fingerprint } from 'lucide-react';
 
 
 // --- COMPONENTES DE APOIO ---
@@ -1402,6 +1404,41 @@ export const ResidentHome: React.FC<{
 export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: string) => void }> = ({ currentUser, onNavigate }) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
+  const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+
+  useEffect(() => {
+    const checkBio = async () => {
+      const creds = await BiometricService.getCredentials();
+      setBiometricsEnabled(!!creds);
+    };
+    checkBio();
+  }, []);
+
+  const handleToggleBiometrics = async () => {
+    if (biometricsEnabled) {
+      if (window.confirm('Deseja desativar o acesso por biometria?')) {
+        await BiometricService.deleteCredentials();
+        setBiometricsEnabled(false);
+      }
+    } else {
+      const { available } = await BiometricService.isAvailable();
+      if (!available) {
+        alert('Biometria não disponível neste dispositivo.');
+        return;
+      }
+
+      const pass = window.prompt('Para ativar, confirme sua senha atual:');
+      if (pass) {
+        try {
+          await BiometricService.saveCredentials(currentUser.email, pass);
+          setBiometricsEnabled(true);
+          alert('Login biométrico ativado!');
+        } catch (e) {
+          alert('Erro ao salvar credenciais.');
+        }
+      }
+    }
+  };
 
   const handleLogout = async () => {
     if (window.confirm('Deseja realmente sair?')) {
@@ -1468,6 +1505,14 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
       <div className="p-10 space-y-4">
         {[
           { icon: <User size={20} />, label: 'Dados Pessoais', desc: 'Edite seu perfil e contatos', onClick: () => onNavigate('personal-data') },
+          {
+            icon: <Fingerprint size={20} />,
+            label: 'Login Biométrico',
+            desc: biometricsEnabled ? 'Ativado (Digital/Face)' : 'Toque para ativar',
+            color: biometricsEnabled ? 'text-emerald-600' : 'text-slate-600',
+            bg: biometricsEnabled ? 'bg-emerald-50' : 'bg-slate-100',
+            onClick: handleToggleBiometrics
+          },
           { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade', onClick: () => onNavigate('privacy') },
           { icon: <LogOut size={20} />, label: 'Encerrar Sessão', color: 'text-rose-600', bg: 'bg-rose-50', onClick: handleLogout },
         ].map((item, i) => (

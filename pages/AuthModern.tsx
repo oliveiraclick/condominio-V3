@@ -51,18 +51,52 @@ export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinis
     );
 };
 
+import { BiometricService } from '../services/BiometricService';
+import { Fingerprint } from 'lucide-react';
+
 // --- LOGIN MODERN (LIGHT THEME) ---
 export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRegister: () => void }> = ({ onLogin, onRegister }) => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [loading, setLoading] = useState(false);
+    const [hasBiometrics, setHasBiometrics] = useState(false);
 
-    const handleLogin = async () => {
+    useEffect(() => {
+        const checkBiometrics = async () => {
+            const { available } = await BiometricService.isAvailable();
+            const credentials = await BiometricService.getCredentials();
+            if (available && credentials) {
+                setHasBiometrics(true);
+                // Opcional: Tentar login automático via biometria ao abrir se preferir
+            }
+        };
+        checkBiometrics();
+    }, []);
+
+    const handleLogin = async (e?: any, forcedEmail?: string, forcedPassword?: string) => {
+        if (e) e.preventDefault();
         setLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+        const loginEmail = forcedEmail || email;
+        const loginPass = forcedPassword || password;
+
+        const { data, error } = await supabase.auth.signInWithPassword({
+            email: loginEmail,
+            password: loginPass
+        });
+
         if (error) alert(error.message);
         else onLogin(data.session);
         setLoading(false);
+    };
+
+    const handleBiometricLogin = async () => {
+        const credentials = await BiometricService.getCredentials();
+        if (!credentials) return;
+
+        const authenticated = await BiometricService.authenticate();
+        if (authenticated) {
+            handleLogin(null, credentials.username, credentials.password);
+        }
     };
 
     return (
@@ -110,13 +144,26 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                     </div>
                 </div>
 
-                <button
-                    onClick={handleLogin}
-                    disabled={loading}
-                    className="w-full h-14 bg-slate-900 text-white rounded-2xl font-bold text-lg mb-4 hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
-                >
-                    {loading ? 'Entrando...' : 'Entrar'}
-                </button>
+                <div className="flex gap-3 mb-4">
+                    <button
+                        onClick={handleLogin}
+                        disabled={loading}
+                        className="flex-1 h-14 bg-slate-900 text-white rounded-2xl font-bold text-lg hover:bg-black active:scale-[0.98] transition-all disabled:opacity-50 shadow-lg shadow-slate-900/20"
+                    >
+                        {loading ? 'Entrando...' : 'Entrar'}
+                    </button>
+
+                    {hasBiometrics && (
+                        <button
+                            onClick={handleBiometricLogin}
+                            disabled={loading}
+                            title="Entrar com Biometria"
+                            className="w-14 h-14 bg-white border border-slate-200 text-slate-900 rounded-2xl flex items-center justify-center hover:bg-slate-50 active:scale-[0.98] transition-all shadow-sm"
+                        >
+                            <Fingerprint size={24} />
+                        </button>
+                    )}
+                </div>
 
                 <button
                     onClick={onRegister}

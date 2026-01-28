@@ -17,6 +17,7 @@
     "@capacitor/ios": "^8.0.0",
     "@capacitor/push-notifications": "^8.0.0",
     "@capacitor/splash-screen": "^8.0.0",
+    "@capgo/capacitor-native-biometric": "^8.3.3",
     "@supabase/supabase-js": "^2.89.0",
     "@yudiel/react-qr-scanner": "^2.5.0",
     "lucide-react": "^0.562.0",
