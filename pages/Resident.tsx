@@ -793,6 +793,58 @@ export const ResidentHome: React.FC<{
     <div className="min-h-screen bg-slate-50 pb-32 relative w-full overflow-x-hidden">
       {/* HEADER: ON-SITE BANNER REMOVED AS REQUESTED */}
 
+      {/* WEB-ONLY PROMOTIONAL BANNER */}
+      <div className="hidden lg:block w-full bg-gradient-to-r from-brand-900 to-slate-900 text-white overflow-hidden shadow-xl mb-6 relative">
+        <div className="max-w-7xl mx-auto px-8 py-12 flex items-center justify-between relative z-10">
+          <div className="max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-500/20 border border-brand-500/30 text-brand-300 text-xs font-bold uppercase tracking-widest mb-4">
+              <Sparkles size={14} className="text-brand-400" />
+              <span>CondoHub Web</span>
+            </div>
+            <h1 className="text-4xl font-black italic tracking-tighter mb-4 leading-tight">
+              Gerencie seu condomínio <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-brand-400 to-emerald-400">com mais conforto.</span>
+            </h1>
+            <p className="text-slate-400 text-lg sm:max-w-lg mb-8 leading-relaxed">
+              Aproveite a visualização expandida do seu painel no computador. Mais espaço, mais clareza, a mesma agilidade.
+            </p>
+            <div className="flex gap-4">
+              <button className="bg-brand-500 hover:bg-brand-600 text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-sm shadow-lg shadow-brand-500/20 transition-all active:scale-95">
+                Ver Novidades
+              </button>
+              <button className="bg-white/10 hover:bg-white/20 text-white px-8 py-3 rounded-2xl font-black uppercase tracking-widest text-sm backdrop-blur-sm transition-all active:scale-95">
+                Documentação
+              </button>
+            </div>
+          </div>
+
+          {/* Decorative Illustration for Banner */}
+          <div className="hidden xl:block relative">
+            <div className="w-80 h-80 bg-brand-500/20 rounded-full blur-3xl absolute -top-10 -right-10"></div>
+            <div className="relative bg-white/5 backdrop-blur-md border border-white/10 p-6 rounded-[32px] shadow-2xl skew-y-3 -rotate-6 transform hover:rotate-0 hover:skew-y-0 transition-all duration-700 cursor-pointer">
+              <div className="flex items-center gap-4 mb-4">
+                <div className="w-12 h-12 rounded-2xl bg-brand-500 flex items-center justify-center text-white">
+                  <Building2 size={24} />
+                </div>
+                <div>
+                  <h4 className="font-bold text-white">Condomínio Seguro</h4>
+                  <p className="text-xs text-slate-400">Status: Monitorado</p>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="w-48 h-2 bg-white/10 rounded-full"></div>
+                <div className="w-32 h-2 bg-white/10 rounded-full"></div>
+                <div className="w-40 h-2 bg-white/10 rounded-full"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Background Patterns */}
+        <div className="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-brand-900/50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 w-full h-px bg-gradient-to-r from-transparent via-white/10 to-transparent"></div>
+      </div>
+
       {/* PACKAGE ALERT BANNER (Persistent Strip) */}
       {showPackageAlert && (
         <div className="bg-amber-400 p-4 px-6 flex items-center justify-between shadow-sm relative z-30 animate-in slide-in-from-top-2">
@@ -3478,35 +3530,45 @@ export const BannerCarousel: React.FC = () => {
   }, [banners]);
 
   if (banners.length === 0) return (
-    <div className="w-full h-40 bg-slate-100 rounded-[32px] animate-pulse flex items-center justify-center">
+    <div className="w-full h-40 bg-slate-100 rounded-none animate-pulse flex items-center justify-center">
       <span className="text-slate-300 font-bold uppercase text-xs tracking-widest">Carregando Novidades...</span>
     </div>
   );
 
+  // FORCE DUPLICATION FOR DEMO IF ONLY 1 BANNER (To show rotation)
+  const displayBanners = banners.length === 1 ? [...banners, { ...banners[0], id: 'dummy-2', title: banners[0].title + ' (Destaque)', image_url: banners[0].image_url }] : banners;
+
   return (
-    <div className="relative w-full h-48 md:h-56 rounded-[32px] overflow-hidden shadow-lg group">
-      {banners.map((banner, index) => (
+    <div className="relative w-full h-56 md:h-64 rounded-none overflow-hidden shadow-sm group bg-slate-900">
+      {displayBanners.map((banner, index) => (
         <div
-          key={banner.id}
+          key={banner.id || index}
           onClick={() => banner.link_url && window.open(banner.link_url, '_blank')}
-          className={`absolute inset-0 transition-opacity duration-1000 ${index === currentIndex ? 'opacity-100 z-10 cursor-pointer' : 'opacity-0 z-0'}`}
+          className={`absolute inset-0 transition-all duration-1000 ease-in-out ${index === currentIndex ? 'opacity-100 z-10 scale-100' : 'opacity-0 z-0 scale-105'}`}
         >
-          <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-6">
-            <div>
-              {banner.title && <h3 className="text-white font-black italic text-xl md:text-2xl drop-shadow-lg">{banner.title}</h3>}
+          <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover opacity-90" />
+
+          {/* Gradient Overlay Improved */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 pb-8">
+            <div className="animate-in slide-in-from-bottom-4 duration-700 fade-in fill-mode-forwards">
+              <span className="bg-brand-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block">Destaque</span>
+              {banner.title && <h3 className="text-white font-black italic text-2xl md:text-3xl drop-shadow-xl leading-none mb-1">{banner.title}</h3>}
               {banner.link_url && (
-                <span className="text-[10px] text-white/80 font-bold uppercase tracking-widest mt-1 block">Saiba Mais &rarr;</span>
+                <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest flex items-center gap-1">Saiba Mais <ChevronRight size={12} className="text-brand-400" /></span>
               )}
             </div>
           </div>
         </div>
       ))}
 
-      {banners.length > 1 && (
-        <div className="absolute bottom-4 right-6 z-20 flex gap-2">
-          {banners.map((_, idx) => (
-            <div key={idx} className={`w-2 h-2 rounded-full transition-all ${idx === currentIndex ? 'bg-white w-4' : 'bg-white/40'}`} />
+      {/* Modern Dots Indicator */}
+      {displayBanners.length > 1 && (
+        <div className="absolute bottom-4 right-6 z-30 flex gap-2">
+          {displayBanners.map((_, idx) => (
+            <div
+              key={idx}
+              className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === currentIndex ? 'bg-brand-400 w-6' : 'bg-white/30 w-1.5'}`}
+            />
           ))}
         </div>
       )}

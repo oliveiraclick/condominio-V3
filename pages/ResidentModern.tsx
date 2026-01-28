@@ -9,6 +9,7 @@ import { Card } from '../components/ui';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 // Imports from original Resident file to preserve functionality
 import { ProfessionalDetailModal, ReviewModal, MuralDemandModal, DigitalIDModal, AuthorizationModal, BannerCarousel, NotificationsModal } from './Resident';
+import { NewsTicker } from '../components/NewsTicker';
 
 // New Component: Service Category Item (Square)
 const ServiceCategoryItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isNew?: boolean; className?: string; iconClassName?: string }> = ({ icon, label, onClick, isNew, className, iconClassName }) => (
@@ -149,216 +150,188 @@ export const ResidentModern: React.FC<{
                     </div>
                 </header>
 
-                <main className="p-6 space-y-8">
+                <main className="pb-32">
                     {/* 2. CATEGORIES CAROUSEL */}
-                    <section className="relative group/nav">
-                        {/* Navigation Arrows */}
-                        <button
-                            onClick={() => handleScroll(categoryScrollRef, 'left')}
-                            className="absolute -left-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                        >
-                            <ChevronLeft size={20} />
-                        </button>
-                        <button
-                            onClick={() => handleScroll(categoryScrollRef, 'right')}
-                            className="absolute -right-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                        >
-                            <ChevronRight size={20} />
-                        </button>
+                    <div className="px-6 pt-6 space-y-8">
+                        <section className="relative group/nav">
+                            {/* Navigation Arrows */}
+                            <button
+                                onClick={() => handleScroll(categoryScrollRef, 'left')}
+                                className="absolute -left-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                            >
+                                <ChevronLeft size={20} />
+                            </button>
+                            <button
+                                onClick={() => handleScroll(categoryScrollRef, 'right')}
+                                className="absolute -right-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                            >
+                                <ChevronRight size={20} />
+                            </button>
 
-                        <div ref={categoryScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                            <ServiceCategoryItem icon={<Droplets size={24} />} iconClassName="text-cyan-500" label="Encanador" onClick={() => onSelectCategory('Encanador')} />
-                            <ServiceCategoryItem icon={<Zap size={24} />} iconClassName="text-yellow-500" label="Eletricista" onClick={() => onSelectCategory('Eletricista')} />
-                            <ServiceCategoryItem icon={<Sparkles size={24} />} iconClassName="text-emerald-500" label="Limpeza" onClick={() => onSelectCategory('Limpeza')} />
-                            <ServiceCategoryItem icon={<Leaf size={24} />} iconClassName="text-green-500" label="Jardim" onClick={() => onSelectCategory('Jardinagem')} />
-                            <ServiceCategoryItem
-                                icon={<CalendarDays size={24} className="stroke-brand-contrast" />}
-                                label="Reservas"
-                                className="bg-brand-gradient border-transparent text-brand-contrast shadow-brand-glow"
-                                iconClassName="text-brand-contrast"
-                                onClick={() => onNavigate('condo-agenda')}
-                            />
-                        </div>
-                    </section>
-
-                    {/* 2.5. BANNERS (Promotions & Notices) */}
-                    <div className="px-1 -mb-2">
-                        <BannerCarousel />
+                            <div ref={categoryScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+                                <ServiceCategoryItem icon={<Droplets size={24} />} iconClassName="text-cyan-500" label="Encanador" onClick={() => onSelectCategory('Encanador')} />
+                                <ServiceCategoryItem icon={<Zap size={24} />} iconClassName="text-yellow-500" label="Eletricista" onClick={() => onSelectCategory('Eletricista')} />
+                                <ServiceCategoryItem icon={<Sparkles size={24} />} iconClassName="text-emerald-500" label="Limpeza" onClick={() => onSelectCategory('Limpeza')} />
+                                <ServiceCategoryItem icon={<Leaf size={24} />} iconClassName="text-green-500" label="Jardim" onClick={() => onSelectCategory('Jardinagem')} />
+                                <ServiceCategoryItem
+                                    icon={<CalendarDays size={24} className="stroke-brand-contrast" />}
+                                    label="Reservas"
+                                    className="bg-brand-gradient border-transparent text-brand-contrast shadow-brand-glow"
+                                    iconClassName="text-brand-contrast"
+                                    onClick={() => onNavigate('condo-agenda')}
+                                />
+                            </div>
+                        </section>
                     </div>
 
-                    {/* NEW: MURAL DE OPORTUNIDADES BANNER (Oculto por solicitação) */}
-                    {/* <div onClick={() => setMuralOpen(true)} className="w-full bg-brand-gradient-horizontal rounded-3xl p-5 shadow-xl shadow-brand-glow text-brand-contrast relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between mt-2">
-                        <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
-                        <div className="relative z-10 flex items-center gap-4">
-                            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm border border-white/10">
-                                <Megaphone size={24} className="text-brand-contrast" />
-                            </div>
-                            <div>
-                                <h4 className="font-bold text-base text-brand-contrast italic uppercase tracking-tighter leading-none mb-1">Não achou o que precisa?</h4>
-                                <p className="text-brand-contrast opacity-80 text-[10px] font-medium">Publique no Mural e receba propostas.</p>
-                            </div>
-                        </div>
-                        <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative z-10">
-                            <Plus size={18} className="text-brand-contrast" />
-                        </div>
-                    </div> */}
+                    {/* 2.5. BANNERS (Promotions & Notices) - FULL WIDTH */}
+                    <div className="mt-6 space-y-0">
+                        <BannerCarousel />
+                        <NewsTicker userRole="resident" />
+                    </div>
 
-                    {/* 3. HERO BANNER (Compact Height) */}
-                    <section>
-                        <div onClick={() => onNavigate('market')} className="w-full bg-brand-gradient-horizontal rounded-3xl p-4 shadow-xl shadow-brand-glow text-white relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group flex items-center justify-between">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-10 -mt-10 blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
-
-                            <div className="relative z-10">
-                                <h4 className="font-bold text-lg text-brand-contrast italic uppercase tracking-tighter leading-none mb-1">e-Shop Vizinho</h4>
-                                <p className="text-brand-contrast opacity-80 text-xs font-medium">Compre e venda no condomínio</p>
-                            </div>
-
-                            <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center backdrop-blur-sm relative z-10 shrink-0 ml-4">
-                                <ChevronRight size={20} className="text-brand-contrast" />
-                            </div>
-                        </div>
-                    </section>
 
                     {/* 4. SECTIONS (Scrollable Horizontal) */}
-
-                    {/* On-Site Pros (Reformas e Reparos highlight) */}
-                    {onSitePros.length > 0 && (
-                        <section className="relative group/nav">
-                            <div className="flex justify-between items-center mb-4 px-1">
-                                <div className="flex items-center gap-2">
-                                    <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                    <h3 className="font-bold text-lg text-slate-800 tracking-tight">No Condomínio</h3>
+                    <div className="px-6 mt-8 space-y-8">
+                        {/* On-Site Pros (Reformas e Reparos highlight) */}
+                        {onSitePros.length > 0 && (
+                            <section className="relative group/nav">
+                                <div className="flex justify-between items-center mb-4 px-1">
+                                    <div className="flex items-center gap-2">
+                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                                        <h3 className="font-bold text-lg text-slate-800 tracking-tight">No Condomínio</h3>
+                                    </div>
+                                    <button onClick={() => onSelectCategory('Todos')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                                 </div>
-                                <button onClick={() => onSelectCategory('Todos')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
-                            </div>
 
-                            {/* Navigation Arrows */}
-                            <button
-                                onClick={() => handleScroll(onSiteScrollRef, 'left')}
-                                className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-                            <button
-                                onClick={() => handleScroll(onSiteScrollRef, 'right')}
-                                className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-
-                            <div ref={onSiteScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                {onSitePros.map((pro, i) => (
-                                    <ServiceCard
-                                        key={i}
-                                        title={pro.name}
-                                        subtitle={pro.category}
-                                        image={pro.avatar}
-                                        onClick={() => setSelectedPro(pro)}
-                                    />
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Marketplace Destaques */}
-                    {products && products.length > 0 && (
-                        <section className="relative group/nav">
-                            <div className="flex justify-between items-center mb-4 px-1">
-                                <h3 className="font-bold text-lg text-slate-800 tracking-tight">Vitrine e-Shop</h3>
-                                <button onClick={() => onNavigate('shop-detail')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
-                            </div>
-
-                            {/* Navigation Arrows */}
-                            <button
-                                onClick={() => handleScroll(eShopScrollRef, 'left')}
-                                className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-                            <button
-                                onClick={() => handleScroll(eShopScrollRef, 'right')}
-                                className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-
-                            <div ref={eShopScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                {products.slice(0, 5).map((prod, i) => (
-                                    <ServiceCard
-                                        key={i}
-                                        title={prod.title}
-                                        subtitle={typeof prod.price === 'number' ? `R$ ${prod.price.toFixed(2)}` : prod.price}
-                                        image={prod.image_url}
-                                        onClick={() => onSelectProduct && onSelectProduct(prod)}
-                                    />
-                                ))}
-                            </div>
-                        </section>
-                    )}
-
-                    {/* Mural do Desapego (Replacing Serviços Domésticos) */}
-                    <section className="relative group/nav">
-                        <div className="flex justify-between items-center mb-4 px-1">
-                            <h3 className="font-bold text-lg text-slate-800 tracking-tight">Mural do Desapego</h3>
-                            <button onClick={() => onNavigate('desapegos-all')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
-                        </div>
-
-                        {desapegos.length > 0 ? (
-                            <>
                                 {/* Navigation Arrows */}
                                 <button
-                                    onClick={() => handleScroll(desapegoScrollRef, 'left')}
+                                    onClick={() => handleScroll(onSiteScrollRef, 'left')}
                                     className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
                                 >
                                     <ChevronLeft size={20} />
                                 </button>
                                 <button
-                                    onClick={() => handleScroll(desapegoScrollRef, 'right')}
+                                    onClick={() => handleScroll(onSiteScrollRef, 'right')}
                                     className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
                                 >
                                     <ChevronRight size={20} />
                                 </button>
 
-                                <div ref={desapegoScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                    {desapegos.map((item, i) => (
+                                <div ref={onSiteScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+                                    {onSitePros.map((pro, i) => (
                                         <ServiceCard
                                             key={i}
-                                            title={item.name || item.title}
-                                            subtitle={item.price}
-                                            image={item.img || item.image_url}
-                                            onClick={() => onSelectDesapego && onSelectDesapego(item)}
+                                            title={pro.name}
+                                            subtitle={pro.category}
+                                            image={pro.avatar}
+                                            onClick={() => setSelectedPro(pro)}
                                         />
                                     ))}
                                 </div>
-                            </>
-                        ) : (
-                            <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 text-center">
-                                <p className="text-slate-400 text-sm">Nenhum desapego anunciado ainda.</p>
-                                <button onClick={() => onNavigate('create-desapego')} className="mt-2 text-brand-primary font-bold text-xs uppercase tracking-widest">Anunciar Agora</button>
-                            </div>
+                            </section>
                         )}
-                    </section>
 
-                    {/* Feedback Trigger (Bottom) */}
-                    <div className="pt-4">
-                        <Card
-                            onClick={() => setFeedbackOpen(true)}
-                            className="bg-brand-gradient-horizontal text-brand-contrast p-6 rounded-[24px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group border-none shadow-xl shadow-brand-glow"
-                        >
-                            <div className="relative z-10 flex gap-4 items-center">
-                                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-brand-contrast group-hover:scale-110 transition-transform">
-                                    <Sparkles size={24} className="stroke-brand-contrast" />
+                        {/* Marketplace Destaques */}
+                        {products && products.length > 0 && (
+                            <section className="relative group/nav">
+                                <div className="flex justify-between items-center mb-4 px-1">
+                                    <h3 className="font-bold text-lg text-slate-800 tracking-tight">Vitrine e-Shop</h3>
+                                    <button onClick={() => onNavigate('shop-detail')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                                 </div>
-                                <div>
-                                    <h4 className="font-bold text-lg leading-none mb-1 text-brand-contrast">Sugestões?</h4>
-                                    <p className="text-brand-contrast opacity-80 text-xs font-medium">Ajude a melhorar o app.</p>
+
+                                {/* Navigation Arrows */}
+                                <button
+                                    onClick={() => handleScroll(eShopScrollRef, 'left')}
+                                    className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                                >
+                                    <ChevronLeft size={20} />
+                                </button>
+                                <button
+                                    onClick={() => handleScroll(eShopScrollRef, 'right')}
+                                    className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                                >
+                                    <ChevronRight size={20} />
+                                </button>
+
+                                <div ref={eShopScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+                                    {products.slice(0, 5).map((prod, i) => (
+                                        <ServiceCard
+                                            key={i}
+                                            title={prod.title}
+                                            subtitle={typeof prod.price === 'number' ? `R$ ${prod.price.toFixed(2)}` : prod.price}
+                                            image={prod.image_url}
+                                            onClick={() => onSelectProduct && onSelectProduct(prod)}
+                                        />
+                                    ))}
                                 </div>
+                            </section>
+                        )}
+
+                        {/* Mural do Desapego (Replacing Serviços Domésticos) */}
+                        <section className="relative group/nav">
+                            <div className="flex justify-between items-center mb-4 px-1">
+                                <h3 className="font-bold text-lg text-slate-800 tracking-tight">Mural do Desapego</h3>
+                                <button onClick={() => onNavigate('desapegos-all')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
                             </div>
-                            {/* Decorative background element */}
-                            <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
-                        </Card>
-                    </div>
 
+                            {desapegos.length > 0 ? (
+                                <>
+                                    {/* Navigation Arrows */}
+                                    <button
+                                        onClick={() => handleScroll(desapegoScrollRef, 'left')}
+                                        className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                                    >
+                                        <ChevronLeft size={20} />
+                                    </button>
+                                    <button
+                                        onClick={() => handleScroll(desapegoScrollRef, 'right')}
+                                        className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
+                                    >
+                                        <ChevronRight size={20} />
+                                    </button>
+
+                                    <div ref={desapegoScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
+                                        {desapegos.map((item, i) => (
+                                            <ServiceCard
+                                                key={i}
+                                                title={item.name || item.title}
+                                                subtitle={item.price}
+                                                image={item.img || item.image_url}
+                                                onClick={() => onSelectDesapego && onSelectDesapego(item)}
+                                            />
+                                        ))}
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 text-center">
+                                    <p className="text-slate-400 text-sm">Nenhum desapego anunciado ainda.</p>
+                                    <button onClick={() => onNavigate('create-desapego')} className="mt-2 text-brand-primary font-bold text-xs uppercase tracking-widest">Anunciar Agora</button>
+                                </div>
+                            )}
+                        </section>
+
+                        {/* Feedback Trigger (Bottom) */}
+                        <div className="pt-4">
+                            <Card
+                                onClick={() => setFeedbackOpen(true)}
+                                className="bg-brand-gradient-horizontal text-brand-contrast p-6 rounded-[24px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group border-none shadow-xl shadow-brand-glow"
+                            >
+                                <div className="relative z-10 flex gap-4 items-center">
+                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-brand-contrast group-hover:scale-110 transition-transform">
+                                        <Sparkles size={24} className="stroke-brand-contrast" />
+                                    </div>
+                                    <div>
+                                        <h4 className="font-bold text-lg leading-none mb-1 text-brand-contrast">Sugestões?</h4>
+                                        <p className="text-brand-contrast opacity-80 text-xs font-medium">Ajude a melhorar o app.</p>
+                                    </div>
+                                </div>
+                                {/* Decorative background element */}
+                                <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+                            </Card>
+                        </div>
+
+                    </div>
                 </main>
 
                 {/* --- MODALS --- */}

@@ -16,7 +16,7 @@ import {
   DesapegoFullView, DesapegoDetailView, CreateDesapegoPage
 } from './pages/Resident';
 import { CommunicationHub } from './pages/CommunicationHub';
-import { NewsTicker } from './components/NewsTicker'; // Added import
+import { NewsTicker } from './components/NewsTicker';
 import {
   ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation,
   ProfessionalServices, ProfessionalEarnings, ProfessionalProfileView, ProfessionalShop
@@ -603,7 +603,10 @@ const App: React.FC = () => {
       if (!userRole || !currentUser) return null;
 
       // LÓGICA RESIDENTE
+      // LÓGICA RESIDENTE
+      // LÓGICA RESIDENTE
       if (userRole === UserRole.RESIDENT) {
+        // --- MOBILE LAYOUT (EXISTING) ---
         switch (activeTab) {
           case 'resident':
           case 'home': return <ResidentModern currentUser={currentUser} onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} desapegos={desapegos} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} onNotifications={() => setNotificationModalOpen(true)} />;
@@ -760,7 +763,7 @@ const App: React.FC = () => {
 
   return (
     <ToastProvider>
-      <div className="relative max-w-md mx-auto shadow-2xl min-h-screen overflow-hidden border-x border-slate-100">
+      <div className="relative w-full max-w-md lg:max-w-full mx-auto shadow-2xl lg:shadow-none min-h-screen overflow-x-hidden border-x lg:border-none border-slate-100 bg-slate-50">
         {/* GLOBAL BACKGROUND (From Login) */}
         <div className="absolute inset-0 z-0 pointer-events-none fixed">
           <div className="absolute inset-0 bg-slate-50"></div>
