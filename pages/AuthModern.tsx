@@ -172,7 +172,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
                     Criar Nova Conta
                 </button>
 
-                <p className="text-center text-[10px] text-slate-300 uppercase tracking-[0.2em] mt-8 font-bold">v2.4.1</p>
+                <p className="text-center text-[10px] text-slate-300 uppercase tracking-[0.2em] mt-8 font-bold">v2.4.2</p>
             </div>
         </div>
     );
