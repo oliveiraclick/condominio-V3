@@ -303,7 +303,7 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
         {/* VERSION LABEL */}
         <p className="text-center text-[9px] text-slate-600 font-black uppercase tracking-[0.4em] mt-8 opacity-60 hover:opacity-100 transition-opacity">
-          v2.4.1 • Build 241
+          v2.4.2 • Build 242
         </p>
 
       </div>
