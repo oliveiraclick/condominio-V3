@@ -3358,11 +3358,11 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
         phone: formData.phone,
         unit: formData.unit,
         tower: formData.tower,
-        condominium_id: formData.condo
+        condominium_id: formData.condo || null
       }).eq('id', currentUser.id);
 
       if (error) throw error;
-      alert('Dados atualizados com sucesso! O aplicativo ser� recarregado para aplicar as mudan�as.');
+      alert('Dados atualizados com sucesso! O aplicativo será recarregado para aplicar as mudanças.');
       window.location.reload();
     } catch (err: any) {
       alert('Erro ao salvar: ' + err.message);
@@ -3378,16 +3378,16 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
-        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-transform hover:bg-white/10 text-white"><ArrowLeft size={20} /></button>
+        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-transform hover:bg-white/10 text-slate-900 bg-slate-200 hover:bg-slate-300"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase text-slate-900">Dados Pessoais</h2>
       </header>
       <div className="p-6 space-y-8">
         <div className="flex flex-col items-center">
-          <div className="w-32 h-32 rounded-[40px] border-4 border-white/10 shadow-xl overflow-hidden mb-4 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
+          <div className="w-32 h-32 rounded-[40px] border-4 border-white shadow-xl overflow-hidden mb-4 relative group cursor-pointer" onClick={() => fileInputRef.current?.click()}>
             <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.name}`} className="w-full h-full object-cover group-hover:opacity-80 transition-opacity" />
             {uploading && <div className="absolute inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="w-8 h-8 border-4 border-white border-t-transparent rounded-full animate-spin"></div></div>}
           </div>
-          <button onClick={() => fileInputRef.current?.click()} className="text-brand-400 font-bold text-xs uppercase bg-brand-500/10 px-4 py-2 rounded-lg active:scale-95 transition-transform hover:bg-brand-500/20" disabled={uploading}>
+          <button onClick={() => fileInputRef.current?.click()} className="text-brand-600 font-bold text-xs uppercase bg-brand-50 px-4 py-2 rounded-lg active:scale-95 transition-transform hover:bg-brand-100" disabled={uploading}>
             {uploading ? 'Enviando...' : 'Alterar Foto'}
           </button>
           <input
@@ -3399,17 +3399,17 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
           />
         </div>
 
-        <div className="space-y-6 bg-white/5 p-8 rounded-[40px] shadow-sm border border-white/10">
+        <div className="space-y-6 bg-white p-8 rounded-[40px] shadow-sm border border-slate-200">
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Nome Completo</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Nome Completo</label>
+            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
           </div>
 
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Condomínio</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Condomínio</label>
             <select
               disabled
-              className="w-full h-14 bg-slate-900/50 text-slate-500 rounded-2xl px-4 font-bold border border-white/5 outline-none appearance-none"
+              className="w-full h-14 bg-slate-100 text-slate-500 rounded-2xl px-4 font-bold border border-slate-200 outline-none appearance-none"
             >
               <option>{selectedCondoData?.name || 'Carregando...'}</option>
             </select>
@@ -3417,21 +3417,21 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
-              <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
+              <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
             </div>
             <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
-              <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
+              <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
             </div>
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">Email</label>
-            <Input value={formData.email} readOnly className="h-14 font-medium bg-slate-900/50 text-slate-500 border-white/5" />
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Email</label>
+            <Input value={formData.email} readOnly className="h-14 font-medium bg-slate-100 text-slate-400 border-slate-200" />
           </div>
           <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-2">WhatsApp</label>
-            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium bg-white/5 border-white/10 text-white placeholder-slate-500" />
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">WhatsApp</label>
+            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
           </div>
         </div>
 
@@ -3584,7 +3584,8 @@ export const BannerCarousel: React.FC = () => {
   const displayBanners = banners.length === 1 ? [...banners, { ...banners[0], id: 'dummy-2', title: banners[0].title + ' (Destaque)', image_url: banners[0].image_url }] : banners;
 
   return (
-    <div className="relative w-full h-56 md:h-64 rounded-none overflow-hidden shadow-sm group bg-slate-900">
+  return (
+    <div className="relative w-full h-56 md:h-64 shadow-sm group bg-slate-900 overflow-hidden">
       {displayBanners.map((banner, index) => (
         <div
           key={banner.id || index}
@@ -3594,12 +3595,12 @@ export const BannerCarousel: React.FC = () => {
           <img src={banner.image_url} alt={banner.title} className="w-full h-full object-cover opacity-90" />
 
           {/* Gradient Overlay Improved */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex items-end p-6 pb-8">
-            <div className="animate-in slide-in-from-bottom-4 duration-700 fade-in fill-mode-forwards">
-              <span className="bg-brand-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block">Destaque</span>
-              {banner.title && <h3 className="text-white font-black italic text-2xl md:text-3xl drop-shadow-xl leading-none mb-1">{banner.title}</h3>}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-6 pb-10">
+            <div className={`transition-all duration-700 delay-300 ${index === currentIndex ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
+              <span className="bg-brand-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block shadow-lg shadow-brand-500/20">Destaque</span>
+              {banner.title && <h3 className="text-white font-black italic text-2xl md:text-3xl drop-shadow-xl leading-none mb-1 max-w-sm">{banner.title}</h3>}
               {banner.link_url && (
-                <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest flex items-center gap-1">Saiba Mais <ChevronRight size={12} className="text-brand-400" /></span>
+                <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest flex items-center gap-1 mt-2 group-hover:text-brand-400 transition-colors">Saiba Mais <ChevronRight size={12} className="text-brand-400" /></span>
               )}
             </div>
           </div>
@@ -3608,11 +3609,12 @@ export const BannerCarousel: React.FC = () => {
 
       {/* Modern Dots Indicator */}
       {displayBanners.length > 1 && (
-        <div className="absolute bottom-4 right-6 z-30 flex gap-2">
+        <div className="absolute bottom-4 left-0 right-0 z-30 flex justify-center gap-2">
           {displayBanners.map((_, idx) => (
-            <div
+            <button
               key={idx}
-              className={`h-1.5 rounded-full transition-all duration-300 shadow-sm ${idx === currentIndex ? 'bg-brand-400 w-6' : 'bg-white/30 w-1.5'}`}
+              onClick={() => setCurrentIndex(idx)}
+              className={`h-1.5 rounded-full transition-all duration-300 shadow-sm backdrop-blur-sm ${idx === currentIndex ? 'bg-brand-400 w-8' : 'bg-white/40 w-2 hover:bg-white/60'}`}
             />
           ))}
         </div>
