@@ -62,7 +62,13 @@ const App: React.FC = () => {
 
   const goBack = () => {
     setHistory(prev => {
-      if (prev.length <= 1) return prev;
+      if (prev.length <= 1) {
+        if (activeTab !== 'home') {
+          setActiveTabRaw('home');
+          return ['home'];
+        }
+        return prev;
+      }
       const newHist = prev.slice(0, -1);
       setActiveTabRaw(newHist[newHist.length - 1]);
       return newHist;
@@ -454,6 +460,7 @@ const App: React.FC = () => {
             return {
               id: i.id, name: i.title, price: `R$ ${i.price}`, img: i.image_url,
               user: seller?.name || 'Vizinho', status: i.status ? i.status.toUpperCase() : 'DISPONÍVEL',
+              avatar: seller?.avatar,
               desc: i.description, tower: seller?.tower || '', unit: seller?.unit || '', phone: seller?.phone || ''
             };
           }));
@@ -763,7 +770,8 @@ const App: React.FC = () => {
     'desapego-detail', 'admin-access', 'admin-reservations', 'admin-incidents',
     'admin-categories', 'admin-packages', 'package-receipt',
     'package-processing', 'package-pickup', 'admin-packages-receipt',
-    'admin-packages-processing', 'admin-packages-pickup'
+    'admin-packages-processing', 'admin-packages-pickup',
+    'condo-agenda', 'resident-bookings'
   ].includes(activeTab);
 
   return (

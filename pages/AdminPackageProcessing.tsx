@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { ArrowLeft, User, QrCode, ClipboardCheck, ArrowUpRight, Search, MapPin, Smartphone, ArrowRight, Package } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { ArrowLeft, User, QrCode, ClipboardCheck, Search, MapPin, Smartphone, ArrowRight, Package, ScanLine, X, Loader2, CheckCircle2, Camera } from 'lucide-react';
 import { supabase } from '../supabase';
+import { Scanner } from '@yudiel/react-qr-scanner';
 
 interface AdminPackageProcessingProps {
     onBack: () => void;
@@ -8,71 +9,134 @@ interface AdminPackageProcessingProps {
 }
 
 export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ onBack }) => {
-    // State
-    const [step, setStep] = useState<'select' | 'form'>('select');
-    const [pendingPackages, setPendingPackages] = useState<any[]>([]);
+    // UI States
+    const [step, setStep] = useState<'search' | 'link' | 'resident' | 'location'>('search');
+    const [loading, setLoading] = useState(false);
+    const [successMessage, setSuccessMessage] = useState('');
+
+    // Data States
     const [selectedPackage, setSelectedPackage] = useState<any>(null);
     const [residents, setResidents] = useState<any[]>([]);
-    const [residentSearch, setResidentSearch] = useState('');
     const [selectedResident, setSelectedResident] = useState<any>(null);
-    const [internalCode, setInternalCode] = useState('');
-    const [location, setLocation] = useState('');
-    const [loading, setLoading] = useState(false);
 
+    // Inputs
+    const [searchCode, setSearchCode] = useState('');
+    const [internalCode, setInternalCode] = useState('');
+    const [residentSearch, setResidentSearch] = useState('');
+    const [location, setLocation] = useState('');
+
+    // Scanner State
+    const [activeScanner, setActiveScanner] = useState<'search' | 'internal' | null>(null);
+
+    // Refs for Focus Management
+    const searchInputRef = useRef<HTMLInputElement>(null);
+    const internalInputRef = useRef<HTMLInputElement>(null);
+    const residentInputRef = useRef<HTMLInputElement>(null);
+    const locationInputRef = useRef<HTMLInputElement>(null);
+
+    // Initial Load & Draft Recovery
     useEffect(() => {
-        fetchPendingPackages();
         fetchResidents();
+
+        // Recover Draft
+        const savedDraft = localStorage.getItem('triage_draft');
+        if (savedDraft) {
+            try {
+                const parsed = JSON.parse(savedDraft);
+                if (parsed.step) setStep(parsed.step);
+                if (parsed.selectedPackage) setSelectedPackage(parsed.selectedPackage);
+                if (parsed.internalCode) setInternalCode(parsed.internalCode);
+                if (parsed.selectedResident) setSelectedResident(parsed.selectedResident);
+                if (parsed.location) setLocation(parsed.location);
+            } catch (e) {
+                console.error('Error parsing draft', e);
+            }
+        }
     }, []);
 
-    const fetchPendingPackages = async () => {
+    // Save Draft on Change
+    useEffect(() => {
+        const draft = {
+            step,
+            selectedPackage,
+            internalCode,
+            selectedResident,
+            location
+        };
+        // Only save if we are past the initial step or have some data
+        if (step !== 'search' || selectedPackage) {
+            localStorage.setItem('triage_draft', JSON.stringify(draft));
+        }
+    }, [step, selectedPackage, internalCode, selectedResident, location]);
+
+    // Auto-focus logic based on Step
+    useEffect(() => {
+        if (step === 'search') setTimeout(() => searchInputRef.current?.focus(), 100);
+        if (step === 'link') setTimeout(() => internalInputRef.current?.focus(), 100);
+        if (step === 'resident') setTimeout(() => residentInputRef.current?.focus(), 100);
+        if (step === 'location') setTimeout(() => locationInputRef.current?.focus(), 100);
+    }, [step]);
+
+    const fetchResidents = async () => {
+        const { data } = await supabase.from('profiles').select('*').eq('role', 'resident');
+        if (data) setResidents(data);
+    };
+
+    // STEP 1: FIND PACKAGE (BIP 1)
+    const handleSearchStart = async (code: string) => {
+        if (!code.trim()) return;
+        setLoading(true);
         try {
+            // Find package by original_code (Carrier Barcode)
             const { data, error } = await supabase
                 .from('packages')
                 .select('*')
+                .eq('original_code', code)
                 .eq('status', 'pending_processing')
-                .order('created_at', { ascending: false });
+                .single();
 
-            if (error) throw error;
-            setPendingPackages(data || []);
-        } catch (err) {
-            console.error('Error fetching pending:', err);
+            if (data) {
+                setSelectedPackage(data);
+                setSearchCode(''); // Clear for next clear view
+                setStep('link'); // Go to link step
+            } else {
+                alert('❌ Pacote não encontrado ou já processado!');
+                setSearchCode('');
+                searchInputRef.current?.focus();
+            }
+        } catch (e) {
+            alert('Erro ao buscar pacote.');
+        } finally {
+            setLoading(false);
         }
     };
 
-    const fetchResidents = async () => {
-        try {
-            const { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('role', 'resident');
-
-            if (error) throw error;
-            setResidents(data || []);
-        } catch (err) {
-            console.error('Error fetching residents:', err);
-        }
+    // STEP 2: LINK INTERNAL TAG (BIP 2)
+    const handleLinkInternal = (code: string) => {
+        if (!code.trim()) return;
+        setInternalCode(code);
+        setStep('resident'); // Go to resident step
     };
 
-    const handleSelectPackage = (pkg: any) => {
-        setSelectedPackage(pkg);
-        setStep('form');
+    // STEP 3: LINK RESIDENT
+    const handleSelectResident = (res: any) => {
+        setSelectedResident(res);
+        setStep('location'); // Go to location step
     };
 
-    const handleSaveProcessing = async () => {
-        if (!selectedResident || !internalCode || !location) {
-            alert('Preencha todos os campos!');
-            return;
-        }
+    // STEP 4: SAVE EVERYTHING
+    const handleFinish = async () => {
+        if (!selectedPackage || !internalCode || !selectedResident || !location) return;
 
         setLoading(true);
         try {
             const { error } = await supabase
                 .from('packages')
                 .update({
-                    status: 'pending',
                     resident_id: selectedResident.id,
                     internal_code: internalCode,
                     location: location,
+                    status: 'pending', // Ready for pickup
                     processed_at: new Date().toISOString(),
                     processed_by: (await supabase.auth.getUser()).data.user?.id
                 })
@@ -80,256 +144,287 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
             if (error) throw error;
 
-            alert('Encomenda processada e morador notificado!');
-            setStep('select');
+            // Success! Reset everything for next package
+            localStorage.removeItem('triage_draft'); // Clear draft
+            setSuccessMessage(`✅ Triagem Concluída!`);
+            setTimeout(() => setSuccessMessage(''), 3000);
+
+            // Reset States
             setSelectedPackage(null);
             setSelectedResident(null);
             setInternalCode('');
+            setResidentSearch('');
             setLocation('');
-            fetchPendingPackages();
-        } catch (err) {
-            console.error('Error processing:', err);
-            alert('Erro ao salvar triagem');
+            setStep('search'); // Ready for next cycle
+
+        } catch (error: any) {
+            alert('Erro ao salvar: ' + error.message);
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredResidents = residents.filter(res =>
-        res.name.toLowerCase().includes(residentSearch.toLowerCase()) ||
-        res.unit?.toString().includes(residentSearch)
-    );
+    // Handle Camera Scan
+    const handleScan = (results: any[]) => {
+        if (results && results.length > 0) {
+            const raw = results[0].rawValue;
+            if (activeScanner === 'search') {
+                setSearchCode(raw);
+                handleSearchStart(raw);
+            } else if (activeScanner === 'internal') {
+                setInternalCode(raw);
+                handleLinkInternal(raw);
+            }
+            setActiveScanner(null);
+        }
+    };
 
-    if (step === 'select') {
-        return (
-            <div className="min-h-screen bg-slate-50">
-                <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20">
-                    <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                            <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200 transition-colors">
-                                <ArrowLeft size={20} />
-                            </button>
-                            <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Triagem Pendente</h1>
-                        </div>
-                        <div className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
-                            {pendingPackages.length} Aguardando
+    // Filter Residents
+    const filteredResidents = residents.filter(r =>
+        r.name?.toLowerCase().includes(residentSearch.toLowerCase()) ||
+        r.unit?.toLowerCase().includes(residentSearch.toLowerCase()) ||
+        r.tower?.toLowerCase().includes(residentSearch.toLowerCase())
+    ).slice(0, 5); // Limit to 5 for speed
+
+    return (
+        <div className="min-h-screen bg-slate-50 pb-32 font-sans selection:bg-brand-500/30">
+            {/* Scanner Modal */}
+            {activeScanner && (
+                <div className="fixed inset-0 z-50 bg-black flex flex-col animate-in fade-in duration-300">
+                    <div className="relative flex-1 bg-black">
+                        <button
+                            onClick={() => setActiveScanner(null)}
+                            className="absolute top-6 right-6 z-50 w-14 h-14 bg-white/20 backdrop-blur rounded-full flex items-center justify-center text-white hover:bg-white/30 transition-all"
+                        >
+                            <X size={28} />
+                        </button>
+                        <Scanner
+                            onScan={handleScan}
+                            allowMultiple={true}
+                            scanDelay={2000}
+                        />
+                        <div className="absolute bottom-24 left-0 right-0 text-center pointer-events-none">
+                            <p className="text-white font-bold bg-black/50 inline-block px-6 py-3 rounded-full backdrop-blur text-sm uppercase tracking-widest border border-white/10">
+                                {activeScanner === 'search' ? 'Bipe o Pacote Original' : 'Bipe a Etiqueta Interna'}
+                            </p>
                         </div>
                     </div>
                 </div>
+            )}
 
-                <div className="max-w-xl mx-auto px-6 py-8">
-                    {pendingPackages.length === 0 ? (
-                        <div className="bg-white p-12 rounded-[40px] text-center border-2 border-dashed border-slate-200 space-y-4">
-                            <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                                <ClipboardCheck size={40} />
+            {/* Success Toast */}
+            {successMessage && (
+                <div className="fixed top-0 left-0 right-0 bg-emerald-500 text-white p-6 text-center font-black uppercase tracking-widest z-50 animate-in slide-in-from-top-full shadow-2xl text-sm flex items-center justify-center gap-3">
+                    <CheckCircle2 size={24} />
+                    {successMessage}
+                </div>
+            )}
+
+            {/* Header */}
+            <div className="bg-white/80 backdrop-blur-xl border-b border-slate-200 sticky top-0 z-40 px-6 py-4 flex items-center justify-between shadow-sm">
+                <div className="flex items-center gap-4">
+                    <button onClick={onBack} className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center hover:bg-slate-50 transition-all border border-slate-200 shadow-sm text-slate-600 active:scale-95">
+                        <ArrowLeft />
+                    </button>
+                    <div>
+                        <h1 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Triagem Flash</h1>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Modo Produtividade</p>
+                    </div>
+                </div>
+                {selectedPackage && (
+                    <div className="hidden sm:block px-4 py-2 bg-blue-50 border border-blue-100 rounded-xl animate-in fade-in">
+                        <p className="text-[10px] font-black text-blue-400 uppercase tracking-widest">Processando</p>
+                        <p className="font-mono font-bold text-slate-700 tracking-widest">{selectedPackage.original_code.slice(0, 12)}...</p>
+                    </div>
+                )}
+            </div>
+
+            <div className="max-w-xl mx-auto p-6 space-y-6 mt-2">
+
+                {/* Progress Indicators */}
+                <div className="flex gap-2 mb-8 px-2">
+                    {['search', 'link', 'resident', 'location'].map((s, i) => {
+                        const isActive = s === step;
+                        const isPast = ['search', 'link', 'resident', 'location'].indexOf(step) > i;
+                        return (
+                            <div key={s} className={`h-1.5 flex-1 rounded-full transition-all duration-500 ${isActive ? 'bg-slate-900' : isPast ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+                        );
+                    })}
+                </div>
+
+                {/* STEP 1: SEARCH (SCAN 1) */}
+                {step === 'search' && (
+                    <div className="space-y-8 animate-in zoom-in-95 duration-500">
+                        <div className="text-center py-4">
+                            <div className="w-24 h-24 bg-slate-100 text-slate-900 rounded-[32px] flex items-center justify-center mx-auto mb-6 shadow-lg shadow-slate-200 border border-slate-200 animate-pulse">
+                                <Camera size={48} />
                             </div>
-                            <div>
-                                <p className="font-black text-slate-300 uppercase italic text-sm">Tudo Organizado!</p>
-                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Nenhum volume para triar</p>
+                            <h2 className="text-2xl font-black italic text-slate-900 uppercase tracking-tighter">Bipe o Pacote</h2>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest mt-2 text-[10px]">Etiqueta da Transportadora</p>
+                        </div>
+
+                        <div className="relative group">
+                            <input
+                                ref={searchInputRef}
+                                autoFocus
+                                value={searchCode}
+                                onChange={(e) => setSearchCode(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleSearchStart(searchCode);
+                                }}
+                                className="w-full h-24 bg-white border-2 border-slate-200 rounded-[32px] px-8 pl-8 pr-24 text-2xl font-mono text-center tracking-widest text-slate-900 focus:border-slate-900 focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                                placeholder="BIP AQUI"
+                            />
+                            <button
+                                onClick={() => setActiveScanner('search')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-20 h-20 bg-slate-900 text-white rounded-[24px] flex items-center justify-center hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-900/20"
+                            >
+                                <Camera size={32} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP 2: LINK (SCAN 2) */}
+                {step === 'link' && (
+                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-8 animate-in slide-in-from-right-8 duration-300">
+                        {/* Summary Card */}
+                        <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center gap-5">
+                            <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center text-slate-900 shrink-0 shadow-sm border border-slate-100"><Package size={28} /></div>
+                            <div className="min-w-0">
+                                <p className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-1">Pacote Identificado</p>
+                                <h3 className="font-bold text-slate-900 text-base truncate">{selectedPackage?.carrier_name}</h3>
+                                <p className="text-xs text-slate-500 font-mono tracking-wider truncate text-ellipsis">{selectedPackage?.original_code}</p>
                             </div>
                         </div>
-                    ) : (
-                        <div className="grid grid-cols-1 gap-4">
-                            {pendingPackages.map(pkg => (
+
+                        <div className="text-center py-2">
+                            <div className="w-24 h-24 bg-slate-100 text-slate-900 rounded-[32px] flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-sm">
+                                <Camera size={48} />
+                            </div>
+                            <h2 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Etiqueta Interna</h2>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest mt-1 text-[10px]">Vincule nosso QR Code</p>
+                        </div>
+
+                        <div className="relative group">
+                            <input
+                                ref={internalInputRef}
+                                autoFocus
+                                value={internalCode}
+                                onChange={(e) => setInternalCode(e.target.value)}
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') handleLinkInternal(internalCode);
+                                }}
+                                className="w-full h-24 bg-white border-2 border-slate-200 rounded-[32px] px-8 pl-8 pr-24 text-2xl font-mono text-center tracking-widest text-slate-900 focus:border-slate-900 focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                                placeholder="QR CODE"
+                            />
+                            <button
+                                onClick={() => setActiveScanner('internal')}
+                                className="absolute right-2 top-1/2 -translate-y-1/2 w-20 h-20 bg-slate-900 text-white rounded-[24px] flex items-center justify-center hover:bg-slate-800 transition-all active:scale-95 shadow-xl shadow-slate-900/20"
+                            >
+                                <Camera size={32} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* STEP 3: RESIDENT */}
+                {step === 'resident' && (
+                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6 animate-in slide-in-from-right-8 duration-300">
+                        <div className="grid grid-cols-2 gap-3">
+                            <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm">
+                                <p className="text-[9px] uppercase tracking-widest text-slate-400 mb-1">Origem</p>
+                                <p className="font-bold text-slate-900 text-xs truncate font-mono">{selectedPackage?.original_code?.slice(-6)}</p>
+                            </div>
+                            <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100">
+                                <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1">Interno</p>
+                                <p className="font-bold text-slate-900 text-xs truncate font-mono">{internalCode}</p>
+                            </div>
+                        </div>
+
+                        <div className="text-center pt-2">
+                            <h2 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Destinatário</h2>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest mt-1 text-[10px]">Quem vai receber?</p>
+                        </div>
+
+                        <div className="relative">
+                            <input
+                                ref={residentInputRef}
+                                autoFocus
+                                value={residentSearch}
+                                onChange={(e) => setResidentSearch(e.target.value)}
+                                className="w-full h-24 bg-white border-2 border-slate-200 rounded-[32px] px-8 pl-8 pr-14 text-2xl font-bold text-slate-900 focus:border-slate-900 focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                                placeholder="Nome, Bloco ou Unidade..."
+                            />
+                            <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
+                        </div>
+
+                        <div className="space-y-3">
+                            {filteredResidents.map(res => (
                                 <button
-                                    key={pkg.id}
-                                    onClick={() => handleSelectPackage(pkg)}
-                                    className="w-full bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between hover:border-blue-200 transition-all active:scale-[0.98] text-left group overflow-hidden relative"
+                                    key={res.id}
+                                    onClick={() => handleSelectResident(res)}
+                                    className="w-full bg-white p-4 rounded-[24px] border border-slate-100 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all flex items-center justify-between group active:scale-[0.98]"
                                 >
-                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500 scale-y-50 group-hover:scale-y-100 transition-transform origin-top"></div>
-                                    <div className="flex-1 min-w-0 pr-4">
-                                        <div className="flex items-center gap-2 mb-2">
-                                            <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">
-                                                {pkg.carrier_name}
-                                            </span>
-                                            <span className="text-[10px] text-slate-400 font-mono font-bold">
-                                                ID: {pkg.original_code.slice(0, 10)}...
-                                            </span>
+                                    <div className="text-left flex items-center gap-4">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs group-hover:bg-emerald-100 group-hover:text-emerald-700 transition-colors">
+                                            {res.unit}
                                         </div>
-                                        <h3 className="font-black text-slate-900 italic uppercase text-sm tracking-tight">Entregador: {pkg.courier_name || 'Não inf.'}</h3>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
-                                            Recebido em {new Date(pkg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(pkg.created_at).toLocaleDateString()}
-                                        </p>
+                                        <div>
+                                            <p className="font-black text-slate-900 italic text-base leading-tight">{res.name}</p>
+                                            <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">{res.tower}</p>
+                                        </div>
                                     </div>
-                                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-50 group-hover:scale-110 transition-all">
-                                        <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600" />
-                                    </div>
+                                    <ArrowRight size={20} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
                                 </button>
                             ))}
                         </div>
-                    )}
-                </div>
-            </div>
-        );
-    }
-
-    return (
-        <div className="min-h-screen bg-slate-50">
-            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
-                <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <button onClick={() => setStep('select')} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200 transition-colors">
-                            <ArrowLeft size={20} />
-                        </button>
-                        <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Detalhes da Triagem</h1>
                     </div>
-                </div>
-            </div>
+                )}
 
-            <div className="max-w-xl mx-auto px-6 py-8 space-y-8">
-
-                {/* Package Info Card */}
-                <div className="bg-slate-900 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-8 opacity-10 scale-150">
-                        <Package size={80} className="text-white" />
-                    </div>
-                    <div className="relative z-10 flex items-center gap-4 mb-6">
-                        <div className="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
-                            <Package size={24} />
-                        </div>
-                        <div>
-                            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Objeto Selecionado</p>
-                            <h2 className="text-lg font-black italic text-white uppercase tracking-tight">{selectedPackage?.original_code}</h2>
-                        </div>
-                    </div>
-                    <div className="relative z-10 grid grid-cols-2 gap-8 border-t border-white/5 pt-6">
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Transportadora</span>
-                            <span className="block font-bold text-white uppercase italic">{selectedPackage?.carrier_name}</span>
-                        </div>
-                        <div className="space-y-1">
-                            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Entregador</span>
-                            <span className="block font-bold text-white uppercase italic">{selectedPackage?.courier_name || 'Não Inf.'}</span>
-                        </div>
-                    </div>
-                </div>
-
-                {/* 1. Internal Code (QR) */}
-                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
-                            <QrCode size={20} />
-                        </div>
-                        <div>
-                            <h2 className="text-sm font-black text-slate-900 italic uppercase">1. Etiqueta Interna</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Identificador do Condomínio</p>
-                        </div>
-                    </div>
-                    <input
-                        autoFocus
-                        type="text"
-                        placeholder="Bipe a etiqueta interna..."
-                        value={internalCode}
-                        onChange={(e) => setInternalCode(e.target.value)}
-                        className="w-full h-16 px-6 bg-slate-50 border border-slate-100 rounded-[28px] focus:border-amber-500 focus:bg-white outline-none font-mono text-xl tracking-widest transition-all placeholder:text-slate-300"
-                    />
-                </div>
-
-                {/* 2. Resident Selection */}
-                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
-                            <User size={20} />
-                        </div>
-                        <div>
-                            <h2 className="text-sm font-black text-slate-900 italic uppercase">2. Vincular Morador</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Dono da Encomenda</p>
-                        </div>
-                    </div>
-
-                    {!selectedResident ? (
-                        <div className="relative group">
-                            <input
-                                type="text"
-                                placeholder="Buscar por nome ou unidade..."
-                                value={residentSearch}
-                                onChange={(e) => setResidentSearch(e.target.value)}
-                                className="w-full h-16 pl-14 pr-6 bg-slate-50 border border-slate-100 rounded-[28px] focus:border-emerald-500 focus:bg-white outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300 shadow-inner"
-                            />
-                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-emerald-500 transition-colors" size={20} />
-
-                            {residentSearch.length > 1 && (
-                                <div className="absolute top-full left-0 right-0 mt-4 bg-white rounded-[32px] shadow-2xl border border-slate-100 max-h-72 overflow-y-auto z-20 animate-in slide-in-from-top-4 duration-300">
-                                    <div className="p-2 space-y-1">
-                                        {filteredResidents.map(res => (
-                                            <button
-                                                key={res.id}
-                                                onClick={() => { setSelectedResident(res); setResidentSearch(''); }}
-                                                className="w-full p-4 text-left hover:bg-emerald-50 rounded-2xl flex items-center gap-4 transition-all group/item"
-                                            >
-                                                <div className="w-12 h-12 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 group-hover/item:border-emerald-100">
-                                                    {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : <User className="w-6 h-6 m-3 text-slate-200" />}
-                                                </div>
-                                                <div className="flex-1">
-                                                    <p className="font-black text-slate-900 italic uppercase text-sm">{res.name}</p>
-                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{res.tower} • Unidade {res.unit}</p>
-                                                </div>
-                                                <ArrowRight size={16} className="text-slate-200 group-hover/item:text-emerald-500 group-hover/item:translate-x-1 transition-all" />
-                                            </button>
-                                        ))}
-                                    </div>
-                                </div>
-                            )}
-                        </div>
-                    ) : (
-                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[32px] flex items-center justify-between group">
-                            <div className="flex items-center gap-4">
-                                <div className="w-14 h-14 bg-white rounded-2xl overflow-hidden border-2 border-emerald-200 shadow-sm transition-transform group-hover:scale-105">
-                                    {selectedResident.avatar ? <img src={selectedResident.avatar} className="w-full h-full object-cover" /> : <User className="w-7 h-7 m-3.5 text-emerald-200" />}
-                                </div>
-                                <div>
-                                    <p className="font-black text-emerald-900 italic uppercase tracking-tight">{selectedResident.name}</p>
-                                    <p className="text-[11px] text-emerald-600 font-black uppercase tracking-widest">{selectedResident.tower} • UNIDADE {selectedResident.unit}</p>
-                                </div>
+                {/* STEP 4: LOCATION */}
+                {step === 'location' && (
+                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-8 animate-in slide-in-from-right-8 duration-300">
+                        <div className="bg-emerald-900 p-8 rounded-[40px] flex items-center gap-6 shadow-xl shadow-emerald-900/20 text-white relative overflow-hidden">
+                            <div className="absolute top-0 right-0 p-8 opacity-10">
+                                <User size={100} />
                             </div>
-                            <button
-                                onClick={() => setSelectedResident(null)}
-                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500 hover:bg-emerald-100 transition-colors shadow-sm"
-                            >
-                                <ArrowLeft size={18} />
-                            </button>
+                            <div className="relative z-10 w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center text-white"><User size={32} /></div>
+                            <div className="relative z-10">
+                                <h3 className="font-black text-white text-xl italic">{selectedResident?.name}</h3>
+                                <p className="text-[10px] text-emerald-200 font-bold uppercase tracking-widest mt-1">Unidade {selectedResident?.unit} • {selectedResident?.tower}</p>
+                            </div>
                         </div>
-                    )}
-                </div>
 
-                {/* 3. Location */}
-                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
-                    <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center">
-                            <MapPin size={20} />
+                        <div className="text-center py-2">
+                            <div className="w-20 h-20 bg-slate-100 text-slate-900 rounded-[32px] flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-sm animate-bounce-slow">
+                                <MapPin size={40} />
+                            </div>
+                            <h2 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Armazenamento</h2>
+                            <p className="text-slate-400 font-bold uppercase tracking-widest mt-1 text-[10px]">Onde vai ficar guardado?</p>
                         </div>
-                        <div>
-                            <h2 className="text-sm font-black text-slate-900 italic uppercase">3. Localização</h2>
-                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Onde será guardado</p>
-                        </div>
+
+                        <input
+                            ref={locationInputRef}
+                            autoFocus
+                            value={location}
+                            onChange={(e) => setLocation(e.target.value)}
+                            onKeyDown={(e) => {
+                                if (e.key === 'Enter') handleFinish();
+                            }}
+                            className="w-full h-24 bg-white border-2 border-slate-200 rounded-[32px] px-8 text-2xl font-bold text-center text-slate-900 focus:border-slate-900 focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                            placeholder="Ex: P-01, Box A"
+                        />
+
+                        <button
+                            onClick={handleFinish}
+                            className="w-full h-16 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 active:scale-95 transition-all flex items-center justify-center gap-3 text-sm"
+                        >
+                            <CheckCircle2 size={20} />
+                            Confirmar & Finalizar
+                        </button>
                     </div>
-                    <input
-                        type="text"
-                        placeholder="Ex: Prateleira A, Gaveta 4..."
-                        value={location}
-                        onChange={(e) => setLocation(e.target.value)}
-                        className="w-full h-16 px-6 bg-slate-50 border border-slate-100 rounded-[28px] focus:border-violet-500 focus:bg-white outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300 shadow-inner"
-                    />
-                </div>
-
-                {/* Action Button */}
-                <div className="pt-8 pb-12">
-                    <button
-                        onClick={handleSaveProcessing}
-                        disabled={loading || !selectedResident || !location || !internalCode}
-                        className="w-full h-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
-                    >
-                        {loading ? 'Processando...' : (
-                            <>
-                                <Smartphone size={18} />
-                                Notificar Morador
-                            </>
-                        )}
-                    </button>
-                    <p className="text-[9px] text-center font-black text-slate-300 uppercase tracking-widest mt-6">
-                        O morador receberá uma notificação push
-                    </p>
-                </div>
+                )}
 
             </div>
         </div>

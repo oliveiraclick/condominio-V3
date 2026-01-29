@@ -1,0 +1,1 @@
+ALTER TABLE public.packages ALTER COLUMN unit DROP NOT NULL;

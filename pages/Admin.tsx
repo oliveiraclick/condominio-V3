@@ -130,6 +130,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
       items: [
         { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-blue-400', bg: 'bg-blue-500/10' },
         { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { id: 'batches', icon: <CalendarDays size={24} />, label: 'Histórico de Lotes', desc: 'Lotes Recebidos', target: 'package-batches', color: 'text-violet-400', bg: 'bg-violet-500/10' },
         { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
       ]
     },
@@ -815,7 +816,7 @@ export const AdminAccess: React.FC<{ onBack: () => void; accessList?: any[]; onC
 // --- ENCOMENDAS (COM APERTO DE MÃO DIGITAL) ---
 
 export const AdminPackages: React.FC<{ onBack: () => void; onNavigate: (t: string) => void; currentUser: any }> = ({ onBack, onNavigate, currentUser }) => {
-  const [activeTab, setActiveTab] = useState<'receipt' | 'processing' | 'pickup'>('receipt');
+  const [activeTab, setActiveTab] = useState<'receipt' | 'processing' | 'pickup' | 'batches'>('receipt');
 
   return (
     <div className="min-h-screen bg-slate-50">

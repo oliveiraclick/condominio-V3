@@ -440,7 +440,7 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
         <h4 className="font-black text-xl text-slate-900 mb-2 tracking-tighter italic truncate">{item.name}</h4>
         <div className="flex items-center gap-3 mb-6">
           <div className="w-8 h-8 rounded-full overflow-hidden border border-slate-100 shadow-sm bg-slate-100">
-            <img src={`https://picsum.photos/seed/${item.user}/100`} className="w-full h-full object-cover" alt="User" />
+            <img src={item.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${item.user}`} className="w-full h-full object-cover" alt="User" />
           </div>
           <div>
             <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest leading-none">{item.user} <span className="text-brand-600">
@@ -1268,9 +1268,9 @@ export const ResidentHome: React.FC<{
           </div>
         </div>
 
-        {/* E-SHOP (Carousel Din�mico) */}
+        {/* E-SHOP (Carousel Dinâmico) */}
         <div>
-          <SectionHeader title="e-Shop" actionLabel="Ver Todos" onAction={() => onNavigate('shop-detail')} />
+          <SectionHeader title="Vitrine E-shop" actionLabel="Ver Todos" onAction={() => onNavigate('shop-detail')} />
           {products.length > 0 ? (
             <div className="flex overflow-x-auto gap-4 pb-4 no-scrollbar">
               {products.map((item, i) => (
@@ -1324,9 +1324,33 @@ export const ResidentHome: React.FC<{
           )}
         </div>
 
-        {/* MURAL DO DESAPEGO (CARROSSEL �NICO) */}
+
+        {/* FEEDBACK TRIGGER CARD (MOVED HERE) */}
         <div>
-          <SectionHeader title="Mural do Desapego" actionLabel="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
+          <Card
+            onClick={() => setFeedbackOpen(true)}
+            className="p-8 bg-brand-gradient text-brand-contrast rounded-[48px] shadow-2xl shadow-brand-glow border-none relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
+          >
+            <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/30 transition-all duration-700"></div>
+
+            <div className="flex items-center gap-6 relative z-10">
+              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-brand-400 shadow-inner">
+                <Sparkles size={32} />
+              </div> {/* Closing div for the Sparkles container */}
+              <div className="flex-1">
+                <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none mb-2">💡 Ajude a melhorar o App</h3>
+                <p className="text-xs text-slate-400 font-medium leading-relaxed">Sua ideia pode ser a próxima funcionalidade do sistema!</p>
+              </div>
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-brand-500 transition-all">
+                <ChevronRight size={20} />
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
+        <div>
+          <SectionHeader title="Vitrine Desapego" actionLabel="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
 
           <div className="relative group">
             {desapegos.length > 0 && (
@@ -1364,27 +1388,13 @@ export const ResidentHome: React.FC<{
           </div>
         </div>
 
-        {/* FEEDBACK TRIGGER CARD */}
+        {/* FEEDBACK TRIGGER CARD (MOVED UP) */}
         <div className="pb-12">
-          <Card
-            onClick={() => setFeedbackOpen(true)}
-            className="p-8 bg-brand-gradient text-brand-contrast rounded-[48px] shadow-2xl shadow-brand-glow border-none relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
-          >
-            <div className="absolute top-0 right-0 w-32 h-32 bg-white/20 rounded-full -mr-16 -mt-16 blur-3xl group-hover:bg-white/30 transition-all duration-700"></div>
-
-            <div className="flex items-center gap-6 relative z-10">
-              <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-brand-400 shadow-inner">
-                <Sparkles size={32} />
-              </div> {/* Closing div for the Sparkles container */}
-              <div className="flex-1">
-                <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none mb-2">💡 Ajude a melhorar o App</h3>
-                <p className="text-xs text-slate-400 font-medium leading-relaxed">Sua ideia pode ser a próxima funcionalidade do sistema!</p>
-              </div>
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center group-hover:bg-brand-500 transition-all">
-                <ChevronRight size={20} />
-              </div>
-            </div>
-          </Card>
+          {/* Card moved up, keeping div for spacing padding if needed, or remove completely? 
+               The original had pb-12. Let's keep a spacer or just remove the content. 
+               Cleaner to just remove the card content since it's above now. 
+               The pb-12 was likely for bottom scrolling space. Let's keep a spacer.
+           */}
         </div>
 
         {/* FEEDBACK MODAL */}
@@ -2101,7 +2111,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
                 <Camera size={28} />
               </div>
               <div className="text-center">
-                <p className="text-[11px] font-black uppercase tracking-widest text-white">Adicionar Fotos</p>
+                <p className="text-[11px] font-black uppercase tracking-widest text-slate-600">Adicionar Fotos</p>
                 <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Clique para upload</p>
               </div>
             </>
@@ -2138,7 +2148,7 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
                   <button
                     key={s}
                     onClick={() => setForm({ ...form, status: s })}
-                    className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${form.status === s ? 'bg-brand-600 text-white shadow-lg shadow-brand-600/20' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}
+                    className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${form.status === s ? 'bg-brand-primary text-brand-contrast shadow-lg shadow-brand-glow' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}
                   >
                     {s}
                   </button>
@@ -2928,9 +2938,13 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                       {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="w-full h-full bg-slate-100 flex items-center justify-center"><ImageIcon size={48} className="text-slate-400" /></div>}
                       <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
                         <h4 className="text-xl font-black italic text-white tracking-tight">{area.name}</h4>
-                        <div className="flex items-center gap-4 mt-2">
-                          <span className="text-[10px] font-bold text-white/80 uppercase bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">R$ {area.price}</span>
-                          <span className="text-[10px] font-bold text-white/80 uppercase bg-white/10 backdrop-blur-md px-3 py-1 rounded-full border border-white/10">{area.hours}</span>
+                        <div className="flex flex-wrap items-center gap-2 mt-2">
+                          <span className="text-[10px] font-black text-white/90 uppercase bg-brand-600/40 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 shadow-sm">
+                            R$ {area.price}
+                          </span>
+                          <span className="text-[10px] font-black text-white/90 uppercase bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 shadow-sm tracking-tighter">
+                            {area.hours?.toUpperCase().replace(/\s+/g, ' ')}
+                          </span>
                         </div>
                       </div>
                     </div>
