@@ -102,7 +102,7 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
     if (step === 'select') {
         return (
-            <div className="min-h-screen bg-slate-50 pb-32">
+            <div className="min-h-screen bg-slate-50">
                 <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20">
                     <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-3">
@@ -164,7 +164,7 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
     }
 
     return (
-        <div className="min-h-screen bg-slate-50 pb-32">
+        <div className="min-h-screen bg-slate-50">
             <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
