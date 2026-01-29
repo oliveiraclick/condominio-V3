@@ -671,7 +671,7 @@ const App: React.FC = () => {
       // --- ADMIN ---
       if (userRole === UserRole.ADMIN) {
         if (useModernDesign && activeTab === 'dashboard') {
-          return <AdminDashboardModern onNavigate={pushScreen} />;
+          return <AdminDashboardModern onNavigate={pushScreen} onLogout={() => supabase.auth.signOut().then(() => { localStorage.removeItem('userRole_cache'); window.location.reload(); })} />;
         }
 
         switch (activeTab) {

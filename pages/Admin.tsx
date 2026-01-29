@@ -230,7 +230,11 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
             </button>
 
             <button
-              onClick={onLogout}
+              onClick={() => {
+                if (window.confirm('Deseja realmente sair do Painel Admin?')) {
+                  onLogout();
+                }
+              }}
               className="bg-rose-50 p-5 rounded-[24px] border border-rose-100 flex items-center gap-4 group active:scale-95 transition-all hover:bg-rose-100"
             >
               <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-rose-500 shadow-sm border border-rose-100">

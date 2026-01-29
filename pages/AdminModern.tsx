@@ -6,7 +6,7 @@ import {
     AlertTriangle, DollarSign, Box, ClipboardCheck, User
 } from 'lucide-react';
 
-export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void }> = ({ onNavigate }) => {
+export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void, onLogout: () => void }> = ({ onNavigate, onLogout }) => {
     const [activeMenu, setActiveMenu] = useState('overview');
     const [counts, setCounts] = useState({ residents: 0, incidents: 0, reservations: 0, accessToday: 0 });
     const [recentActivity, setRecentActivity] = useState<any[]>([]);
@@ -114,7 +114,14 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                 </nav>
 
                 <div className="px-2 mt-auto">
-                    <button className="w-full p-3 rounded-xl flex items-center gap-4 text-rose-400 hover:bg-rose-500/10 transition-colors">
+                    <button
+                        onClick={() => {
+                            if (window.confirm('Deseja realmente sair do Painel Admin?')) {
+                                onLogout();
+                            }
+                        }}
+                        className="w-full p-3 rounded-xl flex items-center gap-4 text-rose-400 hover:bg-rose-500/10 transition-colors"
+                    >
                         <LogOut size={22} />
                         <span className="hidden xl:block text-sm font-medium">Sair</span>
                     </button>
