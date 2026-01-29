@@ -328,23 +328,26 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
             </div>
 
-            {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 z-20">
-                <div className="max-w-xl mx-auto">
-                    <button
-                        onClick={handleSaveProcessing}
-                        disabled={loading || !selectedResident || !location || !internalCode}
-                        className="w-full h-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
-                    >
-                        {loading ? 'Processando...' : (
-                            <>
-                                <Smartphone size={18} />
-                                Notificar Morador
-                            </>
-                        )}
-                    </button>
-                </div>
+            {/* Action Button */}
+            <div className="pt-8 pb-12">
+                <button
+                    onClick={handleSaveProcessing}
+                    disabled={loading || !selectedResident || !location || !internalCode}
+                    className="w-full h-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
+                >
+                    {loading ? 'Processando...' : (
+                        <>
+                            <Smartphone size={18} />
+                            Notificar Morador
+                        </>
+                    )}
+                </button>
+                <p className="text-[9px] text-center font-black text-slate-300 uppercase tracking-widest mt-6">
+                    O morador receberá uma notificação push
+                </p>
             </div>
+
         </div>
+        </div >
     );
 };

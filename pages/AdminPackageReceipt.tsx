@@ -281,11 +281,8 @@ export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack
                     </div>
                 )}
 
-            </div>
-
-            {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 z-20">
-                <div className="max-w-xl mx-auto">
+                {/* Main Action Button */}
+                <div className="pt-8 pb-12">
                     <button
                         onClick={handleFinishReceipt}
                         disabled={loading || scannedPackages.length === 0}
@@ -298,7 +295,11 @@ export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack
                             </>
                         )}
                     </button>
+                    <p className="text-[9px] text-center font-black text-slate-300 uppercase tracking-widest mt-6">
+                        Confirme os volumes bipados acima
+                    </p>
                 </div>
+
             </div>
         </div>
     );
