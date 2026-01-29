@@ -842,7 +842,7 @@ export const AdminPackages: React.FC<{ onBack: () => void; onNavigate: (t: strin
       {/* Modern Floating Tab Bar for Packages */}
       <div className="fixed bottom-8 left-6 right-6 z-50 pointer-events-none flex justify-center">
         <div className="bg-white/70 backdrop-blur-2xl border border-white/40 px-6 py-3 flex items-center gap-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] pointer-events-auto transition-all animate-in slide-in-from-bottom-8 relative overflow-hidden group">
-          <div className="absolute top-0 right-4 px-2 py-0.5 bg-violet-500/10 text-[6px] font-black text-violet-500/40 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">V2.4.4</div>
+          <div className="absolute top-0 right-4 px-2 py-0.5 bg-violet-500/10 text-[6px] font-black text-violet-500/40 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">V2.4.5</div>
 
           <button
             onClick={() => setActiveTab('receipt')}
