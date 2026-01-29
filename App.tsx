@@ -762,7 +762,8 @@ const App: React.FC = () => {
   const isSubPage = [
     'desapego-detail', 'admin-access', 'admin-reservations', 'admin-incidents',
     'admin-categories', 'admin-packages', 'package-receipt',
-    'package-processing', 'package-pickup'
+    'package-processing', 'package-pickup', 'admin-packages-receipt',
+    'admin-packages-processing', 'admin-packages-pickup'
   ].includes(activeTab);
 
   return (

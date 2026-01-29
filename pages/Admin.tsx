@@ -24,25 +24,29 @@ import { AdminPackageReceipt } from './AdminPackageReceipt';
 import { AdminPackageProcessing } from './AdminPackageProcessing';
 import { AdminPackagePickup } from './AdminPackagePickup';
 
-export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
-  <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
-    {[
-      { id: 'dashboard', icon: <LayoutDashboard size={24} />, label: 'Início' },
-      { id: 'residents', icon: <Users size={24} />, label: 'Moradores' },
-      { id: 'messages', icon: <MessageSquare size={24} />, label: 'Chat' },
-      { id: 'system-users', icon: <Lock size={24} />, label: 'Acessos' },
-    ].map((item) => (
-      <button
-        key={item.id}
-        onClick={() => onChange(item.id)}
-        className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-blue-600 scale-110 drop-shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
-      >
-        {item.icon}
-        <span className="text-[10px] font-bold uppercase">{item.label}</span>
-      </button>
-    ))}
-  </div>
-);
+export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => {
+  if (['admin-packages', 'package-receipt', 'package-processing', 'package-pickup', 'admin-packages-receipt', 'admin-packages-processing', 'admin-packages-pickup'].includes(activeTab)) return null;
+
+  return (
+    <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
+      {[
+        { id: 'dashboard', icon: <LayoutDashboard size={24} />, label: 'Início' },
+        { id: 'residents', icon: <Users size={24} />, label: 'Moradores' },
+        { id: 'messages', icon: <MessageSquare size={24} />, label: 'Chat' },
+        { id: 'system-users', icon: <Lock size={24} />, label: 'Acessos' },
+      ].map((item) => (
+        <button
+          key={item.id}
+          onClick={() => onChange(item.id)}
+          className={`flex flex-col items-center gap-1 transition-all ${activeTab === item.id ? 'text-blue-600 scale-110 drop-shadow-sm' : 'text-slate-400 hover:text-slate-600'}`}
+        >
+          {item.icon}
+          <span className="text-[10px] font-bold uppercase">{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+};
 
 const AdminHeader: React.FC<{ title: string; onBack?: () => void; rightElement?: React.ReactNode }> = ({ title, onBack, rightElement }) => (
   <header className="p-6 pt-12 bg-white/90 backdrop-blur-md border-b border-slate-200 flex items-center justify-between sticky top-0 z-50 shadow-sm">
