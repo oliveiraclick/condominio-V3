@@ -759,7 +759,11 @@ const App: React.FC = () => {
   if (appState === 'privacy') return <PrivacyPage onBack={() => { window.location.hash = ''; setAppState('login'); }} />;
   if (appState === 'support') return <SupportPage onBack={() => { window.location.hash = ''; setAppState('login'); }} onNavigateToPrivacy={() => { window.location.hash = '#/privacidade'; setAppState('privacy'); }} />;
 
-  const isSubPage = ['desapego-detail', 'admin-access', 'admin-reservations', 'admin-incidents', 'admin-categories'].includes(activeTab);
+  const isSubPage = [
+    'desapego-detail', 'admin-access', 'admin-reservations', 'admin-incidents',
+    'admin-categories', 'admin-packages', 'package-receipt',
+    'package-processing', 'package-pickup'
+  ].includes(activeTab);
 
   return (
     <ToastProvider>
