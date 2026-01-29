@@ -1,27 +1,22 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, User, MapPin, QrCode, Upload, ArrowRight, Package, ClipboardCheck, CheckCircle, Smartphone } from 'lucide-react';
+import { ArrowLeft, User, QrCode, ClipboardCheck, ArrowUpRight, Search, MapPin, Smartphone, ArrowRight, Package } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface AdminPackageProcessingProps {
     onBack: () => void;
     currentUser: any;
-    onNavigate: (tab: string) => void;
 }
 
-export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ onBack, currentUser, onNavigate }) => {
-    // Selection State
-    const [selectedPackage, setSelectedPackage] = useState<any>(null);
-    const [step, setStep] = useState<'select' | 'details'>('select');
-
-    // Data State
+export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ onBack }) => {
+    // State
+    const [step, setStep] = useState<'select' | 'form'>('select');
     const [pendingPackages, setPendingPackages] = useState<any[]>([]);
+    const [selectedPackage, setSelectedPackage] = useState<any>(null);
     const [residents, setResidents] = useState<any[]>([]);
-
-    // Form State (Details)
-    const [internalCode, setInternalCode] = useState('');
-    const [location, setLocation] = useState('');
     const [residentSearch, setResidentSearch] = useState('');
     const [selectedResident, setSelectedResident] = useState<any>(null);
+    const [internalCode, setInternalCode] = useState('');
+    const [location, setLocation] = useState('');
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
@@ -30,112 +25,103 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
     }, []);
 
     const fetchPendingPackages = async () => {
-        const { data } = await supabase
-            .from('packages')
-            .select('*')
-            .eq('status', 'pending_processing')
-            .order('created_at', { ascending: false });
-        if (data) setPendingPackages(data);
+        try {
+            const { data, error } = await supabase
+                .from('packages')
+                .select('*')
+                .eq('status', 'pending_processing')
+                .order('created_at', { ascending: false });
+
+            if (error) throw error;
+            setPendingPackages(data || []);
+        } catch (err) {
+            console.error('Error fetching pending:', err);
+        }
     };
 
     const fetchResidents = async () => {
-        const { data } = await supabase
-            .from('profiles')
-            .select('id, name, tower, unit, avatar')
-            .eq('role', 'resident');
-        if (data) setResidents(data);
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('role', 'resident');
+
+            if (error) throw error;
+            setResidents(data || []);
+        } catch (err) {
+            console.error('Error fetching residents:', err);
+        }
     };
 
     const handleSelectPackage = (pkg: any) => {
         setSelectedPackage(pkg);
-        setInternalCode('');
-        setStep('details');
+        setStep('form');
     };
 
     const handleSaveProcessing = async () => {
-        if (!selectedResident || !location || !internalCode) {
-            alert('Preencha todos os campos obrigatórios.');
+        if (!selectedResident || !internalCode || !location) {
+            alert('Preencha todos os campos!');
             return;
         }
 
         setLoading(true);
         try {
-            // Update Package
             const { error } = await supabase
                 .from('packages')
                 .update({
+                    status: 'pending',
                     resident_id: selectedResident.id,
                     internal_code: internalCode,
                     location: location,
-                    status: 'pending', // Correcting status to 'pending' as it's the next step (Waiting for pickup)
-                    updated_at: new Date().toISOString()
+                    processed_at: new Date().toISOString(),
+                    processed_by: (await supabase.auth.getUser()).data.user?.id
                 })
                 .eq('id', selectedPackage.id);
 
             if (error) throw error;
 
-            // Trigger Push Notification
-            supabase.functions.invoke('push', {
-                body: {
-                    title: 'Encomenda Recebida! 📦',
-                    body: `Sua encomenda chegou e está na ${location}. Acesse o app para confirmar.`,
-                    target_user_id: selectedResident.id,
-                    data: {
-                        type: 'package_arrived',
-                        packageId: selectedPackage.id
-                    }
-                }
-            }).catch(console.error);
-
-            alert('Pacote processado com sucesso!');
-            setSelectedPackage(null);
+            alert('Encomenda processada e morador notificado!');
             setStep('select');
+            setSelectedPackage(null);
+            setSelectedResident(null);
+            setInternalCode('');
+            setLocation('');
             fetchPendingPackages();
-
-        } catch (error: any) {
-            console.error('Error processing package:', error);
-            alert('Erro: ' + error.message);
+        } catch (err) {
+            console.error('Error processing:', err);
+            alert('Erro ao salvar triagem');
         } finally {
             setLoading(false);
         }
     };
 
-    const filteredResidents = residents.filter(r =>
-        r.name.toLowerCase().includes(residentSearch.toLowerCase()) ||
-        r.unit.includes(residentSearch)
+    const filteredResidents = residents.filter(res =>
+        res.name.toLowerCase().includes(residentSearch.toLowerCase()) ||
+        res.unit?.toString().includes(residentSearch)
     );
 
     if (step === 'select') {
         return (
             <div className="min-h-screen bg-slate-50 pb-32">
-                {/* Header */}
-                <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
+                <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-20">
                     <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-3">
                             <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200 transition-colors">
                                 <ArrowLeft size={20} />
                             </button>
-                            <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Triagem</h1>
+                            <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Triagem Pendente</h1>
                         </div>
-                        <div className="text-[10px] font-black bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full uppercase tracking-[0.2em] border border-blue-100 shadow-sm text-center">
-                            Digital Handshake • Passo 2/3
+                        <div className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-100">
+                            {pendingPackages.length} Aguardando
                         </div>
                     </div>
                 </div>
 
-                <div className="max-w-xl mx-auto px-6 py-8 space-y-6">
-                    <div className="flex justify-between items-center px-2">
-                        <div className="flex items-center gap-2">
-                            <ClipboardCheck size={18} className="text-slate-400" />
-                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Volumes Pendentes</h2>
-                        </div>
-                        <span className="text-2xl font-black italic text-slate-900 tracking-tighter">{pendingPackages.length}</span>
-                    </div>
-
+                <div className="max-w-xl mx-auto px-6 py-8">
                     {pendingPackages.length === 0 ? (
                         <div className="bg-white p-12 rounded-[40px] text-center border-2 border-dashed border-slate-200 space-y-4">
                             <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto shadow-inner">
-                                <Package size={40} />
+                                <ClipboardCheck size={40} />
                             </div>
                             <div>
                                 <p className="font-black text-slate-300 uppercase italic text-sm">Tudo Organizado!</p>
@@ -326,28 +312,26 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
                     />
                 </div>
 
-            </div>
+                {/* Action Button */}
+                <div className="pt-8 pb-12">
+                    <button
+                        onClick={handleSaveProcessing}
+                        disabled={loading || !selectedResident || !location || !internalCode}
+                        className="w-full h-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
+                    >
+                        {loading ? 'Processando...' : (
+                            <>
+                                <Smartphone size={18} />
+                                Notificar Morador
+                            </>
+                        )}
+                    </button>
+                    <p className="text-[9px] text-center font-black text-slate-300 uppercase tracking-widest mt-6">
+                        O morador receberá uma notificação push
+                    </p>
+                </div>
 
-            {/* Action Button */}
-            <div className="pt-8 pb-12">
-                <button
-                    onClick={handleSaveProcessing}
-                    disabled={loading || !selectedResident || !location || !internalCode}
-                    className="w-full h-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
-                >
-                    {loading ? 'Processando...' : (
-                        <>
-                            <Smartphone size={18} />
-                            Notificar Morador
-                        </>
-                    )}
-                </button>
-                <p className="text-[9px] text-center font-black text-slate-300 uppercase tracking-widest mt-6">
-                    O morador receberá uma notificação push
-                </p>
             </div>
-
         </div>
-        </div >
     );
 };
