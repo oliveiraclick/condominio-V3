@@ -2863,7 +2863,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-12 flex items-center justify-between bg-brand-gradient-horizontal shadow-xl shadow-brand-glow sticky top-0 z-40 rounded-b-[32px]">
+      <header className="p-6 pt-5 pb-5 flex items-center justify-between bg-brand-gradient-horizontal shadow-xl shadow-brand-glow sticky top-0 z-40 rounded-b-[32px]">
         <div className="flex items-center gap-4">
           <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all text-brand-contrast hover:bg-white/30 backdrop-blur-sm"><ArrowLeft size={20} className="stroke-brand-contrast" /></button>
           <h2 className="text-xl font-black italic uppercase text-brand-contrast tracking-widest">Reservas</h2>
@@ -2901,13 +2901,13 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
         ) : !selectedArea ? (
           <div className="space-y-8 animate-in slide-in-from-right-4">
             <div>
-              <h3 className="text-2xl font-black italic text-white tracking-tighter mb-2">{selectedCategory}</h3>
-              <p className="text-sm text-slate-400 font-medium">Selecione uma data para ver o que temos livre.</p>
+              <h3 className="text-2xl font-black italic text-slate-800 tracking-tighter mb-2">{selectedCategory}</h3>
+              <p className="text-sm text-slate-600 font-medium">Selecione uma data para ver o que temos livre.</p>
             </div>
 
-            <div className="bg-white/5 p-6 rounded-[32px] shadow-sm border border-white/10 space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Data Pretendida</label>
-              <Input type="date" value={date} onChange={e => handleDateFilter(e.target.value)} className="h-14 font-bold text-white bg-white/5 border-white/10" />
+            <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-3">
+              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Data Pretendida</label>
+              <Input type="date" value={date} onChange={e => handleDateFilter(e.target.value)} className="h-14 font-bold text-slate-900 bg-slate-50 border-slate-200" />
             </div>
 
             {date && (
@@ -2924,8 +2924,8 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                   </div>
                 ) : (
                   availableAreas.map(area => (
-                    <div key={area.id} onClick={() => setSelectedArea(area)} className="w-full h-56 bg-white/5 rounded-[32px] overflow-hidden shadow-lg relative cursor-pointer group active:scale-95 transition-all border border-white/10">
-                      {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="w-full h-full bg-slate-800 flex items-center justify-center"><ImageIcon size={48} className="text-slate-600" /></div>}
+                    <div key={area.id} onClick={() => setSelectedArea(area)} className="w-full h-56 bg-white rounded-[32px] overflow-hidden shadow-lg relative cursor-pointer group active:scale-95 transition-all border border-slate-100">
+                      {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="w-full h-full bg-slate-100 flex items-center justify-center"><ImageIcon size={48} className="text-slate-400" /></div>}
                       <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
                         <h4 className="text-xl font-black italic text-white tracking-tight">{area.name}</h4>
                         <div className="flex items-center gap-4 mt-2">
@@ -2948,26 +2948,26 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
               </div>
             </div>
 
-            <div className="bg-white/5 p-8 rounded-[40px] border border-white/10 shadow-sm space-y-6 backdrop-blur-sm">
+            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm space-y-6">
               <div>
-                <h3 className="text-3xl font-black italic text-white tracking-tight leading-none mb-2">{selectedArea.name}</h3>
-                <p className="text-slate-400 font-medium leading-relaxed">{selectedArea.desc}</p>
+                <h3 className="text-3xl font-black italic text-slate-900 tracking-tight leading-none mb-2">{selectedArea.name}</h3>
+                <p className="text-slate-600 font-medium leading-relaxed">{selectedArea.desc}</p>
               </div>
 
-              <div className="grid grid-cols-2 gap-4 bg-white/5 p-6 rounded-3xl border border-white/5">
-                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Valor</div><div className="text-lg font-black text-white">R$ {selectedArea.price}</div></div>
-                <div><div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-1">Horário</div><div className="text-lg font-black text-white">{selectedArea.hours}</div></div>
-                <div className="col-span-2 border-t border-white/5 pt-4 mt-2">
-                  <div className="text-[9px] font-black text-slate-400 uppercase tracking-widest mb-3">Itens Inclusos</div>
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
+                <div><div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Valor</div><div className="text-lg font-black text-slate-900">R$ {selectedArea.price}</div></div>
+                <div><div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Horário</div><div className="text-lg font-black text-slate-900">{selectedArea.hours}</div></div>
+                <div className="col-span-2 border-t border-slate-200 pt-4 mt-2">
+                  <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Itens Inclusos</div>
                   <div className="space-y-2">
                     {selectedArea.inventory ? selectedArea.inventory.split(',').map((item: string, i: number) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-emerald-500/20 flex items-center justify-center min-w-[20px]">
-                          <Check size={12} className="text-emerald-400 font-bold" />
+                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center min-w-[20px]">
+                          <Check size={12} className="text-emerald-600 font-bold" />
                         </div>
-                        <span className="text-sm font-bold text-slate-300 italic">{item.trim()}</span>
+                        <span className="text-sm font-bold text-slate-600 italic">{item.trim()}</span>
                       </div>
-                    )) : <p className="text-sm text-slate-500 italic">Nenhum item informado.</p>}
+                    )) : <p className="text-sm text-slate-400 italic">Nenhum item informado.</p>}
                   </div>
                 </div>
               </div>
@@ -2985,13 +2985,13 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                           onClick={() => available && setSelectedHour(slot.start)}
                           disabled={!available}
                           className={`p-3 rounded-xl border transition-all text-center ${selectedHour === slot.start
-                            ? 'border-brand-500 bg-brand-500/20 shadow-[0_0_15px_rgba(234,88,12,0.3)]'
+                            ? 'border-brand-500 bg-brand-50 shadow-[0_0_15px_rgba(234,88,12,0.1)]'
                             : available
-                              ? 'border-white/10 bg-white/5 hover:bg-white/10 active:scale-95'
-                              : 'border-white/5 bg-slate-900/50 opacity-40 cursor-not-allowed'
+                              ? 'border-slate-200 bg-white hover:bg-slate-50 active:scale-95'
+                              : 'border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed'
                             }`}
                         >
-                          <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-brand-400' : available ? 'text-white' : 'text-slate-500'}`}>
+                          <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-brand-600' : available ? 'text-slate-900' : 'text-slate-400'}`}>
                             {slot.start}
                           </div>
                           <div className="text-[8px] text-slate-500 font-bold mt-0.5">
@@ -3033,22 +3033,22 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
-        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center hover:bg-white/10 text-white"><ArrowLeft size={20} /></button>
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white border-b border-slate-100 sticky top-0 z-40">
+        <button onClick={onBack} className="w-10 h-10 bg-slate-50 rounded-xl flex items-center justify-center hover:bg-slate-100 text-slate-600"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase text-slate-900">Meus Agendamentos</h2>
       </header>
       <div className="p-6 space-y-6 animate-in slide-in-from-right-4">
         {myReservations.length > 0 ? myReservations.map((r) => (
-          <Card key={r.id} className="p-8 border border-white/10 shadow-xl rounded-[44px] bg-white/5 relative overflow-hidden group">
+          <Card key={r.id} className="p-8 border border-slate-100 shadow-xl rounded-[44px] bg-white relative overflow-hidden group">
             <div className="absolute top-4 right-4 w-24 h-24 opacity-5">
-              <img src="/logo.png" className="w-full h-full object-contain filter invert" />
+              <img src="/logo.png" className="w-full h-full object-contain filter grayscale" />
             </div>
             <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Local da Reserva</p>
-            <h4 className="text-2xl font-black italic tracking-tight text-white">{r.area}</h4>
+            <h4 className="text-2xl font-black italic tracking-tight text-slate-900">{r.area}</h4>
             <div className="mt-6 flex items-center justify-between">
               <div>
                 <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1">Data</p>
-                <p className="font-bold text-white">{new Date(r.date).toLocaleDateString('pt-BR')}</p>
+                <p className="font-bold text-slate-900">{new Date(r.date).toLocaleDateString('pt-BR')}</p>
                 {r.start_time && (
                   <p className="text-[10px] text-brand-400 font-bold uppercase mt-1">
                     {r.start_time.slice(0, 5)} - {r.end_time?.slice(0, 5)}
