@@ -3584,7 +3584,6 @@ export const BannerCarousel: React.FC = () => {
   const displayBanners = banners.length === 1 ? [...banners, { ...banners[0], id: 'dummy-2', title: banners[0].title + ' (Destaque)', image_url: banners[0].image_url }] : banners;
 
   return (
-  return (
     <div className="relative w-full h-56 md:h-64 shadow-sm group bg-slate-900 overflow-hidden">
       {displayBanners.map((banner, index) => (
         <div

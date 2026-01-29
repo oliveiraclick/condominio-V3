@@ -19,6 +19,11 @@ import {
 import { QRCodeSVG } from 'qrcode.react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 
+// Dedicated Package Components
+import { AdminPackageReceipt } from './AdminPackageReceipt';
+import { AdminPackageProcessing } from './AdminPackageProcessing';
+import { AdminPackagePickup } from './AdminPackagePickup';
+
 export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void }> = ({ activeTab, onChange }) => (
   <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-200 px-6 py-4 flex justify-between items-center z-40 max-w-md mx-auto">
     {[
@@ -801,708 +806,73 @@ export const AdminAccess: React.FC<{ onBack: () => void; accessList?: any[]; onC
 
 // --- ENCOMENDAS (COM APERTO DE MÃO DIGITAL) ---
 
-export const AdminPackages: React.FC<{ onBack: () => void; onNavigate: (t: string) => void; packages?: any[]; setPackages?: any }> = ({ onBack, onNavigate }) => {
+export const AdminPackages: React.FC<{ onBack: () => void; onNavigate: (t: string) => void; currentUser: any }> = ({ onBack, onNavigate, currentUser }) => {
   const [activeTab, setActiveTab] = useState<'receipt' | 'processing' | 'pickup'>('receipt');
-  const [isRegistering, setIsRegistering] = useState(false);
-  const [receiptData, setReceiptData] = useState({ carrier: '', deliverer: '' });
-  const [scannedBatch, setScannedBatch] = useState<string[]>([]);
-  const [isScanning, setIsScanning] = useState(false);
-  const [isViewingAll, setIsViewingAll] = useState(false); // NEW
-  const [scannedResident, setScannedResident] = useState<any>(null);
-  const [pendingDeliveryList, setPendingDeliveryList] = useState<any[]>([]);
-
-  const [formData, setFormData] = useState({ photo: '', desc: '', resident_name: '' });
-  const [pkgList, setPkgList] = useState<any[]>([]);
-  const [selectedResident, setSelectedResident] = useState<any>(null);
-  const [searchName, setSearchName] = useState('');
-  const [searchUnit, setSearchUnit] = useState('');
-  const [searchStatus, setSearchStatus] = useState<'all' | 'pending' | 'delivered'>('all');
-  const [searchDate, setSearchDate] = useState('');
-  const [isUnidentified, setIsUnidentified] = useState(false);
-  const [isLinkingQR, setIsLinkingQR] = useState(false);
-  const [editingPackage, setEditingPackage] = useState<any>(null);
-  const [residentsList, setResidentsList] = useState<any[]>([]);
-  const [generatedQR, setGeneratedQR] = useState<string | null>(null);
-  const [isScanningPackageHandshake, setIsScanningPackageHandshake] = useState(false);
-  const [packageAwaitingHandshake, setPackageAwaitingHandshake] = useState<any>(null);
-
-  // Fetch initial packages and residents
-  useEffect(() => {
-    fetchPackages();
-    fetchResidents();
-
-    // Real-time subscription for updates (e.g., handshake confirmation)
-    const channel = supabase
-      .channel('admin-packages')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'packages' }, () => {
-        fetchPackages();
-      })
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
-
-  const fetchPackages = async () => {
-    // OPTIMIZED FETCH: Split Active vs History to avoid loading 10k+ records
-    const [activeRes, historyRes] = await Promise.all([
-      // 1. Fetch Active (Pending/Processing/Awaiting) - CRITICAL
-      supabase
-        .from('packages')
-        .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
-        .in('status', ['pending', 'processing', 'awaiting_confirmation'])
-        .order('created_at', { ascending: false }),
-
-      // 2. Fetch Recent History (Delivered) - LIMIT 50
-      supabase
-        .from('packages')
-        .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
-        .eq('status', 'delivered')
-        .order('picked_up_at', { ascending: false }) // Index this!
-        .limit(50)
-    ]);
-
-    if (activeRes.error || historyRes.error) {
-      console.error('Fetch Error:', activeRes.error || historyRes.error);
-      alert('Erro ao buscar encomendas. Verifique a conexão.');
-      return;
-    }
-
-    const active = activeRes.data || [];
-    const history = historyRes.data || [];
-
-    // Merge lists directly
-    setPkgList([...active, ...history]);
-  };
-
-  // LAZY LOAD HISTORY
-  useEffect(() => {
-    if (isViewingAll) {
-      const fetchFullHistory = async () => {
-        const { data, error } = await supabase
-          .from('packages')
-          .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
-          .eq('status', 'delivered')
-          .order('picked_up_at', { ascending: false })
-          .limit(200); // Fetch more (200) when requested
-
-        if (data) {
-          setPkgList(prev => {
-            const active = prev.filter(p => p.status !== 'delivered');
-            return [...active, ...data]; // Replaces the limited history with the larger list
-          });
-        }
-      };
-      fetchFullHistory();
-    }
-  }, [isViewingAll]);
-
-  const fetchResidents = async () => {
-    const { data } = await supabase.from('profiles').select('id, name, unit, tower, condominium_id').eq('role', 'resident');
-    if (data) setResidentsList(data);
-  };
-
-  const handleRegister = async (scannedQR?: string) => {
-    if (!selectedResident && !isUnidentified) {
-      alert('Selecione um morador ou marque como Não Identificado');
-      return;
-    }
-
-    const payload: any = {
-      resident_id: selectedResident?.id || null,
-      unit: selectedResident?.unit || searchUnit || 'Não Identificado',
-      resident_name: formData.resident_name || selectedResident?.name || 'Não Identificado',
-      description: formData.desc || 'Encomenda Recebida',
-      photo_url: formData.photo || 'https://placehold.co/600x400/png?text=Pacote',
-      qr_code: scannedQR || editingPackage?.qr_code || `TEMP-${Date.now()}`,
-      status: 'pending'
-    };
-
-    let result;
-    if (editingPackage) {
-      result = await supabase.from('packages').update(payload).eq('id', editingPackage.id);
-    } else {
-      result = await supabase.from('packages').insert([payload]);
-    }
-
-    if (!result.error) {
-      if (selectedResident) {
-        await supabase.from('sent_notifications').insert([{
-          title: 'Nova Encomenda!',
-          body: `Chegou um volume para ${payload.resident_name}! Retire na portaria.`,
-          target_role: 'resident',
-          target_user_id: selectedResident.id,
-          condominium_id: selectedResident.condominium_id || null
-        }]);
-      }
-
-      alert(editingPackage ? 'Encomenda atualizada!' : 'Encomenda registrada!');
-      fetchPackages();
-      closeRegistration();
-    } else {
-      alert('Erro ao processar: ' + result.error.message);
-    }
-  };
-
-  const startEdit = (pkg: any) => {
-    setEditingPackage(pkg);
-    setIsRegistering(true);
-    setFormData({
-      photo: pkg.photo_url || '',
-      desc: pkg.description || '',
-      resident_name: pkg.resident_name || ''
-    });
-    const res = residentsList.find(r => r.id === pkg.resident_id);
-    if (res) {
-      setSelectedResident(res);
-      setSearchName(res.name);
-      setSearchUnit(res.unit);
-    } else {
-      setIsUnidentified(true);
-      setSearchUnit(pkg.unit);
-    }
-  };
-
-  const closeRegistration = () => {
-    setIsRegistering(false);
-    setIsLinkingQR(false);
-    setEditingPackage(null);
-    setGeneratedQR(null);
-    setFormData({ photo: '', desc: '', resident_name: '' });
-    setSelectedResident(null);
-    setSearchName('');
-    setSearchUnit('');
-    setIsUnidentified(false);
-  };
-
-  const handleScan = async (text: string) => {
-    // 1. RECEIPT MODE (Batch Scan)
-    if (activeTab === 'receipt') {
-      if (scannedBatch.includes(text)) {
-        alert('Este pacote já foi bipado neste lote!');
-        setIsScanning(false);
-        return;
-      }
-      setScannedBatch(prev => [...prev, text]);
-      setIsScanning(false); // Close for now, can implement continuous later
-      return;
-    }
-
-    // 2. TRIAGE MODE (Scan Package to Identify)
-    if (activeTab === 'processing') {
-      const pkg = pkgList.find(p => p.qr_code === text);
-      if (pkg) {
-        setIsScanning(false);
-        startEdit(pkg);
-      } else {
-        alert('Pacote não encontrado nesta lista.');
-        setIsScanning(false);
-      }
-      return;
-    }
-
-    // 3. RESIDENT ID SCAN (Pickup)
-    if (text && text.startsWith('RESIDENT:')) {
-      const residentId = text.split(':')[1];
-      setIsScanning(false);
-
-      // Find resident
-      const resident = residentsList.find(r => r.id === residentId);
-
-      if (!resident) {
-        alert('Morador não encontrado!');
-        return;
-      }
-
-      // Check for authorizations (Neighbor Pickup)
-      const { data: auths } = await supabase
-        .from('package_authorizations')
-        .select('grantor_id, grantor:grantor_id(unit, tower, name)')
-        .eq('grantee_id', resident.id)
-        .eq('status', 'active');
-
-      // Map authorized IDs and Units
-      const authorizedGrantorIds = auths?.map((a: any) => a.grantor_id) || [];
-      const authorizedUnits = auths?.map((a: any) => ({ unit: a.grantor.unit, tower: a.grantor.tower })) || [];
-
-      const allRelevantIds = [resident.id, ...authorizedGrantorIds];
-
-      // 1. Force Fetch fresh packages (Attempt 1: Strict Pending)
-      // Corrected Join Syntax: profiles(...) relies on the FK constraint.
-      const { data: freshPackages, error: fetchError } = await supabase
-        .from('packages')
-        // Explicitly specify the FK constraint (V1 Standard Final)
-        .select('*, profiles:profiles!packages_resident_id_fkey(name, unit, tower)')
-        .eq('status', 'pending');
-
-      if (fetchError) {
-        alert(`ERRO DE REDE/BANCO: ${fetchError.message}`);
-        return;
-      }
-
-      const latestPkgList = freshPackages || [];
-
-      // Update local state to reflect reality
-      if (freshPackages) setPkgList(prev => freshPackages);
-
-      // 2. Find pending packages for OWN ID OR AUTHORIZED IDs
-      const pending = latestPkgList.filter(p => allRelevantIds.includes(p.resident_id));
-
-      if (pending.length > 0) {
-        setScannedResident({ ...resident, authorizedUnits });
-        setPendingDeliveryList(pending);
-      } else {
-        alert(`Nenhuma encomenda encontrada para ${resident.name} (nem autorizações).`);
-      }
-    }
-  };
-
-  const handleBatchSubmit = async () => {
-    if (scannedBatch.length === 0) return alert('Bipe pelo menos um pacote.');
-    if (!receiptData.carrier) return alert('Informe a transportadora.');
-
-    const newPackages = scannedBatch.map(code => ({
-      resident_id: null, // Unassigned
-      resident_name: 'A Triar',
-      unit: 'Triagem',
-      description: `${receiptData.carrier} ${receiptData.deliverer ? `- ${receiptData.deliverer}` : ''}`,
-      photo_url: 'https://placehold.co/600x400/png?text=Caixa',
-      qr_code: code,
-      status: 'processing' // New status for Triage
-    }));
-
-    const { error } = await supabase.from('packages').insert(newPackages);
-
-    if (!error) {
-      alert(`${scannedBatch.length} pacotes recebidos com sucesso!`);
-      setScannedBatch([]);
-      setReceiptData({ carrier: '', deliverer: '' });
-      fetchPackages();
-      setActiveTab('processing'); // Auto-navigate to Triage
-    } else {
-      alert('Erro ao salvar lote: ' + error.message);
-    }
-  };
-
-  const handleScanPackageHandshake = async (scannedPkgQR: string) => {
-    setIsScanningPackageHandshake(false);
-
-    // Find the package in the pending delivery list
-    const pkg = pendingDeliveryList.find(p => p.qr_code === scannedPkgQR);
-
-    if (!pkg) {
-      alert('QR Code não corresponde a nenhuma encomenda pendente para este morador!');
-      return;
-    }
-
-    const { error } = await supabase
-      .from('packages')
-      .update({
-        status: 'awaiting_confirmation',
-        picked_up_at: new Date().toISOString(),
-        picked_up_by: scannedResident.id
-      })
-      .eq('id', pkg.id);
-
-    if (!error) {
-      alert(`Encomenda ${pkg.description} validada! Aguardando confirmação no celular do morador.`);
-      // Remove from current list to avoid double scan
-      setPendingDeliveryList(prev => {
-        const remaining = prev.filter(p => p.id !== pkg.id);
-        if (remaining.length === 0) setScannedResident(null);
-        return remaining;
-      });
-      fetchPackages();
-    } else {
-      alert('Erro ao processar handshake: ' + error.message);
-    }
-  };
-
-  const confirmDelivery = async () => {
-    // Legacy single-shot confirm without handshake (if needed, but we'll prioritize handshake)
-    if (!scannedResident || pendingDeliveryList.length === 0) return;
-
-    if (confirm(`Deseja confirmar a entrega de ${pendingDeliveryList.length} volumes SEM o aperto de mão digital?`)) {
-      const { error } = await supabase
-        .from('packages')
-        .update({
-          status: 'delivered',
-          picked_up_at: new Date().toISOString(),
-          picked_up_by: scannedResident.id
-        })
-        .in('id', pendingDeliveryList.map(p => p.id));
-
-      if (!error) {
-        alert('Entregas confirmadas manualmente!');
-        setScannedResident(null);
-        setPendingDeliveryList([]);
-        fetchPackages();
-      } else {
-        alert('Erro: ' + error.message);
-      }
-    }
-  };
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
-      {/* CUSTOM HEADER (Tabs Integrated - Underline Style) */}
-      <header className="px-4 pt-12 pb-2 bg-white/95 backdrop-blur-xl border-b border-slate-100 sticky top-0 z-50 shadow-[0_2px_20px_rgb(0,0,0,0.02)] flex items-center gap-2">
-        <button
-          onClick={onBack}
-          className="w-10 h-10 -ml-2 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-50 transition-colors active:scale-95"
-        >
-          <ArrowLeft size={22} />
-        </button>
+    <div className="min-h-screen bg-slate-50">
+      {activeTab === 'receipt' && (
+        <AdminPackageReceipt
+          onBack={onBack}
+          currentUser={currentUser}
+          onNavigateProcessing={() => setActiveTab('processing')}
+        />
+      )}
+      {activeTab === 'processing' && (
+        <AdminPackageProcessing
+          onBack={() => setActiveTab('receipt')}
+          currentUser={currentUser}
+          onNavigate={(tab) => {
+            if (tab === 'admin-packages-pickup') setActiveTab('pickup');
+            else onNavigate(tab);
+          }}
+        />
+      )}
+      {activeTab === 'pickup' && (
+        <AdminPackagePickup
+          onBack={() => setActiveTab('processing')}
+          currentUser={currentUser}
+        />
+      )}
 
-        <div className="flex-1 flex items-center justify-around h-10 relative">
+      {/* Modern Floating Tab Bar for Packages */}
+      <div className="fixed bottom-8 left-6 right-6 z-50 pointer-events-none flex justify-center">
+        <div className="bg-white/70 backdrop-blur-2xl border border-white/40 px-6 py-3 flex items-center gap-8 rounded-[32px] shadow-[0_20px_50px_rgba(0,0,0,0.1)] pointer-events-auto transition-all animate-in slide-in-from-bottom-8">
           <button
             onClick={() => setActiveTab('receipt')}
-            className="flex-1 h-full flex flex-col items-center justify-center relative group"
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'receipt' ? 'text-violet-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}
           >
-            <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'receipt' ? 'text-violet-600' : 'text-slate-400 hover:text-violet-500'}`}>
-              <Box size={14} className="stroke-[2.5]" /> Receber
-            </span>
-            {activeTab === 'receipt' && <span className="absolute bottom-0 w-8 h-0.5 bg-violet-600 rounded-full animate-in fade-in zoom-in duration-200"></span>}
+            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'receipt' ? 'bg-violet-50' : 'bg-transparent'}`}>
+              <Box size={20} className={activeTab === 'receipt' ? "fill-violet-200/50" : ""} />
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest">Receber</span>
           </button>
 
-          <div className="w-[1px] h-4 bg-slate-100"></div>
+          <div className="w-[1px] h-6 bg-slate-200/50"></div>
 
           <button
             onClick={() => setActiveTab('processing')}
-            className="flex-1 h-full flex flex-col items-center justify-center relative group"
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'processing' ? 'text-blue-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}
           >
-            <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'processing' ? 'text-blue-600' : 'text-slate-400 hover:text-blue-500'}`}>
-              <ClipboardCheck size={14} /> Triagem
-            </span>
-            {activeTab === 'processing' && <span className="absolute bottom-0 w-8 h-0.5 bg-blue-600 rounded-full animate-in fade-in zoom-in duration-200"></span>}
+            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'processing' ? 'bg-blue-50' : 'bg-transparent'}`}>
+              <ClipboardCheck size={20} className={activeTab === 'processing' ? "fill-blue-200/50" : ""} />
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest">Triagem</span>
           </button>
 
-          <div className="w-[1px] h-4 bg-slate-100"></div>
+          <div className="w-[1px] h-6 bg-slate-200/50"></div>
 
           <button
             onClick={() => setActiveTab('pickup')}
-            className="flex-1 h-full flex flex-col items-center justify-center relative group"
+            className={`flex flex-col items-center gap-1 transition-all ${activeTab === 'pickup' ? 'text-emerald-600 scale-110' : 'text-slate-400 hover:text-slate-500'}`}
           >
-            <span className={`flex items-center gap-1.5 text-[10px] font-black uppercase tracking-widest transition-colors ${activeTab === 'pickup' ? 'text-emerald-600' : 'text-slate-400 hover:text-emerald-500'}`}>
-              <UserCheck size={14} /> Retirada
-            </span>
-            {activeTab === 'pickup' && <span className="absolute bottom-0 w-8 h-0.5 bg-emerald-600 rounded-full animate-in fade-in zoom-in duration-200"></span>}
+            <div className={`p-2 rounded-xl transition-colors ${activeTab === 'pickup' ? 'bg-emerald-50' : 'bg-transparent'}`}>
+              <UserCheck size={20} className={activeTab === 'pickup' ? "fill-emerald-200/50" : ""} />
+            </div>
+            <span className="text-[9px] font-black uppercase tracking-widest">Retirada</span>
           </button>
         </div>
-      </header>
-
-      <div className="p-6 space-y-6">
-
-        {/* SEARCH BAR - COMMON */}
-        {/* Search Bar is always visible */}
-        <div className="relative group">
-          <div className="absolute left-4 top-1/2 -translate-y-1/2 w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center">
-            <Search size={16} className="text-slate-400" />
-          </div>
-          <input
-            placeholder="Buscar encomenda, morador..."
-            value={searchName}
-            onChange={(e) => setSearchName(e.target.value)}
-            className="w-full h-14 pl-16 pr-4 bg-white border border-slate-100 rounded-2xl text-xs font-bold text-slate-700 placeholder:text-slate-400 outline-none focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all shadow-[0_4px_20px_rgb(0,0,0,0.03)]"
-          />
-        </div>
-
-        {/* CONTENT AREA */}
-        <div className="animate-in fade-in slide-in-from-bottom-2 duration-300">
-          {activeTab === 'receipt' && (
-            <div className="space-y-4">
-              <SectionHeader title="Recebimento de Transportadora" />
-              <div className="p-6 bg-white border border-slate-100 rounded-3xl shadow-sm space-y-4">
-                <Input
-                  placeholder="Nome da Transportadora (Ex: Mercado Livre)"
-                  value={receiptData.carrier}
-                  onChange={e => setReceiptData({ ...receiptData, carrier: e.target.value })}
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl"
-                />
-                <Input
-                  placeholder="Nome do Entregador (Opcional)"
-                  value={receiptData.deliverer}
-                  onChange={e => setReceiptData({ ...receiptData, deliverer: e.target.value })}
-                  className="h-12 bg-slate-50 border-slate-200 rounded-xl"
-                />
-
-                <div className="p-8 border-2 border-dashed border-slate-200 rounded-2xl bg-slate-50 flex flex-col items-center justify-center text-slate-400 hover:border-violet-300 hover:bg-violet-50 hover:text-violet-500 transition-all cursor-pointer group" onClick={() => setIsScanning(true)}>
-                  <div className="w-16 h-16 bg-white rounded-full flex items-center justify-center shadow-sm mb-3 group-hover:scale-110 transition-transform">
-                    <QrCode size={24} />
-                  </div>
-                  <span className="text-[10px] font-black uppercase tracking-widest">Escanear Pacotes ({scannedBatch.length})</span>
-                </div>
-
-                {scannedBatch.length > 0 && (
-                  <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-3">Pacotes Bipados ({scannedBatch.length})</p>
-                    <div className="max-h-40 overflow-y-auto space-y-2 pr-1">
-                      {scannedBatch.map((code, i) => (
-                        <div key={i} className="flex justify-between items-center bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-                          <div className="flex items-center gap-2">
-                            <Box size={14} className="text-violet-500" />
-                            <span className="text-xs font-bold text-slate-700 truncate max-w-[200px]">{code}</span>
-                          </div>
-                          <button onClick={() => setScannedBatch(prev => prev.filter((_, idx) => idx !== i))} className="w-6 h-6 rounded-full bg-rose-50 text-rose-500 flex items-center justify-center hover:bg-rose-100 transition-colors">
-                            <X size={12} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <Button onClick={handleBatchSubmit} disabled={scannedBatch.length === 0 || !receiptData.carrier} className="w-full h-12 bg-violet-600 hover:bg-violet-700 text-white rounded-xl font-black uppercase tracking-widest disabled:opacity-50">
-                  Confirmar Recebimento ({scannedBatch.length})
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'processing' && (
-            <div className="space-y-4">
-              <SectionHeader title="Triagem / Organização" />
-              <div className="grid grid-cols-2 gap-4">
-                <button className="p-6 bg-blue-50 border border-blue-100 rounded-3xl flex flex-col items-center gap-3 active:scale-95 transition-transform" onClick={() => setIsScanning(true)}>
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-blue-500 shadow-sm">
-                    <Scan size={20} />
-                  </div>
-                  <span className="text-[10px] font-black text-blue-900 uppercase tracking-widest text-center">Escanear para Identificar</span>
-                </button>
-                <button className="p-6 bg-slate-50 border border-slate-100 rounded-3xl flex flex-col items-center gap-3 active:scale-95 transition-transform">
-                  <div className="w-12 h-12 bg-white rounded-full flex items-center justify-center text-slate-400 shadow-sm">
-                    <ListFilter size={20} />
-                  </div>
-                  <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">Filtros Avançados</span>
-                </button>
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 ml-2">Pendentes de Identificação</h3>
-                {pkgList.filter(p => p.status === 'processing' || !p.resident_id).length === 0 ? (
-                  <div className="bg-slate-50 rounded-3xl p-8 text-center border border-slate-100">
-                    <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                    <p className="text-[10px] font-bold text-slate-400 uppercase">Tudo organizado!</p>
-                  </div>
-                ) : (
-                  pkgList.filter(p => p.status === 'processing' || !p.resident_id).map(p => (
-                    <div key={p.id} onClick={() => startEdit(p)} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between cursor-pointer hover:border-blue-200 transition-colors group">
-                      <div className="flex items-center gap-3 overflow-hidden">
-                        <div className="w-10 h-10 bg-blue-50 text-blue-500 rounded-xl flex items-center justify-center shrink-0">
-                          <Scan size={18} />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-xs font-bold text-slate-700 truncate">{p.description}</p>
-                          <p className="text-[10px] font-mono text-slate-400 truncate">{p.qr_code}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[9px] font-black uppercase tracking-widest text-blue-500 bg-blue-50 px-2 py-1 rounded-lg">Identificar</span>
-                        <ChevronRight size={14} className="text-slate-300 group-hover:text-blue-500 transition-colors" />
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-
-          {activeTab === 'pickup' && (
-            <>
-              {/* AGUARDANDO RETIRADA */}
-              <div className="space-y-4">
-                <SectionHeader title="Aguardando Retirada" actionLabel={`${pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).length} Volumes`} />
-                <div className="space-y-3">
-                  {pkgList.filter(p => ['pending', 'awaiting_confirmation'].includes(p.status)).length === 0 ? (
-                    <div className="p-8 text-center border-2 border-dashed border-slate-200 rounded-3xl bg-slate-50/50">
-                      <Package className="w-8 h-8 text-slate-300 mx-auto mb-2" />
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhuma encomenda pendente</p>
-                    </div>
-                  ) : (
-                    pkgList
-                      .filter(p => ['pending', 'awaiting_confirmation'].includes(p.status))
-                      .filter(p => !searchName || p.resident_name?.toLowerCase().includes(searchName.toLowerCase()) || p.unit?.includes(searchName))
-                      .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
-                      .map(p => (
-                        <div key={p.id} className="bg-white p-4 rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] flex items-center gap-4 relative overflow-hidden group">
-                          {/* Status Line: All Yellow/Amber for waiting items */}
-                          <div className={`absolute top-0 left-0 w-1 pt-4 h-full ${p.status === 'awaiting_confirmation' ? 'bg-amber-500' : 'bg-yellow-400'}`}></div>
-
-                          <div className={`w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-sm border border-slate-100 ${p.status === 'awaiting_confirmation' ? 'bg-amber-50 text-amber-600' : 'bg-yellow-50 text-yellow-600'}`}>
-                            <Package size={20} />
-                          </div>
-
-                          <div className="flex-1 min-w-0">
-                            <div className="flex justify-between items-start mb-1">
-                              <h4 className="font-bold text-slate-900 text-sm truncate">
-                                {p.resident_name || 'Morador'}
-                              </h4>
-                              <span className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded-lg ${p.status === 'awaiting_confirmation' ? 'bg-amber-100 text-amber-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                                {p.status === 'awaiting_confirmation' ? 'Confirmando' : 'Pendente'}
-                              </span>
-                            </div>
-                            <div className="flex flex-col gap-0.5 mt-1">
-                              <p className="text-[11px] font-bold text-slate-700 truncate">
-                                Rua {p.profiles?.tower || '---'}, {p.unit}
-                              </p>
-                              <p className="text-[10px] text-slate-400 truncate font-medium">
-                                {p.description}
-                              </p>
-                            </div>
-                          </div>
-
-                          <button onClick={() => startEdit(p)} className="w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-400 hover:bg-violet-50 hover:text-violet-600 transition-colors">
-                            <Edit3 size={14} />
-                          </button>
-                        </div>
-                      ))
-                  )}
-                </div>
-              </div>
-
-              {/* LOGÍSTICA FINALIZADA */}
-              <div className="space-y-4 pt-2">
-                <SectionHeader title="Logística Finalizada" actionLabel="Histórico Recente" />
-                <div className="space-y-0 divide-y divide-slate-100 bg-white rounded-3xl border border-slate-100 shadow-[0_4px_20px_rgb(0,0,0,0.03)] overflow-hidden">
-                  {pkgList.filter(p => p.status === 'delivered').length === 0 ? (
-                    <div className="p-8 text-center bg-slate-50/50">
-                      <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Nenhum histórico recente</p>
-                    </div>
-                  ) : (
-                    pkgList
-                      .filter(p => p.status === 'delivered')
-                      .sort((a, b) => new Date(b.picked_up_at || 0).getTime() - new Date(a.picked_up_at || 0).getTime())
-                      .slice(0, 5)
-                      .map(p => (
-                        <div key={p.id} className="p-4 flex items-center gap-3 hover:bg-slate-50 transition-colors group">
-                          <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                            <CheckCircle2 size={14} className="stroke-[3]" />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="text-xs font-bold text-slate-900 truncate">{p.resident_name || 'Morador'}</p>
-                            <p className="text-[10px] text-slate-500 truncate">{p.description} • Unit {p.unit}</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="text-[9px] font-black text-slate-400 uppercase tracking-widest">
-                              {new Date(p.picked_up_at).toLocaleDateString()}
-                            </p>
-                            <p className="text-[9px] font-medium text-slate-300">
-                              {new Date(p.picked_up_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                            </p>
-                          </div>
-                        </div>
-                      ))
-                  )}
-                  {pkgList.filter(p => p.status === 'delivered').length > 5 && (
-                    <button onClick={() => setIsViewingAll(true)} className="w-full py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest hover:bg-slate-50 hover:text-brand-600 transition-colors">
-                      Ver Todo Histórico
-                    </button>
-                  )}
-                </div>
-              </div>
-            </>
-          )}
-        </div>
-
       </div>
-
-      {/* MODALS - EXISTING LOGIC KEPT FOR COMPATIBILITY */}
-      {isScanning && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 backdrop-blur-xl animate-in fade-in duration-300">
-          <div className="w-full max-w-sm bg-white/10 backdrop-blur-md rounded-[48px] overflow-hidden relative p-8 border border-white/10 shadow-2xl">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-black italic text-white tracking-widest uppercase">Identificar Morador</h3>
-              <p className="text-[10px] font-bold text-white/50 uppercase tracking-widest mt-2">Aponte para o QR Code do Morador</p>
-            </div>
-            <div className="rounded-[40px] overflow-hidden border-8 border-white/20 shadow-2xl aspect-square relative bg-black/20 group">
-              <Scanner onScan={(r) => r[0] && handleScan(r[0].rawValue)} />
-              <div className="absolute inset-0 border-[60px] border-black/40 pointer-events-none transition-all group-hover:border-black/20"></div>
-              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                <div className="w-48 h-48 border-2 border-emerald-500/50 rounded-[40px] animate-pulse"></div>
-              </div>
-            </div>
-            <button
-              onClick={() => setIsScanning(false)}
-              className="w-full mt-8 py-5 bg-white/10 hover:bg-white/20 text-white rounded-3xl font-black uppercase tracking-widest text-[10px] border border-white/10 transition-all active:scale-95"
-            >
-              Cancelar
-            </button>
-          </div>
-        </div>
-      )}
-
-      {isRegistering && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/20 backdrop-blur-xl transition-all" onClick={closeRegistration}></div>
-          <Card className="relative w-full max-w-lg p-8 space-y-6 border border-slate-100 shadow-2xl rounded-[40px] bg-white animate-in zoom-in-95 duration-300">
-            {/* Modal Content - Simplified for Brevity as it was existing logic */}
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-xl font-black italic text-slate-900 uppercase">Editar Encomenda</h3>
-              <button onClick={closeRegistration}><X size={24} className="text-slate-400" /></button>
-            </div>
-            <div className="space-y-4">
-              <Input value={formData.resident_name} onChange={e => setFormData({ ...formData, resident_name: e.target.value })} placeholder="Morador" className="h-14 rounded-2xl bg-slate-50" />
-              <Input value={formData.desc} onChange={e => setFormData({ ...formData, desc: e.target.value })} placeholder="Descrição" className="h-14 rounded-2xl bg-slate-50" />
-              <div className="relative group">
-                <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-4 mb-2 flex items-center gap-2">
-                  <MapPin size={12} className="text-brand-500" /> Endereço / Unidade
-                </label>
-                <Input
-                  placeholder="Ex: 402 ou Rua 1"
-                  value={searchUnit}
-                  onChange={e => {
-                    setSearchUnit(e.target.value);
-                  }}
-                  className="h-16 rounded-2xl bg-slate-50 border-slate-200 focus:border-brand-500 transition-all font-bold text-slate-900 placeholder-slate-400"
-                />
-              </div>
-            </div>
-            <Button onClick={() => handleRegister()} className="w-full h-14 bg-brand-600 text-white rounded-2xl font-black uppercase">Salvar Alterações</Button>
-          </Card>
-        </div>
-      )}
-
-      {isViewingAll && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4">
-          <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md transition-all" onClick={() => setIsViewingAll(false)}></div>
-          <div className="relative w-full max-w-2xl bg-white rounded-[40px] shadow-2xl overflow-hidden flex flex-col max-h-[85vh] animate-in zoom-in-95 duration-300">
-            <div className="p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50">
-              <div>
-                <h3 className="text-xl font-black italic text-slate-900 uppercase">Histórico de Entregas</h3>
-                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Últimos 200 registros</p>
-              </div>
-              <button onClick={() => setIsViewingAll(false)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors">
-                <X size={20} className="text-slate-500" />
-              </button>
-            </div>
-            <div className="flex-1 overflow-y-auto p-6 space-y-3">
-              {pkgList.filter(p => p.status === 'delivered').map(p => (
-                <div key={p.id} className="flex items-center gap-4 p-4 border border-slate-100 rounded-3xl hover:bg-slate-50 transition-colors">
-                  <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
-                    <CheckCircle2 size={18} />
-                  </div>
-                  <div className="flex-1">
-                    <h4 className="font-bold text-slate-900 text-sm">{p.resident_name}</h4>
-                    <p className="text-xs text-slate-500">{p.description}</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-                      {new Date(p.picked_up_at).toLocaleDateString()}
-                    </p>
-                    <p className="text-[10px] font-medium text-slate-300">
-                      {new Date(p.picked_up_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Legacy Modals (Handshake, Confirm, etc) can be hidden or kept if needed. Kept minimum for 'scanning' logic. */}
-
     </div>
   );
 };

@@ -1,13 +1,14 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ArrowLeft, Box, Printer, Trash2, Plus, Barcode, CheckCircle, Package } from 'lucide-react';
+import { ArrowLeft, Box, Printer, Trash2, Plus, Barcode, CheckCircle, Package, ArrowRight } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface AdminPackageReceiptProps {
     onBack: () => void;
     currentUser: any;
+    onNavigateProcessing: () => void;
 }
 
-export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack, currentUser }) => {
+export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack, currentUser, onNavigateProcessing }) => {
     // Form State
     const [carrierName, setCarrierName] = useState('');
     const [courierName, setCourierName] = useState('');
@@ -69,11 +70,10 @@ export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack
                 original_code: code,
                 carrier_name: carrierName,
                 courier_name: courierName,
-                status: 'pending_processing', // New status for Step 2
+                status: 'pending_processing',
                 batch_id: batchId,
                 created_at: timestamp,
                 updated_at: timestamp
-                // resident_id is NULL until processing
             }));
 
             const { error } = await supabase.from('packages').insert(inserts);
@@ -101,48 +101,49 @@ export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack
 
     if (showReceipt) {
         return (
-            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6">
-                <div className="bg-white w-full max-w-md p-8 rounded-3xl shadow-xl border border-slate-100 text-center space-y-6">
-                    <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+            <div className="min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 pb-32">
+                <div className="bg-white w-full max-w-md p-8 rounded-[40px] shadow-2xl border border-slate-100 text-center space-y-6 animate-in zoom-in-95 duration-300">
+                    <div className="w-20 h-20 bg-emerald-50 text-emerald-600 rounded-3xl flex items-center justify-center mx-auto mb-4 rotate-3 shadow-inner">
                         <CheckCircle className="w-10 h-10" />
                     </div>
 
-                    <h2 className="text-2xl font-black text-slate-800">Recebimento Concluído!</h2>
+                    <div className="space-y-1">
+                        <h2 className="text-3xl font-black italic text-slate-900 tracking-tighter uppercase">Recebido!</h2>
+                        <p className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Lote #{receiptData.batchId.split('-')[0]}</p>
+                    </div>
 
-                    <div className="bg-slate-50 p-6 rounded-2xl border border-dashed border-slate-300 space-y-3 text-left">
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 text-sm">Data:</span>
-                            <span className="font-bold text-slate-700">{receiptData.date}</span>
+                    <div className="bg-slate-50 p-6 rounded-[32px] border border-slate-100 space-y-4 text-left shadow-inner">
+                        <div className="flex justify-between items-center text-xs">
+                            <span className="font-black text-slate-400 uppercase tracking-widest">Transportadora</span>
+                            <span className="font-bold text-slate-900 italic">{receiptData.carrier}</span>
                         </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 text-sm">Transportadora:</span>
-                            <span className="font-bold text-slate-700">{receiptData.carrier}</span>
-                        </div>
-                        <div className="flex justify-between">
-                            <span className="text-slate-500 text-sm">Entregador:</span>
-                            <span className="font-bold text-slate-700">{receiptData.courier}</span>
-                        </div>
-                        <div className="border-t border-slate-200 my-2 pt-2 flex justify-between items-center">
-                            <span className="text-slate-900 font-bold uppercase">Total de Volumes</span>
-                            <span className="text-2xl font-black text-brand-600">{receiptData.count}</span>
+                        <div className="flex justify-between items-center text-xs">
+                            <span className="font-black text-slate-400 uppercase tracking-widest">Volumes</span>
+                            <span className="text-2xl font-black text-brand-600 italic tracking-tighter">{receiptData.count}</span>
                         </div>
                     </div>
 
-                    <div className="flex gap-3">
+                    <div className="grid grid-cols-2 gap-3">
                         <button
                             onClick={() => window.print()}
-                            className="flex-1 flex items-center justify-center gap-2 h-12 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-bold transition-colors"
+                            className="h-14 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-slate-50 transition-all active:scale-95 flex items-center justify-center gap-2"
                         >
-                            <Printer className="w-5 h-5" />
-                            Imprimir
+                            <Printer size={16} /> Imprimir
                         </button>
                         <button
-                            onClick={() => setShowReceipt(false)}
-                            className="flex-1 h-12 bg-brand-600 hover:bg-brand-700 text-white rounded-xl font-bold transition-colors shadow-lg shadow-brand-600/20"
+                            onClick={() => onNavigateProcessing()}
+                            className="h-14 bg-brand-600 text-white rounded-2xl font-black uppercase tracking-widest text-[10px] hover:bg-brand-500 transition-all active:scale-95 shadow-lg shadow-brand-500/20 flex items-center justify-center gap-2"
                         >
-                            Novo Lote
+                            Ir p/ Triagem <ArrowRight size={16} />
                         </button>
                     </div>
+
+                    <button
+                        onClick={() => setShowReceipt(false)}
+                        className="text-[9px] font-black text-slate-400 uppercase tracking-widest hover:text-slate-600"
+                    >
+                        Novo Lote de Entrada
+                    </button>
                 </div>
             </div>
         );
@@ -151,129 +152,151 @@ export const AdminPackageReceipt: React.FC<AdminPackageReceiptProps> = ({ onBack
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
             {/* Header */}
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={onBack}
-                            className="p-2 hover:bg-slate-100 rounded-full transition-colors"
+                            className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200 transition-colors"
                         >
-                            <ArrowLeft className="w-6 h-6 text-slate-600" />
+                            <ArrowLeft size={20} />
                         </button>
-                        <h1 className="text-lg font-bold text-slate-900">Recebimento de Encomendas</h1>
+                        <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Recebimento</h1>
                     </div>
-                    <div className="text-xs font-bold bg-brand-100 text-brand-700 px-3 py-1 rounded-full uppercase tracking-wide">
-                        Passo 1 de 3
+                    <div className="text-[10px] font-black bg-brand-50 text-brand-600 px-4 py-1.5 rounded-full uppercase tracking-[0.2em] border border-brand-100 shadow-sm">
+                        Digital Handshake • Passo 1/3
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-xl mx-auto px-6 py-8 space-y-8">
 
                 {/* Transport Info */}
-                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <Box className="w-4 h-4" />
-                        Dados da Entrega
-                    </h2>
-                    <div className="grid grid-cols-1 gap-4">
-                        <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">Transportadora</label>
-                            <input
-                                type="text"
-                                placeholder="Ex: Correios, DHL, Mercado Livre..."
-                                value={carrierName}
-                                onChange={(e) => setCarrierName(e.target.value)}
-                                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none font-medium transition-all"
-                            />
+                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center">
+                            <Box size={20} />
                         </div>
                         <div>
-                            <label className="block text-xs font-bold text-slate-500 mb-1 ml-1">Nome do Entregador</label>
+                            <h2 className="text-sm font-black text-slate-900 italic uppercase">Dados da Entrega</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Transportadora & Entregador</p>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 gap-4">
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Transportadora</label>
                             <input
                                 type="text"
-                                placeholder="Nome ou RG do entregador"
+                                placeholder="Ex: Mercado Livre, Amazon, Correios..."
+                                value={carrierName}
+                                onChange={(e) => setCarrierName(e.target.value)}
+                                className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl focus:border-brand-500 focus:bg-white outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Entregador (Opcional)</label>
+                            <input
+                                type="text"
+                                placeholder="Nome do entregador..."
                                 value={courierName}
                                 onChange={(e) => setCourierName(e.target.value)}
-                                className="w-full h-12 px-4 bg-slate-50 border border-slate-200 rounded-xl focus:border-brand-500 focus:ring-2 focus:ring-brand-500/20 outline-none font-medium transition-all"
+                                className="w-full h-14 px-6 bg-slate-50 border border-slate-100 rounded-2xl focus:border-brand-500 focus:bg-white outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300"
                             />
                         </div>
                     </div>
                 </div>
 
                 {/* Scanning Area */}
-                <div className="bg-white p-5 rounded-3xl shadow-sm border border-slate-100 space-y-4">
-                    <h2 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                        <Barcode className="w-4 h-4" />
-                        Bipar Pacotes
-                    </h2>
+                <div className="bg-slate-900 p-8 rounded-[40px] shadow-2xl space-y-6 relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:scale-110 transition-transform duration-500">
+                        <Barcode size={80} className="text-white" />
+                    </div>
 
-                    <form onSubmit={handleAddCode} className="relative">
+                    <div className="relative z-10 flex items-center gap-3">
+                        <div className="w-10 h-10 bg-white/10 text-white rounded-2xl flex items-center justify-center backdrop-blur-md">
+                            <Barcode size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black text-white italic uppercase">Bipar Pacotes</h2>
+                            <p className="text-[10px] text-white/40 font-bold uppercase tracking-widest italic">Aponte o leitor para o código</p>
+                        </div>
+                    </div>
+
+                    <form onSubmit={handleAddCode} className="relative z-10">
                         <input
                             ref={codeInputRef}
                             type="text"
-                            placeholder={carrierName && courierName ? "Bipe o código de barras aqui..." : "Preencha a transportadora primeiro"}
+                            placeholder={carrierName ? "Aguardando BIP..." : "Preencha a transportadora"}
                             value={currentCode}
                             onChange={(e) => setCurrentCode(e.target.value)}
-                            disabled={!carrierName || !courierName}
-                            className="w-full h-14 pl-12 pr-4 bg-slate-900 text-white placeholder-slate-500 border-none rounded-2xl focus:ring-4 focus:ring-brand-500/30 outline-none font-mono text-lg tracking-wider transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                            disabled={!carrierName}
+                            className="w-full h-16 pl-14 pr-6 bg-white/10 text-white border-2 border-white/10 rounded-[28px] focus:border-brand-500 focus:bg-white/20 outline-none font-mono text-xl tracking-widest transition-all placeholder:text-white/20 disabled:opacity-20"
                         />
-                        <Barcode className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 w-6 h-6" />
-                        <button
-                            type="submit"
-                            disabled={!currentCode.trim()}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 bg-brand-500 text-white rounded-xl hover:bg-brand-600 disabled:opacity-0 transition-all shadow-lg shadow-brand-500/30"
-                        >
-                            <Plus className="w-5 h-5" />
-                        </button>
+                        <div className="absolute left-6 top-1/2 -translate-y-1/2 text-white/30">
+                            <Plus size={20} />
+                        </div>
                     </form>
 
-                    <div className="flex justify-between items-center px-2">
-                        <span className="text-xs text-slate-400 font-medium">
-                            Itens neste lote:
-                        </span>
-                        <span className="text-2xl font-black text-slate-800">
-                            {scannedPackages.length}
-                        </span>
+                    <div className="relative z-10 flex justify-between items-end">
+                        <div>
+                            <p className="text-[9px] font-black text-white/30 uppercase tracking-[0.3em]">Volumes Coletados</p>
+                            <p className="text-4xl font-black italic text-white tracking-tighter leading-none mt-1">{scannedPackages.length}</p>
+                        </div>
+                        <div className="flex -space-x-3">
+                            {Array.from({ length: Math.min(scannedPackages.length, 5) }).map((_, i) => (
+                                <div key={i} className="w-10 h-10 bg-brand-500 rounded-xl border-4 border-slate-900 flex items-center justify-center text-white scale-90">
+                                    <Package size={14} />
+                                </div>
+                            ))}
+                        </div>
                     </div>
                 </div>
 
                 {/* List */}
                 {scannedPackages.length > 0 && (
-                    <div className="space-y-3">
-                        <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider ml-2">Histórico do Lote</h3>
-                        {scannedPackages.map((code, index) => (
-                            <div key={index} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between group animate-in slide-in-from-top-2 duration-300">
-                                <div className="flex items-center gap-3 overflow-hidden">
-                                    <div className="w-10 h-10 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center shrink-0">
-                                        <Package className="w-5 h-5" />
+                    <div className="space-y-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                        <h3 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] px-2 italic">Histórico do Lote</h3>
+                        <div className="grid grid-cols-1 gap-3">
+                            {scannedPackages.map((code, index) => (
+                                <div key={index} className="bg-white p-5 rounded-[28px] border border-slate-100 shadow-sm flex items-center justify-between group hover:border-brand-200 transition-all animate-in slide-in-from-top-2">
+                                    <div className="flex items-center gap-4 overflow-hidden">
+                                        <div className="w-12 h-12 bg-slate-50 text-slate-400 rounded-2xl flex items-center justify-center shrink-0 group-hover:bg-brand-50 group-hover:text-brand-600 transition-colors">
+                                            <Package size={20} />
+                                        </div>
+                                        <div className="min-w-0">
+                                            <p className="font-mono font-bold text-slate-900 truncate tracking-tight">{code}</p>
+                                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Volume #{scannedPackages.length - index}</p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0">
-                                        <p className="font-mono font-bold text-slate-700 truncate text-sm">{code}</p>
-                                        <p className="text-[10px] text-slate-400 font-bold uppercase">Volume {scannedPackages.length - index}</p>
-                                    </div>
+                                    <button
+                                        onClick={() => handleRemoveCode(code)}
+                                        className="w-10 h-10 rounded-xl bg-rose-50 text-rose-400 opacity-0 group-hover:opacity-100 hover:bg-rose-100 hover:text-rose-600 transition-all flex items-center justify-center"
+                                    >
+                                        <Trash2 size={18} />
+                                    </button>
                                 </div>
-                                <button
-                                    onClick={() => handleRemoveCode(code)}
-                                    className="p-2 text-red-400 hover:bg-red-50 hover:text-red-600 rounded-xl transition-colors"
-                                >
-                                    <Trash2 className="w-5 h-5" />
-                                </button>
-                            </div>
-                        ))}
+                            ))}
+                        </div>
                     </div>
                 )}
 
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 z-20">
                 <div className="max-w-xl mx-auto">
                     <button
                         onClick={handleFinishReceipt}
                         disabled={loading || scannedPackages.length === 0}
-                        className="w-full h-14 bg-brand-gradient-horizontal text-brand-contrast rounded-2xl font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-brand-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        className="w-full h-16 bg-gradient-to-r from-violet-600 to-indigo-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-violet-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
                     >
-                        {loading ? 'Salvando...' : `Finalizar Recebimento (${scannedPackages.length})`}
+                        {loading ? 'Salvando...' : (
+                            <>
+                                Finalizar Recebimento ({scannedPackages.length})
+                                <ArrowRight size={18} />
+                            </>
+                        )}
                     </button>
                 </div>
             </div>

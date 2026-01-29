@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ArrowLeft, Search, User, MapPin, QrCode, Upload, ArrowRight, Package } from 'lucide-react';
+import { ArrowLeft, Search, User, MapPin, QrCode, Upload, ArrowRight, Package, ClipboardCheck, CheckCircle, Smartphone } from 'lucide-react';
 import { supabase } from '../supabase';
 
 interface AdminPackageProcessingProps {
@@ -48,7 +48,7 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
     const handleSelectPackage = (pkg: any) => {
         setSelectedPackage(pkg);
-        setInternalCode(''); // Reset for new scan
+        setInternalCode('');
         setStep('details');
     };
 
@@ -67,7 +67,7 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
                     resident_id: selectedResident.id,
                     internal_code: internalCode,
                     location: location,
-                    status: 'awaiting_confirmation', // Ready for resident to pick up
+                    status: 'pending', // Correcting status to 'pending' as it's the next step (Waiting for pickup)
                     updated_at: new Date().toISOString()
                 })
                 .eq('id', selectedPackage.id);
@@ -107,53 +107,70 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
     if (step === 'select') {
         return (
-            <div className="min-h-screen bg-slate-50 pb-20">
-                <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+            <div className="min-h-screen bg-slate-50 pb-32">
+                {/* Header */}
+                <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
                     <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                         <div className="flex items-center gap-3">
-                            <button onClick={onBack} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                                <ArrowLeft className="w-6 h-6 text-slate-600" />
+                            <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200 transition-colors">
+                                <ArrowLeft size={20} />
                             </button>
-                            <h1 className="text-lg font-bold text-slate-900">Processar Encomendas</h1>
+                            <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Triagem</h1>
                         </div>
-                        <div className="text-xs font-bold bg-amber-100 text-amber-700 px-3 py-1 rounded-full uppercase tracking-wide">
-                            Pendentes: {pendingPackages.length}
+                        <div className="text-[10px] font-black bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full uppercase tracking-[0.2em] border border-blue-100 shadow-sm text-center">
+                            Digital Handshake • Passo 2/3
                         </div>
                     </div>
                 </div>
 
-                <div className="max-w-xl mx-auto px-4 py-6 space-y-4">
+                <div className="max-w-xl mx-auto px-6 py-8 space-y-6">
+                    <div className="flex justify-between items-center px-2">
+                        <div className="flex items-center gap-2">
+                            <ClipboardCheck size={18} className="text-slate-400" />
+                            <h2 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Volumes Pendentes</h2>
+                        </div>
+                        <span className="text-2xl font-black italic text-slate-900 tracking-tighter">{pendingPackages.length}</span>
+                    </div>
+
                     {pendingPackages.length === 0 ? (
-                        <div className="text-center py-12 text-slate-400">
-                            <Package className="w-12 h-12 mx-auto mb-3 opacity-50" />
-                            <p className="font-medium">Nenhum pacote pendente.</p>
+                        <div className="bg-white p-12 rounded-[40px] text-center border-2 border-dashed border-slate-200 space-y-4">
+                            <div className="w-20 h-20 bg-slate-50 text-slate-200 rounded-full flex items-center justify-center mx-auto shadow-inner">
+                                <Package size={40} />
+                            </div>
+                            <div>
+                                <p className="font-black text-slate-300 uppercase italic text-sm">Tudo Organizado!</p>
+                                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-1">Nenhum volume para triar</p>
+                            </div>
                         </div>
                     ) : (
-                        pendingPackages.map(pkg => (
-                            <button
-                                key={pkg.id}
-                                onClick={() => handleSelectPackage(pkg)}
-                                className="w-full bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:border-brand-200 transition-all active:scale-[0.98] text-left group"
-                            >
-                                <div>
-                                    <div className="flex items-center gap-2 mb-1">
-                                        <span className="text-xs font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-lg uppercase">
-                                            {pkg.carrier_name}
-                                        </span>
-                                        <span className="text-xs text-slate-400 font-mono">
-                                            {pkg.original_code}
-                                        </span>
+                        <div className="grid grid-cols-1 gap-4">
+                            {pendingPackages.map(pkg => (
+                                <button
+                                    key={pkg.id}
+                                    onClick={() => handleSelectPackage(pkg)}
+                                    className="w-full bg-white p-6 rounded-[32px] border border-slate-100 shadow-sm flex items-center justify-between hover:border-blue-200 transition-all active:scale-[0.98] text-left group overflow-hidden relative"
+                                >
+                                    <div className="absolute top-0 left-0 w-1.5 h-full bg-blue-500 scale-y-50 group-hover:scale-y-100 transition-transform origin-top"></div>
+                                    <div className="flex-1 min-w-0 pr-4">
+                                        <div className="flex items-center gap-2 mb-2">
+                                            <span className="text-[10px] font-black bg-blue-50 text-blue-600 px-2.5 py-1 rounded-lg uppercase tracking-wider">
+                                                {pkg.carrier_name}
+                                            </span>
+                                            <span className="text-[10px] text-slate-400 font-mono font-bold">
+                                                ID: {pkg.original_code.slice(0, 10)}...
+                                            </span>
+                                        </div>
+                                        <h3 className="font-black text-slate-900 italic uppercase text-sm tracking-tight">Entregador: {pkg.courier_name || 'Não inf.'}</h3>
+                                        <p className="text-[10px] text-slate-400 font-bold uppercase mt-1 tracking-widest">
+                                            Recebido em {new Date(pkg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })} • {new Date(pkg.created_at).toLocaleDateString()}
+                                        </p>
                                     </div>
-                                    <h3 className="font-bold text-slate-800">Entregue por {pkg.courier_name}</h3>
-                                    <p className="text-xs text-slate-400 mt-1">
-                                        Recebido em {new Date(pkg.created_at).toLocaleString()}
-                                    </p>
-                                </div>
-                                <div className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center group-hover:bg-brand-50 transition-colors">
-                                    <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-brand-600" />
-                                </div>
-                            </button>
-                        ))
+                                    <div className="w-12 h-12 bg-slate-50 rounded-2xl flex items-center justify-center group-hover:bg-blue-50 group-hover:scale-110 transition-all">
+                                        <ArrowRight className="w-5 h-5 text-slate-400 group-hover:text-blue-600" />
+                                    </div>
+                                </button>
+                            ))}
+                        </div>
                     )}
                 </div>
             </div>
@@ -162,143 +179,169 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
     return (
         <div className="min-h-screen bg-slate-50 pb-32">
-            <div className="bg-white border-b border-slate-200 sticky top-0 z-10">
+            <div className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-10">
                 <div className="max-w-3xl mx-auto px-4 h-16 flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                        <button onClick={() => setStep('select')} className="p-2 hover:bg-slate-100 rounded-full transition-colors">
-                            <ArrowLeft className="w-6 h-6 text-slate-600" />
+                        <button onClick={() => setStep('select')} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center text-slate-600 hover:bg-slate-200 border border-slate-200 transition-colors">
+                            <ArrowLeft size={20} />
                         </button>
-                        <h1 className="text-lg font-bold text-slate-900">Detalhes do Pacote</h1>
+                        <h1 className="text-lg font-black italic text-slate-900 uppercase tracking-tighter">Detalhes da Triagem</h1>
                     </div>
                 </div>
             </div>
 
-            <div className="max-w-xl mx-auto px-4 py-6 space-y-6">
+            <div className="max-w-xl mx-auto px-6 py-8 space-y-8">
 
                 {/* Package Info Card */}
-                <div className="bg-white p-5 rounded-3xl border border-slate-100 shadow-sm">
-                    <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 bg-brand-50 text-brand-600 rounded-full flex items-center justify-center">
-                            <Package className="w-5 h-5" />
+                <div className="bg-slate-900 p-8 rounded-[40px] shadow-2xl relative overflow-hidden group">
+                    <div className="absolute top-0 right-0 p-8 opacity-10 scale-150">
+                        <Package size={80} className="text-white" />
+                    </div>
+                    <div className="relative z-10 flex items-center gap-4 mb-6">
+                        <div className="w-12 h-12 bg-white/10 text-white rounded-2xl flex items-center justify-center backdrop-blur-md border border-white/10">
+                            <Package size={24} />
                         </div>
                         <div>
-                            <p className="text-xs font-bold text-slate-400 uppercase">Objeto Selecionado</p>
-                            <p className="font-bold text-slate-800">{selectedPackage?.original_code}</p>
+                            <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Objeto Selecionado</p>
+                            <h2 className="text-lg font-black italic text-white uppercase tracking-tight">{selectedPackage?.original_code}</h2>
                         </div>
                     </div>
-                    <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                            <span className="block text-slate-400 text-xs">Transportadora</span>
-                            <span className="font-medium text-slate-700">{selectedPackage?.carrier_name}</span>
+                    <div className="relative z-10 grid grid-cols-2 gap-8 border-t border-white/5 pt-6">
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Transportadora</span>
+                            <span className="block font-bold text-white uppercase italic">{selectedPackage?.carrier_name}</span>
                         </div>
-                        <div>
-                            <span className="block text-slate-400 text-xs">Entregador</span>
-                            <span className="font-medium text-slate-700">{selectedPackage?.courier_name}</span>
+                        <div className="space-y-1">
+                            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest">Entregador</span>
+                            <span className="block font-bold text-white uppercase italic">{selectedPackage?.courier_name || 'Não Inf.'}</span>
                         </div>
                     </div>
                 </div>
 
                 {/* 1. Internal Code (QR) */}
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-2">
-                        <QrCode className="w-4 h-4 text-brand-500" />
-                        1. Etiqueta Interna (QR)
-                    </label>
+                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-amber-50 text-amber-600 rounded-2xl flex items-center justify-center">
+                            <QrCode size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black text-slate-900 italic uppercase">1. Etiqueta Interna</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Identificador do Condomínio</p>
+                        </div>
+                    </div>
                     <input
                         autoFocus
                         type="text"
                         placeholder="Bipe a etiqueta interna..."
                         value={internalCode}
                         onChange={(e) => setInternalCode(e.target.value)}
-                        className="w-full h-14 px-4 bg-white border border-slate-200 rounded-2xl focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 outline-none font-mono text-lg transition-all"
+                        className="w-full h-16 px-6 bg-slate-50 border border-slate-100 rounded-[28px] focus:border-amber-500 focus:bg-white outline-none font-mono text-xl tracking-widest transition-all placeholder:text-slate-300"
                     />
                 </div>
 
                 {/* 2. Resident Selection */}
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-2">
-                        <User className="w-4 h-4 text-brand-500" />
-                        2. Vincular Morador
-                    </label>
+                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center">
+                            <User size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black text-slate-900 italic uppercase">2. Vincular Morador</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Dono da Encomenda</p>
+                        </div>
+                    </div>
 
                     {!selectedResident ? (
-                        <div className="relative">
+                        <div className="relative group">
                             <input
                                 type="text"
                                 placeholder="Buscar por nome ou unidade..."
                                 value={residentSearch}
                                 onChange={(e) => setResidentSearch(e.target.value)}
-                                className="w-full h-12 pl-10 pr-4 bg-white border border-slate-200 rounded-xl focus:border-brand-500 outline-none transition-all"
+                                className="w-full h-16 pl-14 pr-6 bg-slate-50 border border-slate-100 rounded-[28px] focus:border-emerald-500 focus:bg-white outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300 shadow-inner"
                             />
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-5 h-5" />
+                            <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-hover:text-emerald-500 transition-colors" size={20} />
 
                             {residentSearch.length > 1 && (
-                                <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-xl border border-slate-100 max-h-60 overflow-y-auto z-20">
-                                    {filteredResidents.map(res => (
-                                        <button
-                                            key={res.id}
-                                            onClick={() => { setSelectedResident(res); setResidentSearch(''); }}
-                                            className="w-full p-3 text-left hover:bg-slate-50 border-b border-slate-50 last:border-none flex items-center gap-3 transition-colors"
-                                        >
-                                            <div className="w-8 h-8 bg-slate-200 rounded-full overflow-hidden">
-                                                {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : <User className="w-4 h-4 m-2 text-slate-400" />}
-                                            </div>
-                                            <div>
-                                                <p className="font-bold text-slate-700 text-sm">{res.name}</p>
-                                                <p className="text-xs text-slate-400">{res.tower} - {res.unit}</p>
-                                            </div>
-                                        </button>
-                                    ))}
+                                <div className="absolute top-full left-0 right-0 mt-4 bg-white rounded-[32px] shadow-2xl border border-slate-100 max-h-72 overflow-y-auto z-20 animate-in slide-in-from-top-4 duration-300">
+                                    <div className="p-2 space-y-1">
+                                        {filteredResidents.map(res => (
+                                            <button
+                                                key={res.id}
+                                                onClick={() => { setSelectedResident(res); setResidentSearch(''); }}
+                                                className="w-full p-4 text-left hover:bg-emerald-50 rounded-2xl flex items-center gap-4 transition-all group/item"
+                                            >
+                                                <div className="w-12 h-12 bg-white rounded-xl shadow-sm overflow-hidden border border-slate-100 group-hover/item:border-emerald-100">
+                                                    {res.avatar ? <img src={res.avatar} className="w-full h-full object-cover" /> : <User className="w-6 h-6 m-3 text-slate-200" />}
+                                                </div>
+                                                <div className="flex-1">
+                                                    <p className="font-black text-slate-900 italic uppercase text-sm">{res.name}</p>
+                                                    <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mt-0.5">{res.tower} • Unidade {res.unit}</p>
+                                                </div>
+                                                <ArrowRight size={16} className="text-slate-200 group-hover/item:text-emerald-500 group-hover/item:translate-x-1 transition-all" />
+                                            </button>
+                                        ))}
+                                    </div>
                                 </div>
                             )}
                         </div>
                     ) : (
-                        <div className="bg-brand-50 border border-brand-100 p-4 rounded-xl flex items-center justify-between">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 bg-white rounded-full overflow-hidden border border-brand-100">
-                                    {selectedResident.avatar ? <img src={selectedResident.avatar} className="w-full h-full object-cover" /> : <User className="w-5 h-5 m-2.5 text-brand-300" />}
+                        <div className="bg-emerald-50 border border-emerald-100 p-6 rounded-[32px] flex items-center justify-between group">
+                            <div className="flex items-center gap-4">
+                                <div className="w-14 h-14 bg-white rounded-2xl overflow-hidden border-2 border-emerald-200 shadow-sm transition-transform group-hover:scale-105">
+                                    {selectedResident.avatar ? <img src={selectedResident.avatar} className="w-full h-full object-cover" /> : <User className="w-7 h-7 m-3.5 text-emerald-200" />}
                                 </div>
                                 <div>
-                                    <p className="font-bold text-brand-900 text-sm">{selectedResident.name}</p>
-                                    <p className="text-xs text-brand-600 font-medium">{selectedResident.tower} - {selectedResident.unit}</p>
+                                    <p className="font-black text-emerald-900 italic uppercase tracking-tight">{selectedResident.name}</p>
+                                    <p className="text-[11px] text-emerald-600 font-black uppercase tracking-widest">{selectedResident.tower} • UNIDADE {selectedResident.unit}</p>
                                 </div>
                             </div>
                             <button
                                 onClick={() => setSelectedResident(null)}
-                                className="text-xs font-bold text-brand-500 hover:text-brand-700 uppercase"
+                                className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-emerald-500 hover:bg-emerald-100 transition-colors shadow-sm"
                             >
-                                Trocar
+                                <ArrowLeft size={18} />
                             </button>
                         </div>
                     )}
                 </div>
 
                 {/* 3. Location */}
-                <div className="space-y-2">
-                    <label className="text-sm font-bold text-slate-700 ml-1 flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-brand-500" />
-                        3. Localização no Estoque
-                    </label>
+                <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6">
+                    <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-violet-50 text-violet-600 rounded-2xl flex items-center justify-center">
+                            <MapPin size={20} />
+                        </div>
+                        <div>
+                            <h2 className="text-sm font-black text-slate-900 italic uppercase">3. Localização</h2>
+                            <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest">Onde será guardado</p>
+                        </div>
+                    </div>
                     <input
                         type="text"
-                        placeholder="Ex: Prateleira A, Bandeja 2..."
+                        placeholder="Ex: Prateleira A, Gaveta 4..."
                         value={location}
                         onChange={(e) => setLocation(e.target.value)}
-                        className="w-full h-12 px-4 bg-white border border-slate-200 rounded-xl focus:border-brand-500 outline-none font-medium transition-all"
+                        className="w-full h-16 px-6 bg-slate-50 border border-slate-100 rounded-[28px] focus:border-violet-500 focus:bg-white outline-none font-bold text-slate-900 transition-all placeholder:text-slate-300 shadow-inner"
                     />
                 </div>
 
             </div>
 
             {/* Footer */}
-            <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 p-4 z-20">
+            <div className="fixed bottom-0 left-0 right-0 bg-white/90 backdrop-blur-xl border-t border-slate-100 p-6 z-20">
                 <div className="max-w-xl mx-auto">
                     <button
                         onClick={handleSaveProcessing}
-                        disabled={loading}
-                        className="w-full h-14 bg-brand-gradient-horizontal text-brand-contrast rounded-2xl font-black uppercase tracking-widest hover:opacity-90 active:scale-95 transition-all shadow-lg shadow-brand-glow disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                        disabled={loading || !selectedResident || !location || !internalCode}
+                        className="w-full h-16 bg-gradient-to-r from-emerald-600 to-teal-600 text-white rounded-[32px] font-black uppercase tracking-[0.2em] text-xs hover:opacity-90 active:scale-95 transition-all shadow-xl shadow-emerald-500/20 disabled:opacity-30 disabled:grayscale flex items-center justify-center gap-3"
                     >
-                        {loading ? 'Salvando...' : 'Salvar e Notificar Morador'}
+                        {loading ? 'Processando...' : (
+                            <>
+                                <Smartphone size={18} />
+                                Notificar Morador
+                            </>
+                        )}
                     </button>
                 </div>
             </div>
