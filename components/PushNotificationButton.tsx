@@ -20,8 +20,8 @@ export const PushNotificationButton = () => {
             onClick={subscription ? unsubscribe : subscribe}
             disabled={loading}
             className={`flex items-center gap-2 px-4 py-2 text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-sm active:scale-95 ${subscription
-                    ? 'bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-500'
-                    : 'bg-brand-600 text-white hover:bg-brand-500 shadow-brand-500/20'
+                ? 'bg-slate-100 text-slate-500 hover:bg-rose-50 hover:text-rose-500'
+                : 'bg-brand-600 text-white hover:bg-brand-500 shadow-brand-500/20'
                 }`}
         >
             {loading ? (

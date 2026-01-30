@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { UserRole } from './types';
 import { supabase } from './supabase';
-import { ToastProvider } from './components/ui';
+import { ToastProvider, Card } from './components/ui';
 
 import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
 // Imports de Páginas e Componentes

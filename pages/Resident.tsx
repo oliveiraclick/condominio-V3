@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { maskPhone } from '../utils/masks';
 import { QRCodeSVG } from 'qrcode.react';
-import { PackageScanner } from '../components/PackageScanner';
+import { PackageScanner } from '../components/packagescanner/PackageScanner';
 import { CommunicationHub } from './CommunicationHub';
 import { ProfessionalSector, ProfessionalProfile, UserRole } from '../types';
 import { supabase } from '../supabase';
