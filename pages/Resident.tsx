@@ -1,5 +1,16 @@
 ﻿import React, { useState, useMemo, useRef, useEffect } from 'react';
-import { Card, Badge, Button, Input } from '../components/ui';
+import { Sheet } from '../components/design-system/Sheet';
+import { DSButton } from '../components/design-system/Button';
+import { DSInput } from '../components/design-system/Input';
+import { DSSelect } from '../components/design-system/Select';
+import { Title, Text } from '../components/design-system/Typography';
+import { Card as DSCard } from '../components/design-system/Card';
+import { colors, radius, spacing, shadow } from '../components/design-system/tokens';
+
+// Legacy imports to keep app running during refactor
+// Legacy imports removed
+// import { Card, Badge, Button, Input } from '../components/ui';
+
 import {
   Bell, Search, MapPin, Grid, Calendar, ShoppingBag,
   User, Plus, Package, Key, Zap, CreditCard, Home,
@@ -106,55 +117,65 @@ export const NotificationsModal: React.FC<{ isOpen: boolean; onClose: () => void
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center pointer-events-none">
-      <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm pointer-events-auto transition-opacity" onClick={onClose}></div>
-      <div className="w-full max-w-sm bg-white border border-slate-200 rounded-t-[32px] sm:rounded-[32px] p-6 shadow-2xl transform transition-transform pointer-events-auto max-h-[85vh] flex flex-col animate-in slide-in-from-bottom">
-        <div className="w-12 h-1.5 bg-slate-200 rounded-full mx-auto mb-6 shrink-0"></div>
-        <div className="flex items-center justify-between mb-6 shrink-0">
-          <h3 className="text-xl font-black text-slate-900 uppercase">Notificações</h3>
-          <button onClick={onClose} className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center text-slate-500 hover:bg-slate-200 transition-colors"><XCircle size={20} /></button>
-        </div>
-
-        <div className="space-y-4 overflow-y-auto min-h-0 pb-6">
-          {loading ? (
-            <div className="text-center py-8 text-slate-500 text-xs">Carregando...</div>
-          ) : notifications.length === 0 ? (
-            <div className="text-center py-12 space-y-4 opacity-50">
-              <Bell size={48} className="mx-auto text-slate-300" />
-              <p className="text-sm font-bold text-slate-400">Tudo limpo por aqui!</p>
-            </div>
-          ) : (
-            notifications.map(n => (
-              <div key={n.id} className="bg-white p-4 rounded-2xl border border-slate-100 shadow-sm relative group">
-                <div className="flex gap-3">
-                  <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${n.type === 'package' ? 'bg-amber-100 text-amber-600' :
-                    n.type === 'access' ? 'bg-emerald-100 text-emerald-600' :
-                      n.type === 'notice' ? 'bg-blue-100 text-blue-600' :
-                        'bg-brand-100 text-brand-600'
-                    }`}>
-                    {n.type === 'package' ? <Package size={20} /> :
-                      n.type === 'access' ? <Key size={20} /> :
-                        n.type === 'notice' ? <Megaphone size={20} /> :
-                          <Bell size={20} />
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1">{n.title}</h4>
-                    <p className="text-xs text-slate-500 leading-relaxed mb-2">{n.message}</p>
-                    <p className="text-[10px] text-slate-400 font-medium">
-                      {new Date(n.created_at).toLocaleDateString('pt-BR')} às {new Date(n.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <button onClick={() => markAsRead(n.id)} className="absolute top-2 right-2 p-2 text-slate-400 hover:text-brand-500 transition-colors">
-                    <CheckCircle2 size={16} />
-                  </button>
+    <Sheet open={isOpen} onClose={onClose} title="Notificações">
+      <div className="space-y-4 pb-6">
+        {loading ? (
+          <div className="text-center py-8">
+            <Text variant="caption" style={{ color: colors.neutral[500] }}>Carregando...</Text>
+          </div>
+        ) : notifications.length === 0 ? (
+          <div className="text-center py-12 space-y-4 opacity-50">
+            <Bell size={48} className="mx-auto" style={{ color: colors.neutral[300] }} />
+            <Text variant="body" weight="bold" style={{ color: colors.neutral[400] }}>Tudo limpo por aqui!</Text>
+          </div>
+        ) : (
+          notifications.map(n => (
+            <div key={n.id} style={{
+              backgroundColor: 'white',
+              padding: spacing.md,
+              borderRadius: radius.lg,
+              border: `1px solid ${colors.neutral[100]}`,
+              position: 'relative',
+              boxShadow: shadow.sm
+            }}>
+              <div className="flex gap-3">
+                <div style={{
+                  width: 40,
+                  height: 40,
+                  borderRadius: radius.md,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                  backgroundColor: n.type === 'package' ? colors.brand[100] :
+                    n.type === 'access' ? colors.success ? colors.success + '20' : '#dcfce7' : // Fallback if success color is strictly hex
+                      colors.neutral[100],
+                  color: n.type === 'package' ? colors.brand[600] :
+                    n.type === 'access' ? colors.success || '#16a34a' :
+                      colors.neutral[600]
+                }}>
+                  {n.type === 'package' ? <Package size={20} /> :
+                    n.type === 'access' ? <Key size={20} /> :
+                      n.type === 'notice' ? <Megaphone size={20} /> :
+                        <Bell size={20} />
+                  }
                 </div>
+                <div className="flex-1 min-w-0">
+                  <Text variant="body" weight="bold" style={{ color: colors.neutral[800], marginBottom: 4, lineHeight: 1.2 }}>{n.title}</Text>
+                  <Text variant="caption" style={{ color: colors.neutral[500], marginBottom: 8, display: 'block' }}>{n.message}</Text>
+                  <Text variant="caption" style={{ color: colors.neutral[400], fontSize: 10 }}>
+                    {new Date(n.created_at).toLocaleDateString('pt-BR')} às {new Date(n.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
+                  </Text>
+                </div>
+                <button onClick={() => markAsRead(n.id)} style={{ position: 'absolute', top: 8, right: 8, padding: 8, color: colors.neutral[400] }}>
+                  <CheckCircle2 size={16} />
+                </button>
               </div>
-            ))
-          )}
-        </div>
+            </div>
+          ))
+        )}
       </div>
-    </div>
+    </Sheet>
   );
 };
 
@@ -247,45 +268,43 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-end justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-t-[40px] p-8 pb-12 shadow-2xl animate-in slide-in-from-bottom-8">
-        <div className="flex justify-between items-center mb-6">
-          <h3 className="text-xl font-black italic text-slate-900">Vizinhos Autorizados</h3>
-          <button onClick={onClose}><XCircle size={32} className="text-slate-400 hover:text-slate-600 transition-colors" /></button>
-        </div>
-
-        <div className="bg-slate-50 p-6 rounded-[32px] mb-8 space-y-4 border border-slate-100">
-          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest">Adicionar Novo</h4>
-
+    <Sheet open={isOpen} onClose={onClose} title="Autorizar Vizinho">
+      <div className="space-y-6 pb-6">
+        <div className="bg-slate-50 p-6 rounded-[24px] mb-4 space-y-4 border border-slate-100">
+          <Title variant="section" align="left">Adicionar Novo</Title>
           <div className="flex gap-2 items-end">
             <div className="space-y-2 flex-1">
-              <Input
+              <DSInput
                 placeholder="Rua (Ex: 1)"
                 value={manualEntry.tower}
                 onChange={e => setManualEntry({ ...manualEntry, tower: e.target.value })}
-                className="h-12 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white"
+                className="bg-white"
               />
             </div>
             <div className="space-y-2 flex-1">
-              <Input
+              <DSInput
                 placeholder="Casa (Ex: 460)"
                 value={manualEntry.unit}
                 onChange={e => setManualEntry({ ...manualEntry, unit: e.target.value })}
-                className="h-12 bg-white border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white"
+                className="bg-white"
               />
             </div>
-            <Button onClick={authorizeByAddress} disabled={loading} className="h-12 w-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl flex items-center justify-center shadow-emerald-200 shadow-lg active:scale-95 transition-all">
+            <DSButton
+              onClick={authorizeByAddress}
+              disabled={loading}
+              variant="primary"
+              style={{ width: 56, height: 56, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            >
               {loading ? <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : <Check size={24} strokeWidth={3} />}
-            </Button>
+            </DSButton>
           </div>
         </div>
 
         <div className="space-y-4">
-          <h4 className="text-xs font-black text-slate-500 uppercase tracking-widest pl-2 mb-2">Autorizações Ativas</h4>
+          <Title variant="section" align="left">Autorizações Ativas</Title>
           {authorizations.length === 0 ? (
-            <div className="text-center py-8 text-slate-400">
-              <p className="text-xs italic">Ninguém autorizado.</p>
+            <div className="text-center py-8">
+              <Text variant="caption" style={{ color: colors.neutral[400] }}>Ninguém autorizado.</Text>
             </div>
           ) : (
             authorizations.map(auth => (
@@ -302,7 +321,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
           )}
         </div>
       </div>
-    </div>
+    </Sheet>
   );
 };
 
@@ -312,45 +331,39 @@ export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; cu
   const qrValue = `RESIDENT:${currentUser?.id}`;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-xs sm:max-w-sm bg-white border border-slate-200 rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 mx-6 overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-28 bg-gradient-to-r from-blue-500 to-cyan-500 shadow-lg"></div>
-        <div className="relative flex flex-col items-center">
-          <button onClick={onClose} className="absolute top-0 right-0 z-50 w-8 h-8 bg-white/20 rounded-full flex items-center justify-center text-white active:scale-90 transition-transform backdrop-blur-sm hover:bg-white/30 border border-white/20">
-            <X size={16} strokeWidth={3} />
-          </button>
-
-          <div className="w-20 h-20 rounded-[28px] p-1 bg-white shadow-xl mb-3 mt-6 ring-4 ring-white z-10">
-            <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[24px] object-cover bg-slate-50" />
-          </div>
-          <h2 className="text-xl font-black text-slate-900 italic tracking-tighter text-center leading-none uppercase">{currentUser?.name}</h2>
-          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-6 mt-1">
-            {currentUser?.unit?.toString().toUpperCase().includes('RUA')
-              ? `${currentUser.unit}, ${currentUser.tower}`
-              : `Rua: ${currentUser?.unit || ''} - Torre: ${currentUser?.tower || ''}`
-            }
-          </p>
-
-          <div className="p-4 bg-white rounded-[24px] shadow-sm mb-6 border border-slate-100 ring-4 ring-slate-50">
-            <QRCodeSVG value={qrValue} size={160} />
-          </div>
-
-          <p className="text-center text-slate-500 text-[10px] max-w-[200px] leading-relaxed mb-4 font-medium italic">
-            Apresente este código na portaria para retirar suas encomendas com segurança.
-          </p>
-
-          <Button onClick={onOpenAuth} className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white hover:opacity-90 h-12 rounded-xl text-[10px] font-black uppercase tracking-widest w-full mb-2 shadow-lg shadow-blue-500/20 active:scale-95 transition-all border-none">
-            <Users size={16} className="mr-2" />
-            Autorizar Vizinho
-          </Button>
-
-          <button onClick={onClose} className="hover:bg-slate-100 p-2 rounded-full transition-colors mt-1">
-            <XCircle size={24} className="text-slate-200" />
-          </button>
+    <Sheet open={isOpen} onClose={onClose} title="Carteirinha Digital">
+      <div className="relative flex flex-col items-center pb-8">
+        <div className="w-24 h-24 rounded-[28px] p-1 bg-white shadow-xl mb-4 mt-2 ring-4 ring-slate-50 z-10">
+          <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[24px] object-cover bg-slate-50" />
         </div>
+
+        <Title size="xl" style={{ marginBottom: 4 }}>{currentUser?.name}</Title>
+
+        <Text variant="caption" weight="bold" style={{ textTransform: 'uppercase', color: colors.neutral[500], letterSpacing: 1 }}>
+          {currentUser?.unit?.toString().toUpperCase().includes('RUA')
+            ? `${currentUser.unit}, ${currentUser.tower}`
+            : `Rua: ${currentUser?.unit || ''} - Torre: ${currentUser?.tower || ''}`
+          }
+        </Text>
+
+        <div className="p-4 bg-white rounded-[24px] shadow-sm my-6 border border-slate-100 ring-4 ring-slate-50">
+          <QRCodeSVG value={qrValue} size={180} />
+        </div>
+
+        <Text variant="caption" style={{ textAlign: 'center', maxWidth: 220, marginBottom: 24, color: colors.neutral[500] }}>
+          Apresente este código na portaria para retirar suas encomendas com segurança.
+        </Text>
+
+        <DSButton
+          onClick={onOpenAuth}
+          fullWidth
+          variant="primary"
+          startIcon={<Users size={18} />}
+        >
+          Autorizar Vizinho
+        </DSButton>
       </div>
-    </div>
+    </Sheet>
   );
 };
 
@@ -376,61 +389,52 @@ export const MuralDemandModal: React.FC<{ isOpen: boolean; onClose: () => void; 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={onClose}></div>
-      <div className="relative w-full max-w-md bg-white border border-slate-200 rounded-t-[40px] p-8 shadow-2xl animate-in slide-in-from-bottom-8 duration-300 pb-12">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-black italic text-slate-900 tracking-tighter">Publicar no Mural</h2>
-          <button onClick={onClose} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-200">
-            <X size={20} className="text-slate-500" />
-          </button>
+    <Sheet open={isOpen} onClose={onClose} title="Publicar no Mural">
+      <div className="space-y-6 pb-6">
+        <div>
+          <Title variant="section" align="left">O que você precisa?</Title>
+          <div className="grid grid-cols-2 gap-2 mt-2">
+            {categories.map(cat => (
+              <button
+                key={cat}
+                onClick={() => setCategory(cat)}
+                className={`py-3 px-4 rounded-xl text-[10px] font-black uppercase tracking-tight transition-all border ${category === cat ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
         </div>
 
-        <div className="space-y-6">
-          <div>
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">O que você precisa?</label>
-            <div className="grid grid-cols-2 gap-2">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setCategory(cat)}
-                  className={`py-3 px-4 rounded-2xl text-[10px] font-black uppercase tracking-tight transition-all border ${category === cat ? 'bg-brand-600 text-white border-brand-600' : 'bg-slate-50 text-slate-500 border-slate-100 hover:bg-slate-100'}`}
-                >
-                  {cat}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Dê mais detalhes</label>
-            <textarea
-              className="w-full bg-slate-50 border border-slate-200 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 placeholder-slate-400"
-              placeholder="Ex: Preciso consertar uma torneira na cozinha amanhã de manhã..."
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-            />
-          </div>
-
-          <Button fullWidth className="bg-brand-600 text-white h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-brand-700 transition-colors" onClick={handleSubmit} loading={loading}>
-            Publicar Agora
-          </Button>
+        <div>
+          <Title variant="section" align="left">Dê mais detalhes</Title>
+          <textarea
+            className="w-full bg-slate-50 border border-slate-200 rounded-[24px] p-5 text-sm min-h-[120px] focus:outline-none focus:ring-2 focus:ring-brand-500 text-slate-900 placeholder-slate-400 mt-2"
+            placeholder="Ex: Preciso consertar uma torneira na cozinha amanhã de manhã..."
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
+          />
         </div>
+
+        <DSButton fullWidth variant="primary" onClick={handleSubmit} loading={loading}>
+          Publicar Agora
+        </DSButton>
       </div>
-    </div>
+    </Sheet>
   );
 };
 
 export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ item, onClick }) => {
   return (
-    <Card
+    <DSCard
       onClick={onClick}
       className={`p-0 overflow-hidden border border-slate-100 shadow-xl shadow-slate-200/60 rounded-[40px] bg-white group transition-all cursor-pointer active:scale-[0.98]`}
+      style={{ padding: 0 }}
     >
       <div className="relative h-72 p-5">
         <img src={item.img} className="w-full h-full object-cover rounded-[32px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
         <div className="absolute top-10 left-10">
-          <span className="bg-emerald-500 text-white font-black px-4 py-2 text-[10px] uppercase rounded-xl shadow-lg tracking-widest">{item.status}</span>
+          <div style={{ backgroundColor: colors.success, color: 'white', fontWeight: 900, padding: '8px 16px', fontSize: 10, textTransform: 'uppercase', borderRadius: radius.md, boxShadow: shadow.lg, letterSpacing: '0.1em' }}>{item.status}</div>
         </div>
         <div className="absolute bottom-10 right-10 bg-white/90 backdrop-blur-md px-5 py-3 rounded-[20px] shadow-xl border border-slate-200">
           <p className="text-lg font-black text-slate-900 tracking-tighter">{item.price}</p>
@@ -451,15 +455,19 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
           </div>
         </div>
 
-        <button
+        <DSButton
           onClick={onClick}
-          className="w-full py-4 rounded-[24px] text-[10px] font-black uppercase tracking-[0.2em] shadow-xl shadow-emerald-500/20 bg-emerald-500 text-white flex items-center justify-center gap-2 active:scale-95 transition-all"
+          fullWidth
+          variant="primary"
+          style={{ borderRadius: 24, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.2em', backgroundColor: colors.success, boxShadow: `0 10px 20px -10px ${colors.success}` }}
         >
-          <MessageSquare size={16} />
-          Ver Detalhes
-        </button>
+          <span className="flex items-center gap-2 justify-center">
+            <MessageSquare size={16} />
+            Ver Detalhes
+          </span>
+        </DSButton>
       </div>
-    </Card>
+    </DSCard>
   );
 };
 
@@ -472,38 +480,33 @@ export const ReviewModal: React.FC<{ isOpen: boolean; onClose: () => void; onSub
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-[32px] p-8 shadow-2xl animate-in zoom-in-95 duration-300 mx-4">
-        <div className="text-center space-y-4">
-          <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-amber-500/20 border border-amber-500/20">
-            <Star size={32} fill="currentColor" />
-          </div>
-          <h3 className="text-2xl font-black text-slate-900 italic tracking-tighter">Avaliar Serviço</h3>
-          <p className="text-sm text-slate-500">Como foi o atendimento de <span className="font-bold text-slate-900">{proName}</span>?</p>
-
-          <div className="flex justify-center gap-2 py-4">
-            {[1, 2, 3, 4, 5].map((s) => (
-              <button key={s} onClick={() => setRating(s)} className="active:scale-90 transition-transform">
-                <Star size={32} className={s <= rating ? "text-amber-400 fill-amber-400" : "text-slate-200"} />
-              </button>
-            ))}
-          </div>
-
-          <textarea
-            placeholder="Deixe um comentário (opcional)..."
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-amber-400 transition-all font-medium text-slate-900 placeholder-slate-400"
-          />
-
-          <Button onClick={() => onSubmit(rating, comment)} fullWidth className="h-14 bg-amber-400 text-amber-950 font-black uppercase tracking-widest shadow-lg shadow-amber-400/30 hover:bg-amber-500 hover:text-white">
-            Enviar Avaliação
-          </Button>
-          <button onClick={onClose} className="text-xs font-bold text-slate-500 uppercase tracking-widest hover:text-slate-800 transition-colors">Cancelar</button>
+    <Sheet open={isOpen} onClose={onClose} title="Avaliar Serviço" height="auto">
+      <div className="text-center space-y-4 pb-6">
+        <div className="w-16 h-16 bg-amber-500/10 text-amber-500 rounded-full flex items-center justify-center mx-auto mb-2 shadow-lg shadow-amber-500/20 border border-amber-500/20">
+          <Star size={32} fill="currentColor" />
         </div>
+        <Text variant="body" style={{ color: colors.neutral[500] }}>Como foi o atendimento de <span className="font-bold text-slate-900">{proName}</span>?</Text>
+
+        <div className="flex justify-center gap-2 py-4">
+          {[1, 2, 3, 4, 5].map((s) => (
+            <button key={s} onClick={() => setRating(s)} className="active:scale-90 transition-transform">
+              <Star size={32} className={s <= rating ? "text-amber-400 fill-amber-400" : "text-slate-200"} />
+            </button>
+          ))}
+        </div>
+
+        <textarea
+          placeholder="Deixe um comentário (opcional)..."
+          value={comment}
+          onChange={(e) => setComment(e.target.value)}
+          className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm resize-none outline-none focus:ring-2 focus:ring-amber-400 transition-all font-medium text-slate-900 placeholder-slate-400"
+        />
+
+        <DSButton onClick={() => onSubmit(rating, comment)} fullWidth variant="warning" size="lg">
+          Enviar Avaliação
+        </DSButton>
       </div>
-    </div>
+    </Sheet>
   );
 };
 
@@ -545,102 +548,88 @@ export const ProfessionalDetailModal: React.FC<{ isOpen: boolean; onClose: () =>
   if (!isOpen || !professional) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-md" onClick={onClose}></div>
-      <div className="relative w-full max-w-sm bg-white border border-slate-200 rounded-[32px] p-6 shadow-2xl animate-in zoom-in-95 duration-300 flex flex-col max-h-[85vh]">
+    <Sheet open={isOpen} onClose={onClose} title="" height="85vh">
+      <div className="flex flex-col items-center shrink-0">
+        <div className="w-24 h-24 bg-slate-100 rounded-[24px] overflow-hidden shadow-md border-4 border-white relative z-10 mb-3">
+          <img
+            src={professional.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${professional.name}`}
+            className="w-full h-full object-cover object-top"
+          />
+        </div>
 
-        {/* HEADER: Avatar & Info */}
-        <div className="flex flex-col items-center shrink-0">
-          {/* Avatar - Smaller & Focused */}
-          <div className="w-24 h-24 bg-slate-100 rounded-[24px] overflow-hidden shadow-md border-4 border-white relative z-10 mb-3">
-            <img
-              src={professional.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${professional.name}`}
-              className="w-full h-full object-cover object-top"
-            />
-          </div>
+        <div className="text-center space-y-1 w-full">
+          <Title size="xl">{professional.name}</Title>
+          <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 inline-block">
+            {professional.category || 'Prestador'}
+          </span>
+        </div>
 
-          <div className="text-center space-y-1 w-full">
-            <h2 className="text-2xl font-black text-slate-900 italic tracking-tighter leading-none">
-              {professional.name}
-            </h2>
-            <span className="bg-emerald-500/10 text-emerald-600 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border border-emerald-500/20 inline-block">
-              {professional.category || 'Prestador'}
-            </span>
-          </div>
+        <div className="flex items-center justify-center gap-1 py-4">
+          {[1, 2, 3, 4, 5].map(s => (
+            <Star key={s} size={24} fill={rating && s <= Math.round(rating) ? "#fbbf24" : "none"} className={rating && s <= Math.round(rating) ? "text-amber-400" : "text-slate-200"} strokeWidth={3} />
+          ))}
+        </div>
+        <p className="text-xs font-bold text-slate-500 -mt-2 mb-4">
+          {rating ? rating.toFixed(1) : 'Novo'} • {reviewsCount} avaliações
+        </p>
+      </div>
 
-          {/* BIG STARS */}
-          <div className="flex items-center justify-center gap-1 py-4">
-            {[1, 2, 3, 4, 5].map(s => (
-              <Star key={s} size={24} fill={rating && s <= Math.round(rating) ? "#fbbf24" : "none"} className={rating && s <= Math.round(rating) ? "text-amber-400" : "text-slate-200"} strokeWidth={3} />
-            ))}
-          </div>
-          <p className="text-xs font-bold text-slate-500 -mt-2 mb-4">
-            {rating ? rating.toFixed(1) : 'Novo'} • {reviewsCount} avaliações
+      <div className="flex-1 overflow-y-auto space-y-6 pr-2 -mr-2 min-h-0 pb-6">
+        <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Sobre</h4>
+          <p className="text-sm text-slate-600 leading-relaxed">
+            {professional.description || 'Este profissional ainda não adicionou uma descrição detalhada.'}
           </p>
         </div>
 
-        {/* SCROLLABLE CONTENT: Description & Reviews */}
-        <div className="flex-1 overflow-y-auto space-y-6 pr-2 -mr-2 min-h-0">
-          {/* Description */}
-          <div className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
-            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Sobre</h4>
-            <p className="text-sm text-slate-600 leading-relaxed">
-              {professional.description || 'Este profissional ainda não adicionou uma descrição detalhada.'}
-            </p>
-          </div>
-
-          {/* Reviews List */}
-          <div>
-            <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 sticky top-0 bg-white py-2 z-10">
-              O que dizem os vizinhos
-            </h4>
-            <div className="space-y-3">
-              {reviews.length === 0 ? (
-                <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma avaliação ainda.</p>
-              ) : (
-                reviews.map((rev) => (
-                  <div key={rev.id} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
-                    <div className="flex justify-between items-start mb-1">
-                      <span className="text-xs font-bold text-slate-800">{rev.reviewer?.name || 'Vizinho'}</span>
-                      <div className="flex text-amber-400">
-                        {[1, 2, 3, 4, 5].map(s => (
-                          <Star key={s} size={10} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "" : "text-slate-200"} />
-                        ))}
-                      </div>
+        <div>
+          <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-3 sticky top-0 bg-white py-2 z-10">
+            O que dizem os vizinhos
+          </h4>
+          <div className="space-y-3">
+            {reviews.length === 0 ? (
+              <p className="text-xs text-slate-400 italic text-center py-4">Nenhuma avaliação ainda.</p>
+            ) : (
+              reviews.map((rev) => (
+                <div key={rev.id} className="bg-white border border-slate-100 rounded-2xl p-3 shadow-sm">
+                  <div className="flex justify-between items-start mb-1">
+                    <span className="text-xs font-bold text-slate-800">{rev.reviewer?.name || 'Vizinho'}</span>
+                    <div className="flex text-amber-400">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <Star key={s} size={10} fill={s <= rev.rating ? "currentColor" : "none"} className={s <= rev.rating ? "" : "text-slate-200"} />
+                      ))}
                     </div>
-                    <p className="text-xs text-slate-500 leading-relaxed">{rev.comment || 'Sem comentário.'}</p>
                   </div>
-                ))
-              )}
-            </div>
+                  <p className="text-xs text-slate-500 leading-relaxed">{rev.comment || 'Sem comentário.'}</p>
+                </div>
+              ))
+            )}
           </div>
-        </div>
-
-        {/* FOOTER ACTIONS */}
-        <div className="pt-4 shrink-0 grid gap-2">
-          <button
-            onClick={() => {
-              if (professional.phone) {
-                const cleanPhone = professional.phone.replace(/\D/g, '');
-                window.open(`https://wa.me/55${cleanPhone}`, '_blank');
-              } else {
-                alert('Telefone indisponível');
-              }
-            }}
-            className="h-14 bg-emerald-500 hover:bg-emerald-600 text-white rounded-[20px] flex items-center justify-center gap-2 shadow-xl shadow-emerald-500/20 active:scale-95 transition-all w-full"
-          >
-            <div className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-              <MessageCircle size={18} className="text-white" fill="currentColor" />
-            </div>
-            <span className="font-black uppercase tracking-widest text-xs">Chamar no WhatsApp</span>
-          </button>
-
-          <button onClick={onClose} className="h-10 text-slate-400 font-bold uppercase tracking-widest text-xs hover:bg-slate-50 rounded-xl transition-colors">
-            Fechar
-          </button>
         </div>
       </div>
-    </div>
+
+      <div className="pt-4 shrink-0 grid gap-2">
+        <DSButton
+          onClick={() => {
+            if (professional.phone) {
+              const cleanPhone = professional.phone.replace(/\D/g, '');
+              window.open(`https://wa.me/55${cleanPhone}`, '_blank');
+            } else {
+              alert('Telefone indisponível');
+            }
+          }}
+          fullWidth
+          variant="primary"
+          startIcon={<MessageCircle size={18} />}
+        >
+          Chamar no WhatsApp
+        </DSButton>
+
+        <DSButton onClick={onClose} variant="ghost" size="sm" fullWidth>
+          Fechar
+        </DSButton>
+      </div>
+    </Sheet>
   );
 };
 
@@ -863,7 +852,7 @@ export const ResidentHome: React.FC<{
               </p>
             </div>
           </div>
-          <button onClick={() => setShowPackageModal(true)} className="bg-black/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase text-amber-950">
+          <button onClick={() => setShowPackageModal(true)} className="bg-black/10 px-4 py-2 rounded-xl text-[10px] font-black uppercase text-amber-950 hover:bg-black/20 transition-all">
             {localPackages.some(p => p.status === 'awaiting_confirmation') ? 'Confirmar' : 'Ver'}
           </button>
         </div>
@@ -941,19 +930,19 @@ export const ResidentHome: React.FC<{
                 </div>
 
                 <div className="grid grid-cols-1 gap-3 pt-2">
-                  <Button
+                  <DSButton
                     fullWidth
                     onClick={() => {
                       localPackages.filter(p => p.status === 'awaiting_confirmation').forEach(p => handleConfirmHandshake(p.id));
                       setShowPackageModal(false);
                     }}
-                    className="h-16 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-xl shadow-emerald-500/20 transition-all active:scale-95 group overflow-hidden"
+                    variant="primary"
+                    style={{ height: 64, borderRadius: 24, fontSize: 14, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', backgroundColor: colors.success, boxShadow: `0 10px 20px -10px ${colors.success}` }}
                   >
-                    <span className="relative z-10 flex items-center gap-2 justify-center">
+                    <span className="flex items-center gap-2 justify-center">
                       <Check size={20} className="stroke-[3]" /> Sim, Recebi agora
                     </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  </Button>
+                  </DSButton>
                   <button onClick={() => setShowPackageModal(false)} className="py-3 text-[10px] font-black text-slate-400 uppercase tracking-widest leading-none hover:text-slate-600 transition-colors">
                     Não estou com ele
                   </button>
@@ -981,16 +970,16 @@ export const ResidentHome: React.FC<{
                 </div>
 
                 <div className="space-y-4 pt-2">
-                  <Button
+                  <DSButton
                     fullWidth
                     onClick={() => { setShowPackageModal(false); setDigitalIdOpen(true); }}
-                    className="h-16 bg-gradient-to-r from-blue-600 to-cyan-600 hover:opacity-90 text-white font-black uppercase tracking-widest text-sm rounded-3xl shadow-xl shadow-blue-500/20 relative overflow-hidden group transition-all active:scale-95 border-none"
+                    variant="primary"
+                    style={{ height: 64, borderRadius: 24, fontSize: 14, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em', background: 'linear-gradient(to right, #2563eb, #06b6d4)' }}
                   >
-                    <span className="relative z-10 flex items-center gap-3 justify-center">
+                    <span className="flex items-center gap-3 justify-center">
                       <QrCode size={22} /> Gerar meu QR de Coleta
                     </span>
-                    <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
-                  </Button>
+                  </DSButton>
 
                   <button
                     onClick={() => setShowPackageModal(false)}
@@ -1080,12 +1069,15 @@ export const ResidentHome: React.FC<{
             >
               <Search className="text-white/70" size={18} />
             </button>
-            <Input
+            <DSInput
               placeholder="Procurar produto ou serviço..."
-              className="pl-12 h-14 bg-white/10 border-none rounded-2xl font-medium text-white placeholder:text-white/60 focus:bg-white/20 transition-all font-sans"
+              style={{ height: 56, backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 16, color: 'white' }}
               value={homeSearch}
               onChange={(e) => setHomeSearch(e.target.value)}
+              // onKeyDown={handleHomeSearch} // DSInput might not expose onKeyDown directly in props interface, let's check. IF not, wrap it.
+              // DSInput props: InputHTMLAttributes + label, error, etc. So it should pass ...props.
               onKeyDown={handleHomeSearch}
+              startIcon={<Search className="text-white/70" size={18} />}
             />
           </div>
         </div>
@@ -1107,6 +1099,7 @@ export const ResidentHome: React.FC<{
       </div>
 
       <div className="p-6 space-y-12">
+        {/* CARROSSEL DE MURAL (ADVERTISING) */}
         {/* CARROSSEL DE MURAL (ADVERTISING) */}
         <BannerCarousel />
 
@@ -1190,9 +1183,9 @@ export const ResidentHome: React.FC<{
                     <h4 className="font-black text-slate-900 text-sm mt-1">{req.title}</h4>
                     <p className="text-xs text-slate-500">Com {req.providerName || 'Prestador'}</p>
                   </div>
-                  <Button onClick={() => { setSelectedRequestToReview(req); setReviewModalOpen(true); }} className="px-5 py-2 bg-amber-400 text-amber-950 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-colors shadow-lg shadow-amber-400/20">
+                  <DSButton onClick={() => { setSelectedRequestToReview(req); setReviewModalOpen(true); }} variant="secondary" style={{ backgroundColor: colors.warning, color: '#451a03', borderRadius: 12, padding: '8px 20px', fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
                     Avaliar
-                  </Button>
+                  </DSButton>
                 </div>
               ))}
             </div>
@@ -1326,8 +1319,11 @@ export const ResidentHome: React.FC<{
 
 
         {/* FEEDBACK TRIGGER CARD (MOVED HERE) */}
-        <div>
-          <Card
+        {/* FEEDBACK TRIGGER CARD MOVED UP */}
+
+        {/* FEEDBACK TRIGGER CARD (BANNER AZUL - SUGESTÕES) */}
+        <div className="py-2">
+          <DSCard
             onClick={() => setFeedbackOpen(true)}
             className="p-8 bg-brand-gradient text-brand-contrast rounded-[48px] shadow-2xl shadow-brand-glow border-none relative overflow-hidden group cursor-pointer active:scale-[0.98] transition-all"
           >
@@ -1336,7 +1332,7 @@ export const ResidentHome: React.FC<{
             <div className="flex items-center gap-6 relative z-10">
               <div className="w-16 h-16 bg-white/10 rounded-3xl flex items-center justify-center text-brand-400 shadow-inner">
                 <Sparkles size={32} />
-              </div> {/* Closing div for the Sparkles container */}
+              </div>
               <div className="flex-1">
                 <h3 className="text-xl font-black italic uppercase tracking-tighter leading-none mb-2">💡 Ajude a melhorar o App</h3>
                 <p className="text-xs text-slate-400 font-medium leading-relaxed">Sua ideia pode ser a próxima funcionalidade do sistema!</p>
@@ -1345,7 +1341,7 @@ export const ResidentHome: React.FC<{
                 <ChevronRight size={20} />
               </div>
             </div>
-          </Card>
+          </DSCard>
         </div>
 
         {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
@@ -1526,7 +1522,7 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
           { icon: <ShieldCheck size={20} />, label: 'Privacidade', desc: 'Configurações de visibilidade', onClick: () => onNavigate('privacy') },
           { icon: <LogOut size={20} />, label: 'Encerrar Sessão', color: 'text-rose-600', bg: 'bg-rose-50', onClick: handleLogout },
         ].map((item, i) => (
-          <button key={i} onClick={item.onClick} className="w-full p-6 bg-white backdrop-blur-xl border border-slate-100 rounded-[30px] flex items-center justify-between group transition-all shadow-sm hover:shadow-md hover:bg-slate-50">
+          <DSCard key={i} onClick={item.onClick} className="w-full p-6 bg-white backdrop-blur-xl border border-slate-100 rounded-[30px] flex items-center justify-between group transition-all shadow-sm hover:shadow-md hover:bg-slate-50 cursor-pointer">
             <div className="flex items-center gap-5">
               <div className={`w-12 h-12 rounded-2xl flex items-center justify-center ${item.bg || 'bg-slate-100 shadow-sm'} ${item.color || 'text-slate-600'}`}>
                 {item.icon}
@@ -1537,7 +1533,7 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
               </div>
             </div>
             <ChevronRight size={18} className="text-slate-400" />
-          </button>
+          </DSCard>
         ))}
       </div>
     </div>
@@ -1570,8 +1566,12 @@ export const Marketplace: React.FC<{
       </header>
       <div className="p-6 space-y-10">
         <div className="relative group" onClick={() => onNavigate('shop-detail')}>
-          <Search className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input readOnly placeholder="Qual serviço você precisa?" className="h-18 pl-14 rounded-[30px] border border-slate-200 bg-white text-slate-900 placeholder:text-slate-400 shadow-xl shadow-slate-200/50 cursor-pointer pointer-events-none" />
+          <DSInput
+            readOnly
+            placeholder="Qual serviço você precisa?"
+            startIcon={<Search size={20} />}
+            style={{ height: 72, borderRadius: 30, backgroundColor: 'white', border: `1px solid ${colors.neutral[200]}`, boxShadow: shadow.md, cursor: 'pointer', pointerEvents: 'none' }}
+          />
         </div>
 
         <div className="grid grid-cols-2 gap-4">
@@ -1750,15 +1750,13 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
       <div className="p-6 space-y-6">
         {/* SEARCH BAR */}
-        <div className="relative group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-500 transition-colors" size={20} />
-          <Input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={activeCategory === 'Todos' ? "Busque por serviço (ex: Eletricista)..." : `Buscar em ${activeCategory}...`}
-            className="pl-12 h-14 bg-white border border-slate-200 rounded-2xl shadow-sm focus:border-brand-500 focus:ring-1 focus:ring-brand-500 transition-all text-slate-900 placeholder-slate-400"
-          />
-        </div>
+        <DSInput
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder={activeCategory === 'Todos' ? "Busque por serviço..." : `Buscar em ${activeCategory}...`}
+          startIcon={<Search size={20} className="text-slate-400" />}
+          style={{ borderRadius: 16, border: `1px solid ${colors.neutral[200]}` }}
+        />
 
         {/* CONTENT */}
         {showCategoryGrid ? (
@@ -1791,9 +1789,10 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
             {filteredPros.length > 0 ? filteredPros.map(pro => (
-              <Card
+              <DSCard
                 key={pro.id}
                 className="p-0 border border-slate-100 shadow-xl shadow-slate-200/50 rounded-[40px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all active:scale-[0.98] backdrop-blur-md"
+                style={{ padding: 0 }}
                 onClick={() => handleProClick(pro)}
               >
                 <div className="p-6 pb-0 flex items-start gap-5">
@@ -1804,11 +1803,11 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex gap-2 mb-2">
-                          <Badge variant="secondary" className="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest px-2 py-1">{pro.category || 'Geral'}</Badge>
+                          <div className="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg font-bold">{pro.category || 'Geral'}</div>
                           {pro.is_on_site && (
-                            <Badge className="bg-emerald-500 text-white text-[10px] uppercase tracking-widest px-2 py-1 animate-pulse flex items-center gap-1">
+                            <div className="bg-emerald-500 text-white text-[10px] uppercase tracking-widest px-2 py-1 animate-pulse flex items-center gap-1 rounded-lg font-bold">
                               <div className="w-1.5 h-1.5 bg-white rounded-full"></div> No Local
-                            </Badge>
+                            </div>
                           )}
                         </div>
                         <h4 className="font-black text-slate-900 italic text-xl leading-none truncate">{pro.providerName || pro.title}</h4>
@@ -1830,15 +1829,16 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                     <p className="font-black text-slate-900 text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
                   </div>
                   <div className="flex gap-2">
-                    <button
+                    <DSButton
                       onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone, pro.id); }}
-                      className="flex-1 h-10 bg-emerald-500 text-white rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-emerald-600 px-4 font-bold text-xs uppercase tracking-widest shadow-lg shadow-emerald-500/20"
+                      variant="primary"
+                      style={{ height: 40, backgroundColor: colors.success, padding: '0 16px', borderRadius: 12, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
                     >
                       <Phone size={18} className="mr-2" /> WhatsApp
-                    </button>
+                    </DSButton>
                   </div>
                 </div>
-              </Card>
+              </DSCard>
             )) : (
               <div className="text-center py-20">
                 <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
@@ -1904,8 +1904,8 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                 <div>
                   <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
                   <div className="flex items-center gap-2 mt-2">
-                    <Badge className="bg-brand-50 text-brand-600 border border-brand-100">{selectedPro.category}</Badge>
-                    {selectedPro.is_on_site && <Badge className="bg-emerald-50 text-emerald-600 border border-emerald-100 animate-pulse">No Condomínio!</Badge>}
+                    <div style={{ backgroundColor: colors.brand[50], color: colors.brand[600], border: `1px solid ${colors.brand[100]}`, padding: '4px 8px', borderRadius: radius.sm, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{selectedPro.category}</div>
+                    {selectedPro.is_on_site && <div style={{ backgroundColor: colors.success + '10', color: colors.success, border: `1px solid ${colors.success + '20'}`, padding: '4px 8px', borderRadius: radius.sm, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }} className="animate-pulse">No Condomínio!</div>}
                   </div>
                 </div>
                 <div className="text-right">
@@ -1938,13 +1938,13 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
                 <div className="flex flex-col gap-3 pt-4 border-t border-slate-100">
                   <div className="flex gap-3">
-                    <Button
+                    <DSButton
                       fullWidth
-                      className="h-14 bg-emerald-500 text-white rounded-2xl font-black uppercase tracking-widest text-xs shadow-lg shadow-emerald-500/20 hover:bg-emerald-600"
+                      style={{ height: 56, backgroundColor: colors.success, borderRadius: 16, fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
                       onClick={() => openWhatsApp(selectedPro.providerPhone, selectedPro.id)}
                     >
                       <Phone className="mr-2" size={18} /> WhatsApp
-                    </Button>
+                    </DSButton>
                   </div>
                 </div>
               </div>
@@ -2048,13 +2048,13 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
 
       <div className="fixed bottom-0 left-0 right-0 p-6 bg-white/80 backdrop-blur-xl border-t border-slate-100 z-50">
         {isOwner ? (
-          <Button fullWidth onClick={handleDelete} className="bg-rose-50 text-rose-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-rose-100 border border-rose-100">
+          <DSButton fullWidth onClick={handleDelete} variant="secondary" style={{ height: 64, borderRadius: 24, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 900, color: colors.danger, backgroundColor: colors.danger + '10' }}>
             <Trash2 size={18} className="mr-2" /> Remover Anúncio
-          </Button>
+          </DSButton>
         ) : (
-          <Button fullWidth onClick={handleInterest} className="bg-emerald-500 h-16 rounded-[24px] uppercase tracking-widest font-black text-xs shadow-lg shadow-emerald-500/30 text-white hover:bg-emerald-600">
+          <DSButton fullWidth onClick={handleInterest} variant="primary" style={{ height: 64, borderRadius: 24, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 900, backgroundColor: colors.success }}>
             <MessageSquare size={18} className="mr-2" /> Tenho Interesse
-          </Button>
+          </DSButton>
         )}
       </div>
     </div>
@@ -2091,28 +2091,30 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
   };
 
   return (
-    <div className="min-h-screen bg-transparent pb-10">
-      <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md">
-        <button onClick={onBack} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center shadow-sm hover:bg-slate-200 transition-all active:scale-95 text-slate-600 border border-slate-200"><ArrowLeft size={24} /></button>
-        <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900">Novo Desapego</h2>
+    <div className="min-h-screen bg-slate-50 pb-10">
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md">
+        <DSButton onClick={onBack} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowLeft size={24} />
+        </DSButton>
+        <Title size="xl">Novo Desapego</Title>
       </header>
 
       <div className="p-8 space-y-10 animate-in slide-in-from-bottom-8 duration-500">
         {/* Foto do Item */}
         <div
           onClick={() => fileInputRef.current?.click()}
-          className={`w-full h-80 rounded-[48px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 cursor-pointer overflow-hidden ${image ? 'border-brand-500 bg-slate-50' : 'border-slate-200 bg-slate-50 hover:border-brand-400 hover:bg-slate-100'}`}
+          className={`w-full h-80 rounded-[48px] border-2 border-dashed transition-all flex flex-col items-center justify-center gap-4 cursor-pointer overflow-hidden ${image ? 'border-brand-500 bg-white' : 'border-slate-200 bg-white hover:border-brand-400'}`}
         >
           {image ? (
             <img src={image} className="w-full h-full object-cover animate-in fade-in duration-500" alt="Preview" />
           ) : (
             <>
-              <div className="w-16 h-16 bg-white/10 rounded-[24px] flex items-center justify-center shadow-xl text-brand-400 border border-white/10">
+              <div className="w-16 h-16 bg-brand-50 rounded-[24px] flex items-center justify-center shadow-xl text-brand-400 border border-brand-100">
                 <Camera size={28} />
               </div>
               <div className="text-center">
-                <p className="text-[11px] font-black uppercase tracking-widest text-slate-600">Adicionar Fotos</p>
-                <p className="text-[9px] text-slate-400 font-bold uppercase mt-1">Clique para upload</p>
+                <Text variant="caption" weight="bold" style={{ textTransform: 'uppercase' }}>Adicionar Fotos</Text>
+                <Text variant="caption" style={{ fontSize: 9 }}>Clique para upload</Text>
               </div>
             </>
           )}
@@ -2132,23 +2134,31 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
 
         <div className="space-y-6">
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Nome do Produto</label>
-            <Input placeholder="Ex: Mesa de Jantar Madeira" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-16 rounded-3xl bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
+            <DSInput
+              label="Nome do Produto"
+              placeholder="Ex: Mesa de Jantar Madeira"
+              value={form.name}
+              onChange={e => setForm({ ...form, name: e.target.value })}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-3">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Valor</label>
-              <Input placeholder="Ex: 450,00" value={form.price} onChange={e => setForm({ ...form, price: e.target.value })} className="h-16 rounded-3xl bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
+              <DSInput
+                label="Valor"
+                placeholder="Ex: 450,00"
+                value={form.price}
+                onChange={e => setForm({ ...form, price: e.target.value })}
+              />
             </div>
             <div className="space-y-3 text-right">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mr-4">Status</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] mr-4 block mb-2">Status</label>
               <div className="flex gap-2 justify-end">
                 {['NOVO', 'USADO', 'DOAÇÃO'].map(s => (
                   <button
                     key={s}
                     onClick={() => setForm({ ...form, status: s })}
-                    className={`px-4 py-3 rounded-2xl text-[9px] font-black uppercase tracking-widest transition-all ${form.status === s ? 'bg-brand-primary text-brand-contrast shadow-lg shadow-brand-glow' : 'bg-slate-50 text-slate-500 border border-slate-200 hover:bg-slate-100'}`}
+                    className={`px-4 py-3 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${form.status === s ? 'bg-brand-600 text-white shadow-lg' : 'bg-white text-slate-500 border border-slate-200 hover:bg-slate-50'}`}
                   >
                     {s}
                   </button>
@@ -2158,26 +2168,29 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
           </div>
 
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4">Descrição Detalhada</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-4 block mb-2">Descrição Detalhada</label>
             <textarea
               placeholder="Conte mais sobre o estado do item, tempo de uso e motivo do desapego..."
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
-              className="w-full h-44 bg-slate-50 border border-slate-200 rounded-[32px] p-6 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-sm leading-relaxed focus:bg-white"
+              className="w-full h-44 bg-white border border-slate-200 rounded-[32px] p-6 text-slate-900 placeholder-slate-400 outline-none focus:ring-2 focus:ring-brand-500/20 transition-all font-medium text-sm leading-relaxed"
             />
           </div>
         </div>
 
         <div className="pt-4">
-          <Button
+          <DSButton
             fullWidth
             onClick={handlePublish}
             disabled={!form.name || !form.price || isSubmitting}
-            className={`h-20 rounded-[32px] text-[13px] font-black uppercase tracking-[0.3em] shadow-2xl transition-all ${!form.name || !form.price || isSubmitting ? 'bg-slate-100 text-slate-400 cursor-not-allowed shadow-none' : 'bg-slate-900 text-white shadow-slate-900/20 active:scale-[0.98]'}`}
+            variant={!form.name || !form.price || isSubmitting ? 'secondary' : 'primary'}
+            size="lg"
           >
             {isSubmitting ? 'Publicando...' : 'Publicar Desapego'}
-          </Button>
-          <p className="text-center text-[9px] text-slate-400 font-medium uppercase tracking-widest mt-6 bg-slate-50 py-3 rounded-full border border-slate-100 mx-10">Seu anúncio ficará visível para todo o condomínio</p>
+          </DSButton>
+          <Text variant="caption" style={{ textAlign: 'center', marginTop: 24, display: 'block', color: colors.neutral[400] }}>
+            Seu anúncio ficará visível para todo o condomínio
+          </Text>
         </div>
       </div>
     </div>
@@ -2276,16 +2289,18 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
   const myVisitorAccess = accessList.filter(a => a.residentId === (currentUser?.id || '1'));
 
   return (
-    <div className="min-h-screen bg-transparent pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <FloatingBackButton onClick={onBack} />
-      <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-95 transition-transform hover:bg-slate-200"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <h2 className="text-xl font-black italic uppercase text-slate-900">Controle de Acesso</h2>
+      <header className="p-6 pt-12 flex items-center gap-4 bg-white/80 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md">
+        <DSButton onClick={onBack} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowLeft size={24} />
+        </DSButton>
+        <Title size="xl">Controle de Acesso</Title>
       </header>
 
       <div className="p-6 space-y-6">
         {/* TABS */}
-        <div className="flex p-1 bg-slate-100 border border-slate-200 rounded-2xl">
+        <div className="flex p-1 bg-white border border-slate-200 rounded-2xl">
           <button onClick={() => setActiveTab('visita')} className={`flex-1 py-3 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === 'visita' ? 'bg-brand-600 text-white shadow-lg' : 'text-slate-500 hover:text-slate-700'}`}>
             Visitantes
           </button>
@@ -2296,30 +2311,42 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
 
         {activeTab === 'visita' ? (
           <div className="space-y-8 animate-in slide-in-from-left-4 duration-300">
-            <Card className="p-8 border border-slate-100 shadow-xl rounded-[40px] bg-white space-y-6 backdrop-blur-3xl">
-              <h3 className="text-lg font-black italic text-slate-900 flex items-center gap-2"><Key className="text-brand-600" size={20} /> Novo Visitante</h3>
-              <Input placeholder="Nome do Visitante / Prestador" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
-              <div className="grid grid-cols-2 gap-4">
-                <select value={form.type} onChange={e => setForm({ ...form, type: e.target.value })} className="h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none border border-slate-200 focus:bg-white">
-                  <option className="bg-white text-slate-900">Visita</option>
-                  <option className="bg-white text-slate-900">Serviço</option>
-                  <option className="bg-white text-slate-900">Delivery</option>
-                </select>
-                <Input type="date" value={form.date} onChange={e => setForm({ ...form, date: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-600 focus:bg-white" />
+            <DSCard className="p-8 space-y-6">
+              <div className="flex items-center gap-2">
+                <Key className="text-brand-600" size={20} />
+                <Title level={3}>Novo Visitante</Title>
               </div>
-              <Button fullWidth onClick={handleAuthorizeVisitor} className="bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-brand-700 transition-colors text-white shadow-lg shadow-brand-600/20">Autorizar Entrada</Button>
-            </Card>
+
+              <DSInput
+                placeholder="Nome do Visitante / Prestador"
+                value={form.name}
+                onChange={e => setForm({ ...form, name: e.target.value })}
+              />
+              <div className="grid grid-cols-2 gap-4">
+                <DSSelect
+                  value={form.type}
+                  onChange={e => setForm({ ...form, type: e.target.value })}
+                  options={['Visita', 'Serviço', 'Delivery']}
+                />
+                <DSInput
+                  type="date"
+                  value={form.date}
+                  onChange={e => setForm({ ...form, date: e.target.value })}
+                />
+              </div>
+              <DSButton fullWidth onClick={handleAuthorizeVisitor} variant="primary">Autorizar Entrada</DSButton>
+            </DSCard>
 
             <div className="space-y-4">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2">Histórico de Visitantes</h4>
-              {myVisitorAccess.length === 0 ? <p className="text-center text-slate-400 text-xs italic py-4">Nenhum acesso registrado.</p> : (
+              <Title variant="section" align="left">Histórico de Visitantes</Title>
+              {myVisitorAccess.length === 0 ? <Text variant="caption" style={{ textAlign: 'center', color: colors.neutral[400] }}>Nenhum acesso registrado.</Text> : (
                 myVisitorAccess.map((acc: any, i) => (
                   <div key={i} className="flex justify-between items-center p-4 bg-white border border-slate-100 rounded-2xl shadow-sm">
                     <div>
                       <p className="font-bold text-slate-900 text-sm">{acc.name}</p>
                       <p className="text-[10px] text-slate-500 uppercase">{acc.type} • {acc.date}</p>
                     </div>
-                    <Badge color="bg-emerald-50 text-emerald-600 border border-emerald-100">AUTORIZADO</Badge>
+                    <div style={{ backgroundColor: colors.success + '20', color: colors.success, padding: '4px 8px', borderRadius: radius.pill, fontSize: 10, fontWeight: 'bold' }}>AUTORIZADO</div>
                   </div>
                 ))
               )}
@@ -2327,16 +2354,18 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
           </div>
         ) : (
           <div className="space-y-8 animate-in slide-in-from-right-4 duration-300">
-            <Card className="p-8 border border-slate-100 shadow-xl rounded-[40px] bg-white space-y-6 backdrop-blur-3xl relative overflow-visible">
-              <h3 className="text-lg font-black italic text-slate-900 flex items-center gap-2"><Package className="text-amber-500" size={20} /> Autorizar Vizinho</h3>
-              <p className="text-xs text-slate-500 leading-relaxed">Permita que um vizinho retire suas encomendas na portaria ou lockers.</p>
+            <DSCard className="p-8 space-y-6 relative overflow-visible">
+              <div className="flex items-center gap-2">
+                <Package className="text-amber-500" size={20} />
+                <Title level={3}>Autorizar Vizinho</Title>
+              </div>
+              <Text variant="caption">Permita que um vizinho retire suas encomendas na portaria ou lockers.</Text>
 
               <div className="relative">
-                <Input
+                <DSInput
                   placeholder="Buscar vizinho (Nome ou Unidade)..."
                   value={neighborSearch}
                   onChange={e => setNeighborSearch(e.target.value)}
-                  className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white"
                 />
 
                 {/* SUGGESTIONS */}
@@ -2365,14 +2394,14 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
                 </div>
               )}
 
-              <Button fullWidth onClick={handleAuthorizeNeighbor} disabled={!selectedNeighbor} className="bg-amber-500 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-amber-600 transition-colors text-white shadow-lg shadow-amber-500/20 disabled:opacity-50 disabled:cursor-not-allowed">Conceder Acesso</Button>
-            </Card>
+              <DSButton fullWidth onClick={handleAuthorizeNeighbor} disabled={!selectedNeighbor} variant="warning">Conceder Acesso</DSButton>
+            </DSCard>
 
             <div className="space-y-4">
-              <h4 className="text-xs font-black text-slate-400 uppercase tracking-widest pl-2">Vizinhos Autorizados</h4>
+              <Title variant="section" align="left">Vizinhos Autorizados</Title>
               {authorizations.length === 0 ? (
-                <div className="text-center py-8 text-slate-400">
-                  <p className="text-xs italic">Nenhum vizinho autorizado.</p>
+                <div className="text-center py-8">
+                  <Text variant="caption" style={{ color: colors.neutral[400] }}>Nenhum vizinho autorizado.</Text>
                 </div>
               ) : (
                 authorizations.map(auth => (
@@ -2406,24 +2435,28 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
   const paid = invoices.filter(i => i.status === 'Pago');
 
   return (
-    <div className="min-h-screen bg-transparent pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <FloatingBackButton onClick={onBack} />
-      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-sm">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-95 transition-all hover:bg-slate-200"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <h2 className="text-xl font-black italic uppercase text-slate-900">Boleto Digital</h2>
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white/80 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-sm">
+        <DSButton onClick={onBack} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowLeft size={24} />
+        </DSButton>
+        <Title size="xl">Boleto Digital</Title>
       </header>
       <div className="p-6 space-y-8 animate-in slide-in-from-right-4">
         {pending ? (
-          <Card className="p-10 bg-brand-gradient-horizontal text-brand-contrast border-none shadow-2xl shadow-brand-glow rounded-[48px] relative overflow-hidden">
+          <DSCard className="p-10 bg-brand-gradient-horizontal text-brand-contrast border-none shadow-2xl shadow-brand-glow rounded-[48px] relative overflow-hidden" style={{ minHeight: 400, justifyContent: 'center', display: 'flex', flexDirection: 'column' }}>
             <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -mr-16 -mt-16 blur-2xl"></div>
-            <p className="text-[10px] font-black uppercase tracking-widest opacity-60 mb-2">{pending.title}</p>
+            <Text variant="caption" weight="bold" style={{ textTransform: 'uppercase', opacity: 0.8, marginBottom: 8, color: 'white' }}>{pending.title}</Text>
             <h3 className="text-4xl font-black italic tracking-tighter">R$ {pending.value}</h3>
-            <p className="text-[10px] font-bold mt-2 opacity-80">Vence em: {new Date(pending.dueDate).toLocaleDateString('pt-BR')}</p>
+            <Text variant="caption" style={{ opacity: 0.9, marginTop: 8, color: 'white' }}>Vence em: {new Date(pending.dueDate).toLocaleDateString('pt-BR')}</Text>
             <div className="mt-8 flex gap-3">
-              <Button variant="secondary" className="flex-1 bg-white text-brand-primary h-14 rounded-2xl text-[10px] font-black uppercase tracking-widest active:scale-95 transition-all shadow-lg" onClick={() => alert('Código copiado!')}>Copia Código</Button>
-              <button className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center active:scale-95 transition-all hover:bg-white/30"><Download size={20} /></button>
+              <DSButton variant="secondary" onClick={() => alert('Código copiado!')} fullWidth>
+                Copia Código
+              </DSButton>
+              <button className="w-14 h-14 bg-white/20 rounded-2xl flex items-center justify-center active:scale-95 transition-all hover:bg-white/30 text-white"><Download size={20} /></button>
             </div>
-          </Card>
+          </DSCard>
         ) : (
           <div className="p-10 bg-emerald-500 text-white rounded-[48px] text-center space-y-4 shadow-xl shadow-emerald-500/20">
             <CheckCircle2 size={48} className="mx-auto" />
@@ -2433,7 +2466,7 @@ export const FinanceiroPage: React.FC<{ onBack: () => void; invoices?: any[] }> 
         )}
 
         <div className="space-y-4">
-          <SectionHeader title="Histórico" />
+          <Title variant="section" align="left">Histórico</Title>
           {paid.length === 0 ? <p className="text-center text-slate-400 font-bold italic py-4">Nenhum histórico disponível.</p> : paid.map((inv) => (
             <div key={inv.id} className="bg-white p-6 rounded-[32px] border border-slate-100 flex items-center justify-between shadow-sm">
               <div className="flex items-center gap-4">
@@ -2475,11 +2508,13 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
   const myRequests = serviceRequests.filter(req => req.unit === (currentUser?.unit || '402-B'));
 
   return (
-    <div className="min-h-screen bg-transparent pb-32">
+    <div className="min-h-screen bg-slate-50 pb-32">
       <FloatingBackButton onClick={onBack} />
-      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md">
-        <button onClick={onBack} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-95 transition-all hover:bg-slate-200"><ArrowLeft size={20} className="text-slate-600" /></button>
-        <h2 className="text-xl font-black italic uppercase text-slate-900">Atendimento</h2>
+      <header className="p-6 pt-24 flex items-center gap-4 bg-white/80 border-b border-slate-200 sticky top-0 z-40 backdrop-blur-md">
+        <DSButton onClick={onBack} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowLeft size={24} />
+        </DSButton>
+        <Title size="xl">Atendimento</Title>
       </header>
 
       <div className="p-6 space-y-8">
@@ -2490,7 +2525,7 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
                 <MessageSquare className="mx-auto text-white/80 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
                 <p className="text-sm font-medium text-white/70 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
-                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-white text-brand-primary h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-slate-50 shadow-lg">Abrir Chamado</Button>
+                <DSButton fullWidth onClick={() => setIsNew(true)} variant="secondary" style={{ marginTop: 32, fontWeight: 900, fontSize: 12, textTransform: 'uppercase', letterSpacing: '0.1em' }} className="shadow-lg">Abrir Chamado</DSButton>
               </div>
             </div>
 
@@ -2500,7 +2535,17 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-md hover:shadow-lg transition-all">
                   <div className="flex justify-between items-start">
                     <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}>{req.status}</Badge>
+                    <div style={{
+                      backgroundColor: req.status === 'Concluído' ? colors.success + '20' : colors.brand[50], // Success 20 or Brand 50
+                      color: req.status === 'Concluído' ? colors.success : colors.brand[600],
+                      border: `1px solid ${req.status === 'Concluído' ? colors.success + '30' : colors.brand[100]}`,
+                      padding: '4px 8px',
+                      borderRadius: radius.sm,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>{req.status}</div>
                   </div>
                   <p className="text-xs text-slate-600 leading-relaxed line-clamp-2">{req.description}</p>
                   <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{req.category} – {req.date}</p>
@@ -2509,27 +2554,39 @@ export const ChamadosPage: React.FC<{ onBack: () => void; serviceRequests?: any[
             </div>
           </>
         ) : (
-          <Card className="p-8 border border-slate-100 shadow-xl rounded-[40px] bg-white space-y-6 animate-in slide-in-from-bottom-4 backdrop-blur-3xl">
+          <DSCard className="p-8 space-y-6 animate-in slide-in-from-bottom-4 relative overflow-visible">
             <div className="flex items-center gap-3 mb-2">
-              <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-100 rounded-lg flex items-center justify-center hover:bg-slate-200 text-slate-600"><ArrowLeft size={16} /></button>
-              <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
+              <DSButton onClick={() => setIsNew(false)} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ArrowLeft size={20} />
+              </DSButton>
+              <Title level={3}>Novo Chamado</Title>
             </div>
-            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14 bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white" />
-            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none border border-slate-200 focus:bg-white">
-              <option className="bg-white text-slate-900">Manutenção</option>
-              <option className="bg-white text-slate-900">Limpeza</option>
-              <option className="bg-white text-slate-900">Segurança</option>
-              <option className="bg-white text-slate-900">Sugestão</option>
-              <option className="bg-white text-slate-900">Reclamação</option>
-            </select>
-            <textarea
+
+            <DSInput
+              label="Título"
+              placeholder="Ex: Lâmpada queimada"
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+            />
+
+            <DSSelect
+              label="Categoria"
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+              options={['Manutenção', 'Limpeza', 'Segurança', 'Sugestão', 'Reclamação']}
+            />
+
+            <DSInput
+              label="Descrição"
               placeholder="Descreva a situação..."
-              className="w-full h-32 bg-slate-50 border-slate-200 rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500 transition-all resize-none text-slate-900 placeholder-slate-400 focus:bg-white border"
+              multiline
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
+              style={{ height: 120 }}
             />
-            <Button fullWidth onClick={handleOpen} className="bg-slate-900 text-white h-14 rounded-[24px] uppercase tracking-widest font-black text-xs hover:bg-slate-800 transition-colors shadow-xl shadow-slate-900/20">Enviar para Adm</Button>
-          </Card>
+
+            <DSButton fullWidth onClick={handleOpen} variant="primary">Enviar para Adm</DSButton>
+          </DSCard>
         )}
       </div>
     </div>
@@ -2566,7 +2623,7 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
                 <MessageSquare className="mx-auto text-brand-400 mb-4" size={48} />
                 <h3 className="text-2xl font-black italic tracking-tight">Fale com a Adm</h3>
                 <p className="text-sm font-medium text-slate-400 mt-2 leading-relaxed max-w-xs mx-auto">Relate problemas, faça sugestões ou tire dúvidas diretamente com a administração.</p>
-                <Button fullWidth onClick={() => setIsNew(true)} className="mt-8 bg-brand-600 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Abrir Chamado</Button>
+                <DSButton fullWidth onClick={() => setIsNew(true)} variant="primary" style={{ marginTop: spacing.xl, height: 56, borderRadius: 24, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 900 }}>Abrir Chamado</DSButton>
               </div>
             </div>
 
@@ -2576,7 +2633,16 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
                 <div key={req.id} className="bg-white p-6 rounded-[32px] border border-slate-100 space-y-3 shadow-sm">
                   <div className="flex justify-between items-start">
                     <h5 className="font-bold text-slate-900 italic">{req.title}</h5>
-                    <Badge color={req.status === 'Concluído' ? 'bg-emerald-100 text-emerald-700' : 'bg-blue-50 text-blue-600'}>{req.status}</Badge>
+                    <div style={{
+                      backgroundColor: req.status === 'Concluído' ? colors.success + '20' : colors.brand[50],
+                      color: req.status === 'Concluído' ? colors.success : colors.brand[600],
+                      padding: '4px 8px',
+                      borderRadius: radius.sm,
+                      fontSize: 10,
+                      fontWeight: 700,
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em'
+                    }}>{req.status}</div>
                   </div>
                   <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{req.description}</p>
                   <p className="text-[10px] font-black text-slate-300 uppercase tracking-widest">{req.category} – {req.date}</p>
@@ -2585,27 +2651,39 @@ export const ServiceRequestsPage: React.FC<{ onBack: () => void; serviceRequests
             </div>
           </>
         ) : (
-          <Card className="p-8 border-none shadow-xl rounded-[40px] bg-white space-y-6 animate-in slide-in-from-bottom-4">
+          <DSCard className="p-8 space-y-6 animate-in slide-in-from-bottom-4 relative overflow-visible">
             <div className="flex items-center gap-3 mb-2">
-              <button onClick={() => setIsNew(false)} className="w-8 h-8 bg-slate-50 rounded-lg flex items-center justify-center"><ArrowLeft size={16} /></button>
-              <h3 className="text-lg font-black italic text-slate-900">Novo Chamado</h3>
+              <DSButton onClick={() => setIsNew(false)} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <ArrowLeft size={20} />
+              </DSButton>
+              <Title level={3}>Novo Chamado</Title>
             </div>
-            <Input placeholder="Título (ex: Lâmpada queimada)" value={form.title} onChange={e => setForm({ ...form, title: e.target.value })} className="h-14" />
-            <select value={form.category} onChange={e => setForm({ ...form, category: e.target.value })} className="w-full h-14 bg-slate-50 rounded-2xl px-4 font-bold text-slate-600 outline-none">
-              <option>Manutenção</option>
-              <option>Limpeza</option>
-              <option>Segurança</option>
-              <option>Sugestão</option>
-              <option>Reclamação</option>
-            </select>
-            <textarea
+
+            <DSInput
+              label="Título"
+              placeholder="Ex: Lâmpada queimada"
+              value={form.title}
+              onChange={e => setForm({ ...form, title: e.target.value })}
+            />
+
+            <DSSelect
+              label="Categoria"
+              value={form.category}
+              onChange={e => setForm({ ...form, category: e.target.value })}
+              options={['Manutenção', 'Limpeza', 'Segurança', 'Sugestão', 'Reclamação']}
+            />
+
+            <DSInput
+              label="Descrição"
               placeholder="Descreva a situação..."
-              className="w-full h-32 bg-slate-50 border-none rounded-2xl p-4 font-medium text-sm outline-none focus:ring-2 focus:ring-brand-500/20 transition-all resize-none"
+              multiline
               value={form.desc}
               onChange={e => setForm({ ...form, desc: e.target.value })}
+              style={{ height: 120 }}
             />
-            <Button fullWidth onClick={handleOpen} className="bg-slate-950 h-14 rounded-[24px] uppercase tracking-widest font-black text-xs">Enviar para Adm</Button>
-          </Card>
+
+            <DSButton fullWidth onClick={handleOpen} variant="primary">Enviar para Adm</DSButton>
+          </DSCard>
         )}
       </div>
     </div>
@@ -2678,16 +2756,18 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
-        <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-95 text-white hover:bg-white/10"><ArrowLeft size={20} /></button>
-        <h2 className="text-xl font-black italic uppercase text-slate-900">Minhas Demandas</h2>
+        <DSButton onClick={onBack} variant="ghost" style={{ width: 40, height: 40, padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <ArrowLeft size={24} />
+        </DSButton>
+        <Title size="xl">Minhas Demandas</Title>
       </header>
 
       <div className="p-6 space-y-6">
         {demands.length === 0 ? (
           <div className="bg-white/5 rounded-[32px] p-8 text-center border border-white/10">
             <Megaphone size={48} className="text-slate-600 mx-auto mb-4 opacity-50" />
-            <h3 className="text-white font-bold text-lg">Nenhuma demanda ativa</h3>
-            <p className="text-slate-400 text-sm mt-2">Publique no Mural para receber propostas.</p>
+            <Title level={3} style={{ color: 'white' }}>Nenhuma demanda ativa</Title>
+            <Text variant="caption" style={{ color: colors.neutral[400] }}>Publique no Mural para receber propostas.</Text>
           </div>
         ) : (
           demands.map(demand => {
@@ -2695,9 +2775,18 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
             return (
               <div key={demand.id} className="bg-white/5 p-6 rounded-[32px] border border-white/10 shadow-sm space-y-4">
                 <div className="flex justify-between items-start">
-                  <Badge color={demand.status === 'open' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20' : 'bg-slate-700 text-slate-400'}>
+                  <div style={{
+                    backgroundColor: demand.status === 'open' ? colors.success + '20' : colors.neutral[700],
+                    color: demand.status === 'open' ? colors.success : colors.neutral[400],
+                    border: `1px solid ${demand.status === 'open' ? colors.success + '20' : 'transparent'}`,
+                    padding: '4px 8px',
+                    borderRadius: radius.pill,
+                    fontSize: 10,
+                    fontWeight: 'bold',
+                    textTransform: 'uppercase'
+                  }}>
                     {demand.status === 'open' ? 'Aberta' : 'Encerrada'}
-                  </Badge>
+                  </div>
                   {demand.status === 'open' && (
                     <button onClick={() => handleCloseDemand(demand.id)} className="text-xs text-rose-400 font-bold hover:underline">
                       Encerrar
@@ -2736,9 +2825,9 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
                                 <p className="text-[10px] text-brand-400 font-black">R$ {prop.price}</p>
                               </div>
                             </div>
-                            <Button onClick={() => handleAcceptProposal(prop)} className="h-8 px-3 text-[10px] bg-emerald-500/20 text-emerald-400 hover:bg-emerald-500/30">
+                            <DSButton onClick={() => handleAcceptProposal(prop)} variant="secondary" size="sm" style={{ height: 32, fontSize: 10, padding: '0 12px' }}>
                               Aceitar
-                            </Button>
+                            </DSButton>
                           </div>
                           <p className="text-xs text-slate-300 italic">"{prop.message}"</p>
                         </div>
@@ -2916,8 +3005,12 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
             </div>
 
             <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-3">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Data Pretendida</label>
-              <Input type="date" value={date} onChange={e => handleDateFilter(e.target.value)} className="h-14 font-bold text-slate-900 bg-slate-50 border-slate-200" />
+              <DSInput
+                label="Data Pretendida"
+                type="date"
+                value={date}
+                onChange={e => handleDateFilter(e.target.value)}
+              />
             </div>
 
             {date && (
@@ -3018,9 +3111,9 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
                 </div>
               )}
 
-              <Button fullWidth onClick={handleReserve} disabled={loading} className="bg-brand-600 h-16 rounded-[28px] uppercase tracking-[0.2em] font-black text-xs shadow-xl shadow-brand-600/30 hover:bg-brand-500 transition-all">
+              <DSButton fullWidth onClick={handleReserve} disabled={loading} variant="primary" style={{ height: 64, borderRadius: 28, textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: 12, fontWeight: 900 }} className="shadow-xl shadow-brand-600/30">
                 {loading ? 'Confirmando...' : 'Confirmar Reserva'}
-              </Button>
+              </DSButton>
             </div>
           </div>
         )}
@@ -3053,7 +3146,7 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
       </header>
       <div className="p-6 space-y-6 animate-in slide-in-from-right-4">
         {myReservations.length > 0 ? myReservations.map((r) => (
-          <Card key={r.id} className="p-8 border border-slate-100 shadow-xl rounded-[44px] bg-white relative overflow-hidden group">
+          <DSCard key={r.id} className="p-8 border border-slate-100 shadow-xl rounded-[44px] bg-white relative overflow-hidden group">
             <div className="absolute top-4 right-4 w-24 h-24 opacity-5">
               <img src="/logo.png" className="w-full h-full object-contain filter grayscale" />
             </div>
@@ -3070,9 +3163,18 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
                 )}
               </div>
               <div className="flex flex-col items-end gap-2">
-                <Badge color={r.status === 'cancelled' ? "bg-rose-500/20 text-rose-500 border border-rose-500/20" : "bg-emerald-500/20 text-emerald-400 border border-emerald-500/20"}>
+                <div style={{
+                  backgroundColor: r.status === 'cancelled' ? colors.danger + '20' : colors.success + '20',
+                  color: r.status === 'cancelled' ? colors.danger : colors.success,
+                  border: `1px solid ${r.status === 'cancelled' ? colors.danger + '20' : colors.success + '20'}`,
+                  padding: '4px 8px',
+                  borderRadius: radius.pill,
+                  fontSize: 10,
+                  fontWeight: 'bold',
+                  textTransform: 'uppercase'
+                }}>
                   {r.status === 'cancelled' ? 'CANCELADA' : 'CONFIRMADA'}
-                </Badge>
+                </div>
                 {r.status !== 'cancelled' && (
                   <button onClick={() => handleCancel(r.id)} className="text-[9px] font-black text-rose-400 uppercase tracking-widest underline decoration-2 underline-offset-4 hover:text-rose-300">
                     Cancelar
@@ -3080,7 +3182,7 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
                 )}
               </div>
             </div>
-          </Card>
+          </DSCard>
         )) : (
           <div className="py-24 text-center space-y-4">
             <Calendar className="mx-auto text-slate-700" size={80} />
@@ -3103,16 +3205,25 @@ export const AssembliesPage: React.FC<{ onBack: () => void }> = ({ onBack }) => 
       <div className="bg-white p-6 rounded-[32px] border border-slate-200 shadow-sm space-y-4">
         <div className="flex justify-between items-start">
           <div className="w-14 h-14 bg-brand-500/10 text-brand-400 rounded-2xl flex items-center justify-center border border-brand-500/20"><Users size={28} /></div>
-          <Badge color="bg-emerald-500/20 text-emerald-400 border border-emerald-500/20">Aberta</Badge>
+          <div style={{
+            backgroundColor: colors.success + '20',
+            color: colors.success,
+            border: `1px solid ${colors.success + '20'}`,
+            padding: '4px 8px',
+            borderRadius: radius.pill,
+            fontSize: 10,
+            fontWeight: 'bold',
+            textTransform: 'uppercase'
+          }}>Aberta</div>
         </div>
         <div>
-          <h4 className="font-black text-slate-900 italic text-lg decoration-slice">AGO: Previs�o Or�ament�ria 2026</h4>
-          <p className="text-xs text-slate-400 font-bold uppercase mt-1">15/01/2026 � 19:30</p>
+          <h4 className="font-black text-slate-900 italic text-lg decoration-slice">AGO: Previso Oramentria 2026</h4>
+          <p className="text-xs text-slate-400 font-bold uppercase mt-1">15/01/2026  19:30</p>
         </div>
-        <Button fullWidth className="rounded-[24px] bg-slate-800 text-[10px] font-black uppercase tracking-widest border border-white/5 hover:bg-slate-700 transition-colors">Ver Pauta e Votar</Button>
+        <DSButton fullWidth variant="secondary" style={{ borderRadius: 24, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ver Pauta e Votar</DSButton>
       </div>
       <div className="text-center py-10">
-        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Hist�rico de Atas dispon�vel no portal web.</p>
+        <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Histrico de Atas disponvel no portal web.</p>
       </div>
     </div>
   </div>
@@ -3290,13 +3401,15 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
               <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mb-1">Valor Total</p>
               <p className="text-3xl font-black text-emerald-400 tracking-tighter">R$ {typeof item.price === 'number' ? item.price.toFixed(2) : item.price}</p>
             </div>
-            <button
+            <DSButton
               onClick={handleContact}
-              className="flex-1 bg-brand-600 text-white h-14 rounded-2xl font-black uppercase tracking-widest text-xs shadow-xl shadow-brand-600/40 active:scale-95 transition-all flex items-center justify-center gap-2 hover:bg-brand-500 border border-white/10"
+              variant="primary"
+              fullWidth
+              style={{ flex: 1, height: 56, borderRadius: 16, fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+              startIcon={<MessageCircle size={18} />}
             >
-              <MessageCircle size={18} />
               Tenho Interesse
-            </button>
+            </DSButton>
           </div>
         </div>
       </div>
@@ -3414,44 +3527,49 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
         </div>
 
         <div className="space-y-6 bg-white p-8 rounded-[40px] shadow-sm border border-slate-200">
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Nome Completo</label>
-            <Input value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
-          </div>
+          <DSInput
+            label="Nome Completo"
+            value={formData.name}
+            onChange={e => setFormData({ ...formData, name: e.target.value })}
+          />
 
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Condomínio</label>
-            <select
-              disabled
-              className="w-full h-14 bg-slate-100 text-slate-500 rounded-2xl px-4 font-bold border border-slate-200 outline-none appearance-none"
-            >
-              <option>{selectedCondoData?.name || 'Carregando...'}</option>
-            </select>
-          </div>
+          <DSSelect
+            label="Condomínio"
+            disabled
+            value={formData.condo}
+            options={[{ label: selectedCondoData?.name || 'Carregando...', value: formData.condo }]}
+          />
 
           <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">{isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}</label>
-              <Input value={formData.unit} onChange={e => setFormData({ ...formData, unit: e.target.value })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
-            </div>
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">{isHorizontal ? 'Número' : 'Bloco/Torre'}</label>
-              <Input value={formData.tower} onChange={e => setFormData({ ...formData, tower: e.target.value })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
-            </div>
+            <DSInput
+              label={isHorizontal ? 'Rua/Alameda' : 'Apto/Unidade'}
+              value={formData.unit}
+              onChange={e => setFormData({ ...formData, unit: e.target.value })}
+            />
+            <DSInput
+              label={isHorizontal ? 'Número' : 'Bloco/Torre'}
+              value={formData.tower}
+              onChange={e => setFormData({ ...formData, tower: e.target.value })}
+            />
           </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Email</label>
-            <Input value={formData.email} readOnly className="h-14 font-medium bg-slate-100 text-slate-400 border-slate-200" />
-          </div>
-          <div className="space-y-2">
-            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">WhatsApp</label>
-            <Input value={formData.phone} onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })} className="h-14 font-medium bg-slate-50 border-slate-200 text-slate-900 placeholder-slate-400 focus:bg-white transition-all" />
-          </div>
+
+          <DSInput
+            label="Email"
+            value={formData.email}
+            readOnly
+            style={{ backgroundColor: colors.neutral[100], color: colors.neutral[400] }}
+          />
+
+          <DSInput
+            label="WhatsApp"
+            value={formData.phone}
+            onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
+          />
         </div>
 
-        <Button fullWidth onClick={handleSave} disabled={loading} className="h-16 bg-indigo-600 text-white font-black uppercase tracking-widest shadow-xl shadow-indigo-600/30 hover:bg-indigo-500">
+        <DSButton fullWidth onClick={handleSave} disabled={loading} variant="primary" style={{ height: 64, borderRadius: 28, textTransform: 'uppercase', letterSpacing: '0.1em', fontSize: 12, fontWeight: 900 }}>
           {loading ? 'Salvando...' : 'Salvar Alterações'}
-        </Button>
+        </DSButton>
 
         <button
           onClick={async () => {

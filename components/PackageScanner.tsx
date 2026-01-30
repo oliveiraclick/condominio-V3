@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabase';
-import { X, CheckCircle2 } from 'lucide-react';
-import { Button } from './ui';
+import { X, CheckCircle2, ScanLine } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
-
 import { Camera } from '@capacitor/camera';
+
+import { Sheet } from './design-system/Sheet';
+import { DSButton } from './design-system/Button';
+import { Title, Text } from './design-system/Typography';
+import { colors, radius, spacing } from './design-system/tokens';
 
 export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any }> = ({ isOpen, onClose, currentUser }) => {
     const [scannedData, setScannedData] = useState<string | null>(null);
@@ -30,16 +33,16 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
                     }
                 } catch (e) {
                     console.error("Erro ao verificar permissão nativa:", e);
-                    // Fallback para web/navegador
-                    setPermissionGranted(true);
+                    setPermissionGranted(true); // Fallback
                 }
             };
             checkPermission();
+        } else {
+            // Reset states when closed
+            setSuccess(false);
+            setScannedData(null);
         }
     }, [isOpen]);
-
-    if (!isOpen) return null;
-    if (!permissionGranted) return <div className="fixed inset-0 bg-black z-50 flex items-center justify-center text-white">Verificando permissões...</div>;
 
     const handleScan = async (text: string) => {
         if (text && !isProcessing && !success) {
@@ -47,7 +50,6 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
             setScannedData(text);
 
             try {
-                // Use Secure RPC to handle pickup (Handles RLS and Authorization internally)
                 const { data, error } = await supabase.rpc('pickup_package', { qr_text: text });
 
                 if (error) throw new Error(error.message);
@@ -57,65 +59,162 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
                 }
 
                 setSuccess(true);
-                // Play success sound logic here if available or vibration
 
             } catch (error: any) {
                 alert(error.message);
-                setScannedData(null); // Reset to scan again
+                setScannedData(null);
             } finally {
                 setIsProcessing(false);
             }
         }
     };
 
+    // Custom rendering for the Scanner content to fit inside Sheet
     return (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col animate-in fade-in duration-300">
-            <div className="p-6 flex justify-between items-center z-10">
-                <button onClick={onClose} className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center text-white backdrop-blur-md"><X size={20} /></button>
-                <h3 className="text-white font-black italic tracking-widest text-sm">SCANNER</h3>
-                <div className="w-10"></div>
-            </div>
+        <Sheet
+            open={isOpen}
+            onClose={onClose}
+            title={success ? "Confirmado!" : "Scanner"}
+            subtitle={success ? "Retirada registrada" : "Aponte para o QR Code"}
+            height="90vh"
+        >
+            <div style={{ display: 'flex', flexDirection: 'column', height: '100%', gap: spacing.lg }}>
 
-            <div className="flex-1 flex flex-col items-center justify-center relative">
                 {success ? (
-                    <div className="bg-white p-8 rounded-[40px] text-center space-y-6 animate-in zoom-in duration-300 mx-6">
-                        <div className="w-20 h-20 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <div style={{
+                        flex: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: spacing.xl
+                    }}>
+                        <div style={{
+                            width: 80,
+                            height: 80,
+                            borderRadius: radius.pill,
+                            background: colors.success + '20', // Using hex opacity or similar, assuming success is hex
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: colors.success
+                        }}>
                             <CheckCircle2 size={40} />
                         </div>
-                        <div>
-                            <h2 className="text-2xl font-black italic text-slate-900">Confirmado!</h2>
-                            <p className="text-sm text-slate-500 font-medium mt-2">Você retirou a encomenda com sucesso.</p>
+
+                        <div style={{ textAlign: 'center' }}>
+                            <Title level={3}>Sucesso!</Title>
+                            <Text variant="body" style={{ color: colors.neutral[500], marginTop: spacing.xs }}>
+                                Encomenda retirada corretamente.
+                            </Text>
                         </div>
-                        <div className="bg-slate-50 p-4 rounded-2xl text-left border border-slate-100">
-                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest">Assinatura Digital</p>
-                            <p className="font-bold text-slate-900 text-xs mt-1">{currentUser.name || 'Morador'} • {currentUser.phone || 'Sem celular'}</p>
-                            <p className="text-[10px] uppercase font-black text-slate-400 tracking-widest mt-2">Data/Hora</p>
-                            <p className="font-bold text-slate-900 text-xs mt-1">{new Date().toLocaleString()}</p>
+
+                        <div style={{
+                            width: '100%',
+                            padding: spacing.md,
+                            background: colors.neutral[50],
+                            borderRadius: radius.lg,
+                            border: `1px solid ${colors.neutral[200]}`
+                        }}>
+                            <Text variant="caption" style={{ color: colors.neutral[400], marginBottom: 4 }}>RETIRADO POR</Text>
+                            <Text variant="body" weight="bold" style={{ color: colors.neutral[900] }}>
+                                {currentUser.name || 'Morador'}
+                            </Text>
+                            <Text variant="caption" style={{ color: colors.neutral[500] }}>
+                                {currentUser.phone || 'Sem celular'}
+                            </Text>
+
+                            <div style={{ height: 1, background: colors.neutral[200], margin: `${spacing.sm} 0` }} />
+
+                            <Text variant="caption" style={{ color: colors.neutral[400], marginBottom: 4 }}>DATA</Text>
+                            <Text variant="body" weight="medium" style={{ color: colors.neutral[900] }}>
+                                {new Date().toLocaleString('pt-BR')}
+                            </Text>
                         </div>
-                        <Button fullWidth onClick={onClose} className="bg-emerald-600">Fechar</Button>
+
+                        <div style={{ width: '100%', marginTop: 'auto' }}>
+                            <DSButton fullWidth variant="primary" onClick={onClose}>
+                                Fechar
+                            </DSButton>
+                        </div>
                     </div>
                 ) : (
-                    <>
-                        <div className="w-full max-w-sm aspect-square relative rounded-[40px] overflow-hidden border-4 border-white/20 shadow-2xl">
-                            <Scanner
-                                onScan={(result) => result?.[0]?.rawValue && handleScan(result[0].rawValue)}
-                                onError={(error: any) => alert(`Erro na câmera: ${error?.message || 'Permissão negada ou dispositivo não suportado.'}`)}
-                                constraints={{ facingMode: 'environment' }}
-                                styles={{ container: { width: '100%', height: '100%' } }}
-                                components={{ finder: false }}
-                            />
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+                        {permissionGranted ? (
+                            <div style={{
+                                position: 'relative',
+                                width: '100%',
+                                aspectRatio: '1',
+                                borderRadius: radius.xl,
+                                overflow: 'hidden',
+                                background: 'black'
+                            }}>
+                                <Scanner
+                                    onScan={(result) => result?.[0]?.rawValue && handleScan(result[0].rawValue)}
+                                    onError={(error: any) => console.log(error)}
+                                    constraints={{ facingMode: 'environment' }}
+                                    styles={{ container: { width: '100%', height: '100%' } }}
+                                    components={{ finder: false }}
+                                />
 
-                            {/* Custom Overlay */}
-                            <div className="absolute inset-0 border-[40px] border-black/50 rounded-[40px]"></div>
-                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 border-2 border-white/80 rounded-3xl flex items-center justify-center">
-                                <div className="w-44 h-44 border border-dashed border-white/30 rounded-2xl animate-pulse"></div>
+                                {/* Overlay Visual */}
+                                <div style={{
+                                    position: 'absolute',
+                                    inset: 0,
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    pointerEvents: 'none'
+                                }}>
+                                    <div style={{
+                                        width: '70%',
+                                        height: '70%',
+                                        border: `2px solid rgba(255,255,255,0.8)`,
+                                        borderRadius: radius.lg,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center'
+                                    }}>
+                                        <ScanLine size={48} color="rgba(255,255,255,0.5)" className="animate-pulse" />
+                                    </div>
+                                </div>
                             </div>
+                        ) : (
+                            <div style={{
+                                flex: 1,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                background: colors.neutral[100],
+                                borderRadius: radius.xl
+                            }}>
+                                <Text>Aguardando câmera...</Text>
+                            </div>
+                        )}
+
+                        <Text variant="caption" style={{ textAlign: 'center', color: colors.neutral[500] }}>
+                            Aponte a câmera para o QR Code da etiqueta da encomenda.
+                        </Text>
+
+                        {isProcessing && (
+                            <div style={{
+                                padding: spacing.sm,
+                                background: colors.brand[50],
+                                borderRadius: radius.md,
+                                textAlign: 'center'
+                            }}>
+                                <Text variant="label" style={{ color: colors.brand[600] }}>Processando...</Text>
+                            </div>
+                        )}
+
+                        <div style={{ marginTop: 'auto' }}>
+                            <DSButton fullWidth variant="secondary" onClick={onClose}>
+                                Cancelar
+                            </DSButton>
                         </div>
-                        <p className="text-white/70 text-center text-sm font-medium mt-8 px-10">Aponte a câmera para o QR Code na etiqueta da encomenda.</p>
-                        {isProcessing && <p className="text-white font-black animate-pulse mt-4">Processando...</p>}
-                    </>
+                    </div>
                 )}
             </div>
-        </div>
+        </Sheet>
     );
 };

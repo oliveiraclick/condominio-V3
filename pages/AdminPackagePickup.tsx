@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { ArrowLeft, User, QrCode, ClipboardCheck, ArrowUpRight, Check, Loader2, CheckCircle2, Package, MapPin, X, Camera } from 'lucide-react';
 import { supabase } from '../supabase';
 import { Scanner } from '@yudiel/react-qr-scanner';
+import { useResidentCache } from '../components/hooks/useResidentCache';
 
 interface AdminPackagePickupProps {
     onBack: () => void;
@@ -15,6 +16,8 @@ export const AdminPackagePickup: React.FC<AdminPackagePickupProps> = ({ onBack }
     const [selectedResident, setSelectedResident] = useState<any>(null);
     const [residentPackages, setResidentPackages] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+
+    const { getResident } = useResidentCache();
 
     // Scanner
     const [showScanner, setShowScanner] = useState(false);
@@ -65,20 +68,14 @@ export const AdminPackagePickup: React.FC<AdminPackagePickupProps> = ({ onBack }
 
     const handleScanResident = async (e: React.FormEvent | null, codeOverride?: string) => {
         if (e) e.preventDefault();
-        const codeToSearch = codeOverride || residentCode;
+        const codeToSearch = (codeOverride || residentCode).trim();
 
-        if (!codeToSearch.trim()) return;
+        if (!codeToSearch) return;
 
         setLoading(true);
 
         try {
-            let { data, error } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', codeToSearch.trim())
-                .maybeSingle();
-
-            if (error && error.code !== 'PGRST116') throw error;
+            const data = await getResident(codeToSearch);
 
             if (!data) {
                 alert('Morador não encontrado! Verifique o código.');
@@ -112,7 +109,20 @@ export const AdminPackagePickup: React.FC<AdminPackagePickupProps> = ({ onBack }
     };
 
     const handleForceFinish = async (pkgId: string) => {
+        // OPTIMISTIC UI (Step 2)
+        // 1. Snapshot previous state
+        const previousPackages = [...residentPackages];
+
+        // 2. Optimistic Update
+        const optimisticUpdate = residentPackages.map(p =>
+            p.id === pkgId
+                ? { ...p, status: 'delivered', picked_up_at: new Date().toISOString() }
+                : p
+        );
+        setResidentPackages(optimisticUpdate);
+
         try {
+            // 3. API Call
             const { error } = await supabase
                 .from('packages')
                 .update({
@@ -122,10 +132,14 @@ export const AdminPackagePickup: React.FC<AdminPackagePickupProps> = ({ onBack }
                 .eq('id', pkgId);
 
             if (error) throw error;
-            if (selectedResident) fetchResidentPackages(selectedResident.id);
+
+            // NO RE-FETCH (Step 1) - We rely on local state update success
+
         } catch (err) {
             console.error('Error delivering package:', err);
             alert('Erro ao confirmar entrega');
+            // 4. Rollback on Error
+            setResidentPackages(previousPackages);
         }
     };
 

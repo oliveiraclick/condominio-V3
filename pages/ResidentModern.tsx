@@ -268,6 +268,35 @@ export const ResidentModern: React.FC<{
                             </section>
                         )}
 
+                        {/* Feedback Trigger (Moved - Thin Banner Style) */}
+                        <div className="py-2 -mx-6">
+                            <div
+                                onClick={() => setFeedbackOpen(true)}
+                                className="bg-brand-gradient-horizontal text-brand-contrast py-3 px-6 relative overflow-hidden cursor-pointer transition-all group border-y border-white/10 shadow-sm"
+                            >
+                                <div className="relative z-10 flex gap-4 items-center justify-between">
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center text-brand-contrast group-hover:scale-110 transition-transform">
+                                            <Sparkles size={18} className="stroke-brand-contrast" />
+                                        </div>
+                                        <div>
+                                            <h4 className="font-bold text-sm leading-none mb-0.5 text-brand-contrast">Sugestões?</h4>
+                                            <p className="text-brand-contrast opacity-90 text-[10px] font-medium">Ajude a melhorar o app.</p>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex items-center gap-2">
+                                        <span className="text-[10px] font-bold text-brand-contrast uppercase tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">Participar</span>
+                                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
+                                            <ChevronRight size={14} className="text-brand-contrast" />
+                                        </div>
+                                    </div>
+                                </div>
+                                {/* Decorative background element */}
+                                <div className="absolute -top-10 -right-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+                            </div>
+                        </div>
+
                         {/* Mural do Desapego (Replacing Serviços Domésticos) */}
                         <section className="relative group/nav">
                             <div className="flex justify-between items-center mb-4 px-1">
@@ -311,25 +340,7 @@ export const ResidentModern: React.FC<{
                             )}
                         </section>
 
-                        {/* Feedback Trigger (Bottom) */}
-                        <div className="pt-4">
-                            <Card
-                                onClick={() => setFeedbackOpen(true)}
-                                className="bg-brand-gradient-horizontal text-brand-contrast p-6 rounded-[24px] relative overflow-hidden cursor-pointer active:scale-[0.98] transition-all group border-none shadow-xl shadow-brand-glow"
-                            >
-                                <div className="relative z-10 flex gap-4 items-center">
-                                    <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center text-brand-contrast group-hover:scale-110 transition-transform">
-                                        <Sparkles size={24} className="stroke-brand-contrast" />
-                                    </div>
-                                    <div>
-                                        <h4 className="font-bold text-lg leading-none mb-1 text-brand-contrast">Sugestões?</h4>
-                                        <p className="text-brand-contrast opacity-80 text-xs font-medium">Ajude a melhorar o app.</p>
-                                    </div>
-                                </div>
-                                {/* Decorative background element */}
-                                <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
-                            </Card>
-                        </div>
+
 
                     </div>
                 </main>

@@ -35,14 +35,14 @@ export const NewsTicker: React.FC<{ userRole?: string }> = ({ userRole }) => {
     return (
         <>
             <div className="w-full bg-slate-900 border-b border-slate-800 flex items-center h-10 relative overflow-hidden">
-                {/* BADGE FIXO ESQUERDA - COR AZUL/BRAND PRIMARY */}
-                <div className="bg-brand-600 text-white text-[10px] font-black uppercase tracking-widest px-6 h-full flex items-center z-20 shrink-0 shadow-lg relative ml-[-1px]">
+                {/* BADGE FIXO ESQUERDA - AZUL CLARO (BRAND) */}
+                <div className="bg-brand-gradient text-white text-[10px] font-black uppercase tracking-widest px-6 h-full flex items-center z-20 shrink-0 shadow-lg relative ml-[-1px]">
                     <span className="animate-pulse mr-2 text-amber-400">●</span> AVISOS
                     {/* Extension to create the slant */}
-                    <div className="absolute top-0 -right-4 w-8 h-full bg-brand-600 transform skew-x-[-20deg]"></div>
+                    <div className="absolute top-0 -right-4 w-8 h-full bg-brand-500 transform skew-x-[-20deg]"></div>
                 </div>
 
-                <div className="flex-1 overflow-hidden relative h-full flex items-center bg-slate-900">
+                <div className="flex-1 overflow-hidden relative h-full flex items-center bg-transparent">
                     <div className="animate-marquee whitespace-nowrap flex items-center gap-12 pl-4">
                         {notices.map((notice, i) => (
                             <div

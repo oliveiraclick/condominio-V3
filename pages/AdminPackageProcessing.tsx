@@ -330,13 +330,13 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
                 {/* STEP 3: RESIDENT */}
                 {step === 'resident' && (
-                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-6 animate-in slide-in-from-right-8 duration-300">
+                    <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100 space-y-6 animate-in slide-in-from-right-8 duration-300">
                         <div className="grid grid-cols-2 gap-3">
-                            <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100 shadow-sm">
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100 shadow-sm">
                                 <p className="text-[9px] uppercase tracking-widest text-slate-400 mb-1">Origem</p>
                                 <p className="font-bold text-slate-900 text-xs truncate font-mono">{selectedPackage?.original_code?.slice(-6)}</p>
                             </div>
-                            <div className="bg-slate-50 p-4 rounded-[24px] border border-slate-100">
+                            <div className="bg-slate-50 p-4 rounded-2xl border border-slate-100">
                                 <p className="text-[9px] uppercase tracking-widest text-slate-600 mb-1">Interno</p>
                                 <p className="font-bold text-slate-900 text-xs truncate font-mono">{internalCode}</p>
                             </div>
@@ -353,7 +353,7 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
                                 autoFocus
                                 value={residentSearch}
                                 onChange={(e) => setResidentSearch(e.target.value)}
-                                className="w-full h-24 bg-white border-2 border-slate-200 rounded-[32px] px-8 pl-8 pr-14 text-2xl font-bold text-slate-900 focus:border-slate-900 focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                                className="w-full h-24 bg-slate-50 border-2 border-slate-200 rounded-[24px] px-8 pl-8 pr-14 text-2xl font-bold text-slate-900 focus:border-brand-600 focus:bg-white focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
                                 placeholder="Nome, Bloco ou Unidade..."
                             />
                             <Search className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-300" size={24} />
@@ -364,10 +364,10 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
                                 <button
                                     key={res.id}
                                     onClick={() => handleSelectResident(res)}
-                                    className="w-full bg-white p-4 rounded-[24px] border border-slate-100 hover:border-emerald-300 hover:bg-emerald-50/30 transition-all flex items-center justify-between group active:scale-[0.98]"
+                                    className="w-full bg-white p-4 rounded-2xl border border-slate-100 hover:border-brand-300 hover:bg-brand-50/30 transition-all flex items-center justify-between group active:scale-[0.98]"
                                 >
                                     <div className="text-left flex items-center gap-4">
-                                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs group-hover:bg-emerald-100 group-hover:text-emerald-700 transition-colors">
+                                        <div className="w-12 h-12 rounded-2xl bg-slate-100 flex items-center justify-center text-slate-500 font-black text-xs group-hover:bg-brand-100 group-hover:text-brand-700 transition-colors">
                                             {res.unit}
                                         </div>
                                         <div>
@@ -375,7 +375,7 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
                                             <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-0.5">{res.tower}</p>
                                         </div>
                                     </div>
-                                    <ArrowRight size={20} className="text-slate-300 group-hover:text-emerald-500 transition-colors" />
+                                    <ArrowRight size={20} className="text-slate-300 group-hover:text-brand-500 transition-colors" />
                                 </button>
                             ))}
                         </div>
@@ -384,20 +384,20 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
 
                 {/* STEP 4: LOCATION */}
                 {step === 'location' && (
-                    <div className="bg-white p-8 rounded-[40px] shadow-sm border border-slate-100 space-y-8 animate-in slide-in-from-right-8 duration-300">
-                        <div className="bg-emerald-900 p-8 rounded-[40px] flex items-center gap-6 shadow-xl shadow-emerald-900/20 text-white relative overflow-hidden">
+                    <div className="bg-white p-6 rounded-[24px] shadow-sm border border-slate-100 space-y-8 animate-in slide-in-from-right-8 duration-300">
+                        <div className="bg-brand-900 p-8 rounded-[24px] flex items-center gap-6 shadow-xl shadow-brand-900/20 text-white relative overflow-hidden">
                             <div className="absolute top-0 right-0 p-8 opacity-10">
                                 <User size={100} />
                             </div>
                             <div className="relative z-10 w-16 h-16 bg-white/20 backdrop-blur rounded-2xl flex items-center justify-center text-white"><User size={32} /></div>
                             <div className="relative z-10">
                                 <h3 className="font-black text-white text-xl italic">{selectedResident?.name}</h3>
-                                <p className="text-[10px] text-emerald-200 font-bold uppercase tracking-widest mt-1">Unidade {selectedResident?.unit} • {selectedResident?.tower}</p>
+                                <p className="text-[10px] text-brand-200 font-bold uppercase tracking-widest mt-1">Unidade {selectedResident?.unit} • {selectedResident?.tower}</p>
                             </div>
                         </div>
 
                         <div className="text-center py-2">
-                            <div className="w-20 h-20 bg-slate-100 text-slate-900 rounded-[32px] flex items-center justify-center mx-auto mb-4 border border-slate-200 shadow-sm animate-bounce-slow">
+                            <div className="w-20 h-20 bg-brand-50 text-brand-600 rounded-[24px] flex items-center justify-center mx-auto mb-4 border border-brand-200 shadow-sm animate-bounce-slow">
                                 <MapPin size={40} />
                             </div>
                             <h2 className="text-xl font-black italic text-slate-900 uppercase tracking-tighter">Armazenamento</h2>
@@ -412,13 +412,13 @@ export const AdminPackageProcessing: React.FC<AdminPackageProcessingProps> = ({ 
                             onKeyDown={(e) => {
                                 if (e.key === 'Enter') handleFinish();
                             }}
-                            className="w-full h-24 bg-white border-2 border-slate-200 rounded-[32px] px-8 text-2xl font-bold text-center text-slate-900 focus:border-slate-900 focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
+                            className="w-full h-24 bg-slate-50 border-2 border-slate-200 rounded-[24px] px-8 text-2xl font-bold text-center text-slate-900 focus:border-brand-600 focus:bg-white focus:shadow-2xl outline-none transition-all placeholder:text-slate-300 shadow-sm"
                             placeholder="Ex: P-01, Box A"
                         />
 
                         <button
                             onClick={handleFinish}
-                            className="w-full h-16 bg-slate-900 hover:bg-slate-800 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-slate-900/20 active:scale-95 transition-all flex items-center justify-center gap-3 text-sm"
+                            className="w-full h-16 bg-brand-600 hover:bg-brand-700 text-white rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-brand-600/20 active:scale-95 transition-all flex items-center justify-center gap-3 text-sm"
                         >
                             <CheckCircle2 size={20} />
                             Confirmar & Finalizar
