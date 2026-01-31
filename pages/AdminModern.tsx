@@ -6,9 +6,12 @@ import {
     AlertTriangle, DollarSign, Box, ClipboardCheck, User
 } from 'lucide-react';
 
-export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void, onLogout: () => void }> = ({ onNavigate, onLogout }) => {
+import { PackagePickupFlow } from '../components/PackagePickupFlow';
+
+export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void, onLogout: () => void, currentUser?: any }> = ({ onNavigate, onLogout, currentUser }) => {
     const [activeMenu, setActiveMenu] = useState('overview');
     const [counts, setCounts] = useState({ residents: 0, incidents: 0, reservations: 0, accessToday: 0 });
+    const [pickupFlowOpen, setPickupFlowOpen] = useState(false);
     const [recentActivity, setRecentActivity] = useState<any[]>([]);
     const [chartData, setChartData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -100,7 +103,14 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                     ].map(item => (
                         <button
                             key={item.id}
-                            onClick={() => { setActiveMenu(item.id); onNavigate(item.id); }}
+                            onClick={() => {
+                                if (item.id === 'package-pickup') {
+                                    setPickupFlowOpen(true);
+                                } else {
+                                    setActiveMenu(item.id);
+                                    onNavigate(item.id);
+                                }
+                            }}
                             className={`w-full p-3 rounded-xl flex items-center gap-4 transition-all duration-300 group
                 ${activeMenu === item.id
                                     ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/25'
@@ -240,6 +250,12 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                     </div>
                 </div>
             </main>
+
+            <PackagePickupFlow
+                open={pickupFlowOpen}
+                onClose={() => setPickupFlowOpen(false)}
+                currentUser={currentUser || { name: 'Admin', id: 'admin' }}
+            />
         </div>
     );
 };

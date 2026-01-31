@@ -38,6 +38,7 @@ import { NewsTicker } from '../components/NewsTicker';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 import { BiometricService } from '../services/BiometricService';
 import { Fingerprint } from 'lucide-react';
+import { SpaceReservationFlow } from '../components/SpaceReservationFlow';
 
 
 // --- COMPONENTES DE APOIO ---
@@ -2846,125 +2847,14 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
   );
 };
 
-export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]; onAddReservation: (res: any) => void; commonAreas: any[]; onNavigate?: (s: string) => void }> = ({ onBack, reservations, onAddReservation, commonAreas, onNavigate }) => {
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedArea, setSelectedArea] = useState<any>(null);
-  const [date, setDate] = useState('');
-  const [selectedHour, setSelectedHour] = useState<string | null>(null);
-  const [dateFiltered, setDateFiltered] = useState(false);
-  const [loading, setLoading] = useState(false);
-
-  // Group by category
-  const categories = Array.from(new Set(commonAreas.map(a => a.category || 'Outros')));
-
-  // Generate hourly slots (6am to 10pm)
-  const generateHourlySlots = () => {
-    const slots = [];
-    for (let hour = 6; hour <= 22; hour++) {
-      slots.push({
-        start: `${hour.toString().padStart(2, '0')}:00`,
-        end: `${(hour + 1).toString().padStart(2, '0')}:00`,
-        label: `${hour.toString().padStart(2, '0')}:00 - ${(hour + 1).toString().padStart(2, '0')}:00`
-      });
-    }
-    return slots;
-  };
-
-  const hourlySlots = generateHourlySlots();
-
-  const handleReserve = async () => {
-    if (!selectedArea || !date) return;
-
-    const isHourly = selectedArea.reservation_type === 'hourly';
-
-    if (isHourly && !selectedHour) {
-      alert('Por favor, selecione um horário.');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const reservationData: any = {
-        areaId: selectedArea.id,
-        area: selectedArea.name,
-        date: date
-      };
-
-      if (isHourly && selectedHour) {
-        const slot = hourlySlots.find(s => s.start === selectedHour);
-        reservationData.startTime = slot?.start;
-        reservationData.endTime = slot?.end;
-      } else {
-        reservationData.timeSlot = 'all_day';
-      }
-
-      await onAddReservation(reservationData);
-      alert('Reserva confirmada com sucesso!');
-      setSelectedArea(null);
-      setDate('');
-      setSelectedHour(null);
-      setDateFiltered(false);
-    } catch (error: any) {
-      alert(error.message || 'Erro ao criar reserva. Tente novamente.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDateFilter = (d: string) => {
-    setDate(d);
-    setDateFiltered(true);
-    setSelectedHour(null);
-  };
-
-  const filteredAreas = selectedCategory
-    ? commonAreas.filter(a => (a.category || 'Outros') === selectedCategory)
-    : [];
-
-  // Check if hour is available
-  const isHourAvailable = (hour: string) => {
-    if (!selectedArea || !date) return true;
-
-    return !reservations.some(r =>
-      r.area_id === selectedArea.id &&
-      r.date === date &&
-      r.start_time === hour &&
-      r.status !== 'cancelled'
-    );
-  };
-
-  // Filter available areas if date is selected
-  const availableAreas = dateFiltered && date
-    ? filteredAreas.filter(area => {
-      const isHourly = area.reservation_type === 'hourly';
-
-      if (isHourly) {
-        // For hourly areas, check if at least one hour is available
-        return hourlySlots.some(slot => {
-          return !reservations.some(r =>
-            r.area_id === area.id &&
-            r.date === date &&
-            r.start_time === slot.start &&
-            r.status !== 'cancelled'
-          );
-        });
-      } else {
-        // For full-day areas, check if day is available
-        return !reservations.some(r =>
-          r.area_id === area.id &&
-          r.date === date &&
-          r.time_slot === 'all_day' &&
-          r.status !== 'cancelled'
-        );
-      }
-    })
-    : filteredAreas;
+export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]; onAddReservation: (res: any) => void; commonAreas: any[]; onNavigate?: (s: string) => void; currentUser: any }> = ({ onBack, reservations, onAddReservation, commonAreas, onNavigate, currentUser }) => {
+  const [isReservationFlowOpen, setIsReservationFlowOpen] = useState(false);
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
       <header className="p-6 pt-5 pb-5 flex items-center justify-between bg-brand-gradient-horizontal shadow-xl shadow-brand-glow sticky top-0 z-40 rounded-b-[32px]">
         <div className="flex items-center gap-4">
-          <button onClick={selectedArea ? () => setSelectedArea(null) : selectedCategory ? () => { setSelectedCategory(null); setDate(''); setDateFiltered(false); } : onBack} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all text-brand-contrast hover:bg-white/30 backdrop-blur-sm"><ArrowLeft size={20} className="stroke-brand-contrast" /></button>
+          <button onClick={onBack} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all text-brand-contrast hover:bg-white/30 backdrop-blur-sm"><ArrowLeft size={20} className="stroke-brand-contrast" /></button>
           <h2 className="text-xl font-black italic uppercase text-brand-contrast tracking-widest">Reservas</h2>
         </div>
         <button
@@ -2975,149 +2865,50 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
           Meus Agendamentos
         </button>
       </header>
+
       <div className="p-6">
-
-        {!selectedCategory ? (
-          <div className="space-y-6 animate-in slide-in-from-left-4">
-            <h3 className="text-xl font-black text-slate-800 tracking-tight mb-6">O que você quer agendar?</h3>
-            <div className="grid grid-cols-2 gap-4">
-              {categories.map(cat => (
-                <button
-                  key={cat}
-                  onClick={() => setSelectedCategory(cat)}
-                  className="bg-white aspect-square rounded-[32px] border border-slate-100 shadow-sm flex flex-col items-center justify-center gap-4 hover:scale-105 transition-all group active:scale-95"
-                >
-                  <div className="w-16 h-16 rounded-2xl bg-brand-50 text-brand-primary flex items-center justify-center group-hover:bg-brand-primary group-hover:text-white transition-colors">
-                    {cat === 'Gourmet' ? <Utensils size={32} /> :
-                      cat === 'Esportes' ? <Activity size={32} /> :
-                        <Calendar size={32} />}
-                  </div>
-                  <span className="font-black text-slate-700 uppercase tracking-widest text-xs">{cat}</span>
-                </button>
-              ))}
-            </div>
+        <div className="bg-white rounded-[40px] shadow-sm border border-slate-100 p-8 text-center space-y-6">
+          <div className="w-24 h-24 bg-brand-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <CalendarDays size={48} className="text-brand-600" />
           </div>
-        ) : !selectedArea ? (
-          <div className="space-y-8 animate-in slide-in-from-right-4">
-            <div>
-              <h3 className="text-2xl font-black italic text-slate-800 tracking-tighter mb-2">{selectedCategory}</h3>
-              <p className="text-sm text-slate-600 font-medium">Selecione uma data para ver o que temos livre.</p>
-            </div>
+          <div>
+            <h3 className="text-2xl font-black italic text-slate-900 mb-2">Agende seu Espaço</h3>
+            <p className="text-slate-600">Reserve salão de festas, churrasqueira e outros espaços comuns de forma rápida e fácil.</p>
+          </div>
+          <DSButton
+            fullWidth
+            onClick={() => setIsReservationFlowOpen(true)}
+            variant="primary"
+            style={{ height: 56, borderRadius: 24, fontSize: 14, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+          >
+            Nova Reserva
+          </DSButton>
+        </div>
 
-            <div className="bg-white p-6 rounded-[32px] shadow-sm border border-slate-100 space-y-3">
-              <DSInput
-                label="Data Pretendida"
-                type="date"
-                value={date}
-                onChange={e => handleDateFilter(e.target.value)}
-              />
-            </div>
-
-            {date && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between px-2">
-                  <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Disponíveis em {new Date(date).toLocaleDateString('pt-BR')}</h4>
-                  <span className="text-[10px] font-bold bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/20">{availableAreas.length} opções</span>
+        <div className="mt-8">
+          <h3 className="text-lg font-black italic text-slate-800 mb-4 px-2">Espaços Disponíveis</h3>
+          <div className="space-y-4">
+            {commonAreas.map(area => (
+              <div key={area.id} className="bg-white p-4 rounded-[32px] border border-slate-100 flex items-center gap-4 shadow-sm">
+                <div className="w-20 h-20 bg-slate-100 rounded-2xl overflow-hidden flex-shrink-0">
+                  {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-slate-400"><ImageIcon size={24} /></div>}
                 </div>
-
-                {availableAreas.length === 0 ? (
-                  <div className="text-center py-12 opacity-50">
-                    <CalendarDays size={48} className="mx-auto mb-4 text-slate-500" />
-                    <p className="font-bold italic text-slate-500">Poxa! Tudo ocupado hoje.</p>
-                  </div>
-                ) : (
-                  availableAreas.map(area => (
-                    <div key={area.id} onClick={() => setSelectedArea(area)} className="w-full h-56 bg-white rounded-[32px] overflow-hidden shadow-lg relative cursor-pointer group active:scale-95 transition-all border border-slate-100">
-                      {area.photos?.[0] ? <img src={area.photos[0]} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" /> : <div className="w-full h-full bg-slate-100 flex items-center justify-center"><ImageIcon size={48} className="text-slate-400" /></div>}
-                      <div className="absolute inset-x-0 bottom-0 p-6 bg-gradient-to-t from-black/90 to-transparent">
-                        <h4 className="text-xl font-black italic text-white tracking-tight">{area.name}</h4>
-                        <div className="flex flex-wrap items-center gap-2 mt-2">
-                          <span className="text-[10px] font-black text-white/90 uppercase bg-brand-600/40 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 shadow-sm">
-                            R$ {area.price}
-                          </span>
-                          <span className="text-[10px] font-black text-white/90 uppercase bg-white/10 backdrop-blur-md px-3 py-1 rounded-lg border border-white/20 shadow-sm tracking-tighter">
-                            {area.hours?.toUpperCase().replace(/\s+/g, ' ')}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </div>
-        ) : (
-          <div className="space-y-6 animate-in slide-in-from-right-4">
-            <div className="w-full h-72 bg-slate-800 rounded-[40px] overflow-hidden shadow-2xl relative border border-white/5">
-              {selectedArea.photos?.[0] ? <img src={selectedArea.photos[0]} className="w-full h-full object-cover" /> : null}
-              <div className="absolute top-6 right-6 bg-black/60 backdrop-blur-xl px-4 py-2 rounded-2xl text-xs font-black uppercase tracking-widest shadow-sm text-white border border-white/10">
-                {date.split('-').reverse().join('/')}
-              </div>
-            </div>
-
-            <div className="bg-white p-8 rounded-[40px] border border-slate-100 shadow-sm space-y-6">
-              <div>
-                <h3 className="text-3xl font-black italic text-slate-900 tracking-tight leading-none mb-2">{selectedArea.name}</h3>
-                <p className="text-slate-600 font-medium leading-relaxed">{selectedArea.desc}</p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-6 rounded-3xl border border-slate-100">
-                <div><div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Valor</div><div className="text-lg font-black text-slate-900">R$ {selectedArea.price}</div></div>
-                <div><div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Horário</div><div className="text-lg font-black text-slate-900">{selectedArea.hours}</div></div>
-                <div className="col-span-2 border-t border-slate-200 pt-4 mt-2">
-                  <div className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-3">Itens Inclusos</div>
-                  <div className="space-y-2">
-                    {selectedArea.inventory ? selectedArea.inventory.split(',').map((item: string, i: number) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <div className="w-5 h-5 rounded-full bg-emerald-100 flex items-center justify-center min-w-[20px]">
-                          <Check size={12} className="text-emerald-600 font-bold" />
-                        </div>
-                        <span className="text-sm font-bold text-slate-600 italic">{item.trim()}</span>
-                      </div>
-                    )) : <p className="text-sm text-slate-400 italic">Nenhum item informado.</p>}
-                  </div>
+                <div>
+                  <h4 className="font-bold text-slate-900 leading-tight">{area.name}</h4>
+                  <p className="text-xs text-slate-500 mt-1 line-clamp-2">{area.desc}</p>
+                  <p className="text-[10px] font-black text-brand-600 uppercase mt-2">{area.category}</p>
                 </div>
               </div>
-
-              {/* Hourly Selection for Sports Areas */}
-              {selectedArea.category === 'Esportes' && (
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Escolha o Horário</label>
-                  <div className="grid grid-cols-3 gap-2 max-h-64 overflow-y-auto" style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-                    {hourlySlots.map(slot => {
-                      const available = isHourAvailable(slot.start);
-                      return (
-                        <button
-                          key={slot.start}
-                          onClick={() => available && setSelectedHour(slot.start)}
-                          disabled={!available}
-                          className={`p-3 rounded-xl border transition-all text-center ${selectedHour === slot.start
-                            ? 'border-brand-500 bg-brand-50 shadow-[0_0_15px_rgba(234,88,12,0.1)]'
-                            : available
-                              ? 'border-slate-200 bg-white hover:bg-slate-50 active:scale-95'
-                              : 'border-slate-100 bg-slate-50 opacity-40 cursor-not-allowed'
-                            }`}
-                        >
-                          <div className={`text-xs font-black ${selectedHour === slot.start ? 'text-brand-600' : available ? 'text-slate-900' : 'text-slate-400'}`}>
-                            {slot.start}
-                          </div>
-                          <div className="text-[8px] text-slate-500 font-bold mt-0.5">
-                            {available ? '● Livre' : '● Ocupado'}
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <DSButton fullWidth onClick={handleReserve} disabled={loading} variant="primary" style={{ height: 64, borderRadius: 28, textTransform: 'uppercase', letterSpacing: '0.2em', fontSize: 12, fontWeight: 900 }} className="shadow-xl shadow-brand-600/30">
-                {loading ? 'Confirmando...' : 'Confirmar Reserva'}
-              </DSButton>
-            </div>
+            ))}
           </div>
-        )}
+        </div>
       </div>
+
+      <SpaceReservationFlow
+        isOpen={isReservationFlowOpen}
+        onClose={() => setIsReservationFlowOpen(false)}
+        currentUser={currentUser}
+      />
     </div>
   );
 };

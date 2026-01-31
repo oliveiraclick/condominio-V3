@@ -6,7 +6,7 @@ import { Title, Text } from './design-system/Typography';
 import { DSInput } from './design-system/Input';
 import { DSSelect } from './design-system/Select';
 import { DSButton } from './design-system/Button';
-import { spacing, colors } from './design-system/tokens';
+import { spacing, colors, radius } from './design-system/tokens';
 
 interface ReceivePackageStepProps {
     open: boolean;
@@ -54,21 +54,19 @@ export const ReceivePackageStep: React.FC<ReceivePackageStepProps> = ({
                 {/* SEÇÃO 1: REMETENTE & TRANSPORTADORA */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
                     <DSInput
-                        label="Quem enviou? (Remetente)"
-                        placeholder="Ex: Amazon, Mercado Livre, Shopee"
+                        label="Nome da Transportadora"
+                        placeholder="Ex: Amazon, Mercado Livre, Loggi"
                         value={sender}
                         onChange={(e) => setSender(e.target.value)}
-                        leftIcon={<Package size={18} />}
-                        fullWidth
+                        startIcon={<Package size={18} />}
                     />
 
                     <DSInput
-                        label="Quem entregou? (Transportadora)"
-                        placeholder="Ex: Correios, Jadlog, Motoboy"
+                        label="NOME DO ENTREGADOR"
+                        placeholder="Ex: João da Silva, Motoboy"
                         value={carrier}
                         onChange={(e) => setCarrier(e.target.value)}
-                        leftIcon={<Truck size={18} />}
-                        fullWidth
+                        startIcon={<Truck size={18} />}
                     />
                 </div>
 
@@ -78,11 +76,11 @@ export const ReceivePackageStep: React.FC<ReceivePackageStepProps> = ({
                         label="O que é?"
                         placeholder="Selecione o tipo"
                         value={type}
-                        onChange={setType}
+                        onChange={(e) => setType(e.target.value)}
                         options={[
                             { label: '📦 Caixa / Pacote', value: 'package' },
                             { label: '✉️ Envelope / Documento', value: 'document' },
-                            { label: 'food Delivery / Comida', value: 'food' },
+                            { label: '🍔 Delivery / Comida', value: 'food' },
                             { label: '💊 Farmácia / Medicamentos', value: 'pharmacy' },
                             { label: '❓ Outros', value: 'other' },
                         ]}
@@ -93,8 +91,7 @@ export const ReceivePackageStep: React.FC<ReceivePackageStepProps> = ({
                         placeholder="Ex: Deixar na portaria, frágil..."
                         value={note}
                         onChange={(e) => setNote(e.target.value)}
-                        leftIcon={<FileText size={18} />}
-                        fullWidth
+                        startIcon={<FileText size={18} />}
                     />
                 </div>
 
@@ -103,7 +100,7 @@ export const ReceivePackageStep: React.FC<ReceivePackageStepProps> = ({
                     style={{
                         padding: spacing.md,
                         background: colors.neutral[50],
-                        borderRadius: 12, // Using hardcoded value here as radius.md/lg might be strings with 'px'
+                        borderRadius: radius.sm,
                         border: `1px dashed ${colors.neutral[200]}`,
                     }}
                 >

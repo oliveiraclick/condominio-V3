@@ -10,8 +10,8 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTe
     helperText?: string;
 }
 
-export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, InputProps>(
-    ({ label, error, startIcon, endIcon, multiline, helperText, style, className, ...props }, ref) => {
+export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, InputProps & { fullWidth?: boolean }>(
+    ({ label, error, startIcon, endIcon, multiline, helperText, style, className, fullWidth, ...props }, ref) => {
         const [focused, setFocused] = React.useState(false);
 
         const Component = multiline ? 'textarea' : 'input';

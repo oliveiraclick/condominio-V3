@@ -30,6 +30,10 @@ export const ConfirmReceiptStep: React.FC<ConfirmReceiptStepProps> = ({
     data,
     loading
 }) => {
+    if (!data || !data.resident) {
+        return null;
+    }
+
     return (
         <Sheet
             open={open}

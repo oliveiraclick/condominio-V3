@@ -13,10 +13,12 @@ import {
   FloatingBackButton, SectionHeader, NotificationsModal, DesapegoCard, ResidentProfile,
   ServicosFullView, MuralDemandModal, MinhasDemandasPage, ServiceRequestsPage, CondoAgendaPage,
   ResidentBookings, AssembliesPage, ShopDetailPage, PersonalDataPage, ProductDetailPage,
-  DesapegoFullView, DesapegoDetailView, CreateDesapegoPage
+  DesapegoFullView, DesapegoDetailView, CreateDesapegoPage,
 } from './pages/Resident';
+import { RegistrationFlow } from './components/RegistrationFlow';
 import { CommunicationHub } from './pages/CommunicationHub';
 import { NewsTicker } from './components/NewsTicker';
+import { ResidentPackageConfirmation } from './components/ResidentPackageConfirmation';
 import {
   ProfessionalDashboard, ProfessionalAgenda, ProfessionalNavigation,
   ProfessionalServices, ProfessionalEarnings, ProfessionalProfileView, ProfessionalShop
@@ -98,6 +100,7 @@ const App: React.FC = () => {
 
   const [useModernDesign, setUseModernDesign] = useState(false);
   const [notificationModalOpen, setNotificationModalOpen] = useState(false);
+  const [packageConfirmationOpen, setPackageConfirmationOpen] = useState(false);
 
   const toggleModernDesign = () => {
     const newValue = !useModernDesign;
@@ -325,6 +328,13 @@ const App: React.FC = () => {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, [activeTab, selectedCategory]);
+
+  // --- PACKAGE CONFIRMATION LISTENER ---
+  useEffect(() => {
+    const handleOpenConfirmation = () => setPackageConfirmationOpen(true);
+    window.addEventListener('open-package-confirmation', handleOpenConfirmation);
+    return () => window.removeEventListener('open-package-confirmation', handleOpenConfirmation);
+  }, []);
 
   // --- 4. CARREGAMENTO DE DADOS OTIMIZADO (SPLIT LOADING) ---
   const refreshAppData = useCallback(async () => {
@@ -616,7 +626,32 @@ const App: React.FC = () => {
         // --- MOBILE LAYOUT (EXISTING) ---
         switch (activeTab) {
           case 'resident':
-          case 'home': return <ResidentModern currentUser={currentUser} onNavigate={pushScreen} onSelectCategory={navigateToCategory} packages={packages} desapegos={desapegos} notifications={notifications} onSelectDesapego={handleSelectDesapego} products={products} onSelectProduct={handleSelectProduct} onSitePros={onSitePros} muralCategories={categories?.map((c: any) => c.name) || []} onPostMuralDemand={handlePostMuralDemand} activeTab={activeTab} onClearNotifications={refreshAppData} onNotifications={() => setNotificationModalOpen(true)} />;
+          case 'home': return (
+            <>
+              <ResidentModern
+                currentUser={currentUser}
+                onNavigate={pushScreen}
+                onSelectCategory={navigateToCategory}
+                packages={packages}
+                desapegos={desapegos}
+                notifications={notifications}
+                onSelectDesapego={handleSelectDesapego}
+                products={products}
+                onSelectProduct={handleSelectProduct}
+                onSitePros={onSitePros}
+                muralCategories={categories?.map((c: any) => c.name) || []}
+                onPostMuralDemand={handlePostMuralDemand}
+                activeTab={activeTab}
+                onClearNotifications={refreshAppData}
+                onNotifications={() => setNotificationModalOpen(true)}
+              />
+              <ResidentPackageConfirmation
+                open={packageConfirmationOpen}
+                onClose={() => setPackageConfirmationOpen(false)}
+                residentId={currentUser?.id}
+              />
+            </>
+          );
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
           case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
@@ -678,7 +713,7 @@ const App: React.FC = () => {
       // --- ADMIN ---
       if (userRole === UserRole.ADMIN) {
         if (useModernDesign && activeTab === 'dashboard') {
-          return <AdminDashboardModern onNavigate={pushScreen} onLogout={() => supabase.auth.signOut().then(() => { localStorage.removeItem('userRole_cache'); window.location.reload(); })} />;
+          return <AdminDashboardModern onNavigate={pushScreen} onLogout={() => supabase.auth.signOut().then(() => { localStorage.removeItem('userRole_cache'); window.location.reload(); })} currentUser={currentUser} />;
         }
 
         switch (activeTab) {
@@ -754,8 +789,13 @@ const App: React.FC = () => {
   if (appState === 'roleSelection') return <RoleSelection onSelect={(role) => { setUserRole(role); setAppState(role === UserRole.RESIDENT ? 'registerResident' : 'registerProfessional'); }} onBack={() => setAppState('login')} />;
 
   if (appState === 'registerResident') {
-    if (useModernDesign) return <ResidentRegistrationModern onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
-    return <ResidentRegistration onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
+    return (
+      <RegistrationFlow
+        open={true}
+        onClose={() => setAppState('roleSelection')}
+        onSuccess={() => setAppState('login')}
+      />
+    );
   }
 
   if (appState === 'registerProfessional') {
