@@ -3,7 +3,7 @@ import { supabase } from '../supabase';
 import {
     Dumbbell, MessageSquare, Car, LogOut, LayoutGrid, Users,
     ShieldCheck, Calendar, Bell, Search, ChevronRight, TrendingUp,
-    AlertTriangle, DollarSign, Box, ClipboardCheck, User
+    AlertTriangle, DollarSign, Box, ClipboardCheck, User, CheckSquare
 } from 'lucide-react';
 
 import { PackagePickupFlow } from '../components/PackagePickupFlow';
@@ -96,6 +96,7 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                         { id: 'package-receipt', icon: Box, label: 'Receber (Lote)' },
                         { id: 'package-processing', icon: ClipboardCheck, label: 'Triagem' },
                         { id: 'package-pickup', icon: User, label: 'Retirada' },
+                        { id: 'tasks', icon: CheckSquare, label: 'Tarefas' },
                         { id: 'admin-incidents', icon: AlertTriangle, label: 'Ocorrências' },
                         { id: 'admin-reservations', icon: Calendar, label: 'Reservas' },
                         { id: 'admin-access', icon: ShieldCheck, label: 'Portaria (Acesso)' },

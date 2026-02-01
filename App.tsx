@@ -31,6 +31,7 @@ import {
 import { AdminPackageReceipt } from './pages/AdminPackageReceipt';
 import { AdminPackageProcessing } from './pages/AdminPackageProcessing';
 import { AdminPackagePickup } from './pages/AdminPackagePickup';
+import { Tasks } from './pages/Tasks';
 import { SuperAdmin } from './pages/SuperAdmin';
 
 // IMPORTS MODO MODERNO (BETA)
@@ -724,6 +725,7 @@ const App: React.FC = () => {
           case 'package-receipt': return <AdminPackageReceipt onBack={goBack} currentUser={currentUser} />;
           case 'package-processing': return <AdminPackageProcessing onBack={goBack} currentUser={currentUser} onNavigate={pushScreen} />;
           case 'package-pickup': return <AdminPackagePickup onBack={goBack} currentUser={currentUser} />;
+          case 'tasks': return <Tasks session={session} currentUser={currentUser} />;
           case 'admin-banners': return <AdminBanners onBack={goBack} />;
           case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
           case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;

@@ -75,7 +75,7 @@ const SectionHeader: React.FC<{ title: string; action?: string; onAction?: () =>
 
 // --- DASHBOARD ADMIN REDESIGNED ---
 export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogout: () => void }> = ({ onNavigate, onLogout }) => {
-  const [counts, setCounts] = useState({ residents: 0, reservations: 0, pendencies: 0 });
+  const [counts, setCounts] = useState({ residents: 0, reservations: 0, pendencies: 0, tasks: 0 });
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -98,10 +98,17 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
         .select('*', { count: 'exact', head: true })
         .in('status', ['pending', 'open', 'Aberto', 'Em Análise']); // Add all "pending" statuses used
 
+      // 4. Tasks Count (Open/In Progress)
+      const { count: taskCount } = await supabase
+        .from('tasks')
+        .select('*', { count: 'exact', head: true })
+        .in('status', ['open', 'analysis', 'in_progress']);
+
       setCounts({
         residents: resCount || 0,
         reservations: reserveCount || 0,
-        pendencies: pendingCount || 0
+        pendencies: pendingCount || 0,
+        tasks: taskCount || 0
       });
     };
 
@@ -113,6 +120,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
       .on('postgres_changes', { event: '*', schema: 'public', table: 'profiles' }, fetchStats)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'reservations' }, fetchStats)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'service_requests' }, fetchStats)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, fetchStats)
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
@@ -122,6 +130,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
     { label: 'Moradores', value: counts.residents, icon: <Users size={16} />, color: 'bg-blue-500' },
     { label: 'Reservas Hoje', value: counts.reservations, icon: <CalendarDays size={16} />, color: 'bg-emerald-500' },
     { label: 'Pendências', value: counts.pendencies, icon: <AlertCircle size={16} />, color: 'bg-amber-500' },
+    { label: 'Tarefas', value: counts.tasks, icon: <ClipboardCheck size={16} />, color: 'bg-indigo-500' },
   ];
 
   const operationalGroups = [
@@ -130,6 +139,7 @@ export const AdminDashboard: React.FC<{ onNavigate: (t: string) => void, onLogou
       items: [
         { id: 'access', icon: <Key size={24} />, label: 'Portaria & Acessos', desc: 'Controle de visitantes', target: 'admin-access', color: 'text-blue-400', bg: 'bg-blue-500/10' },
         { id: 'packages', icon: <Package size={24} />, label: 'Encomendas', desc: 'Gestão de recebidos', target: 'admin-packages', color: 'text-blue-400', bg: 'bg-blue-500/10' },
+        { id: 'tasks', icon: <ClipboardCheck size={24} />, label: 'Gerenciamento Tarefas', desc: 'Equipe e reparos', target: 'tasks', color: 'text-indigo-400', bg: 'bg-indigo-500/10' },
         { id: 'batches', icon: <CalendarDays size={24} />, label: 'Histórico de Lotes', desc: 'Lotes Recebidos', target: 'package-batches', color: 'text-violet-400', bg: 'bg-violet-500/10' },
         { id: 'reserves', icon: <CalendarDays size={24} />, label: 'Reservas', desc: 'Áreas comuns', target: 'admin-reservations', color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
       ]
