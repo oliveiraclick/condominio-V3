@@ -73,7 +73,7 @@ export const TaskCreateFlow: React.FC<TaskCreateFlowProps> = ({
                 location: location.trim() || null,
                 category,
                 priority,
-                status: 'open',
+                status: 'new', // Fixed: usando o status correto do novo sistema
                 created_by: currentUser.id,
                 requires_approval: false,
             }).select().single();
@@ -107,11 +107,15 @@ export const TaskCreateFlow: React.FC<TaskCreateFlowProps> = ({
                 }
             }
 
-            // Invalidate cache
+            // Invalidate cache and force immediate refresh
             packagesCache.invalidate('tasks:all');
 
+            // Trigger parent refresh
             onSuccess();
             onClose();
+
+            // Force immediate refetch by reloading the page section
+            window.dispatchEvent(new CustomEvent('tasks:refresh'));
         } catch (error) {
             console.error('Error creating task:', error);
             alert('Erro ao criar tarefa');

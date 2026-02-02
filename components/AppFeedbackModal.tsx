@@ -2,6 +2,7 @@
 import React, { useState } from 'react';
 import { Sparkles, X } from 'lucide-react';
 import { supabase } from '../supabase';
+import { translateError } from '../utils/errorTranslator';
 
 export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; currentUser: any; userRole: string }> = ({ isOpen, onClose, currentUser, userRole }) => {
     const [type, setType] = useState<'Dica' | 'Sugestão'>('Dica');
@@ -35,7 +36,7 @@ export const AppFeedbackModal: React.FC<{ isOpen: boolean; onClose: () => void; 
             setArea('');
             setContent('');
         } else {
-            alert('Erro ao enviar feedback: ' + error.message);
+            alert(translateError(error));
         }
         setLoading(false);
     };

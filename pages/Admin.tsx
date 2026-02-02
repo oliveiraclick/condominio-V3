@@ -1,20 +1,19 @@
 ﻿import React, { useState, useMemo, useRef, useEffect } from 'react';
 import { Card, Badge, Button, Input } from '../components/ui';
+import { translateError } from '../utils/errorTranslator';
 import { supabase } from '../supabase';
 import {
-  LayoutDashboard, Users, Megaphone, Key, CalendarDays,
-  MessageSquare, Wallet, Package, ArrowLeft, Search,
-  Plus, MoreVertical, CheckCircle2, XCircle, Bell,
-  MapPin, Filter, UserPlus, FileText, Upload, Send,
-  Download, FileSpreadsheet, Layers, QrCode, Scan,
-  Car, UserCheck, Clock, ShieldAlert, Wrench, ChevronRight,
-  DoorOpen, Hash, UserCircle2, Info, AlertCircle, Check,
-  TrendingUp, TrendingDown, Trash2, Edit3, Phone,
-  ClipboardCheck, HardHat, Hammer, HelpCircle, Trophy,
-  Activity, Shield, Camera, Image as ImageIcon,
-  Droplets, Leaf, Waves, Heart, Baby, Calendar, Mail, IdCard,
-  Lock, Settings, Eye, EyeOff, User, Paperclip, Mic, CheckCheck,
-  Briefcase, Share2, X, PartyPopper, Save, Building2, UserCog, Flame, Dumbbell, LogOut, ListFilter, Box
+  LayoutDashboard, Users, MessageSquare, Lock, Calendar, Package, DollarSign,
+  Bell, FileText, Settings, LogOut, Plus, Search, Edit, Trash2, X, Check,
+  AlertCircle, ChevronRight, Home, Car, Tag, Image as ImageIcon, ArrowLeft,
+  MapPin, Phone, Mail, Clock, User, Eye, EyeOff, Copy, Download, Upload,
+  Filter, SortAsc, ChevronDown, AlertTriangle, UserCog, Megaphone, Key, CalendarDays,
+  Wallet, MoreVertical, CheckCircle2, XCircle, UserPlus, Send,
+  FileSpreadsheet, Layers, QrCode, Scan, UserCheck, ShieldAlert, Wrench,
+  DoorOpen, Hash, UserCircle2, Info, TrendingUp, TrendingDown, Edit3,
+  ClipboardCheck, HardHat, Hammer, HelpCircle, Trophy, Activity, Shield, Camera,
+  Droplets, Leaf, Waves, Heart, Baby, IdCard, Paperclip, Mic, CheckCheck,
+  Briefcase, Share2, PartyPopper, Save, Building2, Flame, Dumbbell, ListFilter, Box
 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { Scanner } from '@yudiel/react-qr-scanner';
@@ -32,6 +31,7 @@ export const AdminNavigation: React.FC<{ activeTab: string; onChange: (tab: stri
       {[
         { id: 'dashboard', icon: <LayoutDashboard size={24} />, label: 'Início' },
         { id: 'residents', icon: <Users size={24} />, label: 'Moradores' },
+        { id: 'employees', icon: <UserCog size={24} />, label: 'Funcionários' },
         { id: 'messages', icon: <MessageSquare size={24} />, label: 'Chat' },
         { id: 'system-users', icon: <Lock size={24} />, label: 'Acessos' },
       ].map((item) => (
@@ -334,7 +334,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
       alert('Área salva com sucesso!');
 
     } catch (error: any) {
-      alert('Erro ao salvar área: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -365,7 +365,7 @@ export const AdminCommonAreas: React.FC<{ commonAreas: any[]; setCommonAreas: an
         if (error) throw error;
         setCommonAreas(commonAreas.filter(a => a.id !== id));
       } catch (error: any) {
-        alert('Erro ao excluir: ' + error.message);
+        alert(translateError(error));
       }
     }
   };
@@ -530,7 +530,7 @@ export const AdminReservations: React.FC<{ onBack: () => void; reservations: any
         setReservations(reservations.filter(r => r.id !== id));
         alert('Reserva removida com sucesso diretamente no banco.');
       } catch (e: any) {
-        alert('Erro ao excluir do banco: ' + e.message);
+        alert(translateError(e));
       }
     }
   };
@@ -1069,7 +1069,7 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
       onRefresh();
 
     } catch (error: any) {
-      alert('Erro: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -1079,7 +1079,7 @@ export const AdminCategories: React.FC<{ onBack: () => void; categories: any[]; 
     if (!confirm('Excluir? Isso apagará também as sub-categorias.')) return;
     const { error } = await supabase.from('categories').delete().eq('id', id);
     if (!error) onRefresh();
-    else alert('Erro: ' + error.message);
+    else alert(translateError(error));
   };
 
   return (
@@ -1205,7 +1205,7 @@ export const AdminProfile: React.FC<{
       alert('Foto atualizada!');
       window.location.reload();
     } catch (error: any) {
-      alert('Erro ao atualizar foto: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -1306,7 +1306,7 @@ export const AdminBanners: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     if (!confirm('Excluir este banner?')) return;
     const { error } = await supabase.from('banners').delete().eq('id', id);
     if (!error) loadBanners();
-    else alert('Erro: ' + error.message);
+    else alert(translateError(error));
   };
 
   const handleSave = async () => {
@@ -1348,7 +1348,7 @@ export const AdminBanners: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       loadBanners();
 
     } catch (error: any) {
-      alert('Erro ao salvar: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -1445,7 +1445,7 @@ export const AdminNotices: React.FC<{ onBack: () => void }> = ({ onBack }) => {
     setLoading(false);
 
     if (error) {
-      alert('Erro: ' + error.message);
+      alert(translateError(error));
     } else {
       // TRIGGER BROADCAST PUSH
       supabase.functions.invoke('push', {

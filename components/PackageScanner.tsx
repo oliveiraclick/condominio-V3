@@ -3,6 +3,7 @@ import { supabase } from '../supabase';
 import { X, CheckCircle2, ScanLine } from 'lucide-react';
 import { Scanner } from '@yudiel/react-qr-scanner';
 import { Camera } from '@capacitor/camera';
+import { translateError } from '../utils/errorTranslator';
 
 import { Sheet } from './design-system/Sheet';
 import { DSButton } from './design-system/Button';
@@ -61,7 +62,7 @@ export const PackageScanner: React.FC<{ isOpen: boolean; onClose: () => void; cu
                 setSuccess(true);
 
             } catch (error: any) {
-                alert(error.message);
+                alert(translateError(error));
                 setScannedData(null);
             } finally {
                 setIsProcessing(false);

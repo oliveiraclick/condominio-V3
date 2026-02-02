@@ -27,6 +27,7 @@ import {
   Building2, Camera as CameraIcon, Download, Scan, Handshake, BadgeCheck, Menu
 } from 'lucide-react';
 import { maskPhone } from '../utils/masks';
+import { translateError } from '../utils/errorTranslator';
 import { QRCodeSVG } from 'qrcode.react';
 import { PackageScanner } from '../components/PackageScanner';
 import { CommunicationHub } from './CommunicationHub';
@@ -255,7 +256,7 @@ export const AuthorizationModal: React.FC<{ isOpen: boolean; onClose: () => void
       loadAuthorizations();
 
     } catch (err: any) {
-      alert('Erro ao autorizar: ' + err.message);
+      alert(translateError(err));
     } finally {
       setLoading(false);
     }
@@ -742,7 +743,7 @@ export const ResidentHome: React.FC<{
       // Refresh
       if (onClearNotifications) onClearNotifications();
     } else {
-      alert('Erro ao confirmar: ' + error.message);
+      alert(translateError(error));
     }
   };
 
@@ -772,7 +773,7 @@ export const ResidentHome: React.FC<{
         (window as any).refreshAppData();
       }
     } else {
-      alert('Erro ao enviar avaliação: ' + error.message);
+      alert(translateError(error));
     }
   };
 
@@ -1471,7 +1472,7 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
       alert('Foto atualizada com sucesso!');
       window.location.reload(); // Simple reload to refresh app state
     } catch (error: any) {
-      alert('Erro ao atualizar foto: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -2280,7 +2281,7 @@ export const AcessoPage: React.FC<{ onBack: () => void; accessList?: any[]; onAd
       setNeighborSearch('');
       loadAuthorizations();
     } else {
-      alert('Erro ao autorizar: ' + error.message);
+      alert(translateError(error));
     }
   };
 
@@ -2747,7 +2748,7 @@ export const MinhasDemandasPage: React.FC<{ onBack: () => void; currentUser: any
       alert('Proposta aceita! O profissional entrará em contato.');
       if (onRefresh) onRefresh();
     } else {
-      alert('Erro: ' + error.message);
+      alert(translateError(error));
     }
   };
 
@@ -2921,7 +2922,7 @@ export const ResidentBookings: React.FC<{ onBack: () => void; reservations: any[
         alert('Reserva cancelada com sucesso!');
         onRefresh();
       } catch (e: any) {
-        alert('Erro ao cancelar: ' + e.message);
+        alert(translateError(e));
       }
     }
   };
@@ -3259,7 +3260,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
       alert('Foto de perfil atualizada!');
       window.location.reload();
     } catch (error: any) {
-      alert('Erro ao atualizar foto: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -3280,7 +3281,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
       alert('Dados atualizados com sucesso! O aplicativo será recarregado para aplicar as mudanças.');
       window.location.reload();
     } catch (err: any) {
-      alert('Erro ao salvar: ' + err.message);
+      alert(translateError(err));
     } finally {
       setLoading(false);
     }
@@ -3366,7 +3367,7 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
                 setLoading(true);
                 const { error } = await supabase.rpc('delete_client_user');
                 if (error) {
-                  alert('Erro ao excluir: ' + error.message);
+                  alert(translateError(error));
                   setLoading(false);
                 } else {
                   alert('Conta excluída com sucesso.');
@@ -3442,7 +3443,7 @@ export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string
         className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'condo-agenda' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
       >
         <CalendarDays size={24} strokeWidth={activeTab === 'condo-agenda' ? 2.5 : 2} />
-        <span className="text-[10px] font-bold">Agenda</span>
+        <span className="text-[10px] font-bold">Reservas</span>
       </button>
 
       <div className="-mt-10 relative z-10 mx-2">

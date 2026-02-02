@@ -3,6 +3,7 @@ import { Users, Building, DollarSign, Activity, LayoutGrid, ShieldCheck, Plus, S
 import { Card, Button, Input, Badge } from '../components/ui';
 import { supabase } from '../supabase';
 import { maskPhone } from '../utils/masks';
+import { translateError } from '../utils/errorTranslator';
 
 import { PushNotificationButton } from '../components/PushNotificationButton';
 
@@ -34,7 +35,7 @@ const MessageUserModal: React.FC<{ isOpen: boolean; onClose: () => void; user: a
     setLoading(false);
 
     if (error) {
-      alert('Erro: ' + error.message);
+      alert(translateError(error));
     } else {
       alert(`Mensagem enviada para ${user.name}!`);
       onClose();
@@ -194,7 +195,7 @@ const CondosView = () => {
         const { data: { publicUrl } } = supabase.storage.from('condo_assets').getPublicUrl(fileName);
         finalLogoUrl = publicUrl;
       } catch (err: any) {
-        alert('Erro no upload da logo: ' + err.message);
+        alert(translateError(err));
         setUploading(false);
         return;
       }
@@ -212,7 +213,7 @@ const CondosView = () => {
         const { data: { publicUrl } } = supabase.storage.from('condo_assets').getPublicUrl(fileName);
         finalSymbolUrl = publicUrl;
       } catch (err: any) {
-        alert('Erro no upload do símbolo: ' + err.message);
+        alert(translateError(err));
         setUploading(false);
         return;
       }
@@ -243,7 +244,7 @@ const CondosView = () => {
       setLogoFile(null);
       setSymbolFile(null);
     } else {
-      alert(error.message);
+      alert(translateError(error));
     }
     setUploading(false);
   };
@@ -272,13 +273,13 @@ const CondosView = () => {
   const handleDelete = async (id: string) => {
     if (!confirm('Tem certeza que deseja EXCLUIR este condomínio?')) return;
     const { error } = await supabase.from('condominiums').delete().eq('id', id);
-    if (!error) { loadCondos(); } else { alert('Erro: ' + error.message); }
+    if (!error) { loadCondos(); } else { alert(translateError(error)); }
   };
 
   const handleToggleStatus = async (id: string, currentStatus: string) => {
     const newStatus = currentStatus === 'active' ? 'blocked' : 'active';
     const { error } = await supabase.from('condominiums').update({ status: newStatus }).eq('id', id);
-    if (!error) loadCondos(); else alert('Erro: ' + error.message);
+    if (!error) loadCondos(); else alert(translateError(error));
   };
 
   return (
@@ -487,7 +488,7 @@ const ProfessionalsView = () => {
       phone: editingPro.phone
     }).eq('id', editingPro.id);
 
-    if (error) alert('Erro: ' + error.message);
+    if (error) alert(translateError(error));
     else {
       setEditingPro(null);
       loadPros();
@@ -794,7 +795,7 @@ const AccessDevicesView = () => {
 
     const { error } = await supabase.from('access_devices').insert(newDevice);
     if (error) {
-      alert('Erro ao salvar: ' + error.message);
+      alert(translateError(error));
     } else {
       setShowNew(false);
       setNewDevice({ ...newDevice, name: '', ip_address: '', location: '' });

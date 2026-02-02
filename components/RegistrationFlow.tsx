@@ -10,6 +10,7 @@ import { colors, radius, spacing } from './design-system/tokens';
 
 import { maskCPF, maskPhone } from '../utils/masks';
 import { validateCPF } from '../utils/validators';
+import { translateError } from '../utils/errorTranslator';
 
 interface RegistrationFlowProps {
     open: boolean;
@@ -70,7 +71,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                     // or block if we want strict security. For UX, let's proceed but maybe validation will catch it later DB side.
                     // But actually, unique constraint in DB is safe. 
                     // Let's alert user just to be safe.
-                    alert('Erro ao validar CPF. Tente novamente.');
+                    alert(translateError(err));
                 } finally {
                     setLoading(false);
                 }
@@ -155,7 +156,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                 setStep('success');
             }
         } catch (error: any) {
-            alert(error.message || 'Erro ao realizar cadastro');
+            alert(translateError(error));
         } finally {
             setLoading(false);
         }

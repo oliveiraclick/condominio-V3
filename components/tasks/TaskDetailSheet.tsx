@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { X, Clock, MapPin, User, Calendar, CheckCircle, Play, Check, FastForward, Search, AlertTriangle } from 'lucide-react';
 import { supabase } from '../../supabase';
-import { Task } from '../../types/tasks';
+import { Task, isPendingApproval } from '../../types/tasks';
+import { packagesCache } from '../../cache/packagesCache';
 import { TaskStatusBadge } from './TaskStatusBadge';
 import { TaskPriorityBadge } from './TaskPriorityBadge';
 import { TaskCategoryBadge } from './TaskCategoryBadge';
@@ -17,9 +18,10 @@ interface TaskDetailSheetProps {
     task: Task | null;
     currentUser: any;
     onStartTriage?: () => void;
-    onStartAnalysis?: () => void;
-    onCompleteTask?: (notes: string) => void;
-    onReportIssue?: (notes: string, supervisorId?: string) => void;
+    onStartExecution?: () => void;
+    onCompleteTask?: () => void;
+    onReportProblem?: () => void;
+    onApproveTask?: () => void;
     onSuccess?: () => void;
     assignedUserName?: string;
     createdByName?: string;
@@ -31,179 +33,261 @@ export const TaskDetailSheet: React.FC<TaskDetailSheetProps> = ({
     task,
     currentUser,
     onStartTriage,
-    onStartAnalysis,
+    onStartExecution,
     onCompleteTask,
-    onReportIssue,
+    onReportProblem,
+    onApproveTask,
     onSuccess,
     assignedUserName,
     createdByName,
 }) => {
-    const [approving, setApproving] = useState(false);
-    const [resolutionNotes, setResolutionNotes] = useState('');
-    const [executionMode, setExecutionMode] = useState<'complete' | 'return'>('complete');
-    const [selectedSupervisor, setSelectedSupervisor] = useState('');
-    const [supervisors, setSupervisors] = useState<any[]>([]);
+    const [employees, setEmployees] = useState<{ id: string, name: string }[]>([]);
+    const [assigning, setAssigning] = useState(false);
 
-    // Reset state on open logic typically needed, but state is local.
-    // Effect to reset when task changes or closes:
-    useEffect(() => {
-        if (!open) {
-            setResolutionNotes('');
-            setExecutionMode('complete');
-            setSelectedSupervisor('');
-        }
-    }, [open]);
+    // Permission checks
+    const isAdmin = ['admin', 'super_admin'].includes(currentUser?.role);
+    const isEmployee = currentUser?.role === 'employee';
 
     useEffect(() => {
-        if (executionMode === 'return' && supervisors.length === 0) {
-            const fetchSupervisors = async () => {
+        const fetchEmployees = async () => {
+            if (isAdmin) {
                 const { data } = await supabase
                     .from('profiles')
                     .select('id, name')
-                    .in('role', ['admin', 'board']) // Assuming supervisors are admins/board
-                    .order('name');
-                if (data) setSupervisors(data);
-            };
-            fetchSupervisors();
-        }
-    }, [executionMode]);
+                    .eq('role', 'employee');
+                if (data) setEmployees(data);
+            }
+        };
+        fetchEmployees();
+    }, [isAdmin]);
 
-    // ... existing code ...
     if (!task) return null;
 
-    const canStartTriage = (task.status === 'open') && (currentUser.role === 'admin' || currentUser.role === 'employee');
-    const canPerformAnalysis = task.status === 'analysis' && (task.assigned_to === currentUser.id || currentUser.role === 'admin');
-    const canComplete = task.status === 'in_progress' && (task.assigned_to === currentUser.id || currentUser.role === 'admin');
-    const canApprove = task.status === 'approval' && (currentUser.role === 'admin');
+    // "Fazer Triagem" - Only Admin + status = new
+    const canStartTriage = isAdmin && task.status === 'new';
+
+    // "Iniciar Execução" - Employee or Admin + status = evaluating
+    const canStartExecution = (isEmployee || isAdmin) && task.status === 'evaluating';
+
+    // "Concluir Tarefa" - Only Employee + status = executing
+    const canComplete = isEmployee && task.status === 'executing';
+
+    // "Reportar Problema" - Employee + status = executing
+    const canReportProblem = isEmployee && task.status === 'executing';
+
+    // "Aprovar Tarefa" - Only Admin + status = finished + requires_approval = true + approved_at = null
+    const canApprove = isAdmin && task.status === 'finished' && task.requires_approval && !task.approved_at;
+
+    const [currentAssignedTo, setCurrentAssignedTo] = useState(task?.assigned_to);
+
+    useEffect(() => {
+        setCurrentAssignedTo(task?.assigned_to);
+    }, [task]);
+
+    const handleAssignUser = async (userId: string) => {
+        if (!task) return;
+        setAssigning(true);
+        try {
+            const { error } = await supabase
+                .from('tasks')
+                .update({
+                    assigned_to: userId,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('id', task.id);
+
+            if (error) throw error;
+
+            // Update local state immediately
+            setCurrentAssignedTo(userId);
+
+            // Invalidate cache
+            packagesCache.invalidate('tasks:all');
+
+            if (onSuccess) onSuccess();
+            // alert('Responsável atualizado com sucesso!'); // Removed alert to be smoother
+        } catch (error) {
+            console.error('Error assigning user:', error);
+            alert('Erro ao atribuir responsável');
+        } finally {
+            setAssigning(false);
+        }
+    };
 
     return (
         <Sheet open={open} onClose={onClose}>
-            {/* Header ... */}
+            {/* Header */}
+            <div style={{ marginBottom: spacing.xl }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div style={{ flex: 1, paddingRight: spacing.md }}>
+                        <div style={{ display: 'flex', gap: spacing.xs, marginBottom: spacing.sm, flexWrap: 'wrap' }}>
+                            <TaskStatusBadge status={task.status} />
+                            <TaskPriorityBadge priority={task.priority} />
+                            <TaskCategoryBadge category={task.category} />
+                        </div>
+                        <Title level={3} style={{ marginBottom: spacing.xs }}>{task.title}</Title>
+                        <Text size="sm" color="secondary" style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
+                            <Calendar size={14} /> Atribuído em: {new Date(task.created_at).toLocaleDateString()}
+                        </Text>
+                    </div>
+                    <button
+                        onClick={onClose}
+                        style={{
+                            background: 'none',
+                            border: 'none',
+                            cursor: 'pointer',
+                            padding: spacing.sm,
+                        }}
+                    >
+                        <X size={24} color={colors.neutral[600]} />
+                    </button>
+                </div>
+            </div>
 
-            {/* ... Content ... */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.lg }}>
 
-            {/* Actions */}
-            {(canStartTriage || canPerformAnalysis || canComplete || canApprove) && (
+                {/* Description */}
+                <div>
+                    <Text weight="bold" style={{ marginBottom: spacing.xs, display: 'block' }}>Descrição</Text>
+                    <div style={{ backgroundColor: colors.neutral[50], padding: spacing.md, borderRadius: radius.md }}>
+                        <Text>{task.description || 'Sem descrição.'}</Text>
+                    </div>
+                </div>
+
+                {/* Assignment Section (Admin Only) */}
+                {isAdmin && (
+                    <div>
+                        <Text weight="bold" style={{ marginBottom: spacing.xs, display: 'block' }}>Atribuir Responsável</Text>
+                        <select
+                            value={currentAssignedTo || ''}
+                            onChange={(e) => handleAssignUser(e.target.value)}
+                            disabled={assigning}
+                            style={{
+                                width: '100%',
+                                padding: spacing.md,
+                                borderRadius: radius.md,
+                                border: `1px solid ${colors.neutral[300]}`,
+                                backgroundColor: '#fff',
+                                fontSize: '16px'
+                            }}
+                        >
+                            <option value="">Selecione um funcionário...</option>
+                            {employees.map(emp => (
+                                <option key={emp.id} value={emp.id}>{emp.name}</option>
+                            ))}
+                        </select>
+                        <Text size="sm" color="secondary" style={{ marginTop: spacing.xs }}>
+                            Ao selecionar, a tarefa aparecerá imediatamente para o funcionário.
+                        </Text>
+                    </div>
+                )}
+
+                {/* Current Assignment Display (Non-Admin View) */}
+                {!isAdmin && (assignedUserName || task.assigned_to) && (
+                    <div>
+                        <Text weight="bold" style={{ marginBottom: spacing.xs, display: 'block' }}>Responsável</Text>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                            <div style={{ width: '32px', height: '32px', borderRadius: '50%', backgroundColor: colors.neutral[200], display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                                <User size={20} color={colors.neutral[500]} />
+                            </div>
+                            <Text>{assignedUserName || 'Usuário atribuído'}</Text>
+                        </div>
+                    </div>
+                )}
+
+
+                {/* Location */}
+                {task.location && (
+                    <div>
+                        <Text weight="bold" style={{ marginBottom: spacing.xs, display: 'block' }}>Localização</Text>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: spacing.sm }}>
+                            <MapPin size={20} color={colors.neutral[500]} />
+                            <Text>{task.location}</Text>
+                        </div>
+                    </div>
+                )}
+
+                {/* Additional Info Grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: spacing.md }}>
+                    <div>
+                        <Text weight="bold" style={{ marginBottom: spacing.xs, display: 'block' }}>Criado por</Text>
+                        <Text color="secondary">{createdByName || 'Sistema'}</Text>
+                    </div>
+                    {task.due_date && (
+                        <div>
+                            <Text weight="bold" style={{ marginBottom: spacing.xs, display: 'block' }}>Prazo</Text>
+                            <Text color="secondary">{new Date(task.due_date).toLocaleDateString()}</Text>
+                        </div>
+                    )}
+                </div>
+
+            </div>
+
+            {/* Actions Footer */}
+            {(canStartTriage || canStartExecution || canComplete || canReportProblem || canApprove) && (
                 <div style={{ marginTop: spacing.xl, borderTop: `1px solid ${colors.neutral[100]}`, paddingTop: spacing.xl }}>
                     <Text weight="bold" style={{ fontSize: '10px', color: colors.neutral[400], uppercase: true, letterSpacing: '0.1em', marginBottom: spacing.md, display: 'block' }}>
                         PRÓXIMA ETAPA
                     </Text>
                     <div style={{ display: 'flex', gap: spacing.md, flexDirection: 'column' }}>
 
-                        {/* Analysis Button */}
-                        {canPerformAnalysis && onStartAnalysis && (
+                        {/* Triage Button */}
+                        {canStartTriage && onStartTriage && (
                             <DSButton
-                                onClick={onStartAnalysis}
+                                onClick={onStartTriage}
                                 style={{ height: '56px', fontSize: '16px', fontWeight: '900', backgroundColor: colors.brand[600], boxShadow: `0 8px 16px -4px ${colors.brand[500]}40` }}
-                                leftIcon={<Search size={20} />}
+                                leftIcon={<Play size={20} fill="currentColor" />}
                             >
-                                Realizar Análise
+                                Iniciar Triagem
                             </DSButton>
                         )}
 
-                        <div style={{ display: 'flex', gap: spacing.md }}>
-                            {canStartTriage && onStartTriage && (
-                                <DSButton
-                                    onClick={onStartTriage}
-                                    style={{ flex: 1, height: '56px', fontSize: '16px', fontWeight: '900', backgroundColor: colors.brand[600], boxShadow: `0 8px 16px -4px ${colors.brand[500]}40` }}
-                                    leftIcon={<Play size={20} fill="currentColor" />}
-                                >
-                                    Iniciar Triagem
-                                </DSButton>
-                            )}
+                        {/* Start Execution Button */}
+                        {canStartExecution && onStartExecution && (
+                            <DSButton
+                                onClick={onStartExecution}
+                                style={{ height: '56px', fontSize: '16px', fontWeight: '900', backgroundColor: colors.brand[600], boxShadow: `0 8px 16px -4px ${colors.brand[500]}40` }}
+                                leftIcon={<Play size={20} />}
+                            >
+                                Iniciar Execução
+                            </DSButton>
+                        )}
 
-                            {/* Execution Buttons - Embedded */}
-                            {canComplete && (
-                                <div style={{
-                                    backgroundColor: colors.neutral[50],
-                                    padding: spacing.md,
-                                    borderRadius: radius.md,
-                                    width: '100%',
-                                    marginTop: spacing.sm
-                                }}>
-                                    <DSInput
-                                        label="Resolução / Justificativa"
-                                        placeholder="Descreva o que foi feito ou o problema encontrado..."
-                                        value={resolutionNotes}
-                                        onChange={(e) => setResolutionNotes(e.target.value)}
-                                        multiline
-                                        rows={3}
-                                        style={{ marginBottom: spacing.md }}
-                                    />
+                        {/* Complete and Report Problem Buttons */}
+                        {(canComplete || canReportProblem) && (
+                            <div style={{ display: 'flex', gap: spacing.md }}>
+                                {canComplete && onCompleteTask && (
+                                    <DSButton
+                                        onClick={onCompleteTask}
+                                        style={{ flex: 1, height: '56px', fontSize: '16px', fontWeight: '900', backgroundColor: colors.brand[600], boxShadow: `0 8px 16px -4px ${colors.brand[500]}40` }}
+                                        leftIcon={<Check size={20} />}
+                                    >
+                                        Concluir Tarefa
+                                    </DSButton>
+                                )}
+                                {canReportProblem && onReportProblem && (
+                                    <DSButton
+                                        onClick={onReportProblem}
+                                        variant="secondary"
+                                        style={{ flex: 1, height: '56px', fontSize: '16px', fontWeight: '900' }}
+                                        leftIcon={<AlertTriangle size={20} />}
+                                    >
+                                        Reportar Problema
+                                    </DSButton>
+                                )}
+                            </div>
+                        )}
 
-                                    {/* Additional Options for Return */}
-                                    {executionMode === 'return' && (
-                                        <div style={{ marginBottom: spacing.md }}>
-                                            <Text weight="bold" style={{ marginBottom: spacing.xs }}>Devolver para (Supervisor)</Text>
-                                            <select
-                                                value={selectedSupervisor}
-                                                onChange={(e) => setSelectedSupervisor(e.target.value)}
-                                                style={{
-                                                    width: '100%',
-                                                    padding: spacing.md,
-                                                    borderRadius: radius.md,
-                                                    border: `1px solid ${colors.neutral[300]}`,
-                                                    backgroundColor: 'white',
-                                                    fontSize: '16px'
-                                                }}
-                                            >
-                                                <option value="">Selecione um supervisor...</option>
-                                                {supervisors.map(sup => (
-                                                    <option key={sup.id} value={sup.id}>
-                                                        {sup.name}
-                                                    </option>
-                                                ))}
-                                            </select>
-                                        </div>
-                                    )}
-
-                                    <div style={{ display: 'flex', gap: spacing.md }}>
-                                        {/* Toggle Mode / Secondary Action */}
-                                        <DSButton
-                                            onClick={() => setExecutionMode(executionMode === 'complete' ? 'return' : 'complete')}
-                                            variant="secondary"
-                                            style={{ flex: 1 }}
-                                        >
-                                            {executionMode === 'complete' ? 'Reportar Problema' : 'Voltar para Conclusão'}
-                                        </DSButton>
-
-                                        {/* Primary Action */}
-                                        <DSButton
-                                            onClick={() => {
-                                                if (executionMode === 'complete') {
-                                                    onCompleteTask && onCompleteTask(resolutionNotes);
-                                                } else {
-                                                    onReportIssue && onReportIssue(resolutionNotes, selectedSupervisor);
-                                                }
-                                            }}
-                                            loading={approving} // Reusing loading state for now or add new one
-                                            disabled={!resolutionNotes.trim()}
-                                            style={{
-                                                flex: 2,
-                                                fontSize: '16px',
-                                                fontWeight: '900',
-                                                backgroundColor: executionMode === 'complete' ? colors.brand[600] : colors.danger,
-                                                boxShadow: `0 8px 16px -4px ${executionMode === 'complete' ? colors.brand[500] : colors.danger}40`
-                                            }}
-                                            leftIcon={executionMode === 'complete' ? <Check size={20} weight="bold" /> : <AlertTriangle size={20} />}
-                                        >
-                                            {executionMode === 'complete' ? 'Concluir' : 'Devolver Tarefa'}
-                                        </DSButton>
-                                    </div>
-                                </div>
-                            )}
-
-                            {canApprove && (
-                                <DSButton
-                                    onClick={handleApprove}
-                                    loading={approving}
-                                    style={{ flex: 1, height: '56px', fontSize: '16px', fontWeight: '900', backgroundColor: colors.success, color: '#fff', boxShadow: `0 8px 16px -4px ${colors.success}40` }}
-                                    leftIcon={<FastForward size={20} fill="currentColor" />}
-                                >
-                                    Aprovar Tarefa
-                                </DSButton>
-                            )}
-                        </div>
+                        {/* Approve Button */}
+                        {canApprove && onApproveTask && (
+                            <DSButton
+                                onClick={onApproveTask}
+                                style={{ height: '56px', fontSize: '16px', fontWeight: '900', backgroundColor: colors.success, color: '#fff', boxShadow: `0 8px 16px -4px ${colors.success}40` }}
+                                leftIcon={<FastForward size={20} fill="currentColor" />}
+                            >
+                                Aprovar Tarefa
+                            </DSButton>
+                        )}
                     </div>
                 </div>
             )}

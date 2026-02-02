@@ -11,6 +11,7 @@ import {
 import { supabase } from '../supabase';
 import { maskCPF, maskPhone } from '../utils/masks';
 import { validateCPF } from '../utils/validators';
+import { translateError } from '../utils/errorTranslator';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 
 // --- NOTIFICATIONS MODAL ---
@@ -189,7 +190,7 @@ const ProfileCompletionModal: React.FC<{ isOpen: boolean; onClose: () => void; u
       // Optional: trigger reload or callback
       if (window.location.hash.includes('services')) window.location.reload();
     } else {
-      alert('Erro ao salvar: ' + error.message);
+      alert(translateError(error));
     }
     setLoading(false);
   };
@@ -264,7 +265,7 @@ const ProposalModal: React.FC<{
       if (error.code === '23505') {
         alert('Você já enviou uma proposta para esta demanda.');
       } else {
-        alert('Erro ao enviar proposta: ' + error.message);
+        alert(translateError(error));
       }
     }
     setLoading(false);
@@ -1544,7 +1545,7 @@ export const ProfessionalEarnings = ({ currentUser }: any) => {
       setShowAddForm(false);
       loadFinancialData();
     } else {
-      alert('Erro: ' + error.message);
+      alert(translateError(error));
     }
   };
 
@@ -1836,7 +1837,7 @@ export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout
       alert('Foto atualizada!');
       window.location.reload();
     } catch (error: any) {
-      alert('Erro ao atualizar foto: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }
@@ -1934,7 +1935,7 @@ export const ProfessionalProfileView = ({ currentUser, categories = [], onLogout
                 setLoading(true);
                 const { error } = await supabase.rpc('delete_client_user');
                 if (error) {
-                  alert('Erro ao excluir: ' + error.message);
+                  alert(translateError(error));
                   setLoading(false);
                 } else {
                   alert('Conta excluída com sucesso.');
@@ -2036,7 +2037,7 @@ export const ProfessionalShop = ({ currentUser }: any) => {
       setFormData({ ...formData, image_url: publicUrl });
       setImageFile(file);
     } catch (error: any) {
-      alert('Erro ao fazer upload: ' + error.message);
+      alert(translateError(error));
     } finally {
       setUploading(false);
     }

@@ -10,27 +10,10 @@ import { UserRole, Dependent } from '../types';
 import { supabase } from '../supabase';
 import { maskCPF, maskPhone, maskCNPJ } from '../utils/masks';
 import { validateCPF, validateCNPJ } from '../utils/validators';
+import { translateError } from '../utils/errorTranslator';
 
 // --- UTILITÁRIOS DE VALIDAÇÃO ---
-const translateError = (error: any): string => {
-  const message = error?.message || '';
-  if (message.includes('User already registered') || message.includes('already exists')) {
-    return 'Este e-mail já está cadastrado. Tente fazer login.';
-  }
-  if (message.includes('Invalid login credentials')) {
-    return 'E-mail ou senha incorretos.';
-  }
-  if (message.includes('Email not confirmed')) {
-    return 'Confirme seu e-mail na sua caixa de entrada antes de entrar.';
-  }
-  if (message.includes('Password should be at least 6 characters')) {
-    return 'A senha deve ter pelo menos 6 caracteres.';
-  }
-  if (message.includes('valid email')) {
-    return 'Digite um e-mail válido.';
-  }
-  return 'Erro de conexão ou dados inválidos.';
-};
+
 
 // --- COMPONENTE: SPLASH SCREEN ---
 export const SplashScreen: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {

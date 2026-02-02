@@ -4,6 +4,7 @@ import { supabase } from './supabase';
 import { ToastProvider } from './components/ui';
 
 import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
+import { translateError } from './utils/errorTranslator';
 // Imports de Páginas e Componentes
 import { SplashScreen, LoginScreen, RoleSelection, ResidentRegistration, ProfessionalRegistration } from './pages/Auth';
 import { PrivacyPage } from './pages/Privacidade';
@@ -28,11 +29,14 @@ import {
   AdminReservations, AdminConciergeChat, AdminFinance, AdminPackages,
   AdminNavigation, AdminIncidents, AdminGarage, AdminCategories, AdminProfile, AdminBanners
 } from './pages/Admin';
+import { AdminEmployees } from './pages/AdminEmployees';
 import { AdminPackageReceipt } from './pages/AdminPackageReceipt';
 import { AdminPackageProcessing } from './pages/AdminPackageProcessing';
 import { AdminPackagePickup } from './pages/AdminPackagePickup';
 import { Tasks } from './pages/Tasks';
 import { SuperAdmin } from './pages/SuperAdmin';
+import { EmployeeDashboard } from './pages/EmployeeDashboard';
+import { EmployeeNavigation } from './components/employees/EmployeeNavigation';
 
 // IMPORTS MODO MODERNO (BETA)
 import { SplashScreenModern, ResidentRegistrationModern, LoginScreenModern, ProfessionalRegistrationModern } from './pages/AuthModern';
@@ -115,7 +119,7 @@ const App: React.FC = () => {
     if (!isSilent) setLoading(true);
 
     // Timeout safeguard for Login Loop Protection
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 8000));
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 15000));
 
     try {
       const fetchProfileOp = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
@@ -123,9 +127,13 @@ const App: React.FC = () => {
 
       if (profile) {
         let role = profile.role as UserRole;
+        console.log('🔍 DEBUG - Profile fetched:', { email: profile.email, role: profile.role, roleType: typeof profile.role });
+
+        // FORCE ADMIN ROLE FOR SPECIFIC EMAILS
         if (profile.email === 'denys@morador.com.br') role = UserRole.SUPER_ADMIN;
+        if (profile.email === 'adm@morador.app') role = UserRole.ADMIN;
 
-
+        console.log('🔍 DEBUG - Role assigned:', role, 'UserRole.ADMIN:', UserRole.ADMIN);
         setUserRole(role);
 
         // SMART NAME DERIVATION
@@ -211,62 +219,51 @@ const App: React.FC = () => {
           baseScreen(metaRole === UserRole.RESIDENT ? 'home' : 'dashboard');
         } else {
           // --- EMERGENCY RECOVERY FOR EXISTING USERS WITHOUT METADATA ---
-          // If the user has a valid session but no profile and no metadata, we create a default profile.
-          // This fixes the "Login Loop" for legacy users or cleaned databases.
+          // Se não achar perfil no metadata, TENTA CARREGAR DO BANCO SE FOR NULL ANTES
+          // Mas como já tentamos carregar profile na linha 125, se chegamos aqui é porque NÃO EXISTE PROFILE.
 
-          const email = user?.email || '';
-          const isDenys = email.includes('denys');
-          const forcedRole = isDenys ? UserRole.PROFESSIONAL : UserRole.RESIDENT; // Default to Resident for others
-          const forcedName = user?.user_metadata?.full_name || email.split('@')[0];
+          // CRITICAL SECURITY FIX:
+          // Se não achar perfil, NÃO DEIXA ENTRAR COMO MORADOR
+          console.error('❌ Perfil não encontrado no banco de dados nem no metadata.');
 
+          // Tenta recuperar do cache APENAS se tiver certeza
+          const cachedProfileStr = localStorage.getItem('userProfile_cache');
+          const cachedRole = localStorage.getItem('userRole_cache') as UserRole;
 
-
-          await supabase.from('profiles').upsert({
-            id: userId,
-            email: email,
-            name: forcedName,
-            role: forcedRole,
-            is_free: true,
-            created_at: new Date().toISOString()
-          });
-
-          // Update Cache & State
-          const recoveredProfile = { id: userId, name: forcedName, role: forcedRole, condo: 'Recuperado' };
-          localStorage.setItem('userProfile_cache', JSON.stringify(recoveredProfile));
-          localStorage.setItem('userRole_cache', forcedRole);
-
-          setUserRole(forcedRole);
-          setCurrentUser(recoveredProfile);
-          setAppState('main');
-          baseScreen(forcedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
+          if (cachedProfileStr && cachedRole) {
+            // Cache hit - ok to proceed carefully
+            console.log('⚠️ Recuperando perfil do cache.');
+            const cachedProfile = JSON.parse(cachedProfileStr);
+            setUserRole(cachedRole);
+            setCurrentUser(cachedProfile);
+            setAppState('main');
+          } else {
+            // NO PROFILE, NO CACHE -> LOGOUT
+            // Não vamos criar perfil fake automaticamente por segurança
+            console.error('⛔ Acesso negado: Perfil inexistente.');
+            alert('Perfil de usuário não encontrado. Entre em contato com o suporte.');
+            await supabase.auth.signOut();
+            setAppState('login');
+          }
         }
       }
     } catch (err) {
       console.error('Erro ao carregar perfil:', err);
 
-      // RECUPERAÇÃO ROBUSTA: Tenta ler o perfil completo do cache
+      // Attempt recovery from cache on timeout/error
       const cachedProfileStr = localStorage.getItem('userProfile_cache');
       const cachedRole = localStorage.getItem('userRole_cache') as UserRole;
 
       if (cachedProfileStr && cachedRole) {
+        console.warn('⚠️ Erro no fetch, recuperando perfil do cache.');
         const cachedProfile = JSON.parse(cachedProfileStr);
-
-
         setUserRole(cachedRole);
         setCurrentUser(cachedProfile);
-
-        setAppState('main');
-        // Não reseta a tela se já estiver navegando
-        if (!activeTab || activeTab === 'splash') {
-          baseScreen(cachedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
-        }
-      } else if (cachedRole) {
-        // Fallback antigo (mínimo)
-        setUserRole(cachedRole);
-        setCurrentUser({ id: userId, name: 'Usuário', condo: 'Offline', role: cachedRole });
         setAppState('main');
         baseScreen(cachedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
       } else {
+        // Fatal error -> Logout
+        await supabase.auth.signOut();
         setAppState('login');
       }
     } finally {
@@ -424,7 +421,7 @@ const App: React.FC = () => {
           // On-Site Pros (Moved to Phase 1)
 
           // Service Requests (Limit history)
-          fetchTable('service_requests', supabase.from('service_requests').select('*, resident:resident_id(name, phone, unit, tower), provider:provider_id(name, phone)').order('created_at', { ascending: false }).limit(currentRole === 'professional' ? 100 : 20)),
+          fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false }).limit(currentRole === 'professional' ? 100 : 20)),
 
           // Marketplace (Limit 20 initially)
           fetchTable('marketplace', supabase.from('marketplace').select('*').order('created_at', { ascending: false }).limit(20)),
@@ -526,7 +523,7 @@ const App: React.FC = () => {
     }
     const { image_file, ...productData } = product;
     const { error } = await supabase.from('products').insert([{ ...productData, image_url: finalImageUrl, vendor_id: session.user.id }]);
-    if (!error) refreshAppData(); else alert(error.message);
+    if (!error) refreshAppData(); else alert(translateError(error));
   };
 
   const handleDeleteProduct = async (id: string) => {
@@ -554,7 +551,7 @@ const App: React.FC = () => {
       seller_id: session.user.id, title: item.name, price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
       status: item.status, description: item.desc, image_url: finalImageUrl
     }]);
-    if (!error) { refreshAppData(); baseScreen('home'); } else alert(error.message);
+    if (!error) { refreshAppData(); baseScreen('home'); } else alert(translateError(error));
   };
 
   const handleDeleteDesapego = async (id: string) => {
@@ -584,7 +581,7 @@ const App: React.FC = () => {
       location: `${currentUser?.tower} - ${currentUser?.unit}`,
       provider_id: req.professional_id
     }]);
-    if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(error.message);
+    if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(translateError(error));
   };
 
 
@@ -615,7 +612,7 @@ const App: React.FC = () => {
 
       refreshAppData();
     } else {
-      alert('Erro ao publicar: ' + error.message);
+      alert(translateError(error));
     }
   };
 
@@ -630,6 +627,8 @@ const App: React.FC = () => {
   const renderContent = () => {
     try {
       if (!userRole || !currentUser) return null;
+
+      // ROUTING LOGIC
 
       // LÓGICA RESIDENTE
       // LÓGICA RESIDENTE
@@ -685,7 +684,7 @@ const App: React.FC = () => {
               insertData.time_slot = res.timeSlot;
             }
             const { error } = await supabase.from('reservations').insert([insertData]);
-            if (!error) { refreshAppData(); } else { throw new Error(error.message); }
+            if (!error) { refreshAppData(); } else { throw new Error(translateError(error)); }
           }} />;
           case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} currentUser={currentUser} categories={categories} />;
           case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} demands={myDemands} proposals={myProposals} onRefresh={refreshAppData} />;
@@ -722,6 +721,39 @@ const App: React.FC = () => {
         }
       }
 
+      // EMPLOYEE LOGIC
+      if (userRole === 'employee') {
+        // Check if employee is active
+        if (currentUser?.status !== 'active') {
+          return (
+            <div style={{ padding: '40px', textAlign: 'center' }}>
+              <h2>Acesso Desativado</h2>
+              <p>Sua conta está inativa. Entre em contato com o administrador.</p>
+              <button onClick={() => supabase.auth.signOut()}>Sair</button>
+            </div>
+          );
+        }
+
+        switch (activeTab) {
+          case 'home':
+            return <EmployeeDashboard
+              currentUser={currentUser}
+              onNavigate={pushScreen}
+              onLogout={() => supabase.auth.signOut()}
+            />;
+          case 'tasks':
+            return <Tasks session={session} currentUser={currentUser} />;
+          case 'settings':
+            return <ResidentProfile currentUser={currentUser} onBack={goBack} />;
+          default:
+            return <EmployeeDashboard
+              currentUser={currentUser}
+              onNavigate={pushScreen}
+              onLogout={() => supabase.auth.signOut()}
+            />;
+        }
+      }
+
       // --- ADMIN ---
       if (userRole === UserRole.ADMIN) {
         if (useModernDesign && activeTab === 'dashboard') {
@@ -730,13 +762,26 @@ const App: React.FC = () => {
 
         switch (activeTab) {
           case 'dashboard': return <AdminDashboard onNavigate={pushScreen} onLogout={() => supabase.auth.signOut()} />;
+          case 'employees': return <AdminEmployees currentUser={currentUser} />;
           case 'admin-residents': return <AdminResidents onBack={goBack} />;
           case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={refreshAppData} />;
           case 'admin-packages': return <AdminPackages onBack={goBack} onNavigate={pushScreen} />;
           case 'package-receipt': return <AdminPackageReceipt onBack={goBack} currentUser={currentUser} />;
           case 'package-processing': return <AdminPackageProcessing onBack={goBack} currentUser={currentUser} onNavigate={pushScreen} />;
           case 'package-pickup': return <AdminPackagePickup onBack={goBack} currentUser={currentUser} />;
-          case 'tasks': return <Tasks session={session} currentUser={currentUser} />;
+          case 'tasks': {
+            // Access control: Only admin, super_admin, employee, board
+            const hasAccess = ['admin', 'super_admin', 'employee', 'board'].includes(currentUser?.role);
+            return hasAccess ? (
+              <Tasks session={session} currentUser={currentUser} />
+            ) : (
+              <div style={{ padding: '40px', textAlign: 'center' }}>
+                <h2>Acesso Negado</h2>
+                <p>Você não tem permissão para acessar o módulo de Tarefas.</p>
+                <button onClick={goBack}>Voltar</button>
+              </div>
+            );
+          }
           case 'admin-banners': return <AdminBanners onBack={goBack} />;
           case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
           case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
@@ -839,7 +884,8 @@ const App: React.FC = () => {
               </>
             ) :
               userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
-                userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
+                userRole === 'employee' ? <EmployeeNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} /> :
+                  userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
           )}
 
           <RegistrationFlow

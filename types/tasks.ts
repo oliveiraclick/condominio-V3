@@ -4,14 +4,17 @@ export interface Task {
     description: string | null;
     category: 'manutencao' | 'limpeza' | 'seguranca' | 'infraestrutura' | 'outros';
     priority: 'baixa' | 'normal' | 'alta' | 'urgente';
-    status: 'open' | 'analysis' | 'approval' | 'in_progress' | 'done';
+    status: 'new' | 'evaluating' | 'executing' | 'finished';
     requires_approval: boolean;
     approved_at: string | null;
     approved_by: string | null;
+    problem_reported: boolean;
+    problem_reason: string | null;
     created_by: string;
     assigned_to: string | null;
     created_at: string;
     updated_at: string;
+    started_at: string | null;
     due_date: string | null;
     finished_at: string | null;
     location: string | null;
@@ -21,19 +24,17 @@ export interface Task {
 }
 
 export const STATUS_TRANSITIONS: Record<Task['status'], Task['status'][]> = {
-    open: ['analysis'],
-    analysis: ['approval', 'in_progress'], // Can skip approval
-    approval: ['in_progress', 'analysis'], // Can go back if rejected
-    in_progress: ['done', 'analysis'], // Can reopen for re-analysis
-    done: ['in_progress'], // Can reopen if needed
+    new: ['evaluating', 'executing'],
+    evaluating: ['executing'],
+    executing: ['finished', 'evaluating'], // evaluating = problem reported
+    finished: ['executing'], // Can reopen
 };
 
 export const STATUS_LABELS: Record<Task['status'], string> = {
-    open: 'Aberto',
-    analysis: 'Em Análise',
-    approval: 'Aguardando Aprovação',
-    in_progress: 'Em Execução',
-    done: 'Concluído',
+    new: 'Novos Chamados',
+    evaluating: 'Em Avaliação',
+    executing: 'Em Execução',
+    finished: 'Finalizados',
 };
 
 export const PRIORITY_LABELS: Record<Task['priority'], string> = {
@@ -50,3 +51,17 @@ export const CATEGORY_LABELS: Record<Task['category'], string> = {
     infraestrutura: 'Infraestrutura',
     outros: 'Outros',
 };
+
+// Helper: Determine if a task is technically finished but waiting for approval
+export const isPendingApproval = (task: Task): boolean => {
+    // Status is 'finished' AND requires approval AND not yet approved
+    return task.status === 'finished' && task.requires_approval && !task.approved_at;
+};
+
+// Helper: Determine if a task is fully approved/completed
+export const isFullyCompleted = (task: Task): boolean => {
+    if (task.status !== 'finished') return false;
+    if (task.requires_approval && !task.approved_at) return false;
+    return true;
+};
+

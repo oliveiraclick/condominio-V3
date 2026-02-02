@@ -1,41 +1,42 @@
 import React from 'react';
 import { colors, radius, spacing } from '../design-system/tokens';
+import { Task } from '../../types/tasks';
 
 interface TaskStatusBadgeProps {
-    status: 'open' | 'analysis' | 'approval' | 'in_progress' | 'done';
+    status: Task['status'];
     size?: 'sm' | 'md';
 }
 
 const STATUS_CONFIG = {
-    open: {
-        label: 'Aberto',
+    new: {
+        label: 'Novo',
         color: colors.neutral[700],
         bg: colors.neutral[100],
     },
-    analysis: {
+    evaluating: {
         label: 'Em Análise',
         color: colors.brand[700],
         bg: colors.brand[50],
     },
-    approval: {
-        label: 'Aguardando Aprovação',
-        color: '#d97706',
-        bg: '#fef3c7',
-    },
-    in_progress: {
+    executing: {
         label: 'Em Execução',
         color: colors.brand[700],
         bg: colors.brand[100],
     },
-    done: {
+    finished: {
         label: 'Concluído',
-        color: colors.success,
-        bg: '#d1fae5',
+        color: colors.success[700],
+        bg: colors.success[50],
     },
 };
 
 export const TaskStatusBadge: React.FC<TaskStatusBadgeProps> = ({ status, size = 'md' }) => {
-    const config = STATUS_CONFIG[status];
+    // Fallback for safety if an invalid status is passed
+    const config = STATUS_CONFIG[status] || {
+        label: status,
+        color: colors.neutral[600],
+        bg: colors.neutral[100]
+    };
 
     return (
         <span

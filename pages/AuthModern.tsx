@@ -3,6 +3,7 @@ import { Sparkles, ArrowRight, User, Mail, Lock, Building, Smartphone, CheckCirc
 import { supabase } from '../supabase';
 import { maskCPF, maskPhone, maskCNPJ } from '../utils/masks';
 import { validateCPF, validateCNPJ } from '../utils/validators';
+import { translateError } from '../utils/errorTranslator';
 
 // --- SPLASH SCREEN MODERN (LIGHT) ---
 export const SplashScreenModern: React.FC<{ onFinish: () => void }> = ({ onFinish }) => {
@@ -84,7 +85,7 @@ export const LoginScreenModern: React.FC<{ onLogin: (session: any) => void; onRe
             password: loginPass
         });
 
-        if (error) alert(error.message);
+        if (error) alert(translateError(error));
         else onLogin(data.session);
         setLoading(false);
     };
@@ -214,7 +215,7 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
                 }]);
                 onFinish();
             }
-        } catch (err: any) { alert(err.message); } finally { setLoading(false); }
+        } catch (err: any) { alert(translateError(err)); } finally { setLoading(false); }
     };
 
     return (
