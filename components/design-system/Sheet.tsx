@@ -44,7 +44,7 @@ export const Sheet: React.FC<SheetProps> = ({
                 alignItems: 'flex-end',
                 justifyContent: 'center',
                 pointerEvents: open ? 'auto' : 'none',
-                isolation: 'isolate',
+                // isolation: 'isolate', // Removed to simplify stacking context
             }}
         >
             {/* BACKDROP */}
@@ -63,6 +63,8 @@ export const Sheet: React.FC<SheetProps> = ({
             {/* SHEET CONTENT */}
             <div
                 style={{
+                    // Force interaction enabled on content regardless of container
+                    pointerEvents: 'auto',
                     width: '100%',
                     maxWidth: 480,
                     background: 'white',
@@ -107,10 +109,11 @@ export const Sheet: React.FC<SheetProps> = ({
                     </div>
                 )}
 
-                <div style={{ flex: 1, overflowY: 'auto' }}>
+                {/* Content wrapper with correct flex behavior */}
+                <div style={{ flex: 1, overflowY: 'auto', minHeight: 0, display: 'flex', flexDirection: 'column' }}>
                     {children}
                 </div>
             </div>
-        </div>
+        </div >
     );
 };

@@ -434,9 +434,6 @@ export const DesapegoCard: React.FC<{ item: any; onClick: () => void }> = ({ ite
     >
       <div className="relative h-72 p-5">
         <img src={item.img} className="w-full h-full object-cover rounded-[32px] group-hover:scale-105 transition-transform duration-700" alt={item.name} />
-        <div className="absolute top-10 left-10">
-          <div style={{ backgroundColor: colors.success, color: 'white', fontWeight: 900, padding: '8px 16px', fontSize: 10, textTransform: 'uppercase', borderRadius: radius.md, boxShadow: shadow.lg, letterSpacing: '0.1em' }}>{item.status}</div>
-        </div>
         <div className="absolute bottom-10 right-10 bg-white/90 backdrop-blur-md px-5 py-3 rounded-[20px] shadow-xl border border-slate-200">
           <p className="text-lg font-black text-slate-900 tracking-tighter">{item.price}</p>
         </div>
@@ -1557,7 +1554,7 @@ export const Marketplace: React.FC<{
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <FloatingBackButton onClick={() => onNavigate('home')} />
+
       <header className="p-6 pt-safe-offset flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-sm">
         <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-200"><ArrowLeft size={20} className="text-slate-600" /></button>
         <div className="flex-1 flex items-center justify-between">
@@ -1737,7 +1734,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <FloatingBackButton onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} />
+
       <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-sm">
         <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-200">
           <ArrowLeft size={20} className="text-slate-600" />
@@ -2852,7 +2849,7 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-5 pb-5 flex items-center justify-between bg-brand-gradient-horizontal shadow-xl shadow-brand-glow sticky top-0 z-40 rounded-b-[32px]">
+      <header className="p-6 pt-14 pb-5 flex items-center justify-between bg-brand-gradient-horizontal shadow-xl shadow-brand-glow sticky top-0 z-40 rounded-b-[32px]">
         <div className="flex items-center gap-4">
           <button onClick={onBack} className="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center active:scale-95 transition-all text-brand-contrast hover:bg-white/30 backdrop-blur-sm"><ArrowLeft size={20} className="stroke-brand-contrast" /></button>
           <h2 className="text-xl font-black italic uppercase text-brand-contrast tracking-widest">Reservas</h2>
@@ -2905,9 +2902,9 @@ export const CondoAgendaPage: React.FC<{ onBack: () => void; reservations: any[]
       </div>
 
       <SpaceReservationFlow
-        isOpen={isReservationFlowOpen}
+        open={isReservationFlowOpen}
         onClose={() => setIsReservationFlowOpen(false)}
-        currentUser={currentUser}
+        currentUserId={currentUser?.id}
       />
     </div>
   );
@@ -3504,7 +3501,7 @@ export const BannerCarousel: React.FC = () => {
   );
 
   // FORCE DUPLICATION FOR DEMO IF ONLY 1 BANNER (To show rotation)
-  const displayBanners = banners.length === 1 ? [...banners, { ...banners[0], id: 'dummy-2', title: banners[0].title + ' (Destaque)', image_url: banners[0].image_url }] : banners;
+  const displayBanners = banners.length === 1 ? [...banners, { ...banners[0], id: 'dummy-2', title: banners[0].title, image_url: banners[0].image_url }] : banners;
 
   return (
     <div className="relative w-full h-56 md:h-64 shadow-sm group bg-slate-900 overflow-hidden">
@@ -3519,7 +3516,7 @@ export const BannerCarousel: React.FC = () => {
           {/* Gradient Overlay Improved */}
           <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent flex items-end p-6 pb-10">
             <div className={`transition-all duration-700 delay-300 ${index === currentIndex ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
-              <span className="bg-brand-500 text-white text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded mb-2 inline-block shadow-lg shadow-brand-500/20">Destaque</span>
+
               {banner.title && <h3 className="text-white font-black italic text-2xl md:text-3xl drop-shadow-xl leading-none mb-1 max-w-sm">{banner.title}</h3>}
               {banner.link_url && (
                 <span className="text-[10px] text-slate-300 font-bold uppercase tracking-widest flex items-center gap-1 mt-2 group-hover:text-brand-400 transition-colors">Saiba Mais <ChevronRight size={12} className="text-brand-400" /></span>

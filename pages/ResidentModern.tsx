@@ -3,13 +3,14 @@ import {
     LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
     Bell, Search, MapPin, Star, Key, Zap, CreditCard,
     MessageSquare, Sparkles, Package, Leaf, Droplets, Wrench, Monitor, Scissors, Briefcase,
-    BookOpen, Utensils, QrCode, Megaphone, ChevronLeft, ChevronRight
+    BookOpen, Utensils, QrCode, Megaphone, ChevronLeft, ChevronRight, Hammer, Clapperboard
 } from 'lucide-react';
 import { Card } from '../components/ui';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
 // Imports from original Resident file to preserve functionality
 import { ProfessionalDetailModal, ReviewModal, MuralDemandModal, DigitalIDModal, AuthorizationModal, BannerCarousel, NotificationsModal } from './Resident';
 import { NewsTicker } from '../components/NewsTicker';
+import { SpaceReservationFlow } from '../components/SpaceReservationFlow';
 
 // New Component: Service Category Item (Square)
 const ServiceCategoryItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isNew?: boolean; className?: string; iconClassName?: string }> = ({ icon, label, onClick, isNew, className, iconClassName }) => (
@@ -26,8 +27,8 @@ const ServiceCategoryItem: React.FC<{ icon: React.ReactNode; label: string; onCl
 
 // New Component: Service Card (Horizontal)
 const ServiceCard: React.FC<{ title: string; subtitle?: string; image?: string; onClick: () => void }> = ({ title, subtitle, image, onClick }) => (
-    <div onClick={onClick} className="min-w-[160px] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer group active:scale-95 transition-all hover:shadow-md">
-        <div className="h-24 bg-slate-100 relative">
+    <div onClick={onClick} className="min-w-[200px] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer group active:scale-95 transition-all hover:shadow-md">
+        <div className="h-32 bg-slate-100 relative">
             {image ? (
                 <img src={image} className="w-full h-full object-cover" alt={title} />
             ) : (
@@ -65,6 +66,7 @@ export const ResidentModern: React.FC<{
 }) => {
         const [search, setSearch] = useState('');
         const [feedbackOpen, setFeedbackOpen] = useState(false);
+        const [reservationOpen, setReservationOpen] = useState(false);
 
         // Feature States
         const [selectedPro, setSelectedPro] = useState<any>(null);
@@ -108,7 +110,7 @@ export const ResidentModern: React.FC<{
         };
 
         return (
-            <div className="min-h-screen bg-slate-50 pb-32 font-sans md:max-w-md md:mx-auto">
+            <div className="min-h-screen bg-slate-50 pb-24 font-sans md:max-w-md md:mx-auto">
                 {/* 1. HEADER CLEAN */}
                 <header className="px-6 pt-12 pb-6 bg-white shadow-sm sticky top-0 z-40 rounded-b-[32px]">
                     <div className="flex justify-between items-end mb-6">
@@ -150,7 +152,7 @@ export const ResidentModern: React.FC<{
                     </div>
                 </header>
 
-                <main className="pb-32">
+                <main className="">
                     {/* 2. CATEGORIES CAROUSEL */}
                     <div className="px-6 pt-6 space-y-8">
                         <section className="relative group/nav">
@@ -178,7 +180,7 @@ export const ResidentModern: React.FC<{
                                     label="Reservas"
                                     className="bg-brand-gradient border-transparent text-brand-contrast shadow-brand-glow"
                                     iconClassName="text-brand-contrast"
-                                    onClick={() => onNavigate('condo-agenda')}
+                                    onClick={() => setReservationOpen(true)}
                                 />
                             </div>
                         </section>
@@ -189,6 +191,9 @@ export const ResidentModern: React.FC<{
                         <BannerCarousel />
                         <NewsTicker userRole="resident" />
                     </div>
+
+
+
 
 
                     {/* 4. SECTIONS (Scrollable Horizontal) */}
@@ -223,7 +228,7 @@ export const ResidentModern: React.FC<{
                                         <ServiceCard
                                             key={i}
                                             title={pro.name}
-                                            subtitle={pro.category}
+                                            subtitle={pro.category || (pro.specialties && pro.specialties[0]) || pro.company_name || 'Prestador'}
                                             image={pro.avatar}
                                             onClick={() => setSelectedPro(pro)}
                                         />
@@ -378,6 +383,13 @@ export const ResidentModern: React.FC<{
                     onClose={() => setFeedbackOpen(false)}
                     currentUser={currentUser}
                     userRole="resident"
+                />
+
+                <SpaceReservationFlow
+                    open={reservationOpen}
+                    onClose={() => setReservationOpen(false)}
+                    currentUserId={currentUser?.id}
+                    currentUser={currentUser}
                 />
 
             </div>

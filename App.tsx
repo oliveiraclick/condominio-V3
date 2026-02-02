@@ -128,12 +128,19 @@ const App: React.FC = () => {
 
         setUserRole(role);
 
+        // SMART NAME DERIVATION
+        let displayName = profile.name;
+        if (!displayName || displayName === 'Morador') {
+          const { data: { user } } = await supabase.auth.getUser();
+          displayName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Morador';
+        }
+
         // CACHE ROBUSTO: Salva tudo, não só a role
         const fullProfile = {
           ...profile,
-          avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile.name}`,
+          avatar: profile.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${displayName}`,
           role: role,
-          name: profile.name || 'Morador'
+          name: displayName
         };
         localStorage.setItem('userProfile_cache', JSON.stringify(fullProfile));
         localStorage.setItem('userRole_cache', role);
@@ -367,13 +374,40 @@ const App: React.FC = () => {
         currentRole === UserRole.RESIDENT
           ? fetchTable('packages', supabase.from('packages').select('*').or(`resident_id.eq.${session.user.id},picked_up_by.eq.${session.user.id}`).in('status', ['pending', 'awaiting_confirmation']))
           : Promise.resolve([]),
+
+        // 3. On-Site Pros (PRIORITY)
+        fetchTable('profiles', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)),
+
+        // 4. Professional Services (PRIORITY)
+        fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
       ];
 
-      const [unreadNotifs, activePkgs] = await Promise.all(p1Promises);
+      const [unreadNotifs, activePkgs, onSite, proServices] = await Promise.all(p1Promises);
 
       // IMMEDIATE STATE UPDATE (Phase 1)
       if (unreadNotifs) setNotifications(unreadNotifs);
       if (activePkgs) setPackages(activePkgs);
+      if (onSite) setOnSitePros(onSite);
+
+      // Map Professional Services Immediately
+      if (proServices) {
+        // Create Map
+        const proIds = new Set<string>();
+        proServices.forEach((p: any) => { if (p.provider_id) proIds.add(p.provider_id); });
+
+        if (proIds.size > 0) {
+          const { data: profilesData } = await supabase.from('profiles').select('id, name, phone, avatar, specialties').in('id', Array.from(proIds));
+          const proMap: Record<string, any> = {};
+          if (profilesData) profilesData.forEach(p => { proMap[p.id] = p; });
+
+          setProfessionalServices(proServices.map((p: any) => {
+            const profile = proMap[p.provider_id];
+            return { ...p, providerName: profile?.name || 'Prestador', providerPhone: profile?.phone || '', providerAvatar: profile?.avatar, specialties: profile?.specialties };
+          }));
+        } else {
+          setProfessionalServices(proServices);
+        }
+      }
 
       // --- PHASE 2: SECONDARY DATA (Background / Below Fold) ---
       // includes: Marketplace, History, Products, Categories, Full Lists
@@ -387,8 +421,7 @@ const App: React.FC = () => {
 
           fetchTable('categories', supabase.from('categories').select('*').order('name')),
 
-          // On-Site Pros (Quick cache check)
-          fetchTable('profiles', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true).gt('on_site_updated_at', oneHourAgo)),
+          // On-Site Pros (Moved to Phase 1)
 
           // Service Requests (Limit history)
           fetchTable('service_requests', supabase.from('service_requests').select('*, resident:resident_id(name, phone, unit, tower), provider:provider_id(name, phone)').order('created_at', { ascending: false }).limit(currentRole === 'professional' ? 100 : 20)),
@@ -399,14 +432,13 @@ const App: React.FC = () => {
           // Products
           fetchTable('products', supabase.from('products').select('*').eq('available', true).limit(50)),
 
-          // Professional Services
-          fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
+          // Professional Services (Moved to Phase 1)
 
           // Demands (Resident Only)
           currentRole === UserRole.RESIDENT ? fetchTable('service_demands', supabase.from('service_demands').select('*').eq('resident_id', session.user.id).order('created_at', { ascending: false })) : Promise.resolve([]),
         ];
 
-        const [areas, resvs, requests, cats, onSite, requestsHistory, desap, prods, proServices, demandsData] = await Promise.all(p2Promises);
+        const [areas, resvs, cats, requestsHistory, desap, prods, demandsData] = await Promise.all(p2Promises);
 
         // BATCH UPDATE PHASE 2
         if (areas) setCommonAreas(areas);
@@ -422,7 +454,6 @@ const App: React.FC = () => {
         }
 
         if (cats) setCategories(cats);
-        if (onSite) setOnSitePros(onSite);
 
         // MERGE REQUESTS (Active ones from P1 logic if split? No, we fetched all recent in P2 for simplicity, just render them)
         if (requestsHistory) {
@@ -435,36 +466,17 @@ const App: React.FC = () => {
           setActiveServices(requestsHistory.filter((r: any) => r.status === 'accepted' || r.status === 'in_progress'));
         }
 
-        if (proServices) setProfessionalServices(proServices); // Need mapping? logic below handles raw data usually? 
-        // Re-running Mapping Logic for Pros (Simplified)
-        // ... (Existing mapping logic omitted for brevity, assuming standard fetch is okay, or we reuse existing map block) ...
-        // Actually, let's keep the mapping logic for Pros/Marketplace as it was crucial for display.
-
-        // RE-USE EXISTING MAPPING LOGIC FOR PROS & MARKETPLACE (ADAPTED)
-        // ... (Mapping for Pros)
-        const proIds = new Set<string>();
-        if (proServices) proServices.forEach((p: any) => { if (p.provider_id) proIds.add(p.provider_id); });
-
-        let proMap: Record<string, any> = {};
-        if (proIds.size > 0) {
-          const { data: profilesData } = await supabase.from('profiles').select('id, name, phone, avatar, specialties').in('id', Array.from(proIds));
-          if (profilesData) profilesData.forEach(p => { proMap[p.id] = p; });
-        }
-        if (proServices) {
-          setProfessionalServices(proServices.map((p: any) => {
-            const profile = proMap[p.provider_id];
-            return { ...p, providerName: profile?.name || 'Prestador', providerPhone: profile?.phone || '', providerAvatar: profile?.avatar, specialties: profile?.specialties };
-          }));
-        }
-
-        // ... (Mapping for Marketplace)
+        // ... (Mapping for Marketplace & Products)
         const userIds = new Set<string>();
         if (desap) desap.forEach((p: any) => { if (p.seller_id) userIds.add(p.seller_id); });
+        if (prods) prods.forEach((p: any) => { if (p.vendor_id) userIds.add(p.vendor_id); }); // ADDED: Collect vendor_ids from products
+
         let userMap: Record<string, any> = {};
         if (userIds.size > 0) {
           const { data: profilesData } = await supabase.from('profiles').select('id, name, avatar, phone, tower, unit').in('id', Array.from(userIds));
           if (profilesData) profilesData.forEach(p => { userMap[p.id] = p; });
         }
+
         if (desap) {
           setDesapegos(desap.map((i: any) => {
             const seller = userMap[i.seller_id];
@@ -476,11 +488,10 @@ const App: React.FC = () => {
             };
           }));
         }
+
         if (prods) {
           setProducts(prods.map((p: any) => {
-            const vendor = userMap[p.vendor_id]; // Potentially distinct set? For simplicity reusing userMap if seller_id matches vendor_id, otherwise fetch. 
-            // Products vendors might not be in Desapego list. Safe to fetch separately or live with it for V1 optimization. 
-            // Let's assume minimal overlap or okay to have missing avatar for now to save bandwidth.
+            const vendor = userMap[p.vendor_id];
             return { ...p, profiles: vendor || { name: 'Vizinho', avatar: null } };
           }));
         }

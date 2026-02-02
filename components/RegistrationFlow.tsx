@@ -19,6 +19,18 @@ interface RegistrationFlowProps {
 
 type Step = 'personal' | 'property' | 'account' | 'confirm' | 'success';
 
+// Helper for visual sections
+const FormSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+        <Title level={4} style={{ color: colors.brand[600], borderLeft: `4px solid ${colors.brand[500]}`, paddingLeft: spacing.sm }}>
+            {title}
+        </Title>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+            {children}
+        </div>
+    </div>
+);
+
 export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClose, onSuccess }) => {
     const [step, setStep] = useState<Step>('personal');
     const [loading, setLoading] = useState(false);
@@ -125,18 +137,6 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
         }
     };
 
-    // Helper for visual sections
-    const FormSection = ({ title, children }: { title: string, children: React.ReactNode }) => (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-            <Title level={4} style={{ color: colors.brand[600], borderLeft: `4px solid ${colors.brand[500]}`, paddingLeft: spacing.sm }}>
-                {title}
-            </Title>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
-                {children}
-            </div>
-        </div>
-    );
-
     const renderHeader = () => {
         switch (step) {
             case 'personal': return { title: 'Criar Conta', subtitle: 'Passo 1 de 3: Dados Pessoais' };
@@ -162,9 +162,9 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                 {/* PROGRESS BAR */}
                 {step !== 'success' && (
                     <div style={{ display: 'flex', gap: 4 }}>
-                        <div style={{ h: 4, flex: 1, borderRadius: radius.full, background: step === 'personal' || step === 'property' || step === 'account' || step === 'confirm' ? colors.brand[500] : colors.neutral[200] }} />
-                        <div style={{ h: 4, flex: 1, borderRadius: radius.full, background: step === 'property' || step === 'account' || step === 'confirm' ? colors.brand[500] : colors.neutral[200] }} />
-                        <div style={{ h: 4, flex: 1, borderRadius: radius.full, background: step === 'account' || step === 'confirm' ? colors.brand[500] : colors.neutral[200] }} />
+                        <div style={{ height: 4, flex: 1, borderRadius: radius.pill, background: step === 'personal' || step === 'property' || step === 'account' || step === 'confirm' ? colors.brand[500] : colors.neutral[200] }} />
+                        <div style={{ height: 4, flex: 1, borderRadius: radius.pill, background: step === 'property' || step === 'account' || step === 'confirm' ? colors.brand[500] : colors.neutral[200] }} />
+                        <div style={{ height: 4, flex: 1, borderRadius: radius.pill, background: step === 'account' || step === 'confirm' ? colors.brand[500] : colors.neutral[200] }} />
                     </div>
                 )}
 
