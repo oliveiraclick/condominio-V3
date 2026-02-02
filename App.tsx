@@ -801,15 +801,7 @@ const App: React.FC = () => {
 
   if (appState === 'roleSelection') return <RoleSelection onSelect={(role) => { setUserRole(role); setAppState(role === UserRole.RESIDENT ? 'registerResident' : 'registerProfessional'); }} onBack={() => setAppState('login')} />;
 
-  if (appState === 'registerResident') {
-    return (
-      <RegistrationFlow
-        open={true}
-        onClose={() => setAppState('roleSelection')}
-        onSuccess={() => setAppState('login')}
-      />
-    );
-  }
+  if (appState === 'registerResident') return null; // Logic moved below for stability
 
   if (appState === 'registerProfessional') {
     if (useModernDesign) return <ProfessionalRegistrationModern onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;
@@ -849,6 +841,12 @@ const App: React.FC = () => {
               userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :
                 userRole === UserRole.ADMIN ? <AdminNavigation activeTab={activeTab} onChange={baseScreen} /> : null
           )}
+
+          <RegistrationFlow
+            open={appState === 'registerResident'}
+            onClose={() => setAppState('roleSelection')}
+            onSuccess={() => setAppState('login')}
+          />
         </div>
       </div>
     </ToastProvider>

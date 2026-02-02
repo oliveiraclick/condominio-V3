@@ -179,7 +179,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 value={formData.name}
                                 onChange={e => setFormData({ ...formData, name: e.target.value })}
                                 error={errors.name}
-                                leftIcon={<User size={18} />}
+                                startIcon={<User size={18} />}
                                 fullWidth
                             />
                             <DSInput
@@ -188,7 +188,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 value={formData.cpf}
                                 onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })}
                                 error={errors.cpf}
-                                leftIcon={<CreditCard size={18} />}
+                                startIcon={<CreditCard size={18} />}
                                 fullWidth
                             />
                             <DSInput
@@ -197,7 +197,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 value={formData.phone}
                                 onChange={e => setFormData({ ...formData, phone: maskPhone(e.target.value) })}
                                 error={errors.phone}
-                                leftIcon={<Smartphone size={18} />}
+                                startIcon={<Smartphone size={18} />}
                                 fullWidth
                             />
                         </FormSection>
@@ -219,7 +219,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                         value={formData.tower}
                                         onChange={e => setFormData({ ...formData, tower: e.target.value })}
                                         error={errors.tower}
-                                        leftIcon={<Building size={18} />}
+                                        startIcon={<Building size={18} />}
                                         fullWidth
                                     />
                                 </div>
@@ -230,7 +230,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                         value={formData.unit}
                                         onChange={e => setFormData({ ...formData, unit: e.target.value })}
                                         error={errors.unit}
-                                        leftIcon={<MapPin size={18} />}
+                                        startIcon={<MapPin size={18} />}
                                         fullWidth
                                     />
                                 </div>
@@ -248,7 +248,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 value={formData.email}
                                 onChange={e => setFormData({ ...formData, email: e.target.value })}
                                 error={errors.email}
-                                leftIcon={<Mail size={18} />}
+                                startIcon={<Mail size={18} />}
                                 fullWidth
                             />
                             <DSInput
@@ -258,7 +258,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 value={formData.password}
                                 onChange={e => setFormData({ ...formData, password: e.target.value })}
                                 error={errors.password}
-                                leftIcon={<Lock size={18} />}
+                                startIcon={<Lock size={18} />}
                                 fullWidth
                             />
                             <DSInput
@@ -268,7 +268,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 value={formData.passwordConfirm}
                                 onChange={e => setFormData({ ...formData, passwordConfirm: e.target.value })}
                                 error={errors.passwordConfirm}
-                                leftIcon={<ShieldCheck size={18} />}
+                                startIcon={<ShieldCheck size={18} />}
                                 fullWidth
                             />
                         </FormSection>

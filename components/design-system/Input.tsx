@@ -11,7 +11,7 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTe
 }
 
 export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, InputProps & { fullWidth?: boolean }>(
-    ({ label, error, startIcon, endIcon, multiline, helperText, style, className, fullWidth, ...props }, ref) => {
+    ({ label, error, startIcon, endIcon, leftIcon, multiline, helperText, style, className, fullWidth, ...props }, ref) => {
         const [focused, setFocused] = React.useState(false);
 
         const Component = multiline ? 'textarea' : 'input';
@@ -47,9 +47,9 @@ export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, 
                         boxShadow: focused ? `0 0 0 3px ${error ? colors.danger + '20' : colors.brand[500] + '20'}` : 'none',
                     }}
                 >
-                    {startIcon && (
+                    {(startIcon || leftIcon) && (
                         <div style={{ paddingLeft: spacing.md, paddingRight: spacing.xs, color: colors.neutral[400], display: 'flex', alignItems: 'center', height: multiline ? 48 : '100%', paddingTop: multiline ? 14 : 0 }}>
-                            {startIcon}
+                            {startIcon || leftIcon}
                         </div>
                     )}
                     <Component

@@ -76,7 +76,7 @@ export const Text: React.FC<TextProps> = ({
         case 'label':
             fontSize = 14;
             fontWeight = 600;
-            color: colors.neutral[700];
+            color = colors.neutral[700];
             break;
         case 'body':
         default:
