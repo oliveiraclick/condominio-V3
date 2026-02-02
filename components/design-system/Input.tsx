@@ -1,5 +1,6 @@
 import React from 'react';
 import { colors, radius, spacing } from './tokens';
+import { Eye, EyeOff } from 'lucide-react';
 
 interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
     label?: string;
@@ -13,8 +14,11 @@ interface InputProps extends React.InputHTMLAttributes<HTMLInputElement | HTMLTe
 export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, InputProps & { fullWidth?: boolean }>(
     ({ label, error, startIcon, endIcon, leftIcon, multiline, helperText, style, className, fullWidth, ...props }, ref) => {
         const [focused, setFocused] = React.useState(false);
+        const [showPassword, setShowPassword] = React.useState(false);
 
         const Component = multiline ? 'textarea' : 'input';
+        const isPassword = props.type === 'password';
+        const inputType = isPassword ? (showPassword ? 'text' : 'password') : props.type;
 
         return (
             <div style={{ width: '100%', marginBottom: spacing.md }}>
@@ -55,6 +59,7 @@ export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, 
                     <Component
                         ref={ref as any}
                         {...props}
+                        type={inputType}
                         onFocus={(e) => {
                             setFocused(true);
                             props.onFocus?.(e as any);
@@ -70,7 +75,7 @@ export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, 
                             backgroundColor: 'transparent',
                             padding: spacing.md,
                             paddingLeft: startIcon ? 0 : spacing.md,
-                            paddingRight: endIcon ? 0 : spacing.md,
+                            paddingRight: (endIcon || isPassword) ? 0 : spacing.md,
                             color: colors.neutral[900],
                             fontSize: 14,
                             fontWeight: 500,
@@ -80,9 +85,27 @@ export const DSInput = React.forwardRef<HTMLInputElement & HTMLTextAreaElement, 
                             ...style,
                         }}
                     />
-                    {endIcon && (
+                    {(endIcon || isPassword) && (
                         <div style={{ paddingRight: spacing.md, paddingLeft: spacing.xs, color: colors.neutral[400], display: 'flex', alignItems: 'center', height: multiline ? 48 : '100%', paddingTop: multiline ? 14 : 0 }}>
                             {endIcon}
+                            {isPassword && (
+                                <button
+                                    type="button"
+                                    onClick={() => setShowPassword(!showPassword)}
+                                    style={{
+                                        border: 'none',
+                                        background: 'none',
+                                        cursor: 'pointer',
+                                        padding: 4,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        color: colors.neutral[400]
+                                    }}
+                                >
+                                    {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                                </button>
+                            )}
                         </div>
                     )}
                 </div>

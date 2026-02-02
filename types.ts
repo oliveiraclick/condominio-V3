@@ -46,6 +46,8 @@ export interface Profile {
   dependents?: Dependent[];
   is_free?: boolean;
   avatar?: string;
+  status?: 'pending' | 'approved' | 'rejected' | 'inactive' | 'awaiting_payment' | 'suspended' | 'blocked';
+  is_primary_resident?: boolean;
 }
 
 export interface ProfessionalProfile extends Profile {

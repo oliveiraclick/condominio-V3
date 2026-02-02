@@ -1,5 +1,5 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { Sparkles, ArrowRight, User, Mail, Lock, Building, Smartphone, CheckCircle, ArrowLeft } from 'lucide-react';
+import { Sparkles, ArrowRight, User, Mail, Lock, Building, Smartphone, CheckCircle, ArrowLeft, Eye, EyeOff } from 'lucide-react';
 import { supabase } from '../supabase';
 import { maskCPF, maskPhone, maskCNPJ } from '../utils/masks';
 import { validateCPF, validateCNPJ } from '../utils/validators';
@@ -292,12 +292,23 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
 };
 
 // Helper Input Component (Light Mode)
-const InputModern = ({ icon: Icon, label, value, onChange, type = "text" }: any) => (
-    <div className="group bg-white border border-slate-200 rounded-xl p-4 focus-within:ring-2 focus-within:ring-brand-500/50 focus-within:border-brand-primary transition-all shadow-sm">
-        <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">{label}</label>
-        <div className="flex items-center gap-3">
-            <Icon size={18} className="text-slate-400 group-focus-within:text-brand-primary transition-colors" />
-            <input type={type} value={value} onChange={e => onChange(e.target.value)} className="bg-transparent border-none outline-none w-full text-lg placeholder-slate-300 text-slate-900 font-medium" />
+const InputModern = ({ icon: Icon, label, value, onChange, type = "text" }: any) => {
+    const [showPassword, setShowPassword] = useState(false);
+    const isPassword = type === 'password';
+    const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
+    return (
+        <div className="group bg-white border border-slate-200 rounded-xl p-4 focus-within:ring-2 focus-within:ring-brand-500/50 focus-within:border-brand-primary transition-all shadow-sm">
+            <label className="text-xs text-slate-400 uppercase tracking-wider mb-1 block">{label}</label>
+            <div className="flex items-center gap-3">
+                <Icon size={18} className="text-slate-400 group-focus-within:text-brand-primary transition-colors" />
+                <input type={inputType} value={value} onChange={e => onChange(e.target.value)} className="bg-transparent border-none outline-none w-full text-lg placeholder-slate-300 text-slate-900 font-medium" />
+                {isPassword && (
+                    <button type="button" onClick={() => setShowPassword(!showPassword)} className="text-slate-400 hover:text-brand-primary transition-colors cursor-pointer">
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                )}
+            </div>
         </div>
-    </div>
-);
+    );
+};

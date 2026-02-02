@@ -41,18 +41,40 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
         cpf: '',
         phone: '',
         unit: '',
-        tower: '',
-        email: '',
-        password: '',
-        passwordConfirm: ''
+        passwordConfirm: '',
+        isPrimary: false
     });
 
     // Validation State
     const [errors, setErrors] = useState<Record<string, string>>({});
 
-    const handleNext = () => {
+    const handleNext = async () => {
         if (validateStep(step)) {
-            if (step === 'personal') setStep('property');
+            if (step === 'personal') {
+                setLoading(true);
+                try {
+                    const { data: isDuplicate, error } = await supabase.rpc('check_duplicate_cpf', { cpf_check: formData.cpf });
+
+                    if (error) throw error;
+
+                    if (isDuplicate) {
+                        setErrors(prev => ({ ...prev, cpf: 'Este CPF já possui cadastro. Faça login ou recupere seu acesso.' }));
+                        return; // Stop here
+                    }
+
+                    // CPF is new, proceed
+                    setStep('property');
+                } catch (err) {
+                    console.error('Error checking CPF', err);
+                    // Fail safe: proceed or block? Let's proceed to avoid blocking valid users if RPC fails, 
+                    // or block if we want strict security. For UX, let's proceed but maybe validation will catch it later DB side.
+                    // But actually, unique constraint in DB is safe. 
+                    // Let's alert user just to be safe.
+                    alert('Erro ao validar CPF. Tente novamente.');
+                } finally {
+                    setLoading(false);
+                }
+            }
             else if (step === 'property') setStep('account');
             else if (step === 'account') setStep('confirm');
         }
@@ -71,18 +93,18 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
         if (currentStep === 'personal') {
             if (!formData.name.trim()) newErrors.name = 'Nome é obrigatório';
             if (!formData.cpf) newErrors.cpf = 'CPF é obrigatório';
-            else if (!validateCPF(formData.cpf)) newErrors.cpf = 'CPF inválido';
+            else if (!validateCPF(formData.cpf)) newErrors.cpf = 'CPF inválido. Verifique os números digitados.';
             if (!formData.phone) newErrors.phone = 'Celular é obrigatório';
         }
 
         if (currentStep === 'property') {
-            if (!formData.unit) newErrors.unit = 'Unidade é obrigatória';
-            if (!formData.tower) newErrors.tower = 'Bloco/Torre é obrigatório';
+            if (!formData.unit) newErrors.unit = 'Número é obrigatório';
+            if (!formData.tower) newErrors.tower = 'Rua é obrigatória';
         }
 
         if (currentStep === 'account') {
             if (!formData.email) newErrors.email = 'Email é obrigatório';
-            else if (!/\S+@\S+\.\S+/.test(formData.email)) newErrors.email = 'Email inválido';
+            else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) newErrors.email = 'E-mail inválido. Informe um endereço válido.';
 
             if (!formData.password) newErrors.password = 'Senha é obrigatória';
             else if (formData.password.length < 6) newErrors.password = 'Mínimo 6 caracteres';
@@ -120,7 +142,9 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                     unit: formData.unit,
                     tower: formData.tower,
                     role: 'resident',
-                    condominium_id: '00000000-0000-0000-0000-000000000000'
+                    condominium_id: '00000000-0000-0000-0000-000000000000',
+                    status: 'pending',
+                    is_primary_resident: formData.isPrimary
                 }]);
 
                 if (profileError) {
@@ -143,7 +167,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
             case 'property': return { title: 'Onde você mora?', subtitle: 'Passo 2 de 3: Dados do Imóvel' };
             case 'account': return { title: 'Segurança', subtitle: 'Passo 3 de 3: Dados de Acesso' };
             case 'confirm': return { title: 'Revisão', subtitle: 'Confirme seus dados' };
-            case 'success': return { title: 'Bem-vindo(a)!', subtitle: 'Cadastro realizado com sucesso' };
+            case 'success': return { title: 'Cadastro em Análise', subtitle: 'Aguarde a aprovação' };
         }
     };
 
@@ -186,11 +210,27 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                 label="CPF"
                                 placeholder="000.000.000-00"
                                 value={formData.cpf}
-                                onChange={e => setFormData({ ...formData, cpf: maskCPF(e.target.value) })}
+                                onChange={e => {
+                                    setFormData({ ...formData, cpf: maskCPF(e.target.value) });
+                                    if (errors.cpf) setErrors(prev => ({ ...prev, cpf: '' })); // Clear error on type
+                                }}
                                 error={errors.cpf}
                                 startIcon={<CreditCard size={18} />}
                                 fullWidth
                             />
+                            {errors.cpf && errors.cpf.includes('Faça login') && (
+                                <DSButton
+                                    variant="secondary"
+                                    size="sm"
+                                    onClick={() => {
+                                        onClose();
+                                        // Ideally navigate to login/forgot password, but onClose returns to login usually
+                                    }}
+                                    style={{ marginTop: -8 }}
+                                >
+                                    Ir para Login / Recuperar Senha
+                                </DSButton>
+                            )}
                             <DSInput
                                 label="Celular"
                                 placeholder="(00) 00000-0000"
@@ -211,28 +251,36 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                     Isso ajudará a portaria a identificar você e suas encomendas.
                                 </Text>
                             </div>
-                            <div style={{ display: 'flex', gap: spacing.md }}>
-                                <div style={{ flex: 1 }}>
-                                    <DSInput
-                                        label="Bloco / Torre"
-                                        placeholder="Ex: A"
-                                        value={formData.tower}
-                                        onChange={e => setFormData({ ...formData, tower: e.target.value })}
-                                        error={errors.tower}
-                                        startIcon={<Building size={18} />}
-                                        fullWidth
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md }}>
+                                <DSInput
+                                    label="Nome da Rua"
+                                    placeholder="Ex: Rua das Palmeiras"
+                                    value={formData.tower}
+                                    onChange={e => setFormData({ ...formData, tower: e.target.value })}
+                                    error={errors.tower}
+                                    startIcon={<MapPin size={18} />}
+                                    fullWidth
+                                />
+                                <DSInput
+                                    label="Número do Imóvel"
+                                    placeholder="Ex: 42"
+                                    value={formData.unit}
+                                    onChange={e => setFormData({ ...formData, unit: e.target.value })}
+                                    error={errors.unit}
+                                    startIcon={<Building size={18} />}
+                                    fullWidth
+                                />
+                                <div style={{ display: 'flex', alignItems: 'center', gap: 8, paddingLeft: 4 }}>
+                                    <input
+                                        type="checkbox"
+                                        id="isPrimary"
+                                        style={{ width: 18, height: 18, accentColor: colors.brand[500] }}
+                                        checked={formData.isPrimary}
+                                        onChange={e => setFormData({ ...formData, isPrimary: e.target.checked })}
                                     />
-                                </div>
-                                <div style={{ flex: 1 }}>
-                                    <DSInput
-                                        label="Unidade / Apto"
-                                        placeholder="Ex: 101"
-                                        value={formData.unit}
-                                        onChange={e => setFormData({ ...formData, unit: e.target.value })}
-                                        error={errors.unit}
-                                        startIcon={<MapPin size={18} />}
-                                        fullWidth
-                                    />
+                                    <label htmlFor="isPrimary" style={{ fontSize: 13, color: colors.neutral[700], cursor: 'pointer' }}>
+                                        Sou o responsável principal do imóvel
+                                    </label>
                                 </div>
                             </div>
                         </FormSection>
@@ -299,7 +347,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                                     <div style={{ height: 1, background: colors.neutral[200], margin: '8px 0' }} />
                                     <div>
                                         <Text variant="caption">ENDEREÇO</Text>
-                                        <Text weight="bold">Bloco {formData.tower} - Apto {formData.unit}</Text>
+                                        <Text weight="bold">{formData.tower}, {formData.unit}</Text>
                                     </div>
                                     <div style={{ height: 1, background: colors.neutral[200], margin: '8px 0' }} />
                                     <div>
@@ -324,7 +372,7 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                             <div style={{ textAlign: 'center' }}>
                                 <Title level={2}>Tudo pronto!</Title>
                                 <Text style={{ color: colors.neutral[500], marginTop: spacing.sm }}>
-                                    Seu cadastro foi realizado com sucesso.
+                                    Seu cadastro foi enviado e está em análise. Você será notificado assim que for aprovado.
                                 </Text>
                             </div>
                         </div>
@@ -335,8 +383,8 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
                 {/* FOOTER ACTIONS */}
                 <div style={{ marginTop: 'auto', paddingTop: spacing.md }}>
                     {step === 'success' ? (
-                        <DSButton fullWidth size="lg" onClick={onSuccess}>
-                            Ir para Login
+                        <DSButton fullWidth size="lg" onClick={onClose}>
+                            Entendi, vou aguardar
                         </DSButton>
                     ) : (
                         <div style={{ display: 'flex', gap: spacing.md }}>

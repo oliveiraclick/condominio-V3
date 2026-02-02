@@ -8,6 +8,7 @@ import { DSSelect } from './design-system/Select';
 import { Title, Text } from './design-system/Typography';
 import { CalendarPicker } from './CalendarPicker';
 import { colors, radius, spacing, shadow } from './design-system/tokens';
+import { translateError } from '../utils/errorTranslator';
 
 interface CommonArea {
     id: string;
@@ -168,7 +169,7 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
             if (error) throw error;
             setStep('success');
         } catch (err: any) {
-            alert('Erro ao realizar operação: ' + (err.message || 'Tente novamente.'));
+            alert(translateError(err));
             console.error(err);
         } finally {
             setLoading(false);

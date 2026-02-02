@@ -72,6 +72,15 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+
+  useEffect(() => {
+    let interval: any;
+    if (cooldown > 0) {
+      interval = setInterval(() => setCooldown(prev => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [cooldown]);
 
   const handleReset = async () => {
     if (!email) return alert('Digite seu e-mail.');
@@ -82,11 +91,16 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       });
       if (error) throw error;
       setSent(true);
+      setCooldown(60);
     } catch (err: any) {
       alert('Erro: ' + err.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleResend = () => {
+    handleReset();
   };
 
   if (sent) {
@@ -98,9 +112,26 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
             <Check size={32} />
           </div>
           <h2 className="text-xl font-black text-slate-800 mb-2">E-mail Enviado!</h2>
-          <p className="text-slate-600 text-sm mb-6">Verifique sua caixa de entrada (e spam) para redefinir sua senha.</p>
-          <p className="text-center text-slate-400 text-xs mt-8">Versão 3.0 Pro</p>
-          <Button fullWidth onClick={onBack} className="h-14 bg-white/50 text-slate-600 font-bold uppercase rounded-xl hover:bg-white/80 transition-all border border-slate-200">Voltar ao Login</Button>
+          <p className="text-slate-600 text-sm mb-4">
+            Enviamos um link de recuperação para <strong>{email}</strong>.
+          </p>
+          <div className="bg-emerald-50 p-3 rounded-lg mb-6 border border-emerald-100">
+            <p className="text-emerald-800 text-xs font-bold uppercase tracking-wide">Atenção</p>
+            <p className="text-emerald-700 text-xs mt-1">O link expira em 1 hora.</p>
+          </div>
+
+          <Button
+            fullWidth
+            onClick={cooldown > 0 ? undefined : handleResend}
+            disabled={cooldown > 0 || loading}
+            className={`h-12 text-xs font-bold uppercase rounded-xl mb-3 transition-all ${cooldown > 0 ? 'bg-slate-100 text-slate-400' : 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'}`}
+          >
+            {cooldown > 0 ? `Reenviar em ${cooldown}s` : 'Não recebeu? Reenviar'}
+          </Button>
+
+          <Button fullWidth onClick={onBack} className="h-14 bg-white/50 text-slate-600 font-bold uppercase rounded-xl hover:bg-white/80 transition-all border border-slate-200">
+            Voltar ao Login
+          </Button>
         </div>
       </div>
     );
@@ -112,7 +143,7 @@ const ForgotPassword: React.FC<{ onBack: () => void }> = ({ onBack }) => {
       <header className="mb-8 relative z-10">
         <button onClick={onBack} className="w-10 h-10 bg-white border border-slate-100 rounded-xl shadow-sm text-slate-600 flex items-center justify-center mb-6 active:scale-95 transition-transform hover:bg-slate-50"><ArrowLeft size={20} /></button>
         <h2 className="text-3xl font-black italic text-slate-900 uppercase tracking-tight">Recuperar Senha</h2>
-        <p className="text-slate-500 font-medium text-sm mt-2">Digite seu e-mail para receber as instruções.</p>
+        <p className="text-slate-500 font-medium text-sm mt-2">Enviaremos um link de recuperação para o e-mail cadastrado.</p>
       </header>
 
       <div className="bg-white/70 backdrop-blur-xl border border-white/60 p-6 rounded-[32px] shadow-xl space-y-4 mb-6 relative z-10">
@@ -165,9 +196,26 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
       const { data, error: authError } = await supabase.auth.signInWithPassword({ email, password });
       if (authError) throw authError;
 
-      // TRACK LOGIN
+      // TRACK LOGIN & CHECK STATUS
       const { data: profile } = await supabase.from('profiles').select('*').eq('id', data.session.user.id).single();
+
       if (profile) {
+        if (profile.status === 'pending') {
+          await supabase.auth.signOut();
+          setError('Seu cadastro está em análise. Você será notificado após aprovação.');
+          return;
+        }
+        if (profile.status === 'inactive') {
+          await supabase.auth.signOut();
+          setError('Acesso bloqueado. Contato o síndico.');
+          return;
+        }
+        if (profile.status === 'rejected') {
+          await supabase.auth.signOut();
+          setError('Cadastro recusado. Entre em contato com a administração.');
+          return;
+        }
+
         await supabase.from('login_history').insert([{
           user_id: data.session.user.id,
           role: profile.role,
@@ -177,7 +225,26 @@ export const LoginScreen: React.FC<{ onLogin: (session?: any) => void; onRegiste
 
       onLogin(data.session);
     } catch (err: any) {
-      setError(translateError(err));
+      // HANDLE SPECIFIC ERROR LOGIC
+      const msg = err?.message || '';
+
+      if (msg.includes('Invalid login credentials')) {
+        try {
+          // Check if user exists to distinguish error
+          const { data: userExists } = await supabase.rpc('check_user_exists_by_email', { email_check: email });
+
+          if (!userExists) {
+            setError('Usuário não encontrado. Verifique os dados ou cadastre-se.');
+          } else {
+            setError('Senha incorreta. Tente novamente.');
+          }
+        } catch (rpcError) {
+          // Fallback if RPC fails
+          setError('E-mail ou senha incorretos.');
+        }
+      } else {
+        setError(translateError(err));
+      }
     } finally {
       setLoading(false);
     }
@@ -454,23 +521,58 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
     setLoading(true);
     setError(null);
 
-    // Validation
+    // 1. Strict Email Validation
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      setError('E-mail inválido. Informe um endereço válido.');
+      setLoading(false);
+      return;
+    }
+
+    // 2. CPF/CNPJ Format Validation
     if (formData.docType === 'cpf' && !validateCPF(formData.cpf)) {
-      setError('CPF inválido.');
+      setError('CPF inválido. Verifique os dados informados.');
       setLoading(false);
       return;
     }
     if (formData.docType === 'cnpj' && !validateCNPJ(formData.cnpj)) {
-      setError('CNPJ inválido.');
+      setError('CNPJ inválido. Verifique os dados informados.');
       setLoading(false);
       return;
     }
 
     try {
+      // 3. Duplicate Check (RPC)
+      if (formData.docType === 'cpf') {
+        const { data: isDupCpf, error: rpcError } = await supabase.rpc('check_duplicate_cpf', { cpf_check: formData.cpf });
+        if (rpcError) throw rpcError;
+        if (isDupCpf) {
+          setError('Este CPF já possui cadastro.');
+          setLoading(false);
+          return;
+        }
+      } else {
+        const { data: isDupCnpj, error: rpcError } = await supabase.rpc('check_duplicate_cnpj', { cnpj_check: formData.cnpj });
+        if (rpcError) throw rpcError;
+        if (isDupCnpj) {
+          setError('Este CNPJ já possui cadastro.');
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Check Existing User by Email (Pre-check to avoid generic error)
+      const { data: userExists } = await supabase.rpc('check_user_exists_by_email', { email_check: formData.email });
+      if (userExists) {
+        setError('Este e-mail já está cadastrado. Faça login.');
+        setLoading(false);
+        return;
+      }
+
+
       let userId = '';
       let sessionExists = false;
 
-      // Check Existing User
+      // Check Existing User (Standard Auth)
       const { data: { user: currentUser } } = await supabase.auth.getUser();
       if (currentUser) {
         userId = currentUser.id;
@@ -492,9 +594,10 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
           cnpj: formData.docType === 'cnpj' ? formData.cnpj : null,
           category: formData.category, role: UserRole.PROFESSIONAL,
           company_name: formData.company_name, company_address: formData.company_address,
-          // CRITICAL: Set 60 Days Free Trial
-          trial_ends_at: new Date(Date.now() + 60 * 24 * 60 * 60 * 1000).toISOString(),
-          subscription_status: 'trial'
+          // CRITICAL: Set 30 Days Free Trial
+          trial_ends_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_status: 'trial',
+          status: 'approved'
         });
         if (profileError) throw profileError;
         onFinish(formData);
@@ -539,7 +642,7 @@ export const ProfessionalRegistration: React.FC<{ onFinish: (data: any) => void;
         {error && <div className="mb-6 p-4 bg-rose-50 text-rose-600 rounded-2xl text-xs font-bold italic border border-rose-100">{error}</div>}
         <div className="mb-6 bg-emerald-50 border border-emerald-100 p-4 rounded-2xl flex items-center gap-3 shadow-sm">
           <div className="w-10 h-10 rounded-full bg-emerald-100 flex items-center justify-center text-emerald-600"><Briefcase size={20} /></div>
-          <div><h4 className="font-black text-emerald-700 text-sm uppercase italic">Teste Grátis por 60 Dias!</h4><p className="text-emerald-600/80 text-xs">Cadastre-se agora e aproveite 2 meses sem mensalidade.</p></div>
+          <div><h4 className="font-black text-emerald-700 text-sm uppercase italic">Teste Grátis por 30 Dias!</h4><p className="text-emerald-600/80 text-xs">Cadastre-se agora e aproveite 1 mês sem mensalidade.</p></div>
         </div>
         {step === 1 && (
           <div className="space-y-8 animate-in slide-in-from-right-4 pb-8">

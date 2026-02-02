@@ -11,6 +11,8 @@ import { AppFeedbackModal } from '../components/AppFeedbackModal';
 import { ProfessionalDetailModal, ReviewModal, MuralDemandModal, DigitalIDModal, AuthorizationModal, BannerCarousel, NotificationsModal } from './Resident';
 import { NewsTicker } from '../components/NewsTicker';
 import { SpaceReservationFlow } from '../components/SpaceReservationFlow';
+import { supabase } from '../supabase';
+import { ResidentPackageConfirmation } from '../components/ResidentPackageConfirmation';
 
 // New Component: Service Category Item (Square)
 const ServiceCategoryItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isNew?: boolean; className?: string; iconClassName?: string }> = ({ icon, label, onClick, isNew, className, iconClassName }) => (
@@ -109,6 +111,40 @@ export const ResidentModern: React.FC<{
             }
         };
 
+        // --- NEW: PACKAGE CONFIRMATION LOGIC ---
+        const [pendingRequest, setPendingRequest] = useState<any>(null);
+        const [confirmOpen, setConfirmOpen] = useState(false);
+
+        useEffect(() => {
+            if (currentUser?.id) {
+                const fetchPending = async () => {
+                    const { data } = await supabase
+                        .from('package_pickup_requests')
+                        .select('*')
+                        .eq('resident_id', currentUser.id)
+                        .eq('status', 'pending')
+                        .maybeSingle();
+                    if (data) setPendingRequest(data);
+                    else setPendingRequest(null);
+                }
+                fetchPending();
+
+                // Realtime subscription for new requests
+                const channel = supabase
+                    .channel(`pickup_requests_${currentUser.id}`)
+                    .on('postgres_changes', {
+                        event: '*',
+                        schema: 'public',
+                        table: 'package_pickup_requests',
+                        filter: `resident_id=eq.${currentUser.id}`
+                    }, () => fetchPending())
+                    .subscribe();
+
+                return () => { supabase.removeChannel(channel); };
+            }
+        }, [currentUser?.id]);
+        // ---------------------------------------
+
         return (
             <div className="min-h-screen bg-slate-50 pb-24 font-sans md:max-w-md md:mx-auto">
                 {/* 1. HEADER CLEAN */}
@@ -155,6 +191,40 @@ export const ResidentModern: React.FC<{
                 <main className="">
                     {/* 2. CATEGORIES CAROUSEL */}
                     <div className="px-6 pt-6 space-y-8">
+
+                        {/* --- PENDING CONFIRMATION CARD --- */}
+                        {pendingRequest && (
+                            <div className="animate-in slide-in-from-top-4 duration-500 mb-6">
+                                <div
+                                    onClick={() => setConfirmOpen(true)}
+                                    className="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm relative overflow-hidden cursor-pointer active:scale-95 transition-transform"
+                                >
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-full -mr-10 -mt-10 blur-xl opacity-50"></div>
+
+                                    <div className="flex items-center gap-4 relative z-10">
+                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-amber-600 border border-amber-100">
+                                            <Package size={24} className="animate-bounce" />
+                                        </div>
+                                        <div className="flex-1">
+                                            <h3 className="font-bold text-amber-900 leading-tight">Confirme o Recebimento</h3>
+                                            <p className="text-xs text-amber-700 font-medium mt-1">
+                                                Você retirou {pendingRequest.package_ids?.length || 'algumas'} encomendas na portaria.
+                                            </p>
+                                        </div>
+                                        <div className="bg-amber-500 text-white p-2 rounded-full shadow-md shadow-amber-200">
+                                            <ChevronRight size={20} />
+                                        </div>
+                                    </div>
+
+                                    <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest">
+                                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
+                                        Aguardando sua confirmação
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                        {/* ---------------------------------- */}
+
                         <section className="relative group/nav">
                             {/* Navigation Arrows */}
                             <button
@@ -390,6 +460,12 @@ export const ResidentModern: React.FC<{
                     onClose={() => setReservationOpen(false)}
                     currentUserId={currentUser?.id}
                     currentUser={currentUser}
+                />
+
+                <ResidentPackageConfirmation
+                    open={confirmOpen}
+                    onClose={() => setConfirmOpen(false)}
+                    residentId={currentUser?.id}
                 />
 
             </div>

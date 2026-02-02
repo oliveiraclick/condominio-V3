@@ -7,11 +7,13 @@ import {
 } from 'lucide-react';
 
 import { PackagePickupFlow } from '../components/PackagePickupFlow';
+import { PendingApprovalsModal } from '../components/admin/PendingApprovalsModal';
 
 export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => void, onLogout: () => void, currentUser?: any }> = ({ onNavigate, onLogout, currentUser }) => {
     const [activeMenu, setActiveMenu] = useState('overview');
     const [counts, setCounts] = useState({ residents: 0, incidents: 0, reservations: 0, accessToday: 0 });
     const [pickupFlowOpen, setPickupFlowOpen] = useState(false);
+    const [pendingApprovalsOpen, setPendingApprovalsOpen] = useState(false);
     const [recentActivity, setRecentActivity] = useState<any[]>([]);
     const [chartData, setChartData] = useState<number[]>([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
 
@@ -19,6 +21,9 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
         const fetchData = async () => {
             // 1. Residents
             const { count: resCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('role', 'resident');
+
+            // 1b. Pending Approvals
+            const { count: pendingCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true }).eq('status', 'pending');
 
             // 2. Incidents (Open)
             const { count: incCount } = await supabase.from('service_requests').select('*', { count: 'exact', head: true }).in('status', ['pending', 'open']);
@@ -34,9 +39,11 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                 residents: resCount || 0,
                 incidents: incCount || 0,
                 reservations: resvCount || 0,
-                accessToday: accCount || 0
+                accessToday: accCount || 0,
+                pending: pendingCount || 0
             });
 
+            // ... rest of fetch logic
             // 5. Recent Activity
             const { data: logs } = await supabase.from('access_logs').select('*, profiles(name)').order('created_at', { ascending: false }).limit(4);
             if (logs) {
@@ -71,10 +78,10 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
     }, []);
 
     const stats = [
+        { label: 'Aprovações Pendentes', value: (counts as any).pending?.toString() || '0', change: 'Ação Necessária', icon: User, color: 'text-white', bg: 'bg-rose-500', onClick: () => setPendingApprovalsOpen(true) },
         { label: 'Moradores', value: counts.residents.toString(), change: '+12%', icon: Users, color: 'text-brand-400', bg: 'bg-brand-400/10' },
         { label: 'Ocorrências', value: counts.incidents.toString().padStart(2, '0'), change: '-2%', icon: AlertTriangle, color: 'text-amber-400', bg: 'bg-amber-400/10' },
         { label: 'Reservas Hoje', value: counts.reservations.toString(), change: '+5%', icon: Calendar, color: 'text-emerald-400', bg: 'bg-emerald-400/10' },
-        { label: 'Acessos Hoje', value: counts.accessToday.toString(), change: '+23%', icon: ShieldCheck, color: 'text-blue-400', bg: 'bg-blue-400/10' },
     ];
 
     return (
@@ -173,7 +180,7 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                     {/* Stats Grid */}
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                         {stats.map((stat, i) => (
-                            <div key={i} className="bg-[#161b22] border border-white/5 p-6 rounded-2xl hover:border-brand-500/20 transition-colors group relative overflow-hidden">
+                            <div key={i} onClick={(stat as any).onClick} className={`bg-[#161b22] border border-white/5 p-6 rounded-2xl hover:border-brand-500/20 transition-colors group relative overflow-hidden ${stat.onClick ? 'cursor-pointer hover:bg-white/5' : ''}`}>
                                 <div className={`absolute top-0 right-0 w-24 h-24 ${stat.bg} rounded-full blur-[40px] -translate-y-1/2 translate-x-1/2 group-hover:bg-opacity-100 transition-all duration-500`} />
 
                                 <div className="relative z-10">
@@ -181,7 +188,7 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                                         <div className={`p-3 rounded-xl ${stat.bg} ${stat.color}`}>
                                             <stat.icon size={24} />
                                         </div>
-                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-500/10 text-emerald-400' : 'bg-rose-500/10 text-rose-400'}`}>
+                                        <span className={`text-xs font-bold px-2 py-1 rounded-full ${stat.change.startsWith('+') ? 'bg-emerald-500/10 text-emerald-400' : stat.change === 'Ação Necessária' ? 'bg-white/20 text-white' : 'bg-rose-500/10 text-rose-400'}`}>
                                             {stat.change}
                                         </span>
                                     </div>
@@ -190,6 +197,27 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                                 </div>
                             </div>
                         ))}
+                    </div>
+
+                    {/* System Actions */}
+                    <div className="flex gap-4">
+                        <button
+                            onClick={async () => {
+                                const confirm = window.confirm('Deseja rodar a verificação financeira manual? Isso atualizará status e enviará notificações.');
+                                if (!confirm) return;
+                                try {
+                                    const { error } = await supabase.rpc('check_professional_status');
+                                    if (error) throw error;
+                                    alert('✅ Verificação executada com sucesso!');
+                                } catch (err: any) {
+                                    alert('❌ Erro: ' + err.message);
+                                }
+                            }}
+                            className="flex items-center gap-2 px-4 py-3 bg-[#161b22] border border-white/5 rounded-xl text-xs font-bold uppercase tracking-wider text-slate-400 hover:bg-emerald-500/10 hover:text-emerald-400 hover:border-emerald-500/20 transition-all"
+                        >
+                            <DollarSign size={16} />
+                            Rodar Verificação Financeira (Manual)
+                        </button>
                     </div>
 
                     {/* Charts & Activity Section */}
@@ -256,6 +284,10 @@ export const AdminDashboardModern: React.FC<{ onNavigate: (screen: string) => vo
                 open={pickupFlowOpen}
                 onClose={() => setPickupFlowOpen(false)}
                 currentUser={currentUser || { name: 'Admin', id: 'admin' }}
+            />
+            <PendingApprovalsModal
+                open={pendingApprovalsOpen}
+                onClose={() => setPendingApprovalsOpen(false)}
             />
         </div>
     );

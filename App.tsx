@@ -801,7 +801,7 @@ const App: React.FC = () => {
 
   if (appState === 'roleSelection') return <RoleSelection onSelect={(role) => { setUserRole(role); setAppState(role === UserRole.RESIDENT ? 'registerResident' : 'registerProfessional'); }} onBack={() => setAppState('login')} />;
 
-  if (appState === 'registerResident') return null; // Logic moved below for stability
+
 
   if (appState === 'registerProfessional') {
     if (useModernDesign) return <ProfessionalRegistrationModern onFinish={() => setAppState('login')} onBack={() => setAppState('roleSelection')} />;

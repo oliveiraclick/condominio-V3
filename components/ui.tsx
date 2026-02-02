@@ -1,5 +1,5 @@
 ﻿import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { X, CheckCircle2, AlertCircle, Info, Loader2 } from 'lucide-react';
+import { X, CheckCircle2, AlertCircle, Info, Loader2, Eye, EyeOff } from 'lucide-react';
 
 // --- TOAST SYSTEM ---
 export type ToastType = 'success' | 'error' | 'info' | 'loading';
@@ -133,17 +133,34 @@ export const Button: React.FC<ButtonProps> = ({
   );
 };
 
-export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className = '', ...props }) => {
+export const Input: React.FC<React.InputHTMLAttributes<HTMLInputElement>> = ({ className = '', type = 'text', ...props }) => {
+  const [showPassword, setShowPassword] = useState(false);
+  const isPassword = type === 'password';
+  const inputType = isPassword ? (showPassword ? 'text' : 'password') : type;
+
   return (
-    <input
-      className={`
-        w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 
-        text-sm font-medium text-slate-900 placeholder:text-slate-400
-        outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all
-        ${className}
-      `}
-      {...props}
-    />
+    <div className="relative w-full">
+      <input
+        type={inputType}
+        className={`
+          w-full h-12 bg-slate-50 border border-slate-200 rounded-2xl px-4 
+          text-sm font-medium text-slate-900 placeholder:text-slate-400
+          outline-none focus:border-brand-500 focus:ring-4 focus:ring-brand-500/10 transition-all
+          ${isPassword ? 'pr-12' : ''}
+          ${className}
+        `}
+        {...props}
+      />
+      {isPassword && (
+        <button
+          type="button"
+          onClick={() => setShowPassword(!showPassword)}
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+        >
+          {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+        </button>
+      )}
+    </div>
   );
 };
 
