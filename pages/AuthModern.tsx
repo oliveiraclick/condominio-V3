@@ -240,18 +240,46 @@ export const ProfessionalRegistrationModern: React.FC<{ onFinish: () => void; on
 
         setLoading(true);
         try {
-            const { data, error } = await supabase.auth.signUp({ email: formData.email, password: formData.password });
+            console.log('🚀 Starting professional registration...');
+
+            // 1. Criar usuário no auth
+            const { data, error } = await supabase.auth.signUp({
+                email: formData.email,
+                password: formData.password
+            });
+
+            console.log('📧 Auth signup result:', { user: data?.user?.id, error });
+
             if (error) throw error;
-            if (data.user) {
-                await supabase.from('profiles').insert([{
-                    id: data.user.id, name: formData.name, email: formData.email, phone: formData.phone,
-                    cpf: formData.docType === 'cpf' ? formData.cpf : null,
-                    cnpj: formData.docType === 'cnpj' ? formData.cnpj : null,
-                    role: 'professional', category: formData.category, is_on_site: false, condominium_id: '00000000-0000-0000-0000-000000000000'
-                }]);
-                onFinish();
-            }
-        } catch (err: any) { alert(translateError(err)); } finally { setLoading(false); }
+            if (!data.user) throw new Error('Falha ao criar usuário');
+
+            console.log('✅ User created, creating minimal profile...');
+
+            // 2. Criar perfil MÍNIMO (à prova de erro)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: data.user.id,
+                    email: data.user.email,
+                    role: 'professional',
+                    name: formData.name || data.user.email?.split('@')[0] || 'Usuário',
+                    is_free: true,
+                    condominium_id: '00000000-0000-0000-0000-000000000000'
+                });
+
+            console.log('📋 Profile creation result:', { profileError });
+
+            if (profileError) throw profileError;
+
+            console.log('🎉 Registration successful!');
+            alert('✅ Cadastro realizado com sucesso! Faça login para continuar.');
+            onFinish();
+        } catch (err: any) {
+            console.error('❌ Registration error:', err);
+            alert(translateError(err));
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (

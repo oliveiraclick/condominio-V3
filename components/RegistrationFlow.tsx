@@ -12,6 +12,8 @@ import { maskCPF, maskPhone } from '../utils/masks';
 import { validateCPF } from '../utils/validators';
 import { translateError } from '../utils/errorTranslator';
 
+console.log('🔄 RegistrationFlow loaded - Version 2.0 with detailed logging');
+
 interface RegistrationFlowProps {
     open: boolean;
     onClose: () => void;
@@ -41,8 +43,11 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
         name: '',
         cpf: '',
         phone: '',
-        unit: '',
+        email: '',
+        password: '',
         passwordConfirm: '',
+        unit: '',
+        tower: '',
         isPrimary: false
     });
 
@@ -54,9 +59,16 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
             if (step === 'personal') {
                 setLoading(true);
                 try {
+                    console.log('🔍 Checking CPF:', formData.cpf);
                     const { data: isDuplicate, error } = await supabase.rpc('check_duplicate_cpf', { cpf_check: formData.cpf });
 
-                    if (error) throw error;
+                    console.log('📋 CPF check result:', { isDuplicate, error });
+
+                    if (error) {
+                        console.error('❌ CPF check error:', error);
+                        alert(`Erro ao verificar CPF: ${error.message || 'Tente novamente mais tarde'}`);
+                        return;
+                    }
 
                     if (isDuplicate) {
                         setErrors(prev => ({ ...prev, cpf: 'Este CPF já possui cadastro. Faça login ou recupere seu acesso.' }));
@@ -65,13 +77,9 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
 
                     // CPF is new, proceed
                     setStep('property');
-                } catch (err) {
-                    console.error('Error checking CPF', err);
-                    // Fail safe: proceed or block? Let's proceed to avoid blocking valid users if RPC fails, 
-                    // or block if we want strict security. For UX, let's proceed but maybe validation will catch it later DB side.
-                    // But actually, unique constraint in DB is safe. 
-                    // Let's alert user just to be safe.
-                    alert(translateError(err));
+                } catch (err: any) {
+                    console.error('❌ Error checking CPF:', err);
+                    alert(`Erro ao verificar CPF: ${err.message || 'Tente novamente mais tarde'}`);
                 } finally {
                     setLoading(false);
                 }
@@ -126,37 +134,50 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
     const handleSubmit = async () => {
         setLoading(true);
         try {
+            console.log('🚀 Starting resident registration...');
+
+            // 1. Criar usuário no auth
             const { data: authData, error: authError } = await supabase.auth.signUp({
                 email: formData.email,
                 password: formData.password,
             });
 
-            if (authError) throw authError;
+            console.log('📧 Auth signup result:', { user: authData?.user?.id, error: authError });
 
-            if (authData.user) {
-                // O trigger handle_new_user já criou o perfil básico
-                // Agora só atualizamos com os dados adicionais do formulário
-                const { error: profileError } = await supabase
-                    .from('profiles')
-                    .update({
-                        name: formData.name,
-                        phone: formData.phone,
-                        cpf: formData.cpf,
-                        unit: formData.unit,
-                        tower: formData.tower,
-                        condominium_id: '00000000-0000-0000-0000-000000000000',
-                        status: 'pending',
-                        is_primary_resident: formData.isPrimary
-                    })
-                    .eq('id', authData.user.id);
-
-                if (profileError) {
-                    throw new Error('Erro ao salvar perfil: ' + profileError.message);
-                }
-
-                setStep('success');
+            if (authError) {
+                console.error('❌ Auth Error:', authError);
+                throw authError;
             }
+
+            if (!authData.user) throw new Error('Falha ao criar usuário');
+
+            console.log('✅ User created, creating minimal profile...');
+
+            // 2. Criar perfil MÍNIMO (à prova de erro)
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert({
+                    id: authData.user.id,
+                    email: authData.user.email,
+                    role: 'resident',
+                    name: formData.name || authData.user.email?.split('@')[0] || 'Usuário',
+                    is_free: true,
+                    status: 'pending',
+                    condominium_id: '00000000-0000-0000-0000-000000000000'
+                });
+
+            console.log('📋 Profile creation result:', { profileError });
+
+            if (profileError) {
+                console.error('❌ Profile Error:', profileError);
+                throw new Error('Erro ao salvar perfil: ' + profileError.message);
+            }
+
+            console.log('🎉 Registration successful!');
+            alert('✅ Cadastro realizado com sucesso! Aguarde a aprovação do síndico.');
+            setStep('success');
         } catch (error: any) {
+            console.error('❌ Registration Error:', error);
             alert(translateError(error));
         } finally {
             setLoading(false);

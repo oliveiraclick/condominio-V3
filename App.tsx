@@ -6,7 +6,7 @@ import { ToastProvider } from './components/ui';
 import { SplashScreen as SplashScreenPlugin } from '@capacitor/splash-screen';
 import { translateError } from './utils/errorTranslator';
 // Imports de Páginas e Componentes
-import { SplashScreen, LoginScreen, RoleSelection, ResidentRegistration, ProfessionalRegistration } from './pages/Auth';
+import { SplashScreen, LoginScreen, RoleSelection, ProfessionalRegistration } from './pages/Auth';
 import { PrivacyPage } from './pages/Privacidade';
 import { SupportPage } from './pages/Suporte';
 import {
@@ -39,7 +39,7 @@ import { EmployeeDashboard } from './pages/EmployeeDashboard';
 import { EmployeeNavigation } from './components/employees/EmployeeNavigation';
 
 // IMPORTS MODO MODERNO (BETA)
-import { SplashScreenModern, ResidentRegistrationModern, LoginScreenModern, ProfessionalRegistrationModern, RoleSelectionModern } from './pages/AuthModern';
+import { SplashScreenModern, LoginScreenModern, ProfessionalRegistrationModern, RoleSelectionModern } from './pages/AuthModern';
 import { AdminDashboardModern } from './pages/AdminModern';
 import { ResidentModern } from './pages/ResidentModern';
 
@@ -121,8 +121,8 @@ const App: React.FC = () => {
   const fetchUserProfile = useCallback(async (userId: string, isSilent = false) => {
     if (!isSilent) setLoading(true);
 
-    // Timeout safeguard for Login Loop Protection
-    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 15000));
+    // Timeout safeguard for Login Loop Protection (REDUCED TO 5s)
+    const timeout = new Promise((_, reject) => setTimeout(() => reject(new Error('Profile fetch timeout')), 5000));
 
     try {
       const fetchProfileOp = supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
@@ -241,17 +241,18 @@ const App: React.FC = () => {
             setCurrentUser(cachedProfile);
             setAppState('main');
           } else {
-            // NO PROFILE, NO CACHE -> LOGOUT
-            // Não vamos criar perfil fake automaticamente por segurança
-            console.error('⛔ Acesso negado: Perfil inexistente.');
-            alert('Perfil de usuário não encontrado. Entre em contato com o suporte.');
-            await supabase.auth.signOut();
-            setAppState('login');
+            // NO PROFILE, NO CACHE -> REDIRECT TO REGISTRATION
+            // Usuário autenticado mas sem perfil = fluxo de cadastro incompleto
+            console.warn('⚠️ Perfil não encontrado. Redirecionando para fluxo de cadastro.');
+            setUserRole(null);
+            setCurrentUser(null);
+            // NÃO faz signOut - usuário está autenticado, só precisa completar o cadastro
+            setAppState('roleSelection');
           }
         }
       }
     } catch (err) {
-      console.error('Erro ao carregar perfil:', err);
+      console.error('❌ ERRO ao carregar perfil:', err);
 
       // Attempt recovery from cache on timeout/error
       const cachedProfileStr = localStorage.getItem('userProfile_cache');
@@ -265,9 +266,10 @@ const App: React.FC = () => {
         setAppState('main');
         baseScreen(cachedRole === UserRole.RESIDENT ? 'home' : 'dashboard');
       } else {
-        // Fatal error -> Logout
-        await supabase.auth.signOut();
-        setAppState('login');
+        // Timeout ao buscar perfil -> Redireciona sem logout
+        console.warn('⚠️ Timeout ao buscar perfil. Continuando fluxo sem logout.');
+        setAppState('roleSelection');
+        return;
       }
     } finally {
       if (!isSilent) setLoading(false);
