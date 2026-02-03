@@ -114,7 +114,7 @@ const App: React.FC = () => {
     const newValue = !useModernDesign;
     setUseModernDesign(newValue);
     localStorage.setItem('beta_modern_design', String(newValue));
-    if (newValue) { loadGlobalData(); } // Reload data instead of page
+    if (newValue) window.location.reload(); // Recarrega para mostrar o Splash novo
   };
 
   // --- 1. LÓGICA DE BUSCA DE PERFIL (COM BLINDAGEM ANTI-LOOP) ---
@@ -292,9 +292,7 @@ const App: React.FC = () => {
         // Inicializa Push Notifications
         // Import must be added at top, but usage here
         import('./services/PushNotificationService').then(({ PushNotificationService }) => {
-          if ((window as any).Capacitor?.isNativePlatform?.()) {
-            PushNotificationService.init();
-          }
+          PushNotificationService.init();
         });
 
         const cached = localStorage.getItem('userRole_cache');
@@ -331,114 +329,8 @@ const App: React.FC = () => {
         if (newSession.user.id !== session?.user?.id) await fetchUserProfile(newSession.user.id);
       }
     });
-
     return () => subscription.unsubscribe();
   }, [fetchUserProfile]);
-
-  // ===============================
-  // GLOBAL DATA — LOAD ONCE PER LOGIN
-  // ===============================
-  const loadGlobalData = useCallback(async () => {
-    if (!session) return;
-
-    try {
-      // Notifications
-      const { data: notifs } = await supabase
-        .from('my_unread_notifications')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(20);
-
-      if (notifs) setNotifications(notifs);
-
-      // Categories (cache forte)
-      const cachedCats = localStorage.getItem('categories_cache');
-      if (cachedCats) {
-        setCategories(JSON.parse(cachedCats));
-      } else {
-        const { data: cats } = await supabase
-          .from('categories')
-          .select('*')
-          .order('name');
-
-        if (cats) {
-          setCategories(cats);
-          localStorage.setItem('categories_cache', JSON.stringify(cats));
-        }
-      }
-
-      // On-site professionals
-      const { data: onSite } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('role', 'professional')
-        .eq('is_on_site', true);
-
-      if (onSite) setOnSitePros(onSite);
-
-    } catch (e) {
-      console.error('[GlobalData]', e);
-    }
-  }, [session]);
-
-  // ===============================
-  // TAB DATA — LOAD ON TAB CHANGE
-  // ===============================
-  const loadTabData = useCallback(async () => {
-    if (!session || appState !== 'main') return;
-
-    try {
-      const role = userRole || (localStorage.getItem('userRole_cache') as UserRole);
-
-      // HOME (Resident)
-      if (role === UserRole.RESIDENT && activeTab === 'home') {
-        const { data } = await supabase
-          .from('packages')
-          .select('*')
-          .or(`resident_id.eq.${session.user.id},picked_up_by.eq.${session.user.id}`)
-          .in('status', ['pending', 'awaiting_confirmation']);
-
-        if (data) setPackages(data);
-      }
-
-      // MARKETPLACE
-      if (activeTab === 'market') {
-        const { data } = await supabase
-          .from('marketplace')
-          .select('*')
-          .order('created_at', { ascending: false })
-          .limit(20);
-
-        if (data) setDesapegos(data);
-      }
-
-      // AGENDA
-      if (activeTab === 'condo-agenda') {
-        const { data } = await supabase
-          .from('reservations')
-          .select('*')
-          .gte('date', new Date().toISOString().split('T')[0])
-          .order('date');
-
-        if (data) setReservations(data);
-      }
-
-    } catch (e) {
-      console.error('[TabData]', e);
-    }
-  }, [session, appState, activeTab, userRole]);
-
-  // GLOBAL DATA — UMA VEZ APÓS LOGIN
-  useEffect(() => {
-    if (session && appState === 'main') {
-      loadGlobalData();
-    }
-  }, [session, appState, loadGlobalData]);
-
-  // TAB DATA — SOMENTE AO TROCAR DE ABA
-  useEffect(() => {
-    loadTabData();
-  }, [activeTab, loadTabData]);
 
   // --- 3. SCROLL RESET ON NAVIGATION ---
   useEffect(() => {
@@ -453,24 +345,172 @@ const App: React.FC = () => {
   }, []);
 
   // --- 4. CARREGAMENTO DE DADOS OTIMIZADO (SPLIT LOADING) ---
+  const refreshAppData = useCallback(async () => {
+    if (appState !== 'main' || !session) return;
 
-  // ===============================
-  // GLOBAL DATA — LOAD ONCE PER LOGIN
-  // ===============================
+    try {
+      const currentRole = userRole || localStorage.getItem('userRole_cache') as UserRole;
 
+      // Helper for clean data fetching
+      const fetchTable = async (table: string, query: any) => {
+        const { data, error } = await query;
+        if (error) {
+          console.error(`[App] Erro na tabela ${table}:`, error.message);
+          return null;
+        }
+        return data;
+      };
 
-  // ===============================
-  // TAB DATA — LOAD ON TAB CHANGE
-  // ===============================
+      // --- PHASE 1: CRITICAL DATA (User sees this immediately) ---
+      // includes: Profile, Unread Notifications, Active Packages, Active Service Requests
 
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
 
+      const p1Promises: Promise<any>[] = [
+        // 1. Notifications (Always needed)
+        fetchTable('my_unread_notifications', supabase.from('my_unread_notifications').select('*').order('created_at', { ascending: false }).limit(20)),
 
+        // 2. Active Packages (Resident Only)
+        currentRole === UserRole.RESIDENT
+          ? fetchTable('packages', supabase.from('packages').select('*').or(`resident_id.eq.${session.user.id},picked_up_by.eq.${session.user.id}`).in('status', ['pending', 'awaiting_confirmation']))
+          : Promise.resolve([]),
 
+        // 3. On-Site Pros (PRIORITY)
+        fetchTable('profiles', supabase.from('profiles').select('*').eq('role', 'professional').eq('is_on_site', true)),
+
+        // 4. Professional Services (PRIORITY)
+        fetchTable('professional_services', supabase.from('professional_services').select('*').eq('active', true)),
+      ];
+
+      const [unreadNotifs, activePkgs, onSite, proServices] = await Promise.all(p1Promises);
+
+      // IMMEDIATE STATE UPDATE (Phase 1)
+      if (unreadNotifs) setNotifications(unreadNotifs);
+      if (activePkgs) setPackages(activePkgs);
+      if (onSite) setOnSitePros(onSite);
+
+      // Map Professional Services Immediately
+      if (proServices) {
+        // Create Map
+        const proIds = new Set<string>();
+        proServices.forEach((p: any) => { if (p.provider_id) proIds.add(p.provider_id); });
+
+        if (proIds.size > 0) {
+          const { data: profilesData } = await supabase.from('profiles').select('id, name, phone, avatar, specialties').in('id', Array.from(proIds));
+          const proMap: Record<string, any> = {};
+          if (profilesData) profilesData.forEach(p => { proMap[p.id] = p; });
+
+          setProfessionalServices(proServices.map((p: any) => {
+            const profile = proMap[p.provider_id];
+            return { ...p, providerName: profile?.name || 'Prestador', providerPhone: profile?.phone || '', providerAvatar: profile?.avatar, specialties: profile?.specialties };
+          }));
+        } else {
+          setProfessionalServices(proServices);
+        }
+      }
+
+      // --- PHASE 2: SECONDARY DATA (Background / Below Fold) ---
+      // includes: Marketplace, History, Products, Categories, Full Lists
+
+      setTimeout(async () => {
+        const p2Promises = [
+          fetchTable('common_areas', supabase.from('common_areas').select('*').order('name')),
+
+          // Limit reservations to active/future to validade cache
+          fetchTable('reservations', supabase.from('reservations').select('*, common_areas(name), profiles:resident_id(name, avatar, unit, tower)').gte('date', new Date().toISOString().split('T')[0]).order('date').limit(50)),
+
+          fetchTable('categories', supabase.from('categories').select('*').order('name')),
+
+          // On-Site Pros (Moved to Phase 1)
+
+          // Service Requests (Limit history)
+          fetchTable('service_requests', supabase.from('service_requests').select('*').order('created_at', { ascending: false }).limit(currentRole === 'professional' ? 100 : 20)),
+
+          // Marketplace (Limit 20 initially)
+          fetchTable('marketplace', supabase.from('marketplace').select('*').order('created_at', { ascending: false }).limit(20)),
+
+          // Products
+          fetchTable('products', supabase.from('products').select('*').eq('available', true).limit(50)),
+
+          // Professional Services (Moved to Phase 1)
+
+          // Demands (Resident Only)
+          currentRole === UserRole.RESIDENT ? fetchTable('service_demands', supabase.from('service_demands').select('*').eq('resident_id', session.user.id).order('created_at', { ascending: false })) : Promise.resolve([]),
+        ];
+
+        const [areas, resvs, cats, requestsHistory, desap, prods, demandsData] = await Promise.all(p2Promises);
+
+        // BATCH UPDATE PHASE 2
+        if (areas) setCommonAreas(areas);
+
+        if (resvs) {
+          setReservations(resvs.map((r: any) => ({
+            ...r,
+            displayName: r.profiles?.name || 'Morador',
+            resident: r.profiles?.name || 'Morador',
+            area: r.common_areas?.name || r.area_name || r.area_id,
+            avatar: r.profiles?.avatar
+          })));
+        }
+
+        if (cats) setCategories(cats);
+
+        // MERGE REQUESTS (Active ones from P1 logic if split? No, we fetched all recent in P2 for simplicity, just render them)
+        if (requestsHistory) {
+          setServiceRequests(requestsHistory.map((r: any) => ({
+            ...r,
+            user: r.resident?.name || 'Morador',
+            phone: r.resident?.phone || '',
+            providerName: r.provider?.name || 'Prestador'
+          })));
+          setActiveServices(requestsHistory.filter((r: any) => r.status === 'accepted' || r.status === 'in_progress'));
+        }
+
+        // ... (Mapping for Marketplace & Products)
+        const userIds = new Set<string>();
+        if (desap) desap.forEach((p: any) => { if (p.seller_id) userIds.add(p.seller_id); });
+        if (prods) prods.forEach((p: any) => { if (p.vendor_id) userIds.add(p.vendor_id); }); // ADDED: Collect vendor_ids from products
+
+        let userMap: Record<string, any> = {};
+        if (userIds.size > 0) {
+          const { data: profilesData } = await supabase.from('profiles').select('id, name, avatar, phone, tower, unit').in('id', Array.from(userIds));
+          if (profilesData) profilesData.forEach(p => { userMap[p.id] = p; });
+        }
+
+        if (desap) {
+          setDesapegos(desap.map((i: any) => {
+            const seller = userMap[i.seller_id];
+            return {
+              id: i.id, name: i.title, price: `R$ ${i.price}`, img: i.image_url,
+              user: seller?.name || 'Vizinho', status: i.status ? i.status.toUpperCase() : 'DISPONÍVEL',
+              avatar: seller?.avatar,
+              desc: i.description, tower: seller?.tower || '', unit: seller?.unit || '', phone: seller?.phone || ''
+            };
+          }));
+        }
+
+        if (prods) {
+          setProducts(prods.map((p: any) => {
+            const vendor = userMap[p.vendor_id];
+            return { ...p, profiles: vendor || { name: 'Vizinho', avatar: null } };
+          }));
+        }
+
+        if (demandsData) setMyDemands(demandsData);
+
+      }, 100); // Small Delay to allow UI to paint Phase 1
+
+    } catch (e) {
+      console.error("[App] Erro fatal no refresh", e);
+    }
+  }, [appState, session, userRole]);
+
+  useEffect(() => { refreshAppData(); }, [refreshAppData]);
 
   // --- HANDLERS GENÉRICOS (RE-USÁVEIS) ---
   const handleUpdateServiceRequest = async (id: number | string, status: string) => {
     const { error } = await supabase.from('service_requests').update({ status }).eq('id', id);
-    if (!error) loadTabData();
+    if (!error) refreshAppData();
   };
 
   const handleAddProduct = async (product: any) => {
@@ -486,17 +526,17 @@ const App: React.FC = () => {
     }
     const { image_file, ...productData } = product;
     const { error } = await supabase.from('products').insert([{ ...productData, image_url: finalImageUrl, vendor_id: session.user.id }]);
-    if (!error) loadTabData(); else alert(translateError(error));
+    if (!error) refreshAppData(); else alert(translateError(error));
   };
 
   const handleDeleteProduct = async (id: string) => {
     const { error } = await supabase.from('products').delete().eq('id', id);
-    if (!error) loadTabData();
+    if (!error) refreshAppData();
   };
 
   const handleToggleProductStatus = async (product: any) => {
     const { error } = await supabase.from('products').update({ available: !product.available }).eq('id', product.id);
-    if (!error) loadTabData();
+    if (!error) refreshAppData();
   };
 
   const handleAddDesapego = async (item: any) => {
@@ -514,12 +554,12 @@ const App: React.FC = () => {
       seller_id: session.user.id, title: item.name, price: parseFloat(item.price.replace('R$', '').replace(',', '.').trim()),
       status: item.status, description: item.desc, image_url: finalImageUrl
     }]);
-    if (!error) { loadTabData(); baseScreen('home'); } else alert(translateError(error));
+    if (!error) { refreshAppData(); baseScreen('home'); } else alert(translateError(error));
   };
 
   const handleDeleteDesapego = async (id: string) => {
     const { error } = await supabase.from('marketplace').delete().eq('id', id);
-    if (!error) { alert('Anúncio removido!'); loadTabData(); baseScreen('home'); }
+    if (!error) { alert('Anúncio removido!'); refreshAppData(); baseScreen('home'); }
   };
 
   const handleSelectDesapego = (item: any) => {
@@ -544,7 +584,7 @@ const App: React.FC = () => {
       location: `${currentUser?.tower} - ${currentUser?.unit}`,
       provider_id: req.professional_id
     }]);
-    if (!error) { alert('Chamado aberto!'); loadTabData(); } else alert(translateError(error));
+    if (!error) { alert('Chamado aberto!'); refreshAppData(); } else alert(translateError(error));
   };
 
 
@@ -573,7 +613,7 @@ const App: React.FC = () => {
         }
       }).catch(err => console.error('Push Trigger Error:', err));
 
-      loadTabData();
+      refreshAppData();
     } else {
       alert(translateError(error));
     }
@@ -616,7 +656,7 @@ const App: React.FC = () => {
                 muralCategories={categories?.map((c: any) => c.name) || []}
                 onPostMuralDemand={handlePostMuralDemand}
                 activeTab={activeTab}
-                onClearNotifications={loadGlobalData}
+                onClearNotifications={refreshAppData}
                 onNotifications={() => setNotificationModalOpen(true)}
               />
               <ResidentPackageConfirmation
@@ -628,7 +668,7 @@ const App: React.FC = () => {
           );
           case 'market': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
           case 'profile': return <ResidentProfile currentUser={currentUser} onNavigate={pushScreen} />;
-          case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); loadTabData(); }} currentUser={currentUser} />;
+          case 'acesso': return <AcessoPage onBack={goBack} accessList={accessList} onAddAccess={async (access) => { await supabase.from('access_control').insert([{ resident_id: session.user.id, visitor_name: access.name, type: access.type, date: access.date, unit: currentUser?.unit, tower: currentUser?.tower }]); refreshAppData(); }} currentUser={currentUser} />;
           case 'financeiro': return <FinanceiroPage onBack={goBack} invoices={invoices} />;
           case 'chamado': return <CommunicationHub onBack={goBack} currentUser={currentUser} />;
           case 'condo-agenda': return <CondoAgendaPage onBack={goBack} reservations={reservations} commonAreas={commonAreas} onNavigate={pushScreen} onAddReservation={async (res) => {
@@ -647,13 +687,13 @@ const App: React.FC = () => {
               insertData.time_slot = res.timeSlot;
             }
             const { error } = await supabase.from('reservations').insert([insertData]);
-            if (!error) { loadTabData(); } else { throw new Error(translateError(error)); }
+            if (!error) { refreshAppData(); } else { throw new Error(translateError(error)); }
           }} />;
           case 'servicos-full': return <ServicosFullView initialCategory={selectedCategory} initialSearch={selectedSearch} onBack={goBack} onNavigate={pushScreen} onServiceRequest={handleAddServiceRequest} services={professionalServices} currentUser={currentUser} categories={categories} />;
-          case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} demands={myDemands} proposals={myProposals} onRefresh={loadTabData} />;
+          case 'minhas-demandas': return <MinhasDemandasPage onBack={goBack} currentUser={currentUser} demands={myDemands} proposals={myProposals} onRefresh={refreshAppData} />;
           case 'personal-data': return <PersonalDataPage onBack={goBack} currentUser={currentUser} />;
           case 'privacy': return <PrivacyPage onBack={goBack} />;
-          case 'resident-bookings': return <ResidentBookings onBack={goBack} reservations={reservations} currentUser={currentUser} onRefresh={loadTabData} />;
+          case 'resident-bookings': return <ResidentBookings onBack={goBack} reservations={reservations} currentUser={currentUser} onRefresh={refreshAppData} />;
 
           // --- E-SHOP & DESAPEGO ROUTES ---
           case 'shop-detail': return <Marketplace onNavigate={pushScreen} onSelectCategory={navigateToCategory} services={professionalServices} products={products} categories={categories} />;
@@ -727,7 +767,7 @@ const App: React.FC = () => {
           case 'dashboard': return <AdminDashboard onNavigate={pushScreen} onLogout={() => supabase.auth.signOut()} />;
           case 'employees': return <AdminEmployees currentUser={currentUser} />;
           case 'admin-residents': return <AdminResidents onBack={goBack} />;
-          case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={loadGlobalData} />;
+          case 'admin-access': return <AdminAccess onBack={goBack} accessList={accessList} onCheckIn={refreshAppData} />;
           case 'admin-packages': return <AdminPackages onBack={goBack} onNavigate={pushScreen} />;
           case 'package-receipt': return <AdminPackageReceipt onBack={goBack} currentUser={currentUser} />;
           case 'package-processing': return <AdminPackageProcessing onBack={goBack} currentUser={currentUser} onNavigate={pushScreen} />;
@@ -747,8 +787,8 @@ const App: React.FC = () => {
           }
           case 'admin-banners': return <AdminBanners onBack={goBack} />;
           case 'admin-incidents': return <AdminIncidents onBack={goBack} serviceRequests={serviceRequests} onUpdateRequest={handleUpdateServiceRequest} />;
-          case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={loadTabData} />;
-          case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={loadGlobalData} />;
+          case 'admin-reservations': return <AdminReservations onBack={goBack} reservations={reservations} setReservations={setReservations} commonAreas={commonAreas} setCommonAreas={setCommonAreas} onUpdateArea={refreshAppData} />;
+          case 'admin-categories': return <AdminCategories onBack={goBack} categories={categories} onRefresh={refreshAppData} />;
           case 'admin-notices': return <AdminNotices onBack={goBack} />;
           case 'admin-finance': return <AdminFinance onBack={goBack} />;
           case 'profile': return <AdminProfile currentUser={currentUser} onLogout={() => supabase.auth.signOut()} />;
@@ -846,7 +886,7 @@ const App: React.FC = () => {
             userRole === UserRole.RESIDENT ? (
               <>
                 <AppNavigation activeTab={activeTab} onChange={(tab) => tab === 'create-desapego' ? pushScreen(tab) : baseScreen(tab)} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} onNotifications={() => setNotificationModalOpen(true)} />
-                <NotificationsModal isOpen={notificationModalOpen} onClose={() => setNotificationModalOpen(false)} currentUser={currentUser} onUpdate={loadGlobalData} />
+                <NotificationsModal isOpen={notificationModalOpen} onClose={() => setNotificationModalOpen(false)} currentUser={currentUser} onUpdate={refreshAppData} />
               </>
             ) :
               userRole === UserRole.PROFESSIONAL ? <ProfessionalNavigation activeTab={activeTab} onChange={baseScreen} currentUser={currentUser} onLogout={() => supabase.auth.signOut().then(() => window.location.reload())} /> :

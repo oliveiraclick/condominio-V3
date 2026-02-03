@@ -15,7 +15,7 @@ import {
   Bell, Search, MapPin, Grid, Calendar, ShoppingBag,
   User, Plus, Package, Key, Zap, CreditCard, Home,
   Sparkles, Star, ChevronRight, ChevronLeft, Tag, XCircle,
-  Users, ArrowLeft, Filter, Droplets, Paintbrush,
+  Users, ArrowLeft, MoreHorizontal, Filter, Droplets, Paintbrush,
   Leaf, Car, Wrench, Phone, Monitor, LayoutGrid, Scissors, Utensils,
   Coffee, ShoppingCart, HeartPulse, PawPrint, Megaphone,
   QrCode, Unlock, History, AlertCircle, FileText, Copy, CheckCircle2,
@@ -37,6 +37,7 @@ import { CalendarPicker } from '../components/CalendarPicker';
 import { NewsTicker } from '../components/NewsTicker';
 
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
+import { ResidentHeader } from '../components/ResidentHeader';
 import { BiometricService } from '../services/BiometricService';
 import { Fingerprint } from 'lucide-react';
 import { SpaceReservationFlow } from '../components/SpaceReservationFlow';
@@ -333,7 +334,7 @@ export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; cu
   const qrValue = `RESIDENT:${currentUser?.id}`;
 
   return (
-    <Sheet open={isOpen} onClose={onClose} title="Carteirinha Digital">
+    <Sheet open={isOpen} onClose={onClose} title="Id Individual">
       <div className="relative flex flex-col items-center pb-8">
         <div className="w-24 h-24 rounded-[28px] p-1 bg-white shadow-xl mb-4 mt-2 ring-4 ring-slate-50 z-10">
           <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} className="w-full h-full rounded-[24px] object-cover bg-slate-50" />
@@ -361,6 +362,7 @@ export const DigitalIDModal: React.FC<{ isOpen: boolean; onClose: () => void; cu
           fullWidth
           variant="primary"
           startIcon={<Users size={18} />}
+          style={{ backgroundColor: '#7C3AED', borderColor: '#7C3AED' }}
         >
           Autorizar Vizinho
         </DSButton>
@@ -1117,94 +1119,38 @@ export const ResidentHome: React.FC<{
       />
 
       {/* HEADER DIN�MICO */}
-      <div className="bg-primary pt-24 rounded-b-[40px] shadow-sm border-b border-primary relative overflow-visible mb-12">
-        {/* WATERMARK SYMBOL (Novo) */}
-        {(currentUser?.symbol_url || currentUser?.symbol) && (
-          <div
-            className="absolute inset-0 z-0 pointer-events-none rounded-b-[40px] overflow-hidden"
-            style={{ opacity: (currentUser.symbol_opacity || 15) / 100 }}
-          >
-            <img
-              src={currentUser.symbol_url || currentUser.symbol}
-              className="absolute inset-0 w-full h-full object-cover"
-              alt="Background Branding"
-              style={{
-                transform: 'scale(1.2)'
-              }}
-              onError={(e) => {
-                // Hide watermark on image load error
-                e.currentTarget.parentElement!.style.display = 'none';
-              }}
-            />
-          </div>
-        )}
+      {/* STANDARD HEADER */}
+      <ResidentHeader
+        onQrCodeClick={() => setDigitalIdOpen(true)}
+        onNotificationsClick={() => setShowNotifications(true)}
+        notificationCount={notifications.length}
+      />
 
-        <div className="px-6 pb-20 relative z-10">
-          <div className="flex items-center justify-between mb-8">
-            {/* Left Side: Avatar & Name */}
-            <div className="flex items-center gap-4">
-              <div className="w-16 h-16 rounded-[24px] overflow-hidden border-2 border-white/20 shadow-xl bg-white/10 backdrop-blur-sm">
-                <img src={currentUser?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${currentUser?.name}`} alt="Avatar" className="w-full h-full object-cover" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-white italic tracking-tighter">Olá, {currentUser?.name?.split(' ')[0]}</h1>
-                <p className="text-xs font-bold text-white/70 uppercase tracking-widest flex items-center gap-1">
-                  <MapPin size={12} className="text-white/70" />
-                  {currentUser?.unit?.toString().toUpperCase().includes('RUA')
-                    ? `${currentUser.unit}, ${currentUser.tower}`
-                    : `RUA ${currentUser?.tower || ''}, ${currentUser?.unit || ''}`
-                  }
-                </p>
-              </div>
-            </div>
-
-            {/* Right Side: Actions (Logo removed) */}
-            <div className="flex items-center gap-3">
-              <button onClick={() => setDigitalIdOpen(true)} className="bg-white p-2.5 rounded-xl shadow-sm active:scale-95 transition-all">
-                <QrCode size={20} className="text-slate-900" />
-              </button>
-
-              <button onClick={() => setShowNotifications(!showNotifications)} className="w-12 h-12 bg-white/10 border border-white/10 rounded-2xl flex items-center justify-center relative active:bg-white/20 transition-all">
-                <Bell size={24} className="text-white" />
-                <span className="absolute top-3 right-3 w-2 h-2 bg-amber-400 rounded-full animate-pulse"></span>
-              </button>
-            </div>
-          </div>
-
-          <div className="relative">
-            <button
-              onClick={() => onSelectCategory('Todos', homeSearch.trim())}
-              className="absolute left-4 top-1/2 -translate-y-1/2 p-2 active:scale-90 transition-transform"
-            >
-              <Search className="text-white/70" size={18} />
-            </button>
-            <DSInput
-              placeholder="Procurar produto ou serviço..."
-              style={{ height: 56, backgroundColor: 'rgba(255,255,255,0.1)', border: 'none', borderRadius: 16, color: 'white' }}
-              value={homeSearch}
-              onChange={(e) => setHomeSearch(e.target.value)}
-              // onKeyDown={handleHomeSearch} // DSInput might not expose onKeyDown directly in props interface, let's check. IF not, wrap it.
-              // DSInput props: InputHTMLAttributes + label, error, etc. So it should pass ...props.
-              onKeyDown={handleHomeSearch}
-              startIcon={<Search className="text-white/70" size={18} />}
-            />
-          </div>
+      {/* GREETING & SEARCH SECTION */}
+      <div className="px-6 pb-6 pt-2 bg-white rounded-b-[40px] shadow-[0_10px_40px_-10px_rgba(0,0,0,0.05)] mb-8 relative z-30">
+        <div className="mb-6">
+          <p className="text-slate-500 font-medium text-sm mb-1 ml-1">Olá, {currentUser?.name?.split(' ')[0]}</p>
+          <h2 className="text-3xl font-black text-slate-900 tracking-tight">O que você <br />precisa hoje?</h2>
         </div>
 
-        {/* LOGO CENTRALIZADA (BAIXO) */}
-        {currentUser?.logo && currentUser.logo.trim() && (
-          <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 w-24 h-24 bg-white rounded-full p-2 shadow-xl flex items-center justify-center z-20">
-            <img
-              src={currentUser.logo}
-              className="w-full h-full object-contain"
-              alt="Logo"
-              onError={(e) => {
-                // Hide logo on image load error
-                e.currentTarget.parentElement!.style.display = 'none';
-              }}
-            />
+        <div className="relative group" onClick={() => onSelectCategory('Todos')}>
+          <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none">
+            <Search className="text-slate-400 group-hover:text-brand-500 transition-colors" size={24} />
           </div>
-        )}
+          <input
+            type="text"
+            readOnly
+            placeholder="Procurar produto ou serviço..."
+            className="w-full h-16 pl-14 pr-6 rounded-[24px] bg-slate-50 border-none text-slate-900 placeholder:text-slate-400 focus:ring-0 text-base font-medium shadow-inner transition-all group-hover:bg-slate-100 cursor-pointer"
+            value={homeSearch}
+            onChange={(e) => setHomeSearch(e.target.value)}
+          />
+          <div className="absolute inset-y-0 right-4 flex items-center">
+            <div className="w-8 h-8 rounded-full bg-white shadow-sm flex items-center justify-center text-slate-300">
+              <Mic size={16} />
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="p-6 space-y-12">
@@ -1451,10 +1397,10 @@ export const ResidentHome: React.FC<{
               </div>
             </div>
           </DSCard>
-        </div>
+        </div >
 
         {/* MURAL DO DESAPEGO (CARROSSEL ÚNICO) */}
-        <div>
+        < div >
           <SectionHeader title="Vitrine Desapego" actionLabel="Ver Todos" onAction={() => onNavigate('desapegos-all')} />
 
           <div className="relative group">
@@ -1491,25 +1437,25 @@ export const ResidentHome: React.FC<{
               </div>
             )}
           </div>
-        </div>
+        </div >
 
         {/* FEEDBACK TRIGGER CARD (MOVED UP) */}
-        <div className="pb-12">
+        < div className="pb-12" >
           {/* Card moved up, keeping div for spacing padding if needed, or remove completely? 
                The original had pb-12. Let's keep a spacer or just remove the content. 
                Cleaner to just remove the card content since it's above now. 
                The pb-12 was likely for bottom scrolling space. Let's keep a spacer.
            */}
-        </div>
+        </div >
 
         {/* FEEDBACK MODAL */}
-        <AppFeedbackModal
+        < AppFeedbackModal
           isOpen={feedbackOpen}
           onClose={() => setFeedbackOpen(false)}
           currentUser={currentUser}
           userRole="resident"
         />
-      </div>
+      </div >
     </div >
   );
 };
@@ -1591,21 +1537,11 @@ export const ResidentProfile: React.FC<{ currentUser: any; onNavigate: (t: strin
   return (
     <div className="min-h-screen bg-[#f8f9fc] pb-32 font-sans">
       {/* HEADER */}
-      <header className="px-6 pt-12 pb-4 flex items-center justify-between bg-white sticky top-0 z-40">
-        <div>
-          <h1 className="text-2xl font-black italic text-[#6d28d9] tracking-tighter" style={{ fontFamily: 'Inter, sans-serif' }}>Splendido</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">MEU PERFIL</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-600">
-            <QrCode size={20} />
-          </button>
-          <button className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 relative">
-            <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-          </button>
-        </div>
-      </header>
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
 
       {/* HERO CARD */}
       <div className="bg-[#bd69f6]"> {/* Using a lighter purple to match 'Splendido' image roughly, or main brand color */}
@@ -1729,13 +1665,18 @@ export const Marketplace: React.FC<{
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
 
-      <header className="p-6 pt-safe-offset flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-sm">
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
+      <div className="px-6 py-4 flex items-center gap-4 border-b border-slate-100 sticky top-[88px] bg-slate-50 z-30 transition-all">
         <button onClick={() => onNavigate('home')} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-200"><ArrowLeft size={20} className="text-slate-600" /></button>
         <div className="flex-1 flex items-center justify-between">
           <h2 className="text-2xl font-black italic tracking-tighter uppercase text-slate-900">e-Shop</h2>
           <ShoppingBag className="text-brand-600" size={24} />
         </div>
-      </header>
+      </div>
       <div className="p-6 space-y-10">
         <div className="relative group" onClick={() => onNavigate('shop-detail')}>
           <DSInput
@@ -1821,14 +1762,16 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
   // CATEGORY DEFINITIONS (Icons & Colors)
   const categoryConfig: any = {
-    'Jardinagem': { icon: <Leaf size={24} />, color: 'text-green-400', bg: 'bg-green-500/20' },
-    'Eletricista': { icon: <Zap size={24} />, color: 'text-yellow-400', bg: 'bg-yellow-500/20' },
-    'Limpeza': { icon: <Droplets size={24} />, color: 'text-cyan-400', bg: 'bg-cyan-500/20' },
-    'Pintor': { icon: <Paintbrush size={24} />, color: 'text-pink-400', bg: 'bg-pink-500/20' },
-    'Manutenção': { icon: <Wrench size={24} />, color: 'text-blue-400', bg: 'bg-blue-500/20' },
-    'Tecnologia': { icon: <Monitor size={24} />, color: 'text-brand-400', bg: 'bg-brand-500/20' },
-    'Beleza': { icon: <Scissors size={24} />, color: 'text-rose-400', bg: 'bg-rose-500/20' },
-    'Outros': { icon: <Briefcase size={24} />, color: 'text-slate-400', bg: 'bg-slate-500/20' },
+    'Jardinagem': { icon: <Leaf size={28} />, color: 'text-emerald-600', bg: 'bg-emerald-100' },
+    'Eletricista': { icon: <Zap size={28} />, color: 'text-amber-500', bg: 'bg-amber-100' },
+    'Limpeza': { icon: <Droplets size={28} />, color: 'text-blue-500', bg: 'bg-blue-100' },
+    'Pintor': { icon: <Paintbrush size={28} />, color: 'text-pink-500', bg: 'bg-pink-100' },
+    'Manutenção': { icon: <Wrench size={28} />, color: 'text-indigo-500', bg: 'bg-indigo-100' },
+    'Tecnologia': { icon: <Monitor size={28} />, color: 'text-slate-700', bg: 'bg-slate-200' },
+    'Beleza': { icon: <Scissors size={28} />, color: 'text-rose-500', bg: 'bg-rose-100' },
+    'Encanador': { icon: <Wrench size={28} />, color: 'text-cyan-600', bg: 'bg-cyan-100' }, // Added Encanador
+    'Pós Obra': { icon: <Home size={28} />, color: 'text-slate-600', bg: 'bg-slate-200' }, // Added Pós Obra
+    'Outros': { icon: <MoreHorizontal size={28} />, color: 'text-slate-500', bg: 'bg-slate-200' },
   };
 
   const getCatConfig = (cat: string) => categoryConfig[cat] || categoryConfig['Outros'];
@@ -1837,8 +1780,13 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   const availableCategories = useMemo(() => {
     // Merge config keys with any extra categories found in services
     const serviceCats = new Set(services.map(s => s.category));
-    const configCats = Object.keys(categoryConfig);
-    return Array.from(new Set([...configCats, ...serviceCats])).filter(c => c !== 'Outros').concat('Outros'); // Ensure Outros is last
+    const configCats = Object.keys(categoryConfig); // Use all defined configs to match mockup structure if possible
+    // Prefer config order
+    const ordered = ['Jardinagem', 'Eletricista', 'Limpeza', 'Pintor', 'Manutenção', 'Tecnologia', 'Beleza', 'Encanador', 'Pós Obra', 'Outros'];
+    const otherCats = Array.from(serviceCats).filter(c => !ordered.includes(c));
+
+    // Combine ordered defaults + any others found in data
+    return [...ordered, ...otherCats];
   }, [services]);
 
   // FILTERED LIST - SMART SEARCH IMPLEMENTATION
@@ -1907,119 +1855,145 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
   const showCategoryGrid = activeCategory === 'Todos' && !searchTerm;
 
   return (
-    <div className="min-h-screen bg-slate-50 pb-32">
+    <div className="min-h-screen bg-[#F8F9FA] pb-32 font-sans">
 
-      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-40 backdrop-blur-sm">
-        <button onClick={() => activeCategory === 'Todos' ? onBack() : setActiveCategory('Todos')} className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center active:scale-90 transition-all hover:bg-slate-200">
-          <ArrowLeft size={20} className="text-slate-600" />
-        </button>
-        <div className="flex-1">
-          <h2 className="text-xl font-black italic uppercase tracking-tighter text-slate-900 leading-none">
-            {activeCategory === 'Todos' ? 'Prestadores' : activeCategory}
-          </h2>
-        </div>
-      </header>
+      {/* STANDARD HEADER */}
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={1}
+        className="backdrop-blur-md bg-white/90"
+      />
 
-      <div className="p-6 space-y-6">
+      <div className="px-6 py-4">
+        <h2 className="text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">CATEGORIAS DE SERVIÇOS</h2>
+
         {/* SEARCH BAR */}
         <DSInput
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
-          placeholder={activeCategory === 'Todos' ? "Busque por serviço..." : `Buscar em ${activeCategory}...`}
+          placeholder="Busque por serviço..."
           startIcon={<Search size={20} className="text-slate-400" />}
-          style={{ borderRadius: 16, border: `1px solid ${colors.neutral[200]}` }}
+          style={{ borderRadius: 8, backgroundColor: 'white', border: '1px solid #E2E8F0', height: 48, fontSize: 13 }}
+          wrapperClassName="mb-6 shadow-sm"
         />
 
         {/* CONTENT */}
         {showCategoryGrid ? (
-          <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
-            {/* Map through extracted categories */}
-            {availableCategories.length > 0 ? availableCategories.map((cat) => {
-              const conf = getCatConfig(cat);
-              const count = services.filter(s => s.category === cat).length;
-              return (
-                <button
-                  key={cat}
-                  onClick={() => setActiveCategory(cat)}
-                  className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-md flex flex-col items-center gap-4 active:scale-95 transition-all hover:bg-slate-50 group backdrop-blur-md"
-                >
-                  <div className={`w-16 h-16 ${conf.bg?.replace('bg-', 'bg-') || 'bg-slate-100'} ${conf.color?.replace('text-', 'text-') || 'text-slate-600'} rounded-2xl flex items-center justify-center text-4xl group-hover:scale-110 transition-transform`}>
-                    {conf.icon}
-                  </div>
-                  <div className="text-center">
-                    <h4 className="font-black text-slate-900 text-sm uppercase tracking-tight">{cat}</h4>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">{count} Profissionais</p>
-                  </div>
-                </button>
-              );
-            }) : (
-              <div className="col-span-2 text-center py-12 text-slate-400">
-                <p className="text-sm">Nenhuma categoria encontrada.</p>
-              </div>
-            )}
+          <div className="space-y-6">
+            <div className="grid grid-cols-2 gap-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Map through extracted categories */}
+              {availableCategories.length > 0 ? availableCategories.map((cat) => {
+                const conf = getCatConfig(cat);
+                const count = services.filter(s => s.category === cat).length;
+
+                // Skip if logic to hide empty optional, but mockup shows placeholders.
+                // Mockup layout: Square card, white, shadow-sm. Icon in colored square box centered.
+
+                return (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    className="bg-white aspect-square rounded-[20px] shadow-sm border border-slate-100 flex flex-col items-center justify-center gap-3 active:scale-95 transition-all hover:shadow-md group"
+                  >
+                    <div className={`w-14 h-14 ${conf.bg} ${conf.color} rounded-lg flex items-center justify-center text-3xl mb-1`}>
+                      {conf.icon}
+                    </div>
+                    <div className="text-center">
+                      <h4 className="font-bold text-[#6366f1] text-[11px] uppercase tracking-wide px-2 leading-tight">{cat}</h4>
+                      <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mt-1">{count} Profissionais</p>
+                    </div>
+                  </button>
+                );
+              }) : (
+                <div className="col-span-2 text-center py-12 text-slate-400">
+                  <p className="text-sm">Nenhuma categoria encontrada.</p>
+                </div>
+              )}
+            </div>
+
+            {/* YELLOW CTA BANNER */}
+            <div className="bg-[#fbdb40] rounded-lg p-6 text-center shadow-sm">
+              <h3 className="text-slate-900 font-black text-xs uppercase tracking-wide mb-1">PRECISA DE OUTRA COISA?</h3>
+              <button onClick={() => setMuralOpen && setMuralOpen(true)} className="text-slate-800 underline font-bold text-[10px] uppercase tracking-widest hover:text-black">
+                ENTRE EM CONTATO
+              </button>
+            </div>
           </div>
         ) : (
           <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+            {/* HEADER FOR LIST VIEW */}
+            {activeCategory !== 'Todos' && (
+              <div className="flex items-center gap-2 mb-2">
+                <button onClick={() => setActiveCategory('Todos')} className="text-slate-400 font-bold text-xs uppercase hover:text-[#6366f1]">Categorias</button>
+                <ChevronRight size={12} className="text-slate-300" />
+                <span className="text-[#6366f1] font-bold text-xs uppercase">{activeCategory}</span>
+              </div>
+            )}
+
             {filteredPros.length > 0 ? filteredPros.map(pro => (
               <DSCard
                 key={pro.id}
-                className="p-0 border border-slate-100 shadow-xl shadow-slate-200/50 rounded-[40px] bg-white overflow-hidden group cursor-pointer hover:shadow-2xl transition-all active:scale-[0.98] backdrop-blur-md"
+                className="p-0 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.05)] rounded-[32px] bg-white overflow-hidden group cursor-pointer hover:shadow-xl transition-all active:scale-[0.98]"
                 style={{ padding: 0 }}
                 onClick={() => handleProClick(pro)}
               >
+                {/* ... Existing Card Design (Keep consistent with previous update or refine slightly to match 'Splendido' clean vibe) ... */}
+                {/* Reusing previous good card design but ensuring colors match Splendido purple */}
                 <div className="p-6 pb-0 flex items-start gap-5">
-                  <div className="w-20 h-20 rounded-[28px] overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100">
+                  <div className="w-20 h-20 rounded-[20px] overflow-hidden border-4 border-slate-50 shadow-inner bg-slate-100">
                     <img src={pro.avatar || pro.img || `https://api.dicebear.com/7.x/avataaars/svg?seed=${pro.providerName}`} className="w-full h-full object-cover" />
                   </div>
-                  <div className="flex-1 min-w-0 pt-2">
+                  <div className="flex-1 min-w-0 pt-1">
                     <div className="flex justify-between items-start">
                       <div>
                         <div className="flex gap-2 mb-2">
-                          <div className="bg-slate-100 text-slate-500 text-[10px] uppercase tracking-widest px-2 py-1 rounded-lg font-bold">{pro.category || 'Geral'}</div>
+                          <div className="bg-indigo-50 text-indigo-600 text-[9px] uppercase tracking-widest px-2 py-1 rounded hover:bg-indigo-100 font-bold">{pro.category || 'Geral'}</div>
                           {pro.is_on_site && (
-                            <div className="bg-emerald-500 text-white text-[10px] uppercase tracking-widest px-2 py-1 animate-pulse flex items-center gap-1 rounded-lg font-bold">
+                            <div className="bg-emerald-500 text-white text-[9px] uppercase tracking-widest px-2 py-1 animate-pulse flex items-center gap-1 rounded font-bold">
                               <div className="w-1.5 h-1.5 bg-white rounded-full"></div> No Local
                             </div>
                           )}
                         </div>
-                        <h4 className="font-black text-slate-900 italic text-xl leading-none truncate">{pro.providerName || pro.title}</h4>
+                        <h4 className="font-bold text-slate-800 text-lg leading-none truncate mb-1">{pro.providerName || pro.title}</h4>
                       </div>
-                      {pro.rating && (
-                        <div className="flex items-center gap-1 bg-amber-50 text-amber-500 px-2 py-1 rounded-lg">
-                          <Star size={12} fill="currentColor" />
-                          <span className="text-xs font-black">{pro.rating}</span>
-                        </div>
-                      )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed">{pro.title} - {pro.description || 'Profissional verificado do condomínio.'}</p>
+                    {pro.rating && (
+                      <div className="flex items-center gap-1 mt-1">
+                        <Star size={12} className="text-amber-400 fill-amber-400" />
+                        <span className="text-xs font-bold text-slate-700">{pro.rating}</span>
+                        <span className="text-[10px] text-slate-400">({pro.reviews_count || 12})</span>
+                      </div>
+                    )}
+                    <p className="text-xs text-slate-500 mt-2 line-clamp-2 leading-relaxed font-medium">{pro.title} - {pro.description || 'Profissional verificado.'}</p>
                   </div>
                 </div>
 
-                <div className="mt-6 p-6 bg-slate-50 border-t border-slate-100 flex items-center gap-3">
-                  <div className="flex-1">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Valor Aproximado</p>
-                    <p className="font-black text-slate-900 text-lg">{pro.price_range || pro.price || 'A Combinar'}</p>
+                <div className="mt-6 p-4 px-6 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-0.5">A partir de</p>
+                    <p className="font-black text-slate-900 text-base">{pro.price_range || pro.price || 'A Combinar'}</p>
                   </div>
                   <div className="flex gap-2">
                     <DSButton
                       onClick={(e) => { e.stopPropagation(); openWhatsApp(pro.providerPhone, pro.id); }}
                       variant="primary"
-                      style={{ height: 40, backgroundColor: colors.success, padding: '0 16px', borderRadius: 12, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                      style={{ height: 44, backgroundColor: '#6366f1', padding: '0 20px', borderRadius: 12, fontSize: 10, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
                     >
-                      <Phone size={18} className="mr-2" /> WhatsApp
+                      <Phone size={16} className="mr-2" /> Agendar
                     </DSButton>
                   </div>
                 </div>
               </DSCard>
             )) : (
-              <div className="text-center py-20">
-                <div className="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-300">
-                  <Search size={32} />
+              <div className="text-center py-20 pb-0">
+                <div className="w-20 h-20 bg-slate-50 rounded-full flex items-center justify-center mx-auto mb-4 border border-slate-100">
+                  <Search size={32} className="text-slate-300" />
                 </div>
-                <h3 className="text-slate-900 font-bold text-lg">Nenhum profissional encontrado</h3>
-                <p className="text-slate-400 text-sm mt-1">Tente buscar por outra categoria ou termo.</p>
-                <button onClick={() => { setActiveCategory('Todos'); setSearchTerm(''); }} className="mt-6 text-brand-600 font-black uppercase text-xs tracking-widest hover:underline">
-                  Limpar Filtros
+                <h3 className="text-slate-900 font-bold text-lg">Nenhum profissional</h3>
+                <p className="text-slate-400 text-sm mt-1 mb-6">Tente outra categoria.</p>
+                <button onClick={() => { setActiveCategory('Todos'); setSearchTerm(''); }} className="text-[#6366f1] font-bold uppercase text-xs tracking-widest hover:underline bg-indigo-50 px-6 py-3 rounded-lg">
+                  Ver Todos
                 </button>
               </div>
             )}
@@ -2027,26 +2001,6 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
         )}
       </div>
 
-      {/* MURAL DE DEMANDAS - OCULTO
-      <div className="mt-8 bg-brand-gradient-horizontal rounded-[32px] p-6 text-brand-contrast shadow-xl shadow-brand-glow relative overflow-hidden">
-        <div className="relative z-10 flex items-center justify-between gap-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Megaphone size={14} className="text-brand-contrast opacity-80" />
-              <span className="text-[9px] font-black uppercase tracking-widest text-brand-contrast opacity-80">Não achou?</span>
-            </div>
-            <h3 className="font-black text-lg italic leading-tight mb-1 text-brand-contrast">Mural de Oportunidades</h3>
-            <p className="text-brand-contrast opacity-70 text-[10px] max-w-[180px]">Publique o que precisa e receba propostas.</p>
-          </div>
-          <button
-            onClick={() => setMuralOpen(true)}
-            className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg active:scale-90 transition-all shrink-0"
-          >
-            <Plus size={24} className="text-brand-primary" />
-          </button>
-        </div>
-      </div>
-      */}
 
       {/* PROFESSIONAL DETAIL MODAL */}
       {selectedPro && (
@@ -2054,7 +2008,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
           <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={() => setSelectedPro(null)}></div>
           <div className="relative w-full max-w-md bg-white backdrop-blur-2xl rounded-t-[40px] shadow-2xl animate-in slide-in-from-bottom-10 duration-300 overflow-hidden max-h-[90vh] overflow-y-auto border border-slate-200">
             <div className="h-48 relative">
-              <div className="absolute inset-0 bg-brand-600"></div>
+              <div className="absolute inset-0 bg-[#6366f1]"></div>
               {selectedPro.photos?.[0] && <img src={selectedPro.photos[0]} className="w-full h-full object-cover opacity-50" />}
               <button
                 onClick={() => setSelectedPro(null)}
@@ -2074,9 +2028,9 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
               <div className="flex justify-between items-start mb-6">
                 <div>
-                  <h2 className="text-2xl font-black italic text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
+                  <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-none">{selectedPro.providerName || selectedPro.title}</h2>
                   <div className="flex items-center gap-2 mt-2">
-                    <div style={{ backgroundColor: colors.brand[50], color: colors.brand[600], border: `1px solid ${colors.brand[100]}`, padding: '4px 8px', borderRadius: radius.sm, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{selectedPro.category}</div>
+                    <div style={{ backgroundColor: '#EEF2FF', color: '#6366f1', border: `1px solid #E0E7FF`, padding: '4px 8px', borderRadius: radius.sm, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{selectedPro.category}</div>
                     {selectedPro.is_on_site && <div style={{ backgroundColor: colors.success + '10', color: colors.success, border: `1px solid ${colors.success + '20'}`, padding: '4px 8px', borderRadius: radius.sm, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }} className="animate-pulse">No Condomínio!</div>}
                   </div>
                 </div>
@@ -2097,12 +2051,12 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                    <Clock size={20} className="text-brand-500 mb-2" />
+                    <Clock size={20} className="text-[#6366f1] mb-2" />
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Horário</p>
                     <p className="font-bold text-slate-700">Seg - Sex, 08h-18h</p>
                   </div>
                   <div className="bg-slate-50 p-5 rounded-3xl border border-slate-100">
-                    <MapPin size={20} className="text-brand-500 mb-2" />
+                    <MapPin size={20} className="text-[#6366f1] mb-2" />
                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Atende</p>
                     <p className="font-bold text-slate-700">Todas as Torres</p>
                   </div>
@@ -2112,7 +2066,7 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
                   <div className="flex gap-3">
                     <DSButton
                       fullWidth
-                      style={{ height: 56, backgroundColor: colors.success, borderRadius: 16, fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
+                      style={{ height: 56, backgroundColor: '#6366f1', borderRadius: 16, fontSize: 12, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '0.1em' }}
                       onClick={() => openWhatsApp(selectedPro.providerPhone, selectedPro.id)}
                     >
                       <Phone className="mr-2" size={18} /> WhatsApp
@@ -2131,7 +2085,12 @@ export const ServicosFullView: React.FC<{ initialCategory: string; initialSearch
 export const DesapegoFullView: React.FC<{ onBack: () => void; desapegos: any[]; currentUser?: any; onDelete?: (id: string) => void; onSelect?: (item: any) => void }> = ({ onBack, desapegos, currentUser, onDelete, onSelect }) => (
   <div className="min-h-screen bg-transparent pb-32">
     <FloatingBackButton onClick={onBack} />
-    <header className="p-6 pt-12 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-0 z-50 backdrop-blur-md">
+    <ResidentHeader
+      onQrCodeClick={() => { }}
+      onNotificationsClick={() => { }}
+      notificationCount={0}
+    />
+    <header className="p-6 flex items-center gap-4 bg-transparent border-b border-slate-200 sticky top-[88px] z-30 backdrop-blur-md">
       <button onClick={onBack} className="w-12 h-12 bg-slate-100 rounded-2xl flex items-center justify-center active:scale-95 transition-all hover:bg-slate-200 text-slate-600 shadow-sm border border-slate-200"><ArrowLeft size={24} /></button>
       <h2 className="text-xl font-black italic uppercase text-slate-900">Mural do Desapego</h2>
     </header>
@@ -2174,7 +2133,12 @@ export const DesapegoDetailView: React.FC<{ onBack: () => void; item: any; curre
 
   return (
 
-    <div className="min-h-screen bg-transparent pb-32 animate-in fade-in duration-300">
+    <div className="min-h-screen bg-slate-50 pb-32 animate-in fade-in duration-300">
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
       <div className="h-96 relative bg-slate-100">
         <img src={item.img} className="w-full h-full object-cover" alt={item.name} />
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-transparent to-white/90"></div>
@@ -2277,19 +2241,15 @@ export const CreateDesapegoPage: React.FC<{ onBack: () => void; onAdd: (item: an
   return (
     <div className="min-h-screen bg-[#f8f9fc] pb-32 font-sans relative">
       {/* HEADER */}
-      <header className="px-6 pt-12 pb-4 flex items-center justify-between bg-white sticky top-0 z-40">
+      {/* HEADER */}
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
+      <header className="px-6 py-4 flex items-center justify-between bg-white sticky top-[88px] z-30 border-b border-slate-100">
         <div>
-          <h1 className="text-2xl font-black italic text-[#6d28d9] tracking-tighter" style={{ fontFamily: 'Inter, sans-serif' }}>Splendido</h1>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">ANUNCIAR ITEM</p>
-        </div>
-        <div className="flex gap-3">
-          <button className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-600">
-            <QrCode size={20} />
-          </button>
-          <button className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-600 relative">
-            <Bell size={20} />
-            <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-rose-500 rounded-full border-2 border-white"></span>
-          </button>
+          <h1 className="text-xl font-black italic text-slate-900 tracking-tighter uppercase">Anunciar Item</h1>
         </div>
       </header>
 
@@ -3350,7 +3310,15 @@ export const ShopDetailPage: React.FC<{ onBack: () => void; products?: any[]; on
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <FloatingBackButton onClick={onBack} />
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
+      {/* Search Header for Shop */}
+      <div className="sticky top-[88px] z-30 px-6 py-2 bg-slate-50/90 backdrop-blur-md mb-0">
+        {/* Optional sub-header if needed, but the design has a hero. Let's keep it simple. */}
+      </div>
       <div className="h-64 relative bg-brand-600 overflow-hidden">
         {activeCategoryData?.image_url ? (
           <div className="absolute inset-0 bg-cover bg-center animate-in fade-in duration-700" style={{ backgroundImage: `url(${activeCategoryData.image_url})` }}>
@@ -3459,7 +3427,12 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
 
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <div className="h-[50vh] relative bg-slate-900 rounded-b-[48px] shadow-2xl shadow-black/50 overflow-hidden group border-b border-white/5 mt-20">
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
+      <div className="h-[50vh] relative bg-slate-900 rounded-b-[48px] shadow-2xl shadow-black/50 overflow-hidden group border-b border-white/5">
         {item.image_url ? (
           <img src={item.image_url} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
         ) : (
@@ -3468,7 +3441,7 @@ export const ProductDetailPage: React.FC<{ item: any; onBack: () => void }> = ({
           </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-black/80 opacity-90"></div>
-        <button onClick={onBack} className="fixed top-24 left-6 w-12 h-12 bg-black/40 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/10 hover:bg-black/60 transition-all z-[100]"><ArrowLeft /></button>
+        <button onClick={onBack} className="absolute top-6 left-6 w-12 h-12 bg-black/40 backdrop-blur-md rounded-2xl flex items-center justify-center text-white active:scale-90 shadow-lg border border-white/10 hover:bg-black/60 transition-all z-[30]"><ArrowLeft /></button>
       </div>
 
       <div className="px-6 -mt-16 relative z-10">
@@ -3703,7 +3676,12 @@ export const PersonalDataPage: React.FC<{ onBack: () => void; currentUser: any }
 export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
   return (
     <div className="min-h-screen bg-slate-50 pb-32">
-      <header className="p-6 pt-24 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-0 z-40 backdrop-blur-md">
+      <ResidentHeader
+        onQrCodeClick={() => { }}
+        onNotificationsClick={() => { }}
+        notificationCount={0}
+      />
+      <header className="p-6 flex items-center gap-4 bg-transparent border-b border-white/5 sticky top-[88px] z-30 backdrop-blur-md">
         <button onClick={onBack} className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center active:scale-90 transition-transform hover:bg-white/10 text-white"><ArrowLeft size={20} /></button>
         <h2 className="text-xl font-black italic uppercase text-slate-900">Privacidade</h2>
       </header>
@@ -3741,47 +3719,55 @@ export const PrivacyPage: React.FC<{ onBack: () => void }> = ({ onBack }) => {
 // --- NAVIGATION WITH HAMBURGER MENU ---
 export const AppNavigation: React.FC<{ activeTab: string; onChange: (tab: string) => void; currentUser?: any; onLogout?: () => void; onNotifications?: () => void }> = ({ activeTab, onChange, currentUser, onNotifications }) => {
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-100 px-2 py-2 pb-6 flex justify-between items-end z-50">
+    <div className="fixed bottom-0 left-0 right-0 bg-white shadow-[0_-4px_20px_rgba(0,0,0,0.05)] px-6 py-2 pb-6 flex justify-between items-end z-50 rounded-t-[30px]">
 
       <button
         onClick={() => onChange('home')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'home' || activeTab === 'resident' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1.5 transition-all outline-none ${activeTab === 'home' || activeTab === 'resident' ? 'text-[#7C3AED]' : 'text-purple-200 hover:text-purple-300'}`}
       >
-        <Home size={24} strokeWidth={activeTab === 'home' ? 2.5 : 2} fill={activeTab === 'home' ? "currentColor" : "none"} className={activeTab === 'home' ? "fill-brand-100" : ""} />
-        <span className="text-[10px] font-bold">Home</span>
+        <div className={`p-1 rounded-xl transition-all ${activeTab === 'home' ? 'bg-purple-50' : ''}`}>
+          <Home size={26} strokeWidth={activeTab === 'home' ? 0 : 2.5} fill={activeTab === 'home' ? "currentColor" : "none"} />
+        </div>
+        <span className={`text-[10px] font-bold ${activeTab === 'home' ? 'opacity-100' : 'opacity-80'}`}>Início</span>
       </button>
 
       <button
         onClick={() => onChange('condo-agenda')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'condo-agenda' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1.5 transition-all outline-none ${activeTab === 'condo-agenda' ? 'text-[#7C3AED]' : 'text-purple-200 hover:text-purple-300'}`}
       >
-        <CalendarDays size={24} strokeWidth={activeTab === 'condo-agenda' ? 2.5 : 2} />
-        <span className="text-[10px] font-bold">Reservas</span>
+        <div className={`p-1 rounded-xl transition-all ${activeTab === 'condo-agenda' ? 'bg-purple-50' : ''}`}>
+          <CalendarDays size={26} strokeWidth={activeTab === 'condo-agenda' ? 0 : 2.5} fill={activeTab === 'condo-agenda' ? "currentColor" : "none"} />
+        </div>
+        <span className={`text-[10px] font-bold ${activeTab === 'condo-agenda' ? 'opacity-100' : 'opacity-80'}`}>Agenda</span>
       </button>
 
-      <div className="-mt-10 relative z-10 mx-2">
+      <div className="-mt-14 relative z-10 mx-2 group">
         <button
           onClick={() => onChange('create-desapego')}
-          className="w-14 h-14 bg-[#7C3AED] rounded-full flex items-center justify-center text-white shadow-xl shadow-purple-200 border-4 border-slate-50 active:scale-95 transition-transform"
+          className="w-16 h-16 bg-[#7C3AED] rounded-full flex items-center justify-center text-white shadow-xl shadow-purple-500/40 border-[6px] border-slate-50 active:scale-90 transition-transform hover:scale-105"
         >
-          <Plus size={32} className="stroke-white" />
+          <Plus size={32} strokeWidth={3} className="stroke-white" />
         </button>
       </div>
 
       <button
         onClick={onNotifications ? onNotifications : () => onChange('chamado')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'chamado' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1.5 transition-all outline-none ${activeTab === 'chamado' ? 'text-[#7C3AED]' : 'text-purple-200 hover:text-purple-300'}`}
       >
-        <Bell size={24} strokeWidth={activeTab === 'chamado' ? 2.5 : 2} />
-        <span className="text-[10px] font-bold">Avisos</span>
+        <div className={`p-1 rounded-xl transition-all ${activeTab === 'chamado' ? 'bg-purple-50' : ''}`}>
+          <Megaphone size={26} strokeWidth={activeTab === 'chamado' ? 0 : 2.5} fill={activeTab === 'chamado' ? "currentColor" : "none"} />
+        </div>
+        <span className={`text-[10px] font-bold ${activeTab === 'chamado' ? 'opacity-100' : 'opacity-80'}`}>Avisos</span>
       </button>
 
       <button
         onClick={() => onChange('profile')}
-        className={`flex-1 flex flex-col items-center gap-1 transition-all ${activeTab === 'profile' ? 'text-brand-primary' : 'text-slate-400 hover:text-slate-600'}`}
+        className={`flex-1 flex flex-col items-center gap-1.5 transition-all outline-none ${activeTab === 'profile' ? 'text-[#7C3AED]' : 'text-purple-200 hover:text-purple-300'}`}
       >
-        <User size={24} strokeWidth={activeTab === 'profile' ? 2.5 : 2} />
-        <span className="text-[10px] font-bold">Perfil</span>
+        <div className={`p-1 rounded-xl transition-all ${activeTab === 'profile' ? 'bg-purple-50' : ''}`}>
+          <User size={26} strokeWidth={activeTab === 'profile' ? 0 : 2.5} fill={activeTab === 'profile' ? "currentColor" : "none"} />
+        </div>
+        <span className={`text-[10px] font-bold ${activeTab === 'profile' ? 'opacity-100' : 'opacity-80'}`}>Perfil</span>
       </button>
 
     </div>
