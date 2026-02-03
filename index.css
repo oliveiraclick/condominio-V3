@@ -15,9 +15,9 @@
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  /* DYNAMIC BRANDING VARIABLES */
-  --brand-primary: #3b82f6;
-  --brand-secondary: #06b6d4;
+  /* DYNAMIC BRANDING VARIABLES - SPLENDIDO PURPLE THEME */
+  --brand-primary: #7C3AED;
+  --brand-secondary: #8B5CF6;
   --brand-contrast: #ffffff;
   --brand-50: color-mix(in srgb, var(--brand-primary), white 95%);
   --brand-100: color-mix(in srgb, var(--brand-primary), white 90%);

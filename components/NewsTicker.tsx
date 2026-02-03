@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { supabase } from '../supabase';
 import { Megaphone, X, Clock, AlertTriangle } from 'lucide-react';
 
-export const NewsTicker: React.FC<{ userRole?: string }> = ({ userRole }) => {
+export const NewsTicker: React.FC<{ userRole?: string; variant?: 'default' | 'warning' }> = ({ userRole, variant = 'default' }) => {
     // HARDCODED DEMO NOTICES AS REQUESTED
     const [notices, setNotices] = useState<any[]>([
         { id: 1, title: 'Manutenção', body: 'Troca de Lâmpadas nas ruas próxima Segunda Feira', created_at: new Date().toISOString() },
@@ -32,14 +32,32 @@ export const NewsTicker: React.FC<{ userRole?: string }> = ({ userRole }) => {
 
     if (notices.length === 0) return null;
 
+    const isWarning = variant === 'warning';
+
+    // VARIANT STYLES
+    const containerClasses = isWarning
+        ? "w-full bg-[#FACC15] flex items-center h-12 relative overflow-hidden shadow-sm mb-6" // Yellow theme
+        : "w-full bg-slate-900 border-b border-slate-800 flex items-center h-10 relative overflow-hidden"; // Default Dark theme
+
+    const badgeClasses = isWarning
+        ? "bg-[#7C3AED] text-white text-[10px] font-black uppercase tracking-widest px-6 h-full flex items-center z-20 shrink-0 shadow-sm relative ml-[-1px] border-r border-[#EAB308]/30"
+        : "bg-brand-gradient text-white text-[10px] font-black uppercase tracking-widest px-6 h-full flex items-center z-20 shrink-0 shadow-lg relative ml-[-1px]";
+
+    const textDateClass = isWarning ? "text-slate-800/70 font-bold text-xs uppercase tracking-wider" : "text-amber-400 font-bold text-xs uppercase tracking-wider";
+    const textTitleClass = isWarning ? "text-slate-900 text-xs font-bold tracking-wide" : "text-white text-xs font-medium tracking-wide";
+    const textBodyClass = isWarning ? "text-slate-700" : "text-slate-500";
+    const dotClass = isWarning ? "text-slate-400 mx-1" : "text-slate-500 mx-1";
+
     return (
         <>
-            <div className="w-full bg-slate-900 border-b border-slate-800 flex items-center h-10 relative overflow-hidden">
-                {/* BADGE FIXO ESQUERDA - AZUL CLARO (BRAND) */}
-                <div className="bg-brand-gradient text-white text-[10px] font-black uppercase tracking-widest px-6 h-full flex items-center z-20 shrink-0 shadow-lg relative ml-[-1px]">
-                    <span className="animate-pulse mr-2 text-amber-400">●</span> AVISOS
-                    {/* Extension to create the slant */}
-                    <div className="absolute top-0 -right-4 w-8 h-full bg-brand-500 transform skew-x-[-20deg]"></div>
+            <div className={containerClasses}>
+                {/* BADGE FIXO ESQUERDA */}
+                <div className={badgeClasses}>
+                    {isWarning ? <AlertTriangle size={14} className="mr-2 text-white" /> : <span className="animate-pulse mr-2 text-amber-400">●</span>}
+                    {isWarning ? 'AVISOS' : 'AVISOS'}
+                    {/* Extension to create the slant - only for default */}
+                    {!isWarning && <div className="absolute top-0 -right-4 w-8 h-full bg-brand-500 transform skew-x-[-20deg]"></div>}
+                    {isWarning && <div className="absolute top-0 -right-4 w-8 h-full bg-[#7C3AED] transform skew-x-[-20deg]"></div>}
                 </div>
 
                 <div className="flex-1 overflow-hidden relative h-full flex items-center bg-transparent">
@@ -50,9 +68,9 @@ export const NewsTicker: React.FC<{ userRole?: string }> = ({ userRole }) => {
                                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => setSelectedNotice(notice)}
                             >
-                                <span className="text-amber-400 font-bold text-xs uppercase tracking-wider">{new Date(notice.created_at).toLocaleDateString()}</span>
-                                <span className="text-white text-xs font-medium tracking-wide">
-                                    {notice.title} <span className="text-slate-500 mx-1">•</span> {notice.body?.substring(0, 50)}{notice.body?.length > 50 && '...'}
+                                <span className={textDateClass}>{new Date(notice.created_at).toLocaleDateString()}</span>
+                                <span className={textTitleClass}>
+                                    {notice.title} <span className={dotClass}>•</span> <span className={textBodyClass}>{notice.body?.substring(0, 50)}{notice.body?.length > 50 && '...'}</span>
                                 </span>
                             </div>
                         ))}
@@ -63,9 +81,9 @@ export const NewsTicker: React.FC<{ userRole?: string }> = ({ userRole }) => {
                                 className="flex items-center gap-2 cursor-pointer hover:opacity-80 transition-opacity"
                                 onClick={() => setSelectedNotice(notice)}
                             >
-                                <span className="text-amber-400 font-bold text-xs uppercase tracking-wider">{new Date(notice.created_at).toLocaleDateString()}</span>
-                                <span className="text-white text-xs font-medium tracking-wide">
-                                    {notice.title} <span className="text-slate-500 mx-1">•</span> {notice.body?.substring(0, 50)}{notice.body?.length > 50 && '...'}
+                                <span className={textDateClass}>{new Date(notice.created_at).toLocaleDateString()}</span>
+                                <span className={textTitleClass}>
+                                    {notice.title} <span className={dotClass}>•</span> <span className={textBodyClass}>{notice.body?.substring(0, 50)}{notice.body?.length > 50 && '...'}</span>
                                 </span>
                             </div>
                         ))}

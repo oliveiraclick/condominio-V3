@@ -292,9 +292,9 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                                 onClick={() => handleCategorySelect('sports')}
                                 style={{
                                     padding: spacing.xl,
-                                    backgroundColor: colors.neutral[50], // Different color theme
+                                    backgroundColor: colors.brand[50], // Changed to Brand (Purple) theme
                                     borderRadius: radius.xl,
-                                    border: `1px solid ${colors.neutral[200]}`,
+                                    border: `1px solid ${colors.brand[100]}`,
                                     display: 'flex',
                                     alignItems: 'center',
                                     gap: spacing.lg,
@@ -308,11 +308,11 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                                     boxShadow: shadow.sm
                                 }}>
-                                    <Trophy size={32} color={colors.neutral[600]} />
+                                    <Trophy size={32} color={colors.brand[600]} />
                                 </div>
                                 <div style={{ flex: 1 }}>
-                                    <Title level={4} style={{ color: colors.neutral[900], marginBottom: 4 }}>Esporte e Lazer</Title>
-                                    <Text style={{ color: colors.neutral[600], fontSize: 13 }}>Reserva por Hora (Quadras...)</Text>
+                                    <Title level={4} style={{ color: colors.brand[900], marginBottom: 4 }}>Esporte e Lazer</Title>
+                                    <Text style={{ color: colors.brand[700], fontSize: 13 }}>Reserva por Hora (Quadras...)</Text>
                                 </div>
                             </div>
                         </div>
@@ -333,13 +333,16 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                             {/* Date Header */}
                             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingBottom: spacing.sm, borderBottom: `1px solid ${colors.neutral[100]}` }}>
                                 <div style={{ display: 'flex', alignItems: 'center', gap: spacing.xs }}>
-                                    <Calendar size={16} color={colors.neutral[500]} />
-                                    <Text weight="medium">{selectedDate?.toLocaleDateString('pt-BR')}</Text>
+                                    <Calendar size={16} color={colors.brand[500]} />
+                                    <Text weight="medium" style={{ color: colors.brand[700] }}>
+                                        {selectedDate?.toLocaleDateString('pt-BR')}
+                                    </Text>
                                 </div>
-                                <DSButton variant="ghost" size="sm" onClick={() => setIsCalendarOpen(true)}>Alterar</DSButton>
+                                <DSButton variant="ghost" size="sm" onClick={() => setIsCalendarOpen(true)} style={{ color: colors.brand[600] }}>Alterar</DSButton>
                             </div>
 
                             {getFilteredAreas().length > 0 ? getFilteredAreas()
+                                // ... sort logic unchanged ...
                                 .sort((a, b) => {
                                     const bookedA = isAreaBooked(a.id);
                                     const bookedB = isAreaBooked(b.id);
@@ -355,7 +358,7 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                                             style={{
                                                 backgroundColor: 'white',
                                                 borderRadius: radius.lg,
-                                                border: `1px solid ${booked ? colors.neutral[200] : colors.brand[100]}`,
+                                                border: `1px solid ${booked ? colors.brand[100] : colors.brand[100]}`,
                                                 padding: spacing.md,
                                                 display: 'flex',
                                                 alignItems: 'center',
@@ -374,10 +377,10 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                                                 }} />
 
                                                 <div>
-                                                    <Title level={5} style={{ marginBottom: 0 }}>{area.name}</Title>
+                                                    <Title level={5} style={{ marginBottom: 0, color: colors.brand[900] }}>{area.name}</Title>
                                                     <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                                                        <User size={12} color={colors.neutral[400]} />
-                                                        <Text variant="caption">{area.capacity} pessoas</Text>
+                                                        <User size={12} color={colors.brand[400]} />
+                                                        <Text variant="caption" style={{ color: colors.brand[500] }}>{area.capacity} pessoas</Text>
                                                     </div>
                                                 </div>
                                             </div>
@@ -396,8 +399,8 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                                         </div>
                                     );
                                 }) : (
-                                <div style={{ padding: spacing.xl, textAlign: 'center', color: colors.neutral[500] }}>
-                                    <Text>Nenhum espaço encontrado nesta categoria.</Text>
+                                <div style={{ padding: spacing.xl, textAlign: 'center', color: colors.brand[500] }}>
+                                    <Text style={{ color: colors.brand[500] }}>Nenhum espaço encontrado nesta categoria.</Text>
                                 </div>
                             )}
                         </div>
@@ -410,13 +413,13 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
                                 {/* Area Image */}
                                 <div style={{
                                     height: 200, borderRadius: radius.lg, overflow: 'hidden', marginBottom: spacing.lg,
-                                    backgroundColor: colors.neutral[100], position: 'relative'
+                                    backgroundColor: colors.brand[50], position: 'relative'
                                 }}>
                                     {selectedArea.image_url ? (
                                         <img src={selectedArea.image_url} alt={selectedArea.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     ) : (
                                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}>
-                                            <Sparkles size={48} color={colors.neutral[300]} />
+                                            <Sparkles size={48} color={colors.brand[200]} />
                                         </div>
                                     )}
                                     {isWaitlist && (
@@ -433,21 +436,21 @@ export const SpaceReservationFlow: React.FC<ReservationFlowProps> = ({ open, onC
 
                                 {/* Info */}
                                 <div style={{ display: 'flex', gap: spacing.md, marginBottom: spacing.lg }}>
-                                    <div style={{ flex: 1, padding: spacing.md, backgroundColor: colors.neutral[50], borderRadius: radius.lg }}>
+                                    <div style={{ flex: 1, padding: spacing.md, backgroundColor: colors.brand[50], borderRadius: radius.lg }}>
                                         <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                                            <User size={16} color={colors.neutral[500]} />
-                                            <Text weight="bold">{selectedArea.capacity}</Text>
+                                            <User size={16} color={colors.brand[500]} />
+                                            <Text weight="bold" style={{ color: colors.brand[900] }}>{selectedArea.capacity}</Text>
                                         </div>
-                                        <Text variant="caption">Capacidade</Text>
+                                        <Text variant="caption" style={{ color: colors.brand[600] }}>Capacidade</Text>
                                     </div>
 
                                     {!isWaitlist && (
-                                        <div style={{ flex: 1, padding: spacing.md, backgroundColor: colors.neutral[50], borderRadius: radius.lg }}>
+                                        <div style={{ flex: 1, padding: spacing.md, backgroundColor: colors.brand[50], borderRadius: radius.lg }}>
                                             <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-                                                <Clock size={16} color={colors.neutral[500]} />
-                                                <Text weight="bold">{category === 'gourmet' ? 'Dia Todo' : '1 hora'}</Text>
+                                                <Clock size={16} color={colors.brand[500]} />
+                                                <Text weight="bold" style={{ color: colors.brand[900] }}>{category === 'gourmet' ? 'Dia Todo' : '1 hora'}</Text>
                                             </div>
-                                            <Text variant="caption">Duração</Text>
+                                            <Text variant="caption" style={{ color: colors.brand[600] }}>Duração</Text>
                                         </div>
                                     )}
                                 </div>

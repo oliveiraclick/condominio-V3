@@ -88,11 +88,11 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                         }
                         style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 8 }}
                     >
-                        <ChevronLeft size={20} color={colors.neutral[600]} />
+                        <ChevronLeft size={20} color={colors.brand[600]} />
                     </button>
 
-                    <Title level={4} style={{ textAlign: 'center' }}>
-                        {monthNames[currentMonth.getMonth()].toUpperCase()} <span style={{ color: colors.neutral[400] }}>{currentMonth.getFullYear()}</span>
+                    <Title level={4} style={{ textAlign: 'center', color: colors.brand[900] }}>
+                        {monthNames[currentMonth.getMonth()].toUpperCase()} <span style={{ color: colors.brand[400] }}>{currentMonth.getFullYear()}</span>
                     </Title>
 
                     <button
@@ -103,7 +103,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                         }
                         style={{ border: 'none', background: 'transparent', cursor: 'pointer', padding: 8 }}
                     >
-                        <ChevronRight size={20} color={colors.neutral[600]} />
+                        <ChevronRight size={20} color={colors.brand[600]} />
                     </button>
                 </div>
 
@@ -113,7 +113,7 @@ export const CalendarPicker: React.FC<CalendarPickerProps> = ({
                         <Text
                             key={day}
                             variant="caption"
-                            style={{ textAlign: 'center', color: colors.neutral[400] }}
+                            style={{ textAlign: 'center', color: colors.brand[400] }}
                         >
                             {day}
                         </Text>

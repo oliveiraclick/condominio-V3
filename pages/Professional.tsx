@@ -6,7 +6,7 @@ import {
   TrendingUp, Users, ChevronRight, ChevronLeft, Plus,
   Grid, User, Clock, Check, X, Phone, UserCircle2, CheckCircle2, UserCog,
   Megaphone, MessageCircle, UserCheck, Sparkles,
-  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown, Menu, Building2, Trash2
+  LogOut, ArrowLeft, Camera, ShieldCheck, UserPlus, Store, Briefcase, MapPin, Zap, BadgePercent, BookOpen, Star, Wallet, DollarSign, TrendingDown, Menu, Building2, Trash2, ChevronDown
 } from 'lucide-react';
 import { supabase } from '../supabase';
 import { maskCPF, maskPhone } from '../utils/masks';
@@ -2125,6 +2125,140 @@ export const ProfessionalShop = ({ currentUser }: any) => {
 
   const categories = ['Alimentos', 'Artesanato', 'Serviços', 'Outros'];
 
+  if (showForm) {
+    return (
+      <div className="min-h-screen bg-[#f8f9fc] pb-32 font-sans relative pt-0">
+        <header className="px-6 pt-12 pb-4 flex items-center justify-between bg-white sticky top-0 z-40">
+          <div>
+            <h1 className="text-2xl font-black italic text-[#6d28d9] tracking-tighter" style={{ fontFamily: 'Inter, sans-serif' }}>Splendido</h1>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">CADASTRAR NO E-SHOP</p>
+          </div>
+          <button
+            onClick={resetForm}
+            className="w-10 h-10 bg-slate-50 rounded-full flex items-center justify-center text-slate-600"
+          >
+            <X size={20} />
+          </button>
+        </header>
+
+        {/* VISUAL TABS */}
+        <div className="bg-[#f8f9fc] px-6 py-4">
+          <div className="bg-slate-200/50 p-1 rounded-full flex">
+            {['PRODUTO', 'ESTOQUE', 'ENTREGA'].map((tab) => (
+              <button
+                key={tab}
+                className={`flex-1 py-2 rounded-full text-[10px] font-black uppercase tracking-widest transition-all ${tab === 'PRODUTO' ? 'bg-[#7c3aed] text-white shadow-md' : 'text-slate-400'}`}
+              >
+                {tab}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* HERO / PHOTO UPLOAD */}
+        <div className="bg-[#7c3aed] pt-8 pb-12 px-6 text-center relative overflow-hidden">
+          <div className="w-20 h-20 bg-white/20 rounded-3xl mx-auto flex items-center justify-center mb-4 backdrop-blur-sm border border-white/20">
+            {formData.image_url ? (
+              <img src={formData.image_url} className="w-full h-full object-cover rounded-3xl" />
+            ) : (
+              <Camera size={32} className="text-white" />
+            )}
+          </div>
+          <h2 className="text-lg font-black italic text-white mb-6 uppercase tracking-tight">IMAGEM PRINCIPAL DO PRODUTO</h2>
+
+          <button
+            onClick={() => document.getElementById('pro-product-image')?.click()}
+            className="bg-white text-[#7c3aed] px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+          >
+            {formData.image_url ? 'Alterar Foto' : 'Selecionar'}
+          </button>
+          <input
+            id="pro-product-image"
+            type="file"
+            className="hidden"
+            accept="image/*"
+            onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
+          />
+        </div>
+
+        {/* YELLOW BANNER */}
+        <div className="bg-[#facc15] py-3 px-6 -mt-4 relative z-10 shadow-sm mx-0">
+          <span className="text-xs font-black text-[#854d0e] uppercase tracking-widest">DADOS COMERCIAIS</span>
+        </div>
+
+        {/* FORM */}
+        <div className="p-6 space-y-6 bg-[#f8f9fc]">
+          <div className="space-y-4">
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-2 block">Nome do Produto</label>
+              <input
+                value={formData.title}
+                onChange={e => setFormData({ ...formData, title: e.target.value })}
+                placeholder="Ex: Hambúrguer Artesanal"
+                className="w-full h-14 rounded-2xl border border-slate-200 px-4 font-bold text-slate-700 focus:border-[#7c3aed] outline-none"
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-2 block">Preço (R$)</label>
+                <input
+                  value={formData.price}
+                  onChange={e => setFormData({ ...formData, price: e.target.value })}
+                  placeholder="0,00"
+                  type="number"
+                  className="w-full h-14 rounded-2xl border border-slate-200 px-4 font-bold text-slate-700 focus:border-[#7c3aed] outline-none"
+                />
+              </div>
+              <div>
+                <label className="text-xs font-bold text-slate-700 mb-2 block">Estoque</label>
+                <input
+                  placeholder="Qtd"
+                  type="number"
+                  className="w-full h-14 rounded-2xl border border-slate-200 px-4 font-bold text-slate-700 focus:border-[#7c3aed] outline-none"
+                />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-2 block">Categoria</label>
+              <div className="relative">
+                <select
+                  value={formData.category}
+                  onChange={e => setFormData({ ...formData, category: e.target.value })}
+                  className="w-full h-14 rounded-2xl border border-slate-200 px-4 font-bold text-slate-700 focus:border-[#7c3aed] outline-none appearance-none bg-white"
+                >
+                  {categories.map(cat => (
+                    <option key={cat} value={cat}>{cat}</option>
+                  ))}
+                </select>
+                <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
+              </div>
+            </div>
+
+            <div>
+              <label className="text-xs font-bold text-slate-700 mb-2 block">Descrição</label>
+              <textarea
+                value={formData.description}
+                onChange={e => setFormData({ ...formData, description: e.target.value })}
+                placeholder="Descreva o produto..."
+                className="w-full h-24 rounded-2xl border border-slate-200 p-4 font-medium text-slate-700 focus:border-[#7c3aed] outline-none resize-none"
+              />
+            </div>
+
+          </div>
+
+          <button
+            onClick={handleSubmit}
+            className="w-full h-16 bg-[#7c3aed] text-white rounded-2xl font-black uppercase tracking-widest text-sm shadow-xl shadow-purple-200 active:scale-95 transition-all mt-4"
+          >
+            {editingProduct ? 'ATUALIZAR PRODUTO' : 'SALVAR NO E-SHOP'}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fcfcfd] pb-32 pt-24">
       <header className="p-6 pt-0 bg-white border-b border-slate-100 sticky top-24 z-40">
@@ -2150,99 +2284,6 @@ export const ProfessionalShop = ({ currentUser }: any) => {
       />
 
       <div className="p-6 space-y-4">
-        {/* Formulário */}
-        {showForm && (
-          <div className="bg-white p-6 rounded-[32px] border border-slate-100 shadow-xl space-y-4 animate-in slide-in-from-top-4">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-black italic text-slate-900 uppercase">{editingProduct ? 'Editar' : 'Novo'} Produto</h3>
-              <button onClick={resetForm} className="text-slate-400 hover:text-slate-600">
-                <X size={20} />
-              </button>
-            </div>
-
-            <Input
-              placeholder="Nome do produto"
-              value={formData.title}
-              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-              className="h-14 rounded-2xl"
-            />
-
-            <textarea
-              placeholder="Descrição (opcional)"
-              value={formData.description}
-              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full h-24 bg-slate-50 border border-slate-200 rounded-2xl p-4 text-sm font-medium outline-none focus:border-brand-500 resize-none"
-            />
-
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                type="number"
-                placeholder="Preço (R$)"
-                value={formData.price}
-                onChange={(e) => setFormData({ ...formData, price: e.target.value })}
-                className="h-14 rounded-2xl"
-              />
-
-              <select
-                value={formData.category}
-                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="h-14 bg-slate-50 border border-slate-200 rounded-2xl px-4 font-bold text-sm outline-none focus:border-brand-500"
-              >
-                {categories.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
-                ))}
-              </select>
-            </div>
-
-            {/* Upload de Imagem */}
-            <div className="space-y-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest ml-1">Foto do Produto</label>
-              <div className="relative">
-                {formData.image_url ? (
-                  <div className="relative">
-                    <img src={formData.image_url} alt="Preview" className="w-full h-48 object-cover rounded-2xl" />
-                    <button
-                      onClick={() => setFormData({ ...formData, image_url: '' })}
-                      className="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center hover:bg-rose-600 active:scale-95 transition-all"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center h-48 border-2 border-dashed border-slate-200 rounded-2xl cursor-pointer hover:border-brand-400 transition-all bg-slate-50">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => e.target.files?.[0] && handleImageUpload(e.target.files[0])}
-                      className="hidden"
-                      disabled={uploading}
-                    />
-                    {uploading ? (
-                      <div className="flex flex-col items-center gap-2">
-                        <div className="w-8 h-8 border-4 border-brand-600 border-t-transparent rounded-full animate-spin"></div>
-                        <span className="text-xs font-bold text-slate-400">Enviando...</span>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center gap-2">
-                        <Camera size={32} className="text-slate-300" />
-                        <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">Clique para adicionar foto</span>
-                      </div>
-                    )}
-                  </label>
-                )}
-              </div>
-            </div>
-
-            <Button
-              fullWidth
-              onClick={handleSubmit}
-              className="h-14 bg-brand-600 text-white rounded-2xl uppercase font-black text-xs tracking-widest shadow-xl shadow-brand-600/30"
-            >
-              {editingProduct ? 'Atualizar' : 'Cadastrar'} Produto
-            </Button>
-          </div>
-        )}
-
         {/* Lista de Produtos */}
         {loading ? (
           <div className="flex items-center justify-center py-12">

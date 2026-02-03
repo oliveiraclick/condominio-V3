@@ -32,7 +32,7 @@ export const TaskAnalysisFlow: React.FC<TaskAnalysisFlowProps> = ({
     const [comments, setComments] = useState('');
 
     // Routing Fields
-    const [nextStatus, setNextStatus] = useState<'in_progress' | 'approval'>('in_progress');
+    const [nextStatus, setNextStatus] = useState<'executing' | 'evaluating'>('executing');
     const [nextAssignee, setNextAssignee] = useState('');
     const [employees, setEmployees] = useState<any[]>([]);
 
@@ -57,7 +57,7 @@ export const TaskAnalysisFlow: React.FC<TaskAnalysisFlowProps> = ({
     // Auto-suggest status based on inputs
     React.useEffect(() => {
         const isComplex = needsQuote === true || (parseFloat(estimatedCost) > 0);
-        setNextStatus(isComplex ? 'approval' : 'in_progress');
+        setNextStatus(isComplex ? 'evaluating' : 'executing');
     }, [needsQuote, estimatedCost]);
 
     const handleCompleteAnalysis = async () => {
@@ -74,6 +74,7 @@ export const TaskAnalysisFlow: React.FC<TaskAnalysisFlowProps> = ({
                 .update({
                     status: nextStatus,
                     needs_quote: needsQuote,
+                    requires_approval: needsQuote === true,
                     in_stock: inStock,
                     estimated_cost: parseFloat(estimatedCost) || 0,
                     estimated_time: estimatedTime,
@@ -191,8 +192,8 @@ export const TaskAnalysisFlow: React.FC<TaskAnalysisFlowProps> = ({
                                     fontSize: '16px'
                                 }}
                             >
-                                <option value="in_progress">Execução (Liberar para fazer)</option>
-                                <option value="approval">Aprovação (Enviar p/ Diretoria)</option>
+                                <option value="executing">Execução (Liberar para fazer)</option>
+                                <option value="evaluating">Aprovação (Enviar p/ Diretoria)</option>
                             </select>
                         </div>
 

@@ -3,7 +3,8 @@ import {
     LayoutGrid, ShoppingBag, Plus, CalendarDays, User,
     Bell, Search, MapPin, Star, Key, Zap, CreditCard,
     MessageSquare, Sparkles, Package, Leaf, Droplets, Wrench, Monitor, Scissors, Briefcase,
-    BookOpen, Utensils, QrCode, Megaphone, ChevronLeft, ChevronRight, Hammer, Clapperboard
+    BookOpen, Utensils, QrCode, Megaphone, ChevronLeft, ChevronRight, Hammer, Clapperboard,
+    Gem, AlertTriangle, Home
 } from 'lucide-react';
 import { Card } from '../components/ui';
 import { AppFeedbackModal } from '../components/AppFeedbackModal';
@@ -14,37 +15,93 @@ import { SpaceReservationFlow } from '../components/SpaceReservationFlow';
 import { supabase } from '../supabase';
 import { ResidentPackageConfirmation } from '../components/ResidentPackageConfirmation';
 
-// New Component: Service Category Item (Square)
-const ServiceCategoryItem: React.FC<{ icon: React.ReactNode; label: string; onClick: () => void; isNew?: boolean; className?: string; iconClassName?: string }> = ({ icon, label, onClick, isNew, className, iconClassName }) => (
-    <div onClick={onClick} className="flex flex-col items-center gap-2 min-w-[80px] cursor-pointer group active:scale-95 transition-transform">
-        <div className={`w-16 h-16 rounded-2xl shadow-sm border flex items-center justify-center transition-all relative group-hover:shadow-md group-hover:-translate-y-1 ${className || 'bg-white border-slate-100 text-slate-700'}`}>
-            <div className={iconClassName}>{icon}</div>
-            {isNew && <span className="absolute -top-1 -right-1 w-3 h-3 bg-blue-500 rounded-full border-2 border-white"></span>}
-        </div>
-        <span className="text-[10px] font-bold text-slate-600 text-center leading-tight max-w-[80px]">{label}</span>
-    </div>
-);
-
-
-
-// New Component: Service Card (Horizontal)
-const ServiceCard: React.FC<{ title: string; subtitle?: string; image?: string; onClick: () => void }> = ({ title, subtitle, image, onClick }) => (
-    <div onClick={onClick} className="min-w-[200px] bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden cursor-pointer group active:scale-95 transition-all hover:shadow-md">
-        <div className="h-32 bg-slate-100 relative">
+// --- NEW COMPONENT: Horizontal Product Card (E-Shop) ---
+const EShopCard: React.FC<{ title: string; category: string; price: string; image?: string; onClick: () => void }> = ({ title, category, price, image, onClick }) => (
+    <div onClick={onClick} className="min-w-[160px] max-w-[160px] bg-white rounded-3xl p-3 cursor-pointer group active:scale-95 transition-all hover:shadow-lg flex flex-col gap-3">
+        <div className="h-40 bg-slate-100 rounded-2xl relative overflow-hidden">
             {image ? (
-                <img src={image} className="w-full h-full object-cover" alt={title} />
+                <img src={image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={title} />
             ) : (
                 <div className="w-full h-full flex items-center justify-center text-slate-300">
-                    <User size={32} />
+                    <ShoppingBag size={32} />
                 </div>
             )}
         </div>
-        <div className="p-3">
-            <h4 className="font-bold text-slate-800 text-sm truncate">{title}</h4>
-            {subtitle && <p className="text-[10px] text-slate-500 truncate">{subtitle}</p>}
+        <div>
+            <p className="text-[10px] text-slate-400 font-medium uppercase tracking-wide mb-1">{category}</p>
+            <h4 className="font-bold text-slate-800 text-sm leading-tight mb-2 line-clamp-2">{title}</h4>
+            <span className="text-brand-primary font-bold text-sm block">{price}</span>
         </div>
     </div>
 );
+
+// --- NEW COMPONENT: Vitrine Desapega Card ---
+const DesapegaCard: React.FC<{ title: string; location: string; price: string; image?: string; onClick: () => void }> = ({ title, location, price, image, onClick }) => (
+    <div onClick={onClick} className="min-w-[220px] max-w-[220px] bg-white rounded-3xl overflow-hidden cursor-pointer group active:scale-95 transition-all hover:shadow-lg">
+        <div className="h-32 bg-slate-100 relative overflow-hidden">
+            {image ? (
+                <img src={image} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" alt={title} />
+            ) : (
+                <div className="w-full h-full flex items-center justify-center text-slate-300">
+                    <Package size={32} />
+                </div>
+            )}
+            <div className="absolute bottom-3 left-3 bg-white/90 backdrop-blur-sm px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm">
+                <MapPin size={10} className="text-slate-800" />
+                <span className="text-[10px] font-bold text-slate-800 uppercase tracking-wide">{location}</span>
+            </div>
+        </div>
+        <div className="p-4">
+            <h4 className="font-bold text-slate-800 text-sm leading-tight mb-1 truncate">{title}</h4>
+            <span className="text-brand-primary font-bold text-sm block">{price}</span>
+        </div>
+    </div>
+);
+
+// --- NEW COMPONENT: Simple Hero Carousel ---
+// --- NEW COMPONENT: Simple Hero Carousel ---
+const SimpleCarousel: React.FC<{ items: any[]; onAction: () => void }> = ({ items, onAction }) => {
+    const [currentIndex, setCurrentIndex] = useState(0);
+
+    // Auto-rotation
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setCurrentIndex(prev => (prev === items.length - 1 ? 0 : prev + 1));
+        }, 5000);
+        return () => clearInterval(interval);
+    }, [items.length]);
+
+    const currentItem = items[currentIndex];
+
+    // If no items, fallback to default "Pool Party" image only
+    if (!items || items.length === 0) {
+        return (
+            <div onClick={onAction} className="w-full bg-[#7C3AED] rounded-none p-0 relative overflow-hidden shadow-xl group cursor-pointer active:scale-[0.98] transition-all min-h-[320px] flex flex-col justify-end">
+                {/* Image Background */}
+                <div className="absolute inset-0 z-0">
+                    <img src="https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&q=80&w=800" className="w-full h-full object-cover" />
+                </div>
+            </div>
+        )
+    }
+
+    // MODIFIED: rounded-none and no subtle shadow, just full width image
+    return (
+        <div className="relative w-full rounded-none overflow-hidden shadow-xl min-h-[320px] group">
+            {/* Slides */}
+            <div className="absolute inset-0 transition-all duration-700 ease-in-out">
+                <img src={currentItem.image} className="w-full h-full object-cover" />
+            </div>
+
+            {/* Indicators */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-1.5 z-20">
+                {items.map((_, idx) => (
+                    <div key={idx} className={`h-1.5 rounded-full transition-all duration-300 ${idx === currentIndex ? 'w-6 bg-white shadow-sm' : 'w-1.5 bg-white/40'}`} />
+                ))}
+            </div>
+        </div>
+    );
+}
 
 export const ResidentModern: React.FC<{
     currentUser: any;
@@ -61,6 +118,7 @@ export const ResidentModern: React.FC<{
     muralCategories: string[];
     activeTab?: string;
     onClearNotifications?: () => void;
+    onNotifications?: () => void;
 }> = ({
     currentUser, onNavigate, onSelectCategory, packages = [], desapegos = [],
     notifications = [], products = [], onSelectDesapego, onSelectProduct,
@@ -75,11 +133,16 @@ export const ResidentModern: React.FC<{
         const [muralOpen, setMuralOpen] = useState(false);
         const [digitalIdOpen, setDigitalIdOpen] = useState(false);
         const [authModalOpen, setAuthModalOpen] = useState(false);
-        const [notifsOpen, setNotifsOpen] = useState(false);
-        const categoryScrollRef = useRef<HTMLDivElement>(null);
-        const onSiteScrollRef = useRef<HTMLDivElement>(null);
+
+        // Scroll Refs
         const eShopScrollRef = useRef<HTMLDivElement>(null);
         const desapegoScrollRef = useRef<HTMLDivElement>(null);
+
+        // Derived State
+        const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0;
+        const myPackages = packages.filter(p => p.unit === (currentUser?.unit || '') || p.resident_id === currentUser?.id);
+        const hasPackages = myPackages.length > 0;
+        const pendingHandshake = myPackages.some(p => p.status === 'awaiting_confirmation');
 
         const handleScroll = (ref: React.RefObject<HTMLDivElement>, direction: 'left' | 'right') => {
             if (ref.current) {
@@ -91,27 +154,13 @@ export const ResidentModern: React.FC<{
             }
         };
 
-        // Derived State
-        const unreadCount = notifications ? notifications.filter(n => !n.read).length : 0;
-        const myPackages = packages.filter(p => p.unit === (currentUser?.unit || '') || p.resident_id === currentUser?.id);
-        const hasPackages = myPackages.length > 0;
-        const pendingHandshake = myPackages.some(p => p.status === 'awaiting_confirmation');
-
-        // Auto-open logic removed per user request
-        // useEffect(() => {
-        //     if (pendingHandshake && !sessionStorage.getItem('hasSeenHandshakeRedesign')) {
-        //         setDigitalIdOpen(true);
-        //         sessionStorage.setItem('hasSeenHandshakeRedesign', 'true');
-        //     }
-        // }, [pendingHandshake]);
-
         const handleSearch = (e: any) => {
             if (e.key === 'Enter' && search.trim()) {
                 onSelectCategory('Todos', search.trim());
             }
         };
 
-        // --- NEW: PACKAGE CONFIRMATION LOGIC ---
+        // --- PACKAGE CONFIRMATION LOGIC ---
         const [pendingRequest, setPendingRequest] = useState<any>(null);
         const [confirmOpen, setConfirmOpen] = useState(false);
 
@@ -128,59 +177,48 @@ export const ResidentModern: React.FC<{
                     else setPendingRequest(null);
                 }
                 fetchPending();
-
-                // Realtime subscription for new requests
-                const channel = supabase
-                    .channel(`pickup_requests_${currentUser.id}`)
-                    .on('postgres_changes', {
-                        event: '*',
-                        schema: 'public',
-                        table: 'package_pickup_requests',
-                        filter: `resident_id=eq.${currentUser.id}`
-                    }, () => fetchPending())
-                    .subscribe();
-
+                const channel = supabase.channel(`pickup_requests_${currentUser.id}`).on('postgres_changes', { event: '*', schema: 'public', table: 'package_pickup_requests', filter: `resident_id=eq.${currentUser.id}` }, () => fetchPending()).subscribe();
                 return () => { supabase.removeChannel(channel); };
             }
         }, [currentUser?.id]);
         // ---------------------------------------
 
+        // MOCK CAROUSEL DATA (Replace with real data later if needed)
+        const carouselItems = [
+            { id: 1, title: 'Pool Party de Verão', description: 'Participe da nossa festa na piscina com DJ e coquetéis.', image: 'https://images.unsplash.com/photo-1576013551627-0cc20b96c2a7?auto=format&fit=crop&q=80&w=800', tag: 'Evento Oficial', actionLabel: 'Confirmar Presença' },
+            { id: 2, title: 'Feira Orgânica', description: 'Produtos frescos diretamente do produtor no salão de festas.', image: 'https://images.unsplash.com/photo-1488459716781-31db52582fe9?auto=format&fit=crop&q=80&w=800', tag: 'Hoje', actionLabel: 'Ver Produtos' },
+        ];
+
+
         return (
-            <div className="min-h-screen bg-slate-50 pb-24 font-sans md:max-w-md md:mx-auto">
-                {/* 1. HEADER CLEAN */}
-                <header className="px-6 pt-12 pb-6 bg-white shadow-sm sticky top-0 z-40 rounded-b-[32px]">
-                    <div className="flex justify-between items-end mb-6">
-                        <div>
-                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">{currentUser?.condo || 'Condomínio'}</h1>
-                            <p className="text-slate-500 text-sm font-medium">Olá, {currentUser?.name?.split(' ')[0]}</p>
-                        </div>
+            <div className="min-h-screen bg-slate-50 pb-28 font-sans md:max-w-md md:mx-auto">
+                {/* 1. HEADER SPLENDIDO */}
+                <header className="px-5 pt-12 pb-2 bg-slate-50 sticky top-0 z-40">
+                    <div className="flex justify-between items-center mb-6">
                         <div className="flex items-center gap-3">
-                            {hasPackages && (
-                                <button onClick={() => setDigitalIdOpen(true)} className="w-10 h-10 rounded-full bg-brand-50 flex items-center justify-center text-brand-primary active:scale-90 transition-transform relative hover:bg-brand-100">
-                                    <Package size={20} />
-                                    {pendingHandshake && <span className="absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full border-2 border-white animate-pulse"></span>}
-                                </button>
-                            )}
-                            <button onClick={() => setDigitalIdOpen(true)} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 active:scale-90 transition-transform hover:bg-slate-200">
+                            <div className="w-10 h-10 bg-[#7C3AED] rounded-xl flex items-center justify-center shadow-lg shadow-purple-200">
+                                <Gem className="text-white fill-white" size={20} />
+                            </div>
+                            <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Splendido</h1>
+                        </div>
+                        <div className="flex gap-3">
+                            <button onClick={() => setDigitalIdOpen(true)} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-[#7C3AED] shadow-sm active:scale-95 transition-transform border border-purple-100">
                                 <QrCode size={20} />
                             </button>
-                            <button onClick={onNotifications} className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 relative active:scale-90 transition-transform hover:bg-slate-200">
+                            <button onClick={onNotifications} className="w-10 h-10 bg-white rounded-full flex items-center justify-center text-slate-800 shadow-sm active:scale-95 transition-transform border border-slate-100 relative">
                                 <Bell size={20} />
                                 {unreadCount > 0 && <span className="absolute top-2 right-2 w-2 h-2 bg-rose-500 rounded-full ring-2 ring-white" />}
                             </button>
                         </div>
                     </div>
 
+                    <p className="text-slate-500 text-sm font-medium pl-1 mb-4">Olá, {currentUser?.name?.split(' ')[0]}</p>
+
                     <div className="relative group">
-                        <button
-                            onClick={() => search.trim() && onSelectCategory('Todos', search.trim())}
-                            className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-brand-primary transition-colors cursor-pointer hover:scale-110 active:scale-95"
-                        >
-                            <Search size={20} />
-                        </button>
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
                         <input
-                            className="w-full h-12 pl-12 pr-4 bg-slate-100 rounded-xl border-none text-slate-900 placeholder:text-slate-400 font-medium focus:ring-2 focus:ring-brand-primary transition-all outline-none"
-                            placeholder="O que você precisa?"
+                            className="w-full h-14 pl-12 pr-4 bg-white rounded-2xl border-none text-slate-900 placeholder:text-slate-400 font-medium shadow-sm focus:ring-2 focus:ring-[#7C3AED]/20 transition-all outline-none"
+                            placeholder="O que você precisa hoje?"
                             value={search}
                             onChange={(e) => setSearch(e.target.value)}
                             onKeyDown={handleSearch}
@@ -188,285 +226,121 @@ export const ResidentModern: React.FC<{
                     </div>
                 </header>
 
-                <main className="">
-                    {/* 2. CATEGORIES CAROUSEL */}
-                    <div className="px-6 pt-6 space-y-8">
+                <main>
+                    {/* 2. TAB NAVIGATION (SEGMENTED CONTROL) */}
+                    <div className="px-5 mt-4 mb-6">
+                        <div className="flex p-1.5 bg-slate-200/50 rounded-xl">
+                            <button
+                                onClick={() => onSelectCategory('Todos')}
+                                className="flex-1 bg-[#7C3AED] text-white shadow-md shadow-purple-200 rounded-lg py-3 text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95"
+                            >
+                                Serviços
+                            </button>
+                            <button
+                                onClick={() => onSelectCategory('Food')}
+                                className="flex-1 text-slate-500 hover:text-slate-700 py-3 text-[11px] font-bold uppercase tracking-widest bg-transparent transition-colors"
+                            >
+                                Food
+                            </button>
+                            <button
+                                onClick={() => setReservationOpen(true)}
+                                className="flex-1 text-slate-500 hover:text-slate-700 py-3 text-[11px] font-bold uppercase tracking-widest bg-transparent transition-colors"
+                            >
+                                Entreterimento
+                            </button>
+                        </div>
+                    </div>
 
-                        {/* --- PENDING CONFIRMATION CARD --- */}
+                    {/* 3. HERO (CAROUSEL COM FOTO) - FULL WIDTH */}
+                    <div className="mb-0">
+                        {/* --- PENDING CONFIRMATION CARD (Injecting here if exists, high priority) --- */}
                         {pendingRequest && (
-                            <div className="animate-in slide-in-from-top-4 duration-500 mb-6">
-                                <div
-                                    onClick={() => setConfirmOpen(true)}
-                                    className="bg-amber-50 border border-amber-200 rounded-2xl p-5 shadow-sm relative overflow-hidden cursor-pointer active:scale-95 transition-transform"
-                                >
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-amber-100 rounded-full -mr-10 -mt-10 blur-xl opacity-50"></div>
-
-                                    <div className="flex items-center gap-4 relative z-10">
-                                        <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center shadow-sm text-amber-600 border border-amber-100">
-                                            <Package size={24} className="animate-bounce" />
-                                        </div>
-                                        <div className="flex-1">
-                                            <h3 className="font-bold text-amber-900 leading-tight">Confirme o Recebimento</h3>
-                                            <p className="text-xs text-amber-700 font-medium mt-1">
-                                                Você retirou {pendingRequest.package_ids?.length || 'algumas'} encomendas na portaria.
-                                            </p>
-                                        </div>
-                                        <div className="bg-amber-500 text-white p-2 rounded-full shadow-md shadow-amber-200">
-                                            <ChevronRight size={20} />
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-4 flex items-center gap-2 text-[10px] font-bold text-amber-600 uppercase tracking-widest">
-                                        <span className="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></span>
-                                        Aguardando sua confirmação
-                                    </div>
-                                </div>
-                            </div>
-                        )}
-                        {/* ---------------------------------- */}
-
-                        <section className="relative group/nav">
-                            {/* Navigation Arrows */}
-                            <button
-                                onClick={() => handleScroll(categoryScrollRef, 'left')}
-                                className="absolute -left-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                            >
-                                <ChevronLeft size={20} />
-                            </button>
-                            <button
-                                onClick={() => handleScroll(categoryScrollRef, 'right')}
-                                className="absolute -right-2 top-1/2 -translate-y-full z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                            >
-                                <ChevronRight size={20} />
-                            </button>
-
-                            <div ref={categoryScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                <ServiceCategoryItem icon={<Droplets size={24} />} iconClassName="text-cyan-500" label="Encanador" onClick={() => onSelectCategory('Encanador')} />
-                                <ServiceCategoryItem icon={<Zap size={24} />} iconClassName="text-yellow-500" label="Eletricista" onClick={() => onSelectCategory('Eletricista')} />
-                                <ServiceCategoryItem icon={<Sparkles size={24} />} iconClassName="text-emerald-500" label="Limpeza" onClick={() => onSelectCategory('Limpeza')} />
-                                <ServiceCategoryItem icon={<Leaf size={24} />} iconClassName="text-green-500" label="Jardim" onClick={() => onSelectCategory('Jardinagem')} />
-                                <ServiceCategoryItem
-                                    icon={<CalendarDays size={24} className="stroke-brand-contrast" />}
-                                    label="Reservas"
-                                    className="bg-brand-gradient border-transparent text-brand-contrast shadow-brand-glow"
-                                    iconClassName="text-brand-contrast"
-                                    onClick={() => setReservationOpen(true)}
-                                />
-                            </div>
-                        </section>
-                    </div>
-
-                    {/* 2.5. BANNERS (Promotions & Notices) - FULL WIDTH */}
-                    <div className="mt-6 space-y-0">
-                        <BannerCarousel />
-                        <NewsTicker userRole="resident" />
-                    </div>
-
-
-
-
-
-                    {/* 4. SECTIONS (Scrollable Horizontal) */}
-                    <div className="px-6 mt-8 space-y-8">
-                        {/* On-Site Pros (Reformas e Reparos highlight) */}
-                        {onSitePros.length > 0 && (
-                            <section className="relative group/nav">
-                                <div className="flex justify-between items-center mb-4 px-1">
-                                    <div className="flex items-center gap-2">
-                                        <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
-                                        <h3 className="font-bold text-lg text-slate-800 tracking-tight">No Condomínio</h3>
-                                    </div>
-                                    <button onClick={() => onSelectCategory('Todos')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
-                                </div>
-
-                                {/* Navigation Arrows */}
-                                <button
-                                    onClick={() => handleScroll(onSiteScrollRef, 'left')}
-                                    className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                <button
-                                    onClick={() => handleScroll(onSiteScrollRef, 'right')}
-                                    className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                                >
-                                    <ChevronRight size={20} />
-                                </button>
-
-                                <div ref={onSiteScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                    {onSitePros.map((pro, i) => (
-                                        <ServiceCard
-                                            key={i}
-                                            title={pro.name}
-                                            subtitle={pro.category || (pro.specialties && pro.specialties[0]) || pro.company_name || 'Prestador'}
-                                            image={pro.avatar}
-                                            onClick={() => setSelectedPro(pro)}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Marketplace Destaques */}
-                        {products && products.length > 0 && (
-                            <section className="relative group/nav">
-                                <div className="flex justify-between items-center mb-4 px-1">
-                                    <h3 className="font-bold text-lg text-slate-800 tracking-tight">Vitrine e-Shop</h3>
-                                    <button onClick={() => onNavigate('shop-detail')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
-                                </div>
-
-                                {/* Navigation Arrows */}
-                                <button
-                                    onClick={() => handleScroll(eShopScrollRef, 'left')}
-                                    className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                                >
-                                    <ChevronLeft size={20} />
-                                </button>
-                                <button
-                                    onClick={() => handleScroll(eShopScrollRef, 'right')}
-                                    className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                                >
-                                    <ChevronRight size={20} />
-                                </button>
-
-                                <div ref={eShopScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                    {products.slice(0, 5).map((prod, i) => (
-                                        <ServiceCard
-                                            key={i}
-                                            title={prod.title}
-                                            subtitle={typeof prod.price === 'number' ? `R$ ${prod.price.toFixed(2)}` : prod.price}
-                                            image={prod.image_url}
-                                            onClick={() => onSelectProduct && onSelectProduct(prod)}
-                                        />
-                                    ))}
-                                </div>
-                            </section>
-                        )}
-
-                        {/* Feedback Trigger (Moved - Thin Banner Style) */}
-                        <div className="py-2 -mx-6">
                             <div
-                                onClick={() => setFeedbackOpen(true)}
-                                className="bg-brand-gradient-horizontal text-brand-contrast py-3 px-6 relative overflow-hidden cursor-pointer transition-all group border-y border-white/10 shadow-sm"
+                                onClick={() => setConfirmOpen(true)}
+                                className="mx-5 bg-amber-100 border-l-4 border-amber-500 rounded-lg p-4 mb-4 shadow-sm flex items-center justify-between cursor-pointer animate-in fade-in"
                             >
-                                <div className="relative z-10 flex gap-4 items-center justify-between">
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-white/20 backdrop-blur-md rounded-lg flex items-center justify-center text-brand-contrast group-hover:scale-110 transition-transform">
-                                            <Sparkles size={18} className="stroke-brand-contrast" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-bold text-sm leading-none mb-0.5 text-brand-contrast">Sugestões?</h4>
-                                            <p className="text-brand-contrast opacity-90 text-[10px] font-medium">Ajude a melhorar o app.</p>
-                                        </div>
-                                    </div>
-
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-bold text-brand-contrast uppercase tracking-widest opacity-80 group-hover:opacity-100 transition-opacity">Participar</span>
-                                        <div className="w-6 h-6 bg-white/20 rounded-full flex items-center justify-center">
-                                            <ChevronRight size={14} className="text-brand-contrast" />
-                                        </div>
-                                    </div>
+                                <div>
+                                    <h3 className="font-bold text-amber-900 text-sm">Encomendas para retirar</h3>
+                                    <p className="text-xs text-amber-700">Confirme o recebimento agora.</p>
                                 </div>
-                                {/* Decorative background element */}
-                                <div className="absolute -top-10 -right-4 w-32 h-32 bg-white/10 rounded-full blur-2xl group-hover:scale-110 transition-transform duration-700"></div>
+                                <ChevronRight className="text-amber-600" size={20} />
                             </div>
+                        )}
+                        {/* -------------------------------------------------------------------- */}
+
+                        <SimpleCarousel items={carouselItems} onAction={() => setReservationOpen(true)} />
+                    </div>
+
+                    {/* 4. WARNING BANNER AS TICKER (YELLOW) */}
+                    <div className="w-full mb-8">
+                        <NewsTicker userRole="resident" variant="warning" />
+                    </div>
+
+                    {/* 5. E-SHOP SECTION */}
+                    <div className="px-5 mb-10">
+                        <div className="flex justify-between items-end mb-5">
+                            <h3 className="font-bold text-xl text-slate-900">e-shop</h3>
+                            <button onClick={() => onNavigate('shop-detail')} className="text-[#7C3AED] text-xs font-bold uppercase tracking-widest hover:text-purple-800">Ver tudo</button>
                         </div>
 
-                        {/* Mural do Desapego (Replacing Serviços Domésticos) */}
-                        <section className="relative group/nav">
-                            <div className="flex justify-between items-center mb-4 px-1">
-                                <h3 className="font-bold text-lg text-slate-800 tracking-tight">Mural do Desapego</h3>
-                                <button onClick={() => onNavigate('desapegos-all')} className="text-brand-primary text-xs font-bold uppercase tracking-widest hover:text-brand-700 transition-colors">Ver tudo</button>
-                            </div>
-
-                            {desapegos.length > 0 ? (
+                        <div className="overflow-x-auto -mx-5 px-5 pb-4 flex gap-4 no-scrollbar touch-pan-x" ref={eShopScrollRef}>
+                            {products && products.length > 0 ? products.slice(0, 5).map((prod, i) => (
+                                <EShopCard
+                                    key={i}
+                                    title={prod.title}
+                                    category={prod.category || 'Geral'}
+                                    price={typeof prod.price === 'number' ? `R$ ${prod.price.toFixed(2)}` : prod.price}
+                                    image={prod.image_url}
+                                    onClick={() => onSelectProduct && onSelectProduct(prod)}
+                                />
+                            )) : (
+                                // MOCK DATA FOR PREVIEW IF EMPTY
                                 <>
-                                    {/* Navigation Arrows */}
-                                    <button
-                                        onClick={() => handleScroll(desapegoScrollRef, 'left')}
-                                        className="absolute -left-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                                    >
-                                        <ChevronLeft size={20} />
-                                    </button>
-                                    <button
-                                        onClick={() => handleScroll(desapegoScrollRef, 'right')}
-                                        className="absolute -right-3 top-1/2 z-10 w-10 h-10 bg-white/90 backdrop-blur-md rounded-full shadow-lg flex items-center justify-center text-slate-400 hover:text-brand-primary opacity-0 group-hover/nav:opacity-100 transition-all border border-slate-100 hidden md:flex"
-                                    >
-                                        <ChevronRight size={20} />
-                                    </button>
-
-                                    <div ref={desapegoScrollRef} className="flex gap-4 overflow-x-auto pb-4 -mx-6 px-6 no-scrollbar touch-pan-x">
-                                        {desapegos.map((item, i) => (
-                                            <ServiceCard
-                                                key={i}
-                                                title={item.name || item.title}
-                                                subtitle={item.price}
-                                                image={item.img || item.image_url}
-                                                onClick={() => onSelectDesapego && onSelectDesapego(item)}
-                                            />
-                                        ))}
-                                    </div>
+                                    <EShopCard title="Água Perrier 330ml" category="Bebidas" price="R$ 12,90" image="https://images.unsplash.com/photo-1560023907-5f339617ea30?auto=format&fit=crop&q=80&w=300" onClick={() => { }} />
+                                    <EShopCard title="Café Arabica Especial" category="Café" price="R$ 45,00" image="https://images.unsplash.com/photo-1559056199-6e3e1577e163?auto=format&fit=crop&q=80&w=300" onClick={() => { }} />
+                                    <EShopCard title="Kit Churrasco Premium" category="Alimentos" price="R$ 129,90" image="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=300" onClick={() => { }} />
                                 </>
-                            ) : (
-                                <div className="bg-slate-50 border border-slate-100 rounded-2xl p-6 text-center">
-                                    <p className="text-slate-400 text-sm">Nenhum desapego anunciado ainda.</p>
-                                    <button onClick={() => onNavigate('create-desapego')} className="mt-2 text-brand-primary font-bold text-xs uppercase tracking-widest">Anunciar Agora</button>
-                                </div>
                             )}
-                        </section>
-
-
-
+                        </div>
                     </div>
+
+                    {/* 6. VITRINE DESAPEGA SECTION */}
+                    <div className="px-5 mb-8">
+                        <div className="flex justify-between items-end mb-5">
+                            <h3 className="font-bold text-xl text-slate-900">Vitrine Desapega</h3>
+                            <button onClick={() => onNavigate('desapegos-all')} className="text-[#7C3AED] text-xs font-bold uppercase tracking-widest hover:text-purple-800">Ver todos</button>
+                        </div>
+
+                        <div className="overflow-x-auto -mx-5 px-5 pb-4 flex gap-4 no-scrollbar touch-pan-x" ref={desapegoScrollRef}>
+                            {desapegos && desapegos.length > 0 ? desapegos.map((item, i) => (
+                                <DesapegaCard
+                                    key={i}
+                                    title={item.name || item.title}
+                                    location={`${item.tower || 'Torre A'} - ${item.unit || '101'}`}
+                                    price={item.price}
+                                    image={item.img || item.image_url}
+                                    onClick={() => onSelectDesapego && onSelectDesapego(item)}
+                                />
+                            )) : (
+                                // MOCK DATA FOR PREVIEW IF EMPTY
+                                <>
+                                    <DesapegaCard title="Bicicleta Vintage" location="RUA 5" price="R$ 450,00" image="https://images.unsplash.com/photo-1485965120184-e224f723d6a9?auto=format&fit=crop&q=80&w=500" onClick={() => { }} />
+                                    <DesapegaCard title="Guitarra Fender Usada" location="RUA 2" price="R$ 1.200,00" image="https://images.unsplash.com/photo-1516924962500-2b4b3b99ea02?auto=format&fit=crop&q=80&w=500" onClick={() => { }} />
+                                </>
+                            )}
+                        </div>
+                    </div>
+
                 </main>
 
                 {/* --- MODALS --- */}
-
-                <ProfessionalDetailModal
-                    isOpen={!!selectedPro}
-                    onClose={() => setSelectedPro(null)}
-                    professional={selectedPro}
-                />
-
-                <MuralDemandModal
-                    isOpen={muralOpen}
-                    onClose={() => setMuralOpen(false)}
-                    onPost={onPostMuralDemand}
-                    categories={muralCategories}
-                />
-
-                <DigitalIDModal
-                    isOpen={digitalIdOpen}
-                    onClose={() => setDigitalIdOpen(false)}
-                    currentUser={currentUser}
-                    onOpenAuth={() => setAuthModalOpen(true)}
-                />
-
-                <AuthorizationModal
-                    isOpen={authModalOpen}
-                    onClose={() => setAuthModalOpen(false)}
-                    currentUser={currentUser}
-                />
-
-                <AppFeedbackModal
-                    isOpen={feedbackOpen}
-                    onClose={() => setFeedbackOpen(false)}
-                    currentUser={currentUser}
-                    userRole="resident"
-                />
-
-                <SpaceReservationFlow
-                    open={reservationOpen}
-                    onClose={() => setReservationOpen(false)}
-                    currentUserId={currentUser?.id}
-                    currentUser={currentUser}
-                />
-
-                <ResidentPackageConfirmation
-                    open={confirmOpen}
-                    onClose={() => setConfirmOpen(false)}
-                    residentId={currentUser?.id}
-                />
+                <ProfessionalDetailModal isOpen={!!selectedPro} onClose={() => setSelectedPro(null)} professional={selectedPro} />
+                <MuralDemandModal isOpen={muralOpen} onClose={() => setMuralOpen(false)} onPost={onPostMuralDemand} categories={muralCategories} />
+                <DigitalIDModal isOpen={digitalIdOpen} onClose={() => setDigitalIdOpen(false)} currentUser={currentUser} onOpenAuth={() => setAuthModalOpen(true)} />
+                <AuthorizationModal isOpen={authModalOpen} onClose={() => setAuthModalOpen(false)} currentUser={currentUser} />
+                <AppFeedbackModal isOpen={feedbackOpen} onClose={() => setFeedbackOpen(false)} currentUser={currentUser} userRole="resident" />
+                <SpaceReservationFlow open={reservationOpen} onClose={() => setReservationOpen(false)} currentUserId={currentUser?.id} currentUser={currentUser} />
+                <ResidentPackageConfirmation open={confirmOpen} onClose={() => setConfirmOpen(false)} residentId={currentUser?.id} />
 
             </div>
         );

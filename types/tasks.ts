@@ -21,6 +21,11 @@ export interface Task {
     unit: string | null;
     tower: string | null;
     archived: boolean;
+    needs_quote?: boolean;
+    in_stock?: boolean;
+    estimated_cost?: number;
+    estimated_time?: string;
+    analysis_comments?: string;
 }
 
 export const STATUS_TRANSITIONS: Record<Task['status'], Task['status'][]> = {
