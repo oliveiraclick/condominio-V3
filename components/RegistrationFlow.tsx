@@ -134,22 +134,23 @@ export const RegistrationFlow: React.FC<RegistrationFlowProps> = ({ open, onClos
             if (authError) throw authError;
 
             if (authData.user) {
-                const { error: profileError } = await supabase.from('profiles').insert([{
-                    id: authData.user.id,
-                    name: formData.name,
-                    email: formData.email,
-                    phone: formData.phone,
-                    cpf: formData.cpf,
-                    unit: formData.unit,
-                    tower: formData.tower,
-                    role: 'resident',
-                    condominium_id: '00000000-0000-0000-0000-000000000000',
-                    status: 'pending',
-                    is_primary_resident: formData.isPrimary
-                }]);
+                // O trigger handle_new_user já criou o perfil básico
+                // Agora só atualizamos com os dados adicionais do formulário
+                const { error: profileError } = await supabase
+                    .from('profiles')
+                    .update({
+                        name: formData.name,
+                        phone: formData.phone,
+                        cpf: formData.cpf,
+                        unit: formData.unit,
+                        tower: formData.tower,
+                        condominium_id: '00000000-0000-0000-0000-000000000000',
+                        status: 'pending',
+                        is_primary_resident: formData.isPrimary
+                    })
+                    .eq('id', authData.user.id);
 
                 if (profileError) {
-                    // Rollback simple (nao deleta user auth por segurança do cliente, mas avisa)
                     throw new Error('Erro ao salvar perfil: ' + profileError.message);
                 }
 
