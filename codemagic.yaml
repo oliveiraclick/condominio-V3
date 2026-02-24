@@ -54,19 +54,24 @@ workflows:
           node -v
           npx cap sync ios
 
-      - name: Set up code signing settings on Xcode project
+      - name: Set up code signing settings
         script: |
           xcode-project use-profiles
 
-      # 🔥 AQUI ESTÁ A CORREÇÃO DEFINITIVA
-      - name: Build ipa for distribution
+      # 🔥 ALTERAÇÃO DEFINITIVA DO BUILD NUMBER
+      - name: Set build number via agvtool
         script: |
           BUILD_NUMBER=$(date +%s)
-          echo "Using build number: $BUILD_NUMBER"
+          echo "Setting build number to $BUILD_NUMBER"
+          cd ios/App
+          agvtool new-version -all $BUILD_NUMBER
+          cd ../..
+
+      - name: Build ipa for distribution
+        script: |
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME" \
-            --build-number $BUILD_NUMBER
+            --scheme "$XCODE_SCHEME"
 
     artifacts:
       - build/ios/ipa/*.ipa
