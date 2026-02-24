@@ -3,6 +3,7 @@ workflows:
     name: iOS Capacitor Build
     max_build_duration: 120
     instance_type: mac_mini_m2
+
     integrations:
       app_store_connect: NewKey
 
@@ -57,11 +58,15 @@ workflows:
         script: |
           xcode-project use-profiles
 
+      # 🔥 AQUI ESTÁ A CORREÇÃO DEFINITIVA
       - name: Build ipa for distribution
         script: |
+          BUILD_NUMBER=$(date +%s)
+          echo "Using build number: $BUILD_NUMBER"
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
-            --scheme "$XCODE_SCHEME"
+            --scheme "$XCODE_SCHEME" \
+            --build-number $BUILD_NUMBER
 
     artifacts:
       - build/ios/ipa/*.ipa
