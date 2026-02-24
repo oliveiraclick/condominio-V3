@@ -2,7 +2,7 @@ workflows:
   ios-capacitor-workflow:
     name: iOS Capacitor Build
     max_build_duration: 120
-    instance_type: mac_mini_m2 # Updated to m2 as per user's screenshot
+    instance_type: mac_mini_m2
     integrations:
       app_store_connect: NewKey
     environment:
@@ -29,7 +29,6 @@ workflows:
           ICON_SRC="assets/icon.png"
           ICON_DST="ios/App/App/Assets.xcassets/AppIcon.appiconset"
           mkdir -p $ICON_DST
-          # iPhone & iPad icons
           sips -z 40 40     $ICON_SRC --out $ICON_DST/AppIcon-20x20@2x.png
           sips -z 60 60     $ICON_SRC --out $ICON_DST/AppIcon-20x20@3x.png
           sips -z 58 58     $ICON_SRC --out $ICON_DST/AppIcon-29x29@2x.png
@@ -38,14 +37,12 @@ workflows:
           sips -z 120 120   $ICON_SRC --out $ICON_DST/AppIcon-40x40@3x.png
           sips -z 120 120   $ICON_SRC --out $ICON_DST/AppIcon-60x60@2x.png
           sips -z 180 180   $ICON_SRC --out $ICON_DST/AppIcon-60x60@3x.png
-          # iPad specific
           sips -z 20 20     $ICON_SRC --out $ICON_DST/AppIcon-20x20@1x.png
           sips -z 29 29     $ICON_SRC --out $ICON_DST/AppIcon-29x29@1x.png
           sips -z 40 40     $ICON_SRC --out $ICON_DST/AppIcon-40x40@1x.png
           sips -z 76 76     $ICON_SRC --out $ICON_DST/AppIcon-76x76@1x.png
           sips -z 152 152   $ICON_SRC --out $ICON_DST/AppIcon-76x76@2x.png
           sips -z 167 167   $ICON_SRC --out $ICON_DST/AppIcon-83.5x83.5@2x.png
-          # Marketing
           sips -z 1024 1024 $ICON_SRC --out $ICON_DST/AppIcon-512@2x.png
           echo "Verifying icons..."
           ls -l $ICON_DST
@@ -85,7 +82,7 @@ workflows:
       groups:
         - google_play
       vars:
-        PACKAGE_NAME: "com.oliveiraclick.appmorador"
+        PACKAGE_NAME: "app.morador.app"
       node: 22.13.0
     scripts:
       - name: Install dependencies
@@ -98,7 +95,6 @@ workflows:
       - name: Generate assets manually
         script: |
           echo "Generating Android icons manually..."
-          # Usando capacitor/assets para Android pois ele é mais estável para os mipmaps do que o sips manual
           npx @capacitor/assets generate --android
           echo "Verifying Android assets..."
           ls -R android/app/src/main/res/mipmap*
