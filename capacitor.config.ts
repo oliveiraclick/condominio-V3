@@ -1,5 +1,4 @@
 import type { CapacitorConfig } from '@capacitor/cli';
-
 const config: CapacitorConfig = {
   appId: 'app.morador.app',
   appName: 'App Morador',
@@ -19,12 +18,9 @@ const config: CapacitorConfig = {
       presentationOptions: ["badge", "sound", "alert"]
     }
   },
-  /* 
   server: {
-    url: 'http://192.168.100.99:7778',
-    cleartext: true
+    url: 'https://morador.app',
+    cleartext: false
   }
-  */
 };
-
 export default config;

@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Solicitação de Exclusão de Dados - App Morador</title>
+    <style>
+        :root {
+            --primary: #10b981;
+            --primary-dark: #059669;
+            --text: #1e293b;
+            --text-light: #64748b;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background-color: var(--bg);
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            padding: 2rem 1rem;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 1rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .icon-shield {
+            color: var(--primary);
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1rem;
+        }
+
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin: 0 0 0.5rem 0;
+            letter-spacing: -0.025em;
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        p {
+            margin: 0 0 1rem 0;
+            color: var(--text-light);
+            font-size: 0.95rem;
+        }
+
+        .step-list {
+            list-style: none;
+            padding: 0;
+            counter-reset: step;
+        }
+
+        .step-list li {
+            position: relative;
+            padding-left: 2.5rem;
+            margin-bottom: 0.75rem;
+            color: var(--text);
+            font-weight: 500;
+        }
+
+        .step-list li::before {
+            counter-increment: step;
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 1.5rem;
+            height: 1.5rem;
+            background: #ecfdf5;
+            color: var(--primary);
+            border-radius: 50%;
+            text-align: center;
+            line-height: 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 700;
+        }
+
+        .alert {
+            background: #fff1f2;
+            border-left: 4px solid #f43f5e;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .alert p {
+            color: #9f1239;
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        .btn-link {
+            display: inline-block;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .btn-link:hover {
+            background: var(--primary-dark);
+        }
+
+        footer {
+            text-align: center;
+            font-size: 0.8rem;
+            color: #94a3b8;
+            margin-top: 2rem;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="header">
+                <svg class="icon-shield" xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                    fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+                </svg>
+                <h1>Solicitação de Exclusão de Dados</h1>
+                <p>App Morador</p>
+            </div>
+
+            <p>Sua privacidade é importante para nós. De acordo com as diretrizes do Google Play e as leis de proteção
+                de dados (LGPD), você tem o direito de solicitar a exclusão completa de sua conta e dos dados associados
+                a ela.</p>
+
+            <div class="alert">
+                <p><strong>Atenção:</strong> A exclusão da conta é permanente e irreversível. Todos os seus dados,
+                    incluindo histórico de acesso, encomendas, reservas e perfil, serão apagados do nosso sistema.</p>
+            </div>
+
+            <h2>Opção 1: Exclusão Automática (Pelo App)</h2>
+            <p>A maneira mais rápida de excluir sua conta é diretamente pelo aplicativo:</p>
+
+            <h3>Para Moradores:</h3>
+            <ul class="step-list">
+                <li>Abra o App Morador e faça login.</li>
+                <li>Toque na aba <strong>Perfil</strong> no menu inferior.</li>
+                <li>Selecione <strong>Dados Pessoais</strong>.</li>
+                <li>Role até o final da página e toque em <strong>Excluir Minha Conta</strong>.</li>
+                <li>Confirme a ação.</li>
+            </ul>
+
+            <h3>Para Profissionais:</h3>
+            <ul class="step-list">
+                <li>Abra o App Morador e faça login.</li>
+                <li>Toque na aba <strong>Perfil</strong> no menu inferior.</li>
+                <li>Role até o final da página e toque em <strong>Excluir Minha Conta</strong>.</li>
+                <li>Confirme a ação.</li>
+            </ul>
+
+            <h2>Opção 2: Solicitação Manual</h2>
+            <p>Se você não consegue acessar o aplicativo ou prefere fazer a solicitação manualmente, nossa equipe de
+                suporte pode ajudá-lo:</p>
+            <p>Envie um e-mail para <a href="mailto:suporte@oliveiraclick.com.br">suporte@oliveiraclick.com.br</a> com o
+                assunto <strong>"Exclusão de Conta"</strong>, informando:</p>
+            <ul>
+                <li>Seu nome completo</li>
+                <li>E-mail cadastrado no app</li>
+                <li>Condomínio e Unidade</li>
+            </ul>
+            <p>Processaremos sua solicitação em até 7 dias úteis.</p>
+
+            <h2>Dados Retidos</h2>
+            <p>Alguns dados poderão ser mantidos apenas para cumprimento de obrigações legais do condomínio (como
+                registros de acesso por segurança), conforme permitido pela lei, mesmo após a exclusão da conta do
+                usuário no aplicativo.</p>
+
+        </div>
+        <footer>
+            <p>&copy; 2026 App Morador. Todos os direitos reservados.</p>
+        </footer>
+    </div>
+</body>
+
+</html>

@@ -1,62 +1,22 @@
-import path from 'path';
-import { defineConfig, loadEnv } from 'vite';
-import react from '@vitejs/plugin-react';
-import { VitePWA } from 'vite-plugin-pwa';
-import basicSsl from '@vitejs/plugin-basic-ssl';
+import { defineConfig } from "vite";
+import react from "@vitejs/plugin-react-swc";
+import path from "path";
+import { componentTagger } from "lovable-tagger";
 
-import { readFileSync } from 'fs';
-
-const packageJson = JSON.parse(readFileSync('./package.json', 'utf-8'));
-
-export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, '.', '');
-  return {
-    server: {
-      port: 7777,
-      host: '0.0.0.0',
+// https://vitejs.dev/config/
+export default defineConfig(({ mode }) => ({
+  server: {
+    host: "::",
+    port: 8080,
+    hmr: {
+      overlay: false,
     },
-    preview: {
-      port: 7777,
-      host: '0.0.0.0',
+  },
+  plugins: [react(), mode === "development" && componentTagger()].filter(Boolean),
+  resolve: {
+    alias: {
+      "@": path.resolve(__dirname, "./src"),
     },
-    plugins: [
-      // basicSsl(),
-      react(),
-      VitePWA({
-        strategies: 'injectManifest',
-        srcDir: '.',
-        filename: 'sw.ts',
-        registerType: 'autoUpdate',
-        includeAssets: ['logo.png', 'icon.png'],
-        manifest: {
-          name: 'App Morador - Condomínio',
-          short_name: 'CondoConnect',
-          description: 'Gestão Inteligente de Condomínios',
-          theme_color: '#3b82f6',
-          icons: [
-            {
-              src: 'icon.png',
-              sizes: '192x192',
-              type: 'image/png'
-            },
-            {
-              src: 'icon.png',
-              sizes: '512x512',
-              type: 'image/png'
-            }
-          ]
-        }
-      })
-    ],
-    define: {
-      'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-      '__APP_VERSION__': JSON.stringify(packageJson.version),
-    },
-    resolve: {
-      alias: {
-        '@': path.resolve(__dirname, '.'),
-      }
-    }
-  };
-});
+    dedupe: ["react", "react-dom", "react/jsx-runtime"],
+  },
+}));

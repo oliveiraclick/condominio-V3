@@ -53,3 +53,4 @@ COMPORTAMENTO DA IA:
 
 
 OBJETIVO:
+Criar telas consistentes, profissionais e repetíveis.
