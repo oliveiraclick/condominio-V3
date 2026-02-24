@@ -4,7 +4,7 @@ workflows:
     max_build_duration: 120
     instance_type: mac_mini_m2 # Updated to m2 as per user's screenshot
     integrations:
-      app_store_connect: morador.app
+      app_store_connect: NewKey
     environment:
       ios_signing:
         distribution_type: app_store
