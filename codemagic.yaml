@@ -5,24 +5,25 @@ workflows:
     instance_type: mac_mini_m2
     integrations:
       app_store_connect: NewKey
+
     environment:
-      ios_signing:
-        distribution_type: app_store
-        bundle_identifier: app.morador.app
       vars:
         XCODE_PROJECT: "ios/App/App.xcodeproj"
         XCODE_SCHEME: "App"
       node: 22.13.0
       xcode: latest
       cocoapods: default
+
     scripts:
       - name: Install dependencies
         script: |
           node -v
           npm install
+
       - name: Build web assets
         script: |
           npm run build
+
       - name: Generate assets manually
         script: |
           echo "Generating icons manually with sips..."
@@ -46,21 +47,26 @@ workflows:
           sips -z 1024 1024 $ICON_SRC --out $ICON_DST/AppIcon-512@2x.png
           echo "Verifying icons..."
           ls -l $ICON_DST
+
       - name: Capacitor sync
         script: |
           node -v
           npx cap sync ios
+
       - name: Set up code signing settings on Xcode project
         script: |
           xcode-project use-profiles
+
       - name: Build ipa for distribution
         script: |
           xcode-project build-ipa \
             --project "$XCODE_PROJECT" \
             --scheme "$XCODE_SCHEME"
+
     artifacts:
       - build/ios/ipa/*.ipa
       - /tmp/xcodebuild_logs/*.log
+
     publishing:
       email:
         recipients:
@@ -68,14 +74,17 @@ workflows:
         notify:
           success: true
           failure: true
+
       app_store_connect:
         auth: integration
         submit_to_testflight: false
+
 
   android-capacitor-workflow:
     name: Android Capacitor Build
     max_build_duration: 120
     instance_type: linux_x2
+
     environment:
       android_signing:
         - keystore_reference
@@ -84,34 +93,42 @@ workflows:
       vars:
         PACKAGE_NAME: "app.morador.app"
       node: 22.13.0
+
     scripts:
       - name: Install dependencies
         script: |
           node -v
           npm install
+
       - name: Build web assets
         script: |
           npm run build
+
       - name: Generate assets manually
         script: |
           echo "Generating Android icons manually..."
           npx @capacitor/assets generate --android
           echo "Verifying Android assets..."
           ls -R android/app/src/main/res/mipmap*
+
       - name: Capacitor sync
         script: |
           node -v
           npx cap sync android
+
       - name: Set up local.properties
         script: |
           echo "sdk.dir=$ANDROID_SDK_ROOT" > "$CM_BUILD_DIR/android/local.properties"
+
       - name: Build Android release
         script: |
           cd android
           ./gradlew bundleRelease
+
     artifacts:
       - android/app/build/outputs/**/*.aab
       - android/app/build/outputs/**/*.apk
+
     publishing:
       email:
         recipients:
@@ -119,6 +136,7 @@ workflows:
         notify:
           success: true
           failure: true
+
       google_play:
         credentials: $GCLOUD_SERVICE_ACCOUNT_CREDENTIALS
         track: internal
